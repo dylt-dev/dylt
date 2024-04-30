@@ -1,4 +1,4 @@
-package "dylt"
+package dylt
 
 import "fmt"
 import "rsc.io/quote"

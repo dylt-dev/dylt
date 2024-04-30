@@ -1,4 +1,4 @@
-module dylt.dev/dylt
+module github.com/dylt.dev/dylt
 
 go 1.22.2
 
