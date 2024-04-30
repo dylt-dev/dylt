@@ -4,7 +4,7 @@ import "fmt"
 import "rsc.io/quote"
 
 func SayHi () {
-	fmt.Println("Hiiiiiii")
+	fmt.Println("Hiiiiiii Everybody")
 }
 
 func main() {
