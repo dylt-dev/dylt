@@ -11,6 +11,18 @@ type Srv struct {
 	Ips []string
 }
 
+
+func GetCname (host string) string {
+	cname, err := net.LookupCNAME(host)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return ""
+	}
+
+	return cname
+}
+
+
 func GetSrvs (domain string, includeIps bool) []Srv {
 	var srvs []Srv
 	// Use "net" package to do a DNS lookup of SRVs 
