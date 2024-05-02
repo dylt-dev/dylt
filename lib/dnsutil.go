@@ -49,3 +49,14 @@ func GetSrvs (domain string, includeIps bool) []Srv {
 
 	return srvs
 }
+
+
+func GetTxts (domain string) []string {
+	txts, err := net.LookupTXT(domain)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return nil
+	}
+
+	return txts
+}
