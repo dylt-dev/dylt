@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -28,8 +30,13 @@ func GetSrvs (domain string, includeIps bool) []Srv {
 	// Use "net" package to do a DNS lookup of SRVs 
 	_, dnsSrvs, err := net.LookupSRV("etcd-server", "tcp", domain)
 	if err != nil {
+		var dnsError *net.DNSError
+		if errors.As(err, &dnsError) {
+			fmt.Println("This is a DNS error")
+			j, _ := json.Marshal(dnsError)
+			fmt.Println(string(j))
+		}
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
 	}
 	// For each DNS SRV record, create an Srv object
 	// Optionally populate the srv Ips field if --include-ips was set
