@@ -12,6 +12,7 @@ import (
 func Run () int {
 	rootCmd := createRootCommand()
 	rootCmd.AddCommand(cmd.CreateGetCommand())
+	rootCmd.AddCommand(cmd.CreateVmCommand())
 	err := rootCmd.Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
