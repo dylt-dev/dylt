@@ -19,9 +19,41 @@ func CreateVmCommand () *cobra.Command {
 		Short: "VM commands",
 		Long: "Operations on VM objects in storage",
 	}
+	command.AddCommand(CreateVmAllCommand())
 	command.AddCommand(CreateVmGetCommand())
 	command.AddCommand(CreateVmListCommand())
 	return &command
+}
+
+
+func CreateVmAllCommand () *cobra.Command {
+	command := cobra.Command {
+		Use: "all",
+		Short: "All VM info",
+		Long: "Return data for all VMs in the system",
+		RunE: runVmAllCommand,
+	}
+	return &command
+}
+
+func runVmAllCommand (cmd *cobra.Command, args []string) error {
+	cli, err := dylt.NewVmClient("hello.dylt.dev")
+	if err != nil {
+		slog.Error("Error creating new vm client")
+		return err
+	}
+	names, err := cli.Names()
+	if err != nil { return err }
+	vms := []*dylt.VmInfo{}
+	for _, name := range(names) {
+		vmInfo, err := cli.Get(name)
+		if err != nil { return err }
+		vms = append(vms, vmInfo)
+	}
+	jsonData, err := json.Marshal(vms)
+	if err != nil { return err }
+	fmt.Println(string(jsonData))
+	return nil
 }
 
 
