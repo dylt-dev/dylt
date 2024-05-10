@@ -69,10 +69,7 @@ func CreateVmGetCommand () *cobra.Command {
 
 func runVmGetCommand (cmd *cobra.Command, args []string) error {
 	cli, err := dylt.NewVmClient("hello.dylt.dev")
-	if err != nil {
-		slog.Error("Error creating new vm client")
-		return err
-	}
+	if err != nil { return err }
 	key := args[0]
 	vm, err := cli.Get(key)
 	if err != nil { return err }
@@ -94,10 +91,7 @@ func CreateVmListCommand () *cobra.Command {
 
 func runVmListCommand (cmd *cobra.Command, args []string) error {
 	cli, err := dylt.NewVmClient("hello.dylt.dev")
-	if err != nil {
-		slog.Error("Error creating new vm client")
-		return err
-	}
+	if err != nil { return err }
 	names, err := cli.Names()
 	if err != nil { return err }
 	jsonData, err := json.Marshal(names)

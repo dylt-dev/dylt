@@ -10,6 +10,8 @@ import (
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
 
+const prefix = "/vm/"
+
 type VmClient struct{
 	EtcdClient
 }
@@ -25,7 +27,6 @@ type VmApi interface {
 }
 
 func (cli* VmClient) Get (name string) (*VmInfo, error) {
-	const prefix = "/vm/"
 	key := fmt.Sprintf("%s%s", prefix, name)
 	data, err := cli.EtcdClient.Get(key)
 	if err != nil { return nil, err }
@@ -38,7 +39,6 @@ func (cli* VmClient) Get (name string) (*VmInfo, error) {
 func (cli* VmClient) Names () ([]string, error) {
 	etcdClient, err := NewEtcdClient("hello.dylt.dev")
 	if err != nil { return nil, err }
-	const prefix = "/vm/"
 	resp, err := etcdClient.Client.Get(context.Background(), prefix, clientV3.WithPrefix())
 	if err != nil { return nil, err }
 	var names []string

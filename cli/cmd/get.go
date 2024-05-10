@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	// "encoding/json"
 	"fmt"
-	"log/slog"
-	// "os"
 
 	"github.com/spf13/cobra"
 
@@ -24,15 +21,9 @@ func CreateGetCommand () *cobra.Command {
 func runGetCommand (cmd *cobra.Command, args []string) error {
 	key := args[0]
 	cli, err := dylt.NewEtcdClient("hello.dylt.dev")
-	if err != nil {
-		slog.Error("Error creating new etcd client")
-		return err
-	}
+	if err != nil { return err }
 	val, err := cli.Get(key)
-	if err != nil {
-		slog.Error("Error getting value from etcd")
-		return err
-	}
+	if err != nil { return err }
 	fmt.Println(string(val))
 	return nil
 }

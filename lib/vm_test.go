@@ -18,11 +18,11 @@ func TestVmGet (t *testing.T) {
 
 func TestVmList (t *testing.T) {
 	cli, err := NewVmClient("hello.dylt.dev")
-	if err != nil { t.Fatal(err) }
+	if err != nil { t.Fatal(err, debug.Stack()) }
 	names, err := cli.Names() 
-	if err != nil { t.Fatal(err) }
+	if err != nil { t.Fatal(err, debug.Stack()) }
 	for _, name := range(names) {
-		name, _ := strings.CutPrefix(string(name), "/vm/")
+		name, _ := strings.CutPrefix(string(name), prefix)
 		t.Logf("name=%s\n", name)
 	}
 }
