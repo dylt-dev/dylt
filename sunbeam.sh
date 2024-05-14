@@ -4,6 +4,8 @@
 
 gen-nightly-tagname ()
 {
+	# shellcheck disable=SC2016
+	(( $# == 1 )) || { printf 'Usage: gen-nightly-tagname $version\n' >&2; return 1; }
 	local version=$1
 
 	local ts; ts=$(gen-nightly-timestamp) || return
@@ -21,6 +23,8 @@ gen-nightly-timestamp ()
 
 git-get-latest-release-tag ()
 {
+	# shellcheck disable=SC2016
+	(( $# == 2 )) || { printf 'Usage: git-get-latest-release-tag $owner $repo\n' >&2; return 1; }
 	local owner=$1
 	local repo=$2
 	local tag; tag=$(curl -L --silent "api.github.com/repos/$owner/$repo/releases/latest" | jq -r .tag_name)
@@ -40,6 +44,10 @@ git-install-latest-dylt ()
 
 git-tag-nightly ()
 {
-	local tagname; tagname=$(gen-nightly-tagname) || return
+	# shellcheck disable=SC2016
+	(( $# == 1 )) || { printf 'Usage: git-tag-nightly $version\n' >&2; return 1; }
+	local version=$1
+
+	local tagname; tagname=$(gen-nightly-tagname $version) || return
 	git tag "$tagname"
 }
