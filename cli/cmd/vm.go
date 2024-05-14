@@ -33,6 +33,7 @@ func CreateVmAllCommand () *cobra.Command {
 		Long: "Return data for all VMs in the system",
 		RunE: runVmAllCommand,
 	}
+	command.Flags().Bool("shr", true, "return hosts with (or without) SHR")
 	return &command
 }
 
@@ -53,6 +54,8 @@ func runVmAllCommand (cmd *cobra.Command, args []string) error {
 	jsonData, err := json.Marshal(vms)
 	if err != nil { return err }
 	fmt.Println(string(jsonData))
+	shr, _ := cmd.Flags().GetBool("shr")
+	fmt.Printf("shr=%t\n", shr)
 	return nil
 }
 
