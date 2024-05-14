@@ -51,12 +51,29 @@ func runVmAllCommand (cmd *cobra.Command, args []string) error {
 		if err != nil { return err }
 		vms = append(vms, vmInfo)
 	}
+	hasShr := cmd.Flags().Changed("shr")
+	fmt.Printf("hasShr=%t\n", hasShr)
+	if hasShr {
+		shr, _ := cmd.Flags().GetBool("shr")
+		fmt.Printf("shr=%t\n", shr)
+		vms = filterOnShr(vms, shr)
+	}
 	jsonData, err := json.Marshal(vms)
 	if err != nil { return err }
 	fmt.Println(string(jsonData))
-	shr, _ := cmd.Flags().GetBool("shr")
-	fmt.Printf("shr=%t\n", shr)
 	return nil
+}
+
+
+func filterOnShr (vmsOrig []*dylt.VmInfo, shr bool) []*dylt.VmInfo {
+	vms := []*dylt.VmInfo{}
+	for _, vm := range(vmsOrig) {
+		if vm.Shr == shr {
+			vms = append(vms, vm)
+		}
+	}
+
+	return vms
 }
 
 
