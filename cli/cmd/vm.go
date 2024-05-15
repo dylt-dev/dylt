@@ -4,9 +4,6 @@ import (
 	// "encoding/json"
 	"encoding/json"
 	"fmt"
-	"log/slog"
-
-	// "os"
 
 	"github.com/spf13/cobra"
 
@@ -37,43 +34,22 @@ func CreateVmAllCommand () *cobra.Command {
 	return &command
 }
 
+
 func runVmAllCommand (cmd *cobra.Command, args []string) error {
 	cli, err := dylt.NewVmClient("hello.dylt.dev")
-	if err != nil {
-		slog.Error("Error creating new vm client")
-		return err
-	}
-	names, err := cli.Names()
 	if err != nil { return err }
-	vms := []*dylt.VmInfo{}
-	for _, name := range(names) {
-		vmInfo, err := cli.Get(name)
-		if err != nil { return err }
-		vms = append(vms, vmInfo)
-	}
+	vmInfoMap, err := cli.All()
+	if err != nil { return err }
 	hasShr := cmd.Flags().Changed("shr")
-	fmt.Printf("hasShr=%t\n", hasShr)
 	if hasShr {
-		shr, _ := cmd.Flags().GetBool("shr")
-		fmt.Printf("shr=%t\n", shr)
-		vms = filterOnShr(vms, shr)
+		shr, err := cmd.Flags().GetBool("shr")
+		if err != nil { return err }
+		vmInfoMap = dylt.FilterOnShr(vmInfoMap, shr)
 	}
-	jsonData, err := json.Marshal(vms)
+	jsonData, err := json.Marshal(vmInfoMap)
 	if err != nil { return err }
 	fmt.Println(string(jsonData))
 	return nil
-}
-
-
-func filterOnShr (vmsOrig []*dylt.VmInfo, shr bool) []*dylt.VmInfo {
-	vms := []*dylt.VmInfo{}
-	for _, vm := range(vmsOrig) {
-		if vm.Shr == shr {
-			vms = append(vms, vm)
-		}
-	}
-
-	return vms
 }
 
 
