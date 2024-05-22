@@ -1,13 +1,23 @@
 package lib
 
 import (
-	"runtime/debug"
+	"fmt"
 	"testing"
 )
 
 func TestCallDaylightScript (t *testing.T) {
-	args := []string{}
+	args := []string{"hello"}
 	rc, err := CallDaylightScript(args)
-	if err != nil { t.Fatalf("%v\n%s", err, string(debug.Stack())) }
+	if err != nil { t.Fatalf("%v\n", err) }
 	t.Logf("rc=%d\n", rc)
 }
+
+
+func TestCallDaylightScriptO (t *testing.T) {
+	args := []string{"hello"}
+	rc, stdout, err := CallDaylightScriptO(args)
+	fmt.Printf("stdout=%s\n", stdout)
+	if err != nil { t.Fatalf("%v\n", err) }
+	t.Logf("rc=%d\n", rc)
+}
+
