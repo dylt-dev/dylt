@@ -60,6 +60,12 @@ git-push-nightly-release ()
 	(( $# == 1 )) || { printf 'Usage: git-tag-nightly $version\n' >&2; return 1; }
 	local version=$1
 
+	if [[ $(git status --porcelain) != "" ]]; then
+		printf '%s\n' "There are uncommitted changes"
+		if ! yesno "Push nightly release anyway?"; then 
+			return 0
+		fi
+	fi
 	git-tag-nightly "$version" || return
 	git push
 	git push --tags
@@ -75,4 +81,15 @@ git-tag-nightly ()
 
 	local tagname; tagname=$(gen-nightly-tagname $version) || return
 	git tag "$tagname"
+}
+
+
+yesno ()
+{
+	# shellcheck disable=SC2016
+	(( $# == 1 )) || { printf 'Usage: yesno $prompt\n' >&2; return 1; }
+	read -p "$1 " -n 1 -r yn
+	if [[ ! $yn =~ ^[Yy]$ ]]; then
+		return 1
+	fi
 }
