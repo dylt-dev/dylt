@@ -34,7 +34,7 @@ func NewEtcdClient (domain string) (*EtcdClient, error) {
 
 func getEndpoints (domain string) ([]string, error) {
 	endpoints := []string{}
-	srvs, err := GetSrvs(domain, true)
+	srvs, err := GetSrvs(domain, "etcd-server", "tcp", true)
 	if err != nil { return nil, err }
 	for _, srv := range(srvs) {
 		ip := srv.Ips[0]

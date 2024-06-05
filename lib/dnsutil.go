@@ -26,10 +26,10 @@ func GetCname (host string) string {
 }
 
 
-func GetSrvs (domain string, includeIps bool) ([]Srv, error) {
+func GetSrvs (domain string, service string, proto string, includeIps bool) ([]Srv, error) {
 	var srvs []Srv
 	// Use "net" package to do a DNS lookup of SRVs 
-	_, dnsSrvs, err := net.LookupSRV("etcd-server", "tcp", domain)
+	_, dnsSrvs, err := net.LookupSRV(service, proto, domain)
 	if err != nil {
 		var dnsError *net.DNSError
 		if errors.As(err, &dnsError) {
