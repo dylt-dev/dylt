@@ -15,7 +15,7 @@ func TestMain (m *testing.M) {
 	}
 	logger := slog.New(slog.NewTextHandler(logfile, &slog.HandlerOptions{AddSource: true}))
 	slog.SetDefault(logger)
-	fmt.Println("TESTMAIN!!!")
+	slog.Info("Testing logger config")
 	code := m.Run()
 	os.Exit(code)
 }

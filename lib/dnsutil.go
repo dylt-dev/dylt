@@ -59,6 +59,9 @@ func GetSrvs (domain string, service string, proto string, includeIps bool) ([]S
 	return srvs, err
 }
 
+func GetSrvsEtcdServer (domain string, includeIps bool) ([]Srv, error) {
+	return GetSrvs(domain, "etcd-server", "tcp", includeIps)
+}
 
 func GetTxts (domain string) []string {
 	txts, err := net.LookupTXT(domain)
