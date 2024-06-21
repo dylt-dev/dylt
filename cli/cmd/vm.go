@@ -64,11 +64,9 @@ func CreateVmGetCommand () *cobra.Command {
 }
 
 func runVmGetCommand (cmd *cobra.Command, args []string) error {
-	fmt.Println("runVmGetCommand()")
 	cli, err := dylt.NewVmClient("hello.dylt.dev")
 	if err != nil { return err }
 	key := args[0]
-	fmt.Printf("key=%s\n", key)
 	vm, err := cli.Get(key)
 	if vm == nil { return nil }
 	if err != nil { return err }
