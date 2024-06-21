@@ -12,6 +12,7 @@ import (
 func Run () int {
 	rootCmd := createRootCommand()
 	rootCmd.AddCommand(cmd.CreateGetCommand())
+	rootCmd.AddCommand(cmd.CreateListCommand())
 	rootCmd.AddCommand(cmd.CreateVmCommand())
 	rootCmd.AddCommand(cmd.CreateCallCommand())
 	err := rootCmd.Execute()

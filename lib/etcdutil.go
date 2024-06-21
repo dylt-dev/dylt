@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -14,10 +15,33 @@ type EtcdClient struct {
 
 func (cli *EtcdClient) Get (key string) ([]byte, error) {
 	ctx := context.Background()
-	kv, err := cli.Client.Get(ctx, key)
+	resp, err := cli.Client.Get(ctx, key)
 	if err != nil { return nil, err }
-	val := (*kv).Kvs[0].Value
+	if len(resp.Kvs) == 0 {
+		return nil, nil
+	}
+	val := (*resp).Kvs[0].Value
 	return val, err
+}
+
+
+func (cli *EtcdClient) GetKeys (prefix string) ([]string, error) {
+	ctx := context.Background()
+	resp, err := cli.Client.Get(ctx, prefix, clientV3.WithPrefix())
+	if err != nil { return nil, err }
+	keys := []string{}
+	for _, kv := range resp.Kvs {
+		keys = append(keys, string(kv.Key))
+	}
+	return keys, nil
+}
+
+
+func (cli *EtcdClient) List () ([]*mvccpb.KeyValue, error) {
+	ctx := context.Background()
+	resp, err := cli.Client.Get(ctx, "", clientV3.WithPrefix())
+	if err != nil { return nil, err }
+	return resp.Kvs, nil
 }
 
 

@@ -26,6 +26,18 @@ gen-nightly-timestamp ()
 }
 
 
+git-get-latest-release-spec ()
+{
+	# shellcheck disable=SC2016
+	(( $# == 2 )) || { printf 'Usage: git-get-latest-release-tag $owner $repo\n' >&2; return 1; }
+	local owner=$1
+	local repo=$2
+	local tag; tag=$(git-get-latest-release-tag "$owner" "$repo") || return
+	local spec; spec=$(printf '%s/%s/%s/%s' "github.com" "$owner" "$repo" "$tag") || return
+	printf '%s' "$spec"
+}
+
+
 # Use the GitHub API to get the tag of the latest version of a GitHub release,
 # for a specified owner+repo
 # This can be used to `go install` a specific releae
