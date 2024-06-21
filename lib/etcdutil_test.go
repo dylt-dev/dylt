@@ -23,7 +23,7 @@ func TestEtcdGet (t *testing.T) {
 
 func TestEtcdGetNonExistent (t *testing.T) {
 	cli, err := NewEtcdClient("hello.dylt.dev")
-	key := "ABCDEF1234"
+	key := "5"
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	val, err := cli.Get(key)
 	if val != nil { t.Fatal(err, debug.Stack()) } 
