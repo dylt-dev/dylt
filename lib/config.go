@@ -8,28 +8,28 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config = struct {
+type Config struct {
 
 }
 
 
 func (o *Config) Get (name string) (interface{}, error) {
-
+	return nil, nil
 }
 
 
 func (o *Config) Set (name string, value interface{}) error {
-
+	return nil
 }
 
 
 func (o *Config) Load () error {
-
+	return nil
 }
 
 
 func (o *Config) Save () error {
-
+	return nil
 }
 
 

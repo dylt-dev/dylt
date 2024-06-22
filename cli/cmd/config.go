@@ -27,6 +27,8 @@ func CreateConfigGetCommand () *cobra.Command {
 }
 
 func runConfigGetCommand (cmd *cobra.Command, args []string) error {
-	
-	return nil
+	config := dylt.Config{}
+	err := config.Load()
+	if err != nil { return err }
+	return nil	
 }
