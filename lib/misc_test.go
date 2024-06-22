@@ -7,6 +7,8 @@ import (
 	"runtime/debug"
 	"testing"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 
@@ -24,7 +26,7 @@ func Test (t *testing.T) {
 
 
 func TestSimplePut (t *testing.T) {
-	cli, err := NewVmClient("hello.dylt.dev")
+	cli, err := NewVmClient(viper.GetString("etcd_domain"))
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	vm := VmInfo{
 		Address: "hosty toasty host",

@@ -4,6 +4,7 @@ import (
 	// "encoding/json"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -22,7 +23,34 @@ type VmInfo struct {
 	Name string
 }
 
-func (o VmInfo) String () string {
+func (o *VmInfo) Get (field string) (interface{}, error) {
+	switch field {
+	case "Address":
+		return o.Address, nil
+	case "Name":
+		return o.Name, nil
+	default:
+		errmsg := fmt.Sprintf("Unknown field: %s", field)
+		return nil, errors.New(errmsg)
+	}
+}
+
+func (o *VmInfo) Set (field string, value interface{}) error {
+	switch field {
+	case "Address":
+	{
+		o.Address = value.(string)
+	}
+	case "Name":
+		o.Name = value.(string)
+	default:
+		errmsg := fmt.Sprintf("Unknown field: %s", field)
+		return errors.New(errmsg)
+	}
+	return nil
+}
+
+func (o *VmInfo) String () string {
 	buf, _ := json.MarshalIndent(o, "", "\t")
 	s := string(buf)
 	return s
@@ -105,9 +133,7 @@ func GetValue (kv *mvccpb.KeyValue) (*VmInfo, error) {
 
 
 func (cli *VmClient) Names() ([]string, error) {
-	etcdClient, err := NewEtcdClient("hello.dylt.dev")
-	if err != nil { return nil, err }
-	resp, err := etcdClient.Client.Get(context.Background(), PRE_vm, clientV3.WithPrefix())
+	resp, err := cli.Client.Get(context.Background(), PRE_vm, clientV3.WithPrefix())
 	if err != nil { return nil, err }
 	var names []string
 	for _, kv := range resp.Kvs {

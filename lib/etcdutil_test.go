@@ -6,14 +6,13 @@ import (
 	"runtime/debug"
 	"testing"
 
+	"github.com/spf13/viper"
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
 
 
 func TestEtcdGet (t *testing.T) {
-	cli, err := NewEtcdClient("hello.dylt.dev")
-	// cli, err := NewEtcdClient("helloXXX.dylt.dev")
-	// cli, err := NewEtcdClient("google.com")
+	cli, err := NewEtcdClient(viper.GetString("etcd_domain"))
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	val, err := cli.Get("foo")
 	if err != nil { t.Fatal(err, debug.Stack()) }
@@ -22,7 +21,7 @@ func TestEtcdGet (t *testing.T) {
 
 
 func TestEtcdGetNonExistent (t *testing.T) {
-	cli, err := NewEtcdClient("hello.dylt.dev")
+	cli, err := NewEtcdClient(viper.GetString("etcd_domain"))
 	key := "5"
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	val, err := cli.Get(key)
@@ -33,7 +32,7 @@ func TestEtcdGetNonExistent (t *testing.T) {
 
 
 func TestEtcdGetWithPrefix (t *testing.T){
-	cli, err := NewEtcdClient("hello.dylt.dev")
+	cli, err := NewEtcdClient(viper.GetString("etcd_domain"))
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	resp, err := cli.Client.Get(context.Background(), "/vm", clientV3.WithPrefix())
 	if err != nil { t.Fatal(err, debug.Stack()) }
@@ -46,7 +45,7 @@ func TestEtcdGetWithPrefix (t *testing.T){
 
 
 func TestEtcdGetKeys (t *testing.T) {
-	cli, err := NewEtcdClient("hello.dylt.dev")
+	cli, err := NewEtcdClient(viper.GetString("etcd_domain"))
 	if err != nil { t.Fatal(err)}
 	keys, err := cli.GetKeys("/vm")
 	if err != nil { t.Fatal(err)}
@@ -58,7 +57,7 @@ func TestEtcdGetKeys (t *testing.T) {
 
 
 func TestEtcdList (t *testing.T) {
-	cli, err := NewEtcdClient("hello.dylt.dev")
+	cli, err := NewEtcdClient(viper.GetString("etcd_domain"))
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	kvs, err := cli.List()
 	if err != nil { t.Fatal(err, debug.Stack()) }

@@ -1,9 +1,11 @@
 package cmd
+
 import (
 	"fmt"
-	
+
 	"github.com/spf13/cobra"
-	
+	"github.com/spf13/viper"
+
 	dylt "github.com/dylt-dev/dylt/lib"
 )
 
@@ -18,7 +20,7 @@ func CreateListCommand () *cobra.Command {
 }
 
 func runCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.NewEtcdClient("hello.dylt.dev")
+	cli, err := dylt.NewEtcdClient(viper.GetString("etcd_domain"))
 	if err != nil { return err }
 	kvs, err := cli.List()
 	if err != nil { return err }

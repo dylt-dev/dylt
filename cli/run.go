@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -17,7 +15,6 @@ func Run () int {
 	rootCmd.AddCommand(cmd.CreateCallCommand())
 	err := rootCmd.Execute()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
 	return 0
@@ -28,6 +25,7 @@ func createRootCommand() *cobra.Command {
 		Use: "dylt",
 		Short: "dylt core functions",
 		Long: "CLI for using core daylight (dylt) features",
+		SilenceUsage: true,
 	}
 	return cmd
 }

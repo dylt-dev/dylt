@@ -9,6 +9,7 @@ import (
 	"os"
 )
 
+
 type Srv struct {
 	net.SRV
 	Ips []string
@@ -33,11 +34,11 @@ func GetSrvs (domain string, service string, proto string, includeIps bool) ([]S
 	if err != nil {
 		var dnsError *net.DNSError
 		if errors.As(err, &dnsError) {
-			slog.Warn("This is a DNS error", err)
+			slog.Warn("This is a DNS error", "errmsg", err)
 			j, _ := json.Marshal(dnsError)
 			slog.Warn(string(j))
 		} else {
-			slog.Warn("Error during net.LookupSRV()", err)
+			slog.Warn("Error during net.LookupSRV()", "errmsg", err)
 		}
 	}
 	// For each DNS SRV record, create an Srv object

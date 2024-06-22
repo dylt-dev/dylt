@@ -3,6 +3,7 @@ package lib
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientV3 "go.etcd.io/etcd/client/v3"
@@ -25,11 +26,15 @@ func (cli *EtcdClient) Delete (key string) ([]byte, error) {
 }
 
 
-
 func (cli *EtcdClient) Get (key string) ([]byte, error) {
 	ctx := context.Background()
+	fmt.Fprintf(os.Stderr, "key=%s\n", key)
 	resp, err := cli.Client.Get(ctx, key)
-	if err != nil { return nil, err }
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "err type=%T\n", err)
+		return nil, err
+	}
+	fmt.Fprintf(os.Stderr, "%#v\n", resp)
 	if len(resp.Kvs) == 0 {
 		return nil, nil
 	}
