@@ -45,9 +45,10 @@ func runVmAddCommand (cmd *cobra.Command, args []string) error {
 	if err != nil { return err }
 	name := args[0]
 	address := args[1]
-	vm, err = cli.Add(name, address)
+	vm, err := cli.Add(name, address)
 	if err != nil { return err }
-	
+	fmt.Println(vm)
+
 	return nil
 }
 

@@ -22,6 +22,12 @@ type VmInfo struct {
 	Name string
 }
 
+func (o VmInfo) String () string {
+	buf, _ := json.MarshalIndent(o, "", "\t")
+	s := string(buf)
+	return s
+}
+
 type VmInfoMap map[string]*VmInfo
 
 type VmApi interface {
