@@ -22,22 +22,30 @@ func CreateGetCommand () *cobra.Command {
 }
 
 func runGetCommand (cmd *cobra.Command, args []string) error {
-	key := args[0]
+	arg := args[0]
 	cli, err := dylt.NewEtcdClient("hello.dylt.dev")
 	if err != nil { return err }
 	flKeys, err := cmd.Flags().GetBool("keys")
 	if err != nil { return err }
 	if flKeys {
-		kvs, err := cli.GetKeys(key)
-		if err != nil { return err }
-		for _, kv := range kvs {
-			fmt.Println(kv)
-		}
+		prefix := arg
+		return getKeys(cli, prefix)
 	} else {
-		fmt.Printf("flKeys=%t\n", flKeys)
+		key := arg
 		val, err := cli.Get(key)
 		if err != nil { return err }
+		if val == nil { return nil }
 		fmt.Println(string(val))
+	}
+	return nil
+}
+
+
+func getKeys (cli *dylt.EtcdClient, prefix string) error {
+	kvs, err := cli.GetKeys(prefix)
+	if err != nil { return err }
+	for _, kv := range kvs {
+		fmt.Println(kv)
 	}
 	return nil
 }

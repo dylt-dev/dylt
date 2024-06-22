@@ -13,6 +13,19 @@ type EtcdClient struct {
 }
 
 
+func (cli *EtcdClient) Delete (key string) ([]byte, error) {
+	ctx := context.Background()
+	oldVal, err := cli.Get(key)
+	if err != nil {
+		fmt.Println("Error getting old value")
+	}
+	_, err = cli.Client.Delete(ctx, key)
+	if err != nil { return nil, err }
+	return oldVal, nil
+}
+
+
+
 func (cli *EtcdClient) Get (key string) ([]byte, error) {
 	ctx := context.Background()
 	resp, err := cli.Client.Get(ctx, key)

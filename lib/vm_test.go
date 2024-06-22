@@ -4,9 +4,19 @@ import (
 	"fmt"
 	"encoding/json"
 	"runtime/debug"
-	"strings"
 	"testing"
 )
+
+
+func TestVmAdd (t *testing.T) {
+	vmClient, err := NewVmClient("hello.dylt.dev")
+	if err != nil { t.Fatal(err, debug.Stack()) }
+	name := "test-vm"
+	address := "test-vm.dylt.dev"
+	vm, err := vmClient.Add(name, address)
+	if err != nil { t.Fatal(err, debug.Stack()) }
+	fmt.Printf("vm=%#v\n", vm)
+}
 
 
 func TestVmAll (t *testing.T) {
@@ -32,8 +42,8 @@ func TestVmGet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err, debug.Stack())
 	}
-	t.Logf("vm.Host=%s\n", vm.Host)
-	t.Logf("vm.Shr=%t\n", vm.Shr)
+	s, _ := json.Marshal(vm)
+	t.Logf("vm=%s\n", s)
 }
 
 func TestVmList(t *testing.T) {
@@ -46,7 +56,6 @@ func TestVmList(t *testing.T) {
 		t.Fatal(err, debug.Stack())
 	}
 	for _, name := range names {
-		name, _ := strings.CutPrefix(string(name), PRE_vm)
 		t.Logf("name=%s\n", name)
 	}
 }

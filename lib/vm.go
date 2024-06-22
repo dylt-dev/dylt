@@ -11,15 +11,15 @@ import (
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
 
-const PRE_vm = "/vm/"
+const PRE_vm = "/vm"
 
 type VmClient struct {
 	EtcdClient
 }
 
 type VmInfo struct {
-	Host string
-	Shr  bool
+	Address string
+	Name string
 }
 
 type VmInfoMap map[string]*VmInfo
@@ -30,35 +30,50 @@ type VmApi interface {
 }
 
 
+func (cli* VmClient) Add (name string, address string) (*VmInfo, error) {
+	key := getKeyFromName(name)
+	vm := VmInfo {
+		Name: name,
+		Address: address,
+	}
+	value, err := json.Marshal(vm)
+	if err != nil { return nil, err }
+	ctx := context.Background()
+	_, err = cli.KV.Put(ctx, key, string(value))
+	if err != nil { return nil, err }
+	return &vm, nil
+}
+
+
 func (cli *VmClient) All () (VmInfoMap, error) {
 	// Use prefix to get all VM entries from etcd
 	all := make(VmInfoMap)
 	resp, err := cli.Client.Get(context.Background(), PRE_vm, clientV3.WithPrefix())
 	if err != nil { return nil, err }
 	for _, kv := range resp.Kvs {
-		key := GetKey(kv)
+		name := GetVmName(kv)
 		vmInfo, err := GetValue(kv)
-		all[key] = vmInfo
+		all[name] = vmInfo
 		if err != nil { return nil, err }
 	}
 	return all, nil
 }
 
 
-func FilterOnShr (origVmInfoMap VmInfoMap, shr bool) VmInfoMap {
-	vmInfoMap := make(VmInfoMap)
-	for name, info := range origVmInfoMap {
-		if info.Shr == shr {
-			vmInfoMap[name] = info
-		}
-	}
+// func FilterOnShr (origVmInfoMap VmInfoMap, shr bool) VmInfoMap {
+// 	vmInfoMap := make(VmInfoMap)
+// 	for name, info := range origVmInfoMap {
+// 		if info.Shr == shr {
+// 			vmInfoMap[name] = info
+// 		}
+// 	}
 
-	return vmInfoMap
-}
+// 	return vmInfoMap
+// }
 
 
 func (cli *VmClient) Get(name string) (*VmInfo, error) {
-	key := fmt.Sprintf("%s%s", PRE_vm, name)
+	key := getKeyFromName(name)
 	data, err := cli.EtcdClient.Get(key)
 	if err != nil { return nil, err }
 	vm := VmInfo{}
@@ -68,9 +83,9 @@ func (cli *VmClient) Get(name string) (*VmInfo, error) {
 }
 
 
-func GetKey (kv *mvccpb.KeyValue) string {
-	key := strings.TrimPrefix(string(kv.Key), PRE_vm)
-	return key
+func GetVmName (kv *mvccpb.KeyValue) string {
+	name := getNameFromKey(string(kv.Key))
+	return name
 }
 
 
@@ -90,11 +105,7 @@ func (cli *VmClient) Names() ([]string, error) {
 	if err != nil { return nil, err }
 	var names []string
 	for _, kv := range resp.Kvs {
-		key := string(kv.Key)
-		name, found := strings.CutPrefix(key, PRE_vm)
-		if !found {
-			panic("This shouldn't happen")
-		}
+		name := getNameFromKey(string(kv.Key))
 		names = append(names, name)
 	}
 	return names, nil
@@ -115,4 +126,17 @@ func NewVmInfo (kv *mvccpb.KeyValue) (*VmInfo, error) {
 	if err != nil { return nil, err }
 	fmt.Printf(string(jsonData))
 	return nil, nil
+}
+
+
+func getKeyFromName (name string ) string {
+	s := fmt.Sprintf("%s/%s", PRE_vm, name)
+	return s
+}
+
+
+func getNameFromKey (key string) string {
+	prefix := fmt.Sprintf("%s/", PRE_vm)
+	name := strings.TrimPrefix(key, prefix)
+	return name
 }
