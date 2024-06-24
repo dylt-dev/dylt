@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	dylt "github.com/dylt-dev/dylt/lib"
 )
@@ -24,7 +23,7 @@ func CreateGetCommand () *cobra.Command {
 
 func runGetCommand (cmd *cobra.Command, args []string) error {
 	arg := args[0]
-	cli, err := dylt.NewEtcdClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateEtcdClientFromConfig()
 	if err != nil { return err }
 	flKeys, err := cmd.Flags().GetBool("keys")
 	if err != nil { return err }

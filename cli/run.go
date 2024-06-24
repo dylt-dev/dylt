@@ -9,10 +9,11 @@ import (
 
 func Run () int {
 	rootCmd := createRootCommand()
+	rootCmd.AddCommand(cmd.CreateCallCommand())
+	rootCmd.AddCommand(cmd.CreateConfigCommand())
 	rootCmd.AddCommand(cmd.CreateGetCommand())
 	rootCmd.AddCommand(cmd.CreateListCommand())
 	rootCmd.AddCommand(cmd.CreateVmCommand())
-	rootCmd.AddCommand(cmd.CreateCallCommand())
 	err := rootCmd.Execute()
 	if err != nil {
 		return 1

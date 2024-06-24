@@ -12,7 +12,7 @@ import (
 )
 
 func TestSimplePut (t *testing.T) {
-	cli, err := NewVmClient(viper.GetString("etcd_domain"))
+	vmClient, err := CreateVmClientFromConfig()
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	vm := VmInfo{
 		Address: "hosty toasty host",
@@ -23,7 +23,7 @@ func TestSimplePut (t *testing.T) {
 	t.Logf("s=%s\n", s)
 	name := "ovh-vps0"
 	key := fmt.Sprintf("/vm/%s", name)
-	cli.Client.Put(context.Background(), key, s)
+	vmClient.Client.Put(context.Background(), key, s)
 }
 
 func TestLoadConfig (t *testing.T) {

@@ -143,6 +143,16 @@ func (cli *VmClient) Names() ([]string, error) {
 	return names, nil
 }
 
+func CreateVmClientFromConfig () (*VmClient, error) {
+	config := Config{}
+	config.Load()
+	domain, err := config.GetEtcDomain()
+	if err != nil { return nil, err }
+	vmClient, err := NewVmClient(domain)
+	return vmClient, err
+}
+
+
 func NewVmClient(domain string) (*VmClient, error) {
 	etcdClient, err := NewEtcdClient(domain)
 	if err != nil {

@@ -16,7 +16,7 @@ func init () {
 
 
 func TestVmAdd (t *testing.T) {
-	vmClient, err := NewVmClient(viper.GetString("etcd_domain"))
+	vmClient, err := CreateVmClientFromConfig()
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	name := "test-vm"
 	address := "test-vm.dylt.dev"
@@ -27,7 +27,7 @@ func TestVmAdd (t *testing.T) {
 
 
 func TestVmAll (t *testing.T) {
-	vmClient, err := NewVmClient(viper.GetString("etcd_domain"))
+	vmClient, err := CreateVmClientFromConfig()
 	if err != nil { t.Fatal(err, debug.Stack()) }
 	vmInfoMap, err := vmClient.All()
 	if err != nil { t.Fatal(err, debug.Stack()) }
@@ -41,7 +41,7 @@ func TestVmAll (t *testing.T) {
 
 
 func TestVmGet(t *testing.T) {
-	vmClient, err := NewVmClient(viper.GetString("etcd_domain"))
+	vmClient, err := CreateVmClientFromConfig()
 	if err != nil {
 		t.Fatal(err, debug.Stack())
 	}
@@ -54,7 +54,7 @@ func TestVmGet(t *testing.T) {
 }
 
 func TestVmList(t *testing.T) {
-	vmClient, err := NewVmClient(viper.GetString("etcd_domain"))
+	vmClient, err := CreateVmClientFromConfig()
 	if err != nil {
 		t.Fatal(err, debug.Stack())
 	}

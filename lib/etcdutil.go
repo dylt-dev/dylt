@@ -62,6 +62,14 @@ func (cli *EtcdClient) List () ([]*mvccpb.KeyValue, error) {
 	return resp.Kvs, nil
 }
 
+func CreateEtcdClientFromConfig () (*EtcdClient, error) {
+	config := Config{}
+	config.Load()
+	domain, err := config.GetEtcDomain()
+	if err != nil { return nil, err }
+	cli, err := NewEtcdClient(domain)
+	return cli, err
+}
 
 func NewEtcdClient (domain string) (*EtcdClient, error) {
 	endpoints, err := getEndpoints(domain)

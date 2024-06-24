@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	dylt "github.com/dylt-dev/dylt/lib"
 )
@@ -42,7 +41,7 @@ func CreateVmAddCommand () *cobra.Command {
 }
 
 func runVmAddCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.NewVmClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateVmClientFromConfig()
 	if err != nil { return err }
 	name := args[0]
 	address := args[1]
@@ -67,7 +66,7 @@ func CreateVmAllCommand () *cobra.Command {
 
 
 func runVmAllCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.NewVmClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateVmClientFromConfig()
 	if err != nil { return err }
 	vmInfoMap, err := cli.All()
 	if err != nil { return err }
@@ -95,7 +94,7 @@ func CreateVmDelCommand () *cobra.Command {
 }
 
 func runVmDelCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.NewVmClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateVmClientFromConfig()
 	if err != nil { return err }
 	arg := args[0]
 	key := fmt.Sprintf("/vm/%s", arg)
@@ -128,7 +127,7 @@ func runVmGetCommand (cmd *cobra.Command, args []string) error {
 	if attr != "" {
 		hasAttr = true
 	} 
-	cli, err := dylt.NewVmClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateVmClientFromConfig()
 	if err != nil { return err }
 	vm, err := cli.Get(key)
 	if err != nil { return err }
@@ -154,7 +153,7 @@ func CreateVmListCommand () *cobra.Command {
 }
 
 func runVmListCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.NewVmClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateVmClientFromConfig()
 	if err != nil { return err }
 	names, err := cli.Names()
 	if err != nil { return err }
@@ -176,7 +175,7 @@ func CreateVmSetCommand () *cobra.Command {
 }
 
 func runVmSetCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.NewVmClient(viper.GetString("etcd_domain"))
+	cli, err := dylt.CreateVmClientFromConfig()
 	if err != nil { return err }
 	defer cli.Close()
 	name := args[0]
