@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"runtime/debug"
 	"testing"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -15,16 +14,6 @@ import (
 func doit (n *int) {
 	fmt.Println(*n)
 }
-func Test (t *testing.T) {
-	for i := 0; i < 10; i++ {
-		go func() {
-			doit(&i)
-		}()
-	}
-	time.Sleep(9)
-}
-
-
 func TestSimplePut (t *testing.T) {
 	cli, err := NewVmClient(viper.GetString("etcd_domain"))
 	if err != nil { t.Fatal(err, debug.Stack()) }
