@@ -11,7 +11,7 @@ import (
 )
 
 func init () {
-	InitConfig()
+//	InitConfig()
 }
 
 
@@ -131,4 +131,6 @@ func TestVmInfoSetName (t *testing.T) {
 	initName := "vm-test"
 	err := vm.Set("Name", initName)
 	assert.Nil(t, err)
-	assert.Equal(t, initName, vm.Name)}
+	assert.Equal(t, initName, vm.Name)
+}
+
