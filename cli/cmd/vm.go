@@ -25,6 +25,7 @@ func CreateVmCommand () *cobra.Command {
 	command.AddCommand(CreateVmGetCommand())
 	command.AddCommand(CreateVmListCommand())
 	command.AddCommand(CreateVmSetCommand())
+	command.AddCommand(CreateVmShowCommand())
 	return &command
 }
 
@@ -214,5 +215,26 @@ func runVmSetCommand (cmd *cobra.Command, args []string) error {
 	bufNew, err := json.Marshal(vmNew)
 	if err != nil { return err }
 	fmt.Println(string(bufNew))
+	return nil
+}
+
+func CreateVmShowCommand () *cobra.Command {
+	command := cobra.Command {
+		Use: "show $vm",
+		Short: "show a VM",
+		Long: "show a VM",
+		RunE: runVmShowCommand,
+		Args: cobra.ExactArgs(1),
+	}
+	return &command
+}
+
+func runVmShowCommand (cmd *cobra.Command, args []string) error {
+	vmName := args[0]
+	vmClient, err := dylt.CreateVmClientFromConfig()
+	if err != nil { return err }
+	vm, err := vmClient.Get(vmName)
+	if err != nil { return err }
+	fmt.Println(vm)
 	return nil
 }
