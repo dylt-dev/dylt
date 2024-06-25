@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/spf13/viper"
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
 

@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"runtime/debug"
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,8 +49,9 @@ func TestSaveConfig (t *testing.T) {
 	cfg := Config{}
 	err := cfg.Load()
 	assert.Nil(t, err)
-	_ = cfg.SetEtcDomain("hello.dylt.dev")
-	err = cfg.Viper.WriteConfig()
+	err = cfg.SetEtcDomain("hello.dylt.dev")
+	assert.Nil(t, err)
+	err = cfg.Save()
 	assert.Nil(t, err)
 }
 
@@ -63,3 +66,47 @@ func TestInitConfig (t *testing.T) {
 		panic(fmt.Errorf("fatal error config file: %s", err.Error()))
 	}
 }
+
+
+func TestClearConfig (t *testing.T) {
+	err := ClearConfigFile()
+	assert.Nil(t, err)
+	cfgFilePath := GetConfigFilePath()
+	f, err := os.OpenFile(cfgFilePath, os.O_RDONLY, 400)
+	assert.Nil(t, err)
+	defer f.Close()
+	fi, err := f.Stat()
+	assert.Nil(t, err)
+	assert.NotNil(t, fi)
+	assert.Equal(t, int64(0), fi.Size())
+}
+
+
+func TestInit (t *testing.T) {
+	// Init the config
+	const etcdDomain = "hello.dylt.dev"
+	initInfo := InitInfo{
+		EtcdDomain: etcdDomain,
+	}
+	err := Init(&initInfo)
+	assert.Nil(t, err)
+	// Test the file exists
+	cfgFilePath := GetConfigFilePath()
+	cfgFile, err := os.OpenFile(cfgFilePath, os.O_RDONLY, 0400)
+	assert.Nil(t, err)
+	defer cfgFile.Close()
+	// Read file as yaml
+	decoder := yaml.NewDecoder(cfgFile)
+	cfgStruct := ConfigStruct{}
+	err = decoder.Decode(&cfgStruct)
+	t.Logf("%#v", cfgStruct)
+	assert.Nil(t, err)
+	// Test the file contains the expected domain
+	assert.Equal(t, etcdDomain, cfgStruct.EtcdDomain)
+}
+
+func TestShowConfig (t *testing.T) {
+	err := ShowConfig(os.Stdout)
+	assert.Nil(t, err)
+}
+
