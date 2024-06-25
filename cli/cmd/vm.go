@@ -28,7 +28,6 @@ func CreateVmCommand () *cobra.Command {
 	return &command
 }
 
-
 func CreateVmAddCommand () *cobra.Command {
 	command := cobra.Command {
 		Use: "add name address",
@@ -52,7 +51,6 @@ func runVmAddCommand (cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-
 func CreateVmAllCommand () *cobra.Command {
 	command := cobra.Command {
 		Use: "all",
@@ -63,7 +61,6 @@ func CreateVmAllCommand () *cobra.Command {
 	command.Flags().BoolP("just-names", "n", false, "return just the host names")
 	return &command
 }
-
 
 func runVmAllCommand (cmd *cobra.Command, args []string) error {
 	cli, err := dylt.CreateVmClientFromConfig()
@@ -94,7 +91,6 @@ func runVmAllCommand (cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-
 func CreateVmDelCommand () *cobra.Command {
 	command := cobra.Command {
 		Use: "del",
@@ -116,7 +112,6 @@ func runVmDelCommand (cmd *cobra.Command, args []string) error {
 	fmt.Println(string(prevVal))
 	return nil
 }
-
 
 func CreateVmGetCommand () *cobra.Command {
 	command := cobra.Command {
