@@ -60,7 +60,7 @@ func CreateVmAllCommand () *cobra.Command {
 		Long: "Return data for all VMs in the system",
 		RunE: runVmAllCommand,
 	}
-	command.Flags().Bool("shr", true, "return hosts with (or without) SHR")
+	command.Flags().BoolP("just-names", "n", false, "return just the host names")
 	return &command
 }
 
@@ -76,9 +76,21 @@ func runVmAllCommand (cmd *cobra.Command, args []string) error {
 	// 	if err != nil { return err }
 	// 	vmInfoMap = dylt.FilterOnShr(vmInfoMap, shr)
 	// }
-	jsonData, err := json.Marshal(vmInfoMap)
+	isJustNames, err := cmd.Flags().GetBool("just-names")
 	if err != nil { return err }
-	fmt.Println(string(jsonData))
+	if isJustNames {
+		names := []string{}
+		for name, _ := range(vmInfoMap) {
+			names = append(names, name)
+		}
+		buf, err := json.Marshal(names)
+		if err != nil { return err }
+		fmt.Println(string(buf))
+	} else {
+		jsonData, err := json.Marshal(vmInfoMap)
+		if err != nil { return err }
+		fmt.Println(string(jsonData))
+	}
 	return nil
 }
 
