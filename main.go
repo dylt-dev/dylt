@@ -6,7 +6,7 @@ import (
 	"path"
 
 	"github.com/dylt-dev/dylt/cli"
-//	"github.com/dylt-dev/dylt/lib"
+	// "github.com/dylt-dev/dylt/lib"
 )
 
 const LOG_File = "dylt.log"
@@ -22,7 +22,6 @@ func initLogging () {
 	var logger *slog.Logger = slog.New(slog.NewJSONHandler(logWriter, &opts))
 	slog.SetDefault(logger)
 }
-
 
 func main () {
 	// lib.InitConfig()

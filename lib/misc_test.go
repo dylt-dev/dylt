@@ -110,3 +110,15 @@ func TestShowConfig (t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestStrings (t *testing.T) {
+	str0 := "> GET /etcd-io/etcd/releases/download/v3.5.16/etcd-v3.5.16-linux_amd64.tar.gz HTTP/2"
+	str1 := "> GET /etcd-io/etcd/releases/download/v3.5.16/etcd-v3.5.16-linux-amd64.tar.gz HTTP/2"
+	len0 := len(str0)
+	len1 := len(str1)
+	assert.Equal(t, len0, len1)
+	for i := range len0 {
+		t.Logf("Checking index #%d ...\n", i)
+		assert.Equal(t, str0[i], str1[i])
+	}
+	assert.Equal(t, str0, str1)
+}

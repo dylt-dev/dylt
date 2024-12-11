@@ -48,7 +48,7 @@ func GetSrvs (domain string, service string, proto string, includeIps bool) ([]S
 		if includeIps {
 			ips, err := net.LookupHost(dnsSrv.Target)
 			if err != nil {
-				slog.Warn("Error during net.LookupHost()", err)
+				slog.Warn("Error during net.LookupHost()", "err", err.Error())
 				srv.Ips = []string{}
 			} else {
 				srv.Ips = ips

@@ -1,6 +1,19 @@
 #! /usr/bin/env bash
 
 
+# Download the latest daylight.sh from github
+#
+# By default, download to ~/tmp/
+git-download-latest-daylightsh ()
+{
+	# shellcheck disable=SC2016
+	{ (( $# >= 0 )) && (( $# <= 1 )); } || { printf 'Usage: git-download-latest-daylightsh [$downloadFolder]\n' >&2; return 1; }
+	local downloadFolder=${1:-"$HOME/tmp"}
+	[[ -d "$downloadFolder" ]] || { echo "Non-existent folder: $downloadFolder" >&2; return 1; }
+
+	url=https://raw.githubusercontent.com/daylight-public/daylight/main/daylight.sh
+	curl --silent --remote-name --output-dir "/$downloadFolder/" "$url"
+}
 
 # Create a tagname from a root version (eg v1.0.7) and the nightly timestamp
 # eg v1.0.7-nightly.20240522152147
@@ -52,6 +65,32 @@ git-get-latest-release-tag ()
 	local tag; tag=$(curl -L --silent "api.github.com/repos/$owner/$repo/releases/latest" | jq -r .tag_name)
 	printf '%s' "$tag"
 }
+
+
+# Install the latest daylight.sh on a VM
+#
+# By default, install from github
+# If $scriptPath is specified, install that one instead
+git-install-latest-daylightsh ()
+{
+	# shellcheck disable=SC2016
+	# shellcheck disable=SC2016
+	{ (( $# >= 1 )) && (( $# <= 2 )); } || { printf 'Usage: git-install-latest-daylightsh $remoteHost [$scriptPath]\n' >&2; return 1; }
+	local remoteHost=$1
+	ssh ubuntu@$remoteHost -- mkdir -p /opt/bin
+	ssh ubuntu@$remoteHost -- 'if [[ -f /opt/bin/daylight.sh ]]; then cp /opt/bin/daylight.sh /opt/bin/daylight.sh.bk; fi'
+	local scriptPath
+	if (( $# == 2 )); then
+		scriptPath=$2
+		[[ -f "$scriptPath" ]] || { echo "Non-existent path: $scriptPath" >&2; return 1; }
+	else
+		downloadFolder="$HOME/tmp"
+		git-download-latest-daylightsh "$downloadFolder"
+		scriptPath=/tmp/daylight.sh
+	fi
+	scp "$scriptPath" "ubuntu@$remoteHost:/opt/bin/daylight.sh"
+}
+
 
 
 git-install-latest-dylt ()
