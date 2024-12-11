@@ -66,6 +66,19 @@ git-get-latest-release-tag ()
 	printf '%s' "$tag"
 }
 
+git-get-latest-release-version ()
+{
+	# shellcheck disable=SC2016
+	(( $# == 2 )) || { printf 'Usage: git-get-latest-release-tag $owner $repo\n' >&2; return 1; }
+	local owner=$1
+	local repo=$2
+
+	local releaseTag; releaseTag=$(git-get-latest-release-tag "$owner" "$repo") || return
+	local releaseVersion=${releaseTag%%-*}
+	printf '%s' "$releaseVersion" || return
+
+}
+
 
 # Install the latest daylight.sh on a VM
 #
@@ -104,17 +117,22 @@ git-install-latest-dylt ()
 
 
 # Tag the nightly release, push the current commit, and push the tag
-git-push-nightly-release ()
+git-do-nightly-release ()
 {
 	# @todo Use [[ $(git status --porcelain) == "" ]] to see if there is uncommited work. If so ask for confirmation
 	# shellcheck disable=SC2016
-	(( $# == 1 )) || { printf 'Usage: git-tag-nightly $version\n' >&2; return 1; }
-	local version=$1
+	# shellcheck disable=SC2016
+	{ (( $# >= 0 )) && (( $# <= 1 )); } || { printf 'Usage: git-tag-nightly $version\n' >&2; return 1; }
+	local version=${1:-''}
 
+	if [[ -z "$version" ]]; then
+		version=$(git-get-latest-release-version dylt-dev dylt) || return
+		printf '$version=%s\n' "$version"
+	fi
 	if [[ $(git status --porcelain) != "" ]]; then
 		printf '%s\n' "There are uncommitted changes"
-		if ! yesno "Push nightly release anyway?"; then 
-			return 0
+		if ! yesorno yn "Push nightly release anyway? "; then 
+			return 0 
 		fi
 	fi
 	git-tag-nightly "$version" || return
@@ -135,12 +153,56 @@ git-tag-nightly ()
 }
 
 
-yesno ()
+# From @day-sh/app-funcs.sh
+yesorno ()
 {
-	# shellcheck disable=SC2016
-	(( $# == 1 )) || { printf 'Usage: yesno $prompt\n' >&2; return 1; }
-	read -p "$1 " -n 1 -r yn
-	if [[ ! $yn =~ ^[Yy]$ ]]; then
-		return 1
-	fi
+    # shellcheck disable=SC2016
+    (( $# == 2 )) || { printf 'Usage: yesorno varname $prompt\n' >&2; return 1; }
+    [[ $1 != val ]] && local -n val=$1
+	val=''
+    local prompt=$2
+
+    local s
+    while [[ ! "${s,,}" =~ y|n ]]; do
+        read -r -n1 -p "$prompt" s || return
+        echo
+        if [[ $s == '?' ]]; then
+            printf 'Please enter Y, y, N, or n\n'
+        fi
+    done
+    # shellcheck disable=SC2034
+    val=$s
+	case "$val" in
+		Y|y) return 0 ;;
+		N|n) return 1 ;;
+		*) printf '*** Something is wrong ($val=%s)'  "$val"; return 1 ;;
+	esac
 }
+
+
+main ()
+{
+    if (($# >= 1)); then
+        local cmd=$1
+        shift
+        case "$cmd" in
+            gen-nightly-tagname)                      gen-nightly-tagname "$@";;
+            gen-nightly-timestamp)                    gen-nightly-timestamp "$@";;
+            git-do-nightly-release)                   git-do-nightly-release "$@";;
+            git-download-latest-daylightsh)           git-download-latest-daylightsh "$@";;
+            git-get-latest-release-spec)              git-get-latest-release-spec "$@";;
+            git-get-latest-release-tag)               git-get-latest-release-tag "$@";;
+            git-get-latest-release-version)           git-get-latest-release-version "$@";;
+            git-install-latest-daylightsh)            git-install-latest-daylightsh "$@";;
+            git-install-latest-dylt)                  git-install-latest-dylt "$@";;
+            git-tag-nightly)                          git-tag-nightly "$@";;
+            yesorno)                                  yesorno "$@";;
+            *) printf 'Unknown command: %s \n' "$cmd";;
+        esac
+    fi
+}
+
+
+if ! (return 0 2>/dev/null); then
+    main "$@"
+fi
