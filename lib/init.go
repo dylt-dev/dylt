@@ -11,7 +11,7 @@ func Init (initInfo *InitInfo) error {
 	if err != nil { return err }
 	cfg, err := LoadConfig()
 	if err != nil { return err }
-	cfg.SetEtcDomain(initInfo.EtcdDomain)
+	err = cfg.SetEtcDomain(initInfo.EtcdDomain)
 	if err != nil { return err }
 	err = cfg.Save()
 	if err != nil { return err }
