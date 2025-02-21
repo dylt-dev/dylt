@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Hardcoding this info here is a little sketchy, but it's a convenient location 
+// for the info until a final scheme is devised
 const CFG_Filename = "config.yaml"
 const CFG_Folder = ".config/dylt"
 const CFG_Type = "yaml"
