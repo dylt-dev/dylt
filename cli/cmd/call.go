@@ -1,24 +1,38 @@
 package cmd
+
 import (
+	"flag"
 	"fmt"
-	
-	"github.com/spf13/cobra"
-	
-	dylt "github.com/dylt-dev/dylt/lib"
+	"log/slog"
+
+	"github.com/dylt-dev/dylt/lib"
 )
 
-func CreateCallCommand () *cobra.Command {
-	command := cobra.Command {
-		Use: "call [args]",
-		Short: "call",
-		Long: "call",
-		RunE: runCallCommand,
-	}
-	return &command
+type CallCommand struct {
+	*flag.FlagSet
+	ScriptArgs []string
+	ScriptPath string
 }
 
-func runCallCommand (cmd *cobra.Command, args []string) error {
-	_, stdout, err := dylt.CallDaylightScriptO(args)
+func NewCallCommand () *CallCommand {
+	flagSet := flag.NewFlagSet("call", flag.PanicOnError)
+	cmd := CallCommand{FlagSet: flagSet}
+	flagSet.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
+	return &cmd
+}
+
+func (cmd *CallCommand) Run (args []string) error {
+	// Parse flags & get positional args
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	cmd.ScriptArgs = cmd.Args()
+	// Execute command
+	return RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+}
+
+func RunCall (scriptPath string, scriptArgs[] string) error {
+	slog.Debug("In RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
+	_, stdout, err := lib.RunScript(scriptPath, scriptArgs)
 	if err != nil { return err }
 	fmt.Printf("%s\n", stdout)
 	return nil

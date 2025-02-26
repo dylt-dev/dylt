@@ -144,11 +144,9 @@ func (cli *VmClient) Names() ([]string, error) {
 }
 
 func CreateVmClientFromConfig () (*VmClient, error) {
-	config := Config{}
-	config.Load()
-	domain, err := config.GetEtcDomain()
+	cfg, err := LoadConfig()
 	if err != nil { return nil, err }
-	vmClient, err := NewVmClient(domain)
+	vmClient, err := NewVmClient(cfg.EtcdDomain)
 	return vmClient, err
 }
 
@@ -166,7 +164,7 @@ func NewVmClient(domain string) (*VmClient, error) {
 func NewVmInfo (kv *mvccpb.KeyValue) (*VmInfo, error) {
 	jsonData, err := json.Marshal(kv)
 	if err != nil { return nil, err }
-	fmt.Printf(string(jsonData))
+	fmt.Print(string(jsonData))
 	return nil, nil
 }
 

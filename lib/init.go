@@ -1,19 +1,16 @@
 package lib
 
-type InitInfo struct {
+// All data specified in flags to the `init` subcommand
+type InitStruct struct {
 	EtcdDomain string
 }
 
-func Init (initInfo *InitInfo) error {
-	err := CreateConfigFile()
+func Init(initData *InitStruct) error {
+	cfg := ConfigStruct{
+		EtcdDomain: initData.EtcdDomain,
+	}
+	err := SaveConfig(cfg)
 	if err != nil { return err }
-	err = ClearConfigFile()
-	if err != nil { return err }
-	cfg, err := LoadConfig()
-	if err != nil { return err }
-	err = cfg.SetEtcDomain(initInfo.EtcdDomain)
-	if err != nil { return err }
-	err = cfg.Save()
-	if err != nil { return err }
+
 	return nil
 }

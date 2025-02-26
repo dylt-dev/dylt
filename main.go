@@ -1,14 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
 	"path"
 
-	// "github.com/dylt-dev/dylt/cli"
-	// "github.com/dylt-dev/dylt/lib"
+	clicmd "github.com/dylt-dev/dylt/cli/cmd"
 )
 
 const LOG_File = "dylt.log"
@@ -26,24 +24,31 @@ func initLogging () {
 }
 
 
-func cmdInit () {
-	fmt.Println("hello from cmdInit()")
+func createSubCommand (cmd string) (clicmd.Command, error) {
+	switch cmd {
+	case "call": return clicmd.NewCallCommand(), nil
+	case "config": return clicmd.NewConfigCommand(), nil
+	case "get": return clicmd.NewGetCommand(), nil
+	case "init": return clicmd.NewInitCommand(), nil
+	case "list": return clicmd.NewListCommand(), nil
+	case "vm": return clicmd.NewVmCommand(), nil
+	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+	}
 }
-
 
 func main () {
 	// lib.InitConfig()
 	initLogging()
-	// os.Exit(cli.Run())
-	// --token
-	var token string
-	flag.StringVar(&token, "token", "", "GitHub user access token")
-	flag.Parse()
-	args := flag.Args()
-	slog.Debug("test", "args", args)
-	cmd := args[0]
-	switch cmd {
-	case "init":
-		cmdInit()
+	var cmdline clicmd.Cmdline = os.Args[1:]
+	cmdName := cmdline.Command()
+	slog.Debug("main", "cmdName", cmdName)
+	cmdArgs := cmdline.Args()
+	cmd, err := createSubCommand(cmdName)
+	if err != nil { os.Exit(1) }
+	err = cmd.Run(cmdArgs)
+	if err != nil {
+		slog.Error(err.Error())
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 }
