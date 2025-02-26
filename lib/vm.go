@@ -106,6 +106,14 @@ func (cli *VmClient) All () (VmInfoMap, error) {
 // }
 
 
+func (cli *VmClient) Del(name string) ([]byte, error) {
+	key := getKeyFromName(name)
+	prevVal, err := cli.EtcdClient.Delete(key)
+	if err != nil { return nil, err }
+	return prevVal, nil
+}
+
+
 func (cli *VmClient) Get(name string) (*VmInfo, error) {
 	key := getKeyFromName(name)
 	data, err := cli.EtcdClient.Get(key)

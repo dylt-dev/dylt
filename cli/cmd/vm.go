@@ -3,9 +3,12 @@ package cmd
 import (
 	// "encoding/json"
 
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log/slog"
+
+	"github.com/dylt-dev/dylt/lib"
 )
 
 type VmCommand struct {
@@ -22,11 +25,25 @@ func NewVmAddCommand () *VmAddCommand {
 }
 
 func (cmd VmAddCommand) Run (args []string) error {
+	// parse flags + setup positional args
 	slog.Debug("VmAddCommand.Run()", "args", args)
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) != 2 { return fmt.Errorf("vm add requires 2 args; found %d", len(cmdArgs))}
+	// get vm-specific etcd client
+	cli, err := lib.CreateVmClientFromConfig()
+	if err != nil { return err }
+	// execute command
+	name := args[0]
+	address := args[1]
+	vm, err := cli.Add(name, address)
+	if err != nil { return err }
+	fmt.Println(vm)
 	return nil
 }
+
+
 
 type VmAllCommand struct {
 	*flag.FlagSet
@@ -38,14 +55,34 @@ func NewVmAllCommand () *VmAllCommand {
 }
 
 func (cmd VmAllCommand) Run (args[] string) error {
+	// parse flags + setup positional args
 	slog.Debug("VmAllCommand.Run()", "args", args)
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) != 0 { return fmt.Errorf("vm all requires 0 arguments; %d found", len(cmdArgs))}
+	// get vm-specific etcd client
+	cli, err := lib.CreateVmClientFromConfig()
+	if err != nil { return err }
+	// execute command
+ 	vmInfoMap, err := cli.All()
+	if err != nil { return err }
+	jsonData, err := json.Marshal(vmInfoMap)
+	if err != nil { return err }
+	fmt.Println(string(jsonData))
 	return nil
 }
 
 type VmDelCommand struct {
 	*flag.FlagSet
+}
+
+func (cmd *VmDelCommand) ParseAndValidate (args []string, nArgs int) ([]string, error) {
+	err := cmd.Parse(args)
+	if err != nil { return nil, err }
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) != nArgs { return nil, fmt.Errorf("vm all requires %d argument(s); %d found", nArgs, len(cmdArgs))}
+	return cmdArgs, nil
 }
 
 func NewVmDelCommand () *VmDelCommand {
@@ -54,9 +91,18 @@ func NewVmDelCommand () *VmDelCommand {
 }
 
 func (cmd VmDelCommand) Run (args[] string) error {
+	// parse flags and setup positional args
 	slog.Debug("VmDelCommand.Run()", "args", args)
-	err := cmd.Parse(args)
+	cmdArgs, err := cmd.ParseAndValidate(args, 1)
 	if err != nil { return err }
+	name := cmdArgs[0]
+	// get vm-specific etcd client
+	cli, err := lib.CreateVmClientFromConfig()
+	if err != nil { return err }
+	// execute command
+	prevVal, err := cli.Del(name)
+	if err != nil { return err }
+	fmt.Printf("%s\n", string(prevVal))
 	return nil
 }
 
@@ -69,11 +115,30 @@ func NewVmGetCommand () *VmGetCommand {
 	return &VmGetCommand{FlagSet: flagSet}
 }
 
-func (cmd VmGetCommand) Run (args[] string) error {
+func ParseAndValidate (flagSet *flag.FlagSet, args []string, nArgs int) ([]string, error) {
+	err := flagSet.Parse(args)
+	if err != nil { return nil, err }
+	cmdArgs := flagSet.Args()
+	if len(cmdArgs) != nArgs { return nil, fmt.Errorf("vm all requires %d argument(s); %d found", nArgs, len(cmdArgs))}
+	return cmdArgs, nil
+}
+
+func (cmd *VmGetCommand) Run (args[] string) error {
+	// parse flags and setup positional args
 	slog.Debug("VmGetCommand.Run()", "args", args)
-	err := cmd.Parse(args)
+	cmdArgs, err := ParseAndValidate(cmd.FlagSet, args, 1)
 	if err != nil { return err }
+	name := cmdArgs[0]
+	// get vm-specific etcd client
+	cli, err := lib.CreateVmClientFromConfig()
+	if err != nil { return err }
+	// execute command
+	vm, err := cli.Get(name)
+	if err != nil { return err }
+	if vm == nil { return nil }
+	fmt.Println(vm)
 	return nil
+
 }
 
 type VmListCommand struct {
@@ -86,9 +151,19 @@ func NewVmListCommand () *VmListCommand {
 }
 
 func (cmd VmListCommand) Run (args[] string) error {
+	// parse flags and setup positional args
 	slog.Debug("VmListCommand.Run()", "args", args)
-	err := cmd.Parse(args)
+	_, err := ParseAndValidate(cmd.FlagSet, args, 0)
 	if err != nil { return err }
+	// get vm-specific etcd client
+	cli, err := lib.CreateVmClientFromConfig()
+	if err != nil { return err }
+	// execute command
+	names, err := cli.Names()
+	if err != nil { return err }
+	jsonData, err := json.Marshal(names)
+	if err != nil { return err }
+	fmt.Println(string(jsonData))
 	return nil
 }
 
@@ -133,7 +208,7 @@ func createVmSubCommand (cmd string) (Command, error) {
 	case "get": return NewVmGetCommand(), nil
 	case "list": return NewVmListCommand(), nil
 	case "set": return NewVmSetCommand(), nil
-	case "show": return NewVmShowCommand(), nil
+	// case "show": return NewVmShowCommand(), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
 	}
 }
