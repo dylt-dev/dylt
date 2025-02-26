@@ -122,7 +122,7 @@ git-do-nightly-release ()
 	# @todo Use [[ $(git status --porcelain) == "" ]] to see if there is uncommited work. If so ask for confirmation
 	# shellcheck disable=SC2016
 	# shellcheck disable=SC2016
-	{ (( $# >= 0 )) && (( $# <= 1 )); } || { printf 'Usage: git-tag-nightly $version\n' >&2; return 1; }
+	{ (( $# >= 0 )) && (( $# <= 1 )); } || { printf 'Usage: git-do-nightly-release [$version]\n' >&2; return 1; }
 	local version=${1:-''}
 
 	if [[ -z "$version" ]]; then

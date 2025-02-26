@@ -135,7 +135,6 @@ func (cmd *VmGetCommand) Run (args[] string) error {
 	// execute command
 	vm, err := cli.Get(name)
 	if err != nil { return err }
-	if vm == nil { return nil }
 	fmt.Println(vm)
 	return nil
 
@@ -177,9 +176,24 @@ func NewVmSetCommand () *VmSetCommand {
 }
 
 func (cmd VmSetCommand) Run (args[] string) error {
+	// parse flags and setup positional args
 	slog.Debug("VmSetCommand.Run()", "args", args)
-	err := cmd.Parse(args)
+	cmdArgs, err := ParseAndValidate(cmd.FlagSet, args, 3)
 	if err != nil { return err }
+	name := cmdArgs[0]
+	key := cmdArgs[1]
+	val := cmdArgs[2]
+	// get vm-specific etcd client
+	cli, err := lib.CreateVmClientFromConfig()
+	if err != nil { return err }
+	// execute command
+	vm, err := cli.Get(name)
+	if err != nil { return err }
+	err = vm.Set(key, val)
+	if err != nil { return err }
+	vm, err = cli.Put(name, vm)
+	if err != nil { return err }
+	fmt.Println(vm)
 	return nil
 }
 
