@@ -23,7 +23,7 @@ type VmInfo struct {
 	Name string
 }
 
-func (o *VmInfo) Get (field string) (interface{}, error) {
+func (o *VmInfo) Get (field string) (any, error) {
 	switch field {
 	case "Address":
 		return o.Address, nil
@@ -35,7 +35,7 @@ func (o *VmInfo) Get (field string) (interface{}, error) {
 	}
 }
 
-func (o *VmInfo) Set (field string, value interface{}) error {
+func (o *VmInfo) Set (field string, value any) error {
 	switch field {
 	case "Address":
 	{

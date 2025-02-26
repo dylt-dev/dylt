@@ -2,8 +2,11 @@ package lib
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"path"
+	"strings"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -137,6 +140,17 @@ func SaveConfig (cfg ConfigStruct) error {
 	return nil
 }
 
+func WriteConfig (data configMap) error {
+	cfgFilePath := GetConfigFilePath()
+	slog.Debug("WriteConfig", "cfgFilePath", cfgFilePath)
+	f, err := os.Create(cfgFilePath)
+	if err != nil { return err }
+	defer f.Close()
+	err = WriteYaml(data, f)
+	if err != nil { return err }
+	return nil
+}
+
 func ShowConfig(out io.Writer) error {
 	cfgFilePath := GetConfigFilePath()
 	cfgFile, err := os.OpenFile(cfgFilePath, os.O_RDONLY, 0400)
@@ -145,17 +159,54 @@ func ShowConfig(out io.Writer) error {
 	}
 	defer cfgFile.Close()
 	// Read file as yaml
-	decoder := yaml.NewDecoder(cfgFile)
-	cfgStruct := ConfigStruct{}
-	err = decoder.Decode(&cfgStruct)
-	if err != nil {
-		return err
+	data, err := ReadYaml(cfgFile)
+	if err != nil { return err }
+	err = WriteYaml(data, out)
+	if err != nil { return err }
+	return err
+}
+
+
+func GetByKey (key string, in io.Reader) (any, error) {
+	keyParts := strings.Split(key, ".")
+	data, err := ReadYaml(in)
+	if err != nil { return nil, err }
+	var curr any = data
+	for _, currKey := range keyParts {
+		curr = curr.(configMap)[currKey]
 	}
-	// Marshal indented output
-	buf, err := yaml.Marshal(cfgStruct)
-	if err != nil {
-		return err
+	value := curr
+	return value, nil
+}
+
+func SetKey (data configMap, key string, val string) (configMap, error) {
+	dataOrig := data
+	keyParts := strings.Split(key, ".")
+	for i := range(len(keyParts)-1) {
+		keyPart := keyParts[i]
+		if data[keyPart] == nil {
+			data[keyPart] = map[string]any{}
+			data = data[keyPart].(map[string]any)
+		}
 	}
-	_, err = out.Write(buf)
+	lastKey := keyParts[len(keyParts)-1]
+	data[lastKey] = val
+	return dataOrig, nil
+}
+
+
+type configMap map[string]any
+
+func ReadYaml (in io.Reader) (configMap, error) {
+	decoder := yaml.NewDecoder(in)
+	var data configMap
+	err := decoder.Decode(&data)
+	if err != nil { return nil, err }
+	return data, nil
+}
+
+func WriteYaml (data configMap, out io.Writer) error {
+	encoder := yaml.NewEncoder(out)
+	err := encoder.Encode(data)
 	return err
 }

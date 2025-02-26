@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
+
+	"github.com/dylt-dev/dylt/lib"
 )
 
 type GetCommand struct {
@@ -10,7 +13,7 @@ type GetCommand struct {
 }
 
 func NewGetCommand () *GetCommand {
-	flagSet := flag.NewFlagSet("list", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
 	return &GetCommand {
 		FlagSet: flagSet,
 	}
@@ -20,6 +23,16 @@ func (cmd *GetCommand) Run (args []string) error {
 	slog.Debug("GetCommand.Run()", "args", args)
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) != 1 {
+		return fmt.Errorf("get takes 1 argument; got %d", len(cmdArgs))
+	}
+	key := cmdArgs[0]
+	cli, err := lib.CreateEtcdClientFromConfig()
+	if err != nil { return err }
+	val, err := cli.Get(key)
+	if err != nil { return err }
+	fmt.Printf("\n%s\n", val)
 	return nil
 }
 

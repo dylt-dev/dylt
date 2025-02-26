@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"os"
+
+	"github.com/dylt-dev/dylt/lib"
 )
 
 type ConfigCommand struct {
@@ -11,7 +14,7 @@ type ConfigCommand struct {
 }
 
 func NewConfigCommand () *ConfigCommand {
-	flagSet := flag.NewFlagSet("config", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
 	return &ConfigCommand { FlagSet: flagSet }
 }
 
@@ -53,11 +56,17 @@ func (cmd *ConfigGetCommand) Run (args []string) error {
 	slog.Debug("ConfigGetCommand.Run()", "args", args)
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	f, err := lib.OpenConfigFile()
+	if err != nil { return err }
+	key := cmd.Args()[0]
+	value, err := lib.GetByKey(key, f)
+	if err != nil { return err }
+	fmt.Printf("\n%s\n", value)
 	return nil
 }
 
 func NewConfigGetCommand () *ConfigGetCommand {
-	flagSet := flag.NewFlagSet("config.get", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
 	return &ConfigGetCommand { FlagSet: flagSet }
 }
 
@@ -66,7 +75,7 @@ type ConfigSetCommand struct {
 }
 
 func NewConfigSetCommand () *ConfigSetCommand {
-	flagSet := flag.NewFlagSet("config.set", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("config.set", flag.ExitOnError)
 	return &ConfigSetCommand { FlagSet: flagSet }
 }
 
@@ -74,6 +83,20 @@ func (cmd *ConfigSetCommand) Run (args []string) error {
 	slog.Debug("ConfigSetCommand.Run()", "args", args)
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) != 2 {
+		return fmt.Errorf("config set requires 2 arguments")
+	}
+	key := cmdArgs[0]
+	value := cmdArgs[1]
+	f, err := lib.OpenConfigFile()
+	if err != nil { return err }
+	data, err := lib.ReadYaml(f)
+	if err != nil { return err }
+	_, err = lib.SetKey(data, key, value)
+	if err != nil { return err }
+	slog.Debug("ConfigSetCommand.Run()", "data", data)
+	lib.WriteConfig(data)
 	return nil
 }
 
@@ -82,13 +105,15 @@ type ConfigShowCommand struct {
 }
 
 func NewConfigShowCommand () *ConfigShowCommand {
-	flagSet := flag.NewFlagSet("config.show", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("config.show", flag.ExitOnError)
 	return &ConfigShowCommand { FlagSet: flagSet }
 }
 
 func (cmd *ConfigShowCommand) Run (args []string) error {
 	slog.Debug("ConfigShowCommand.Run()", "args", args)
 	err := cmd.Parse(args)
+	if err != nil { return err }
+	err = lib.ShowConfig(os.Stdout)
 	if err != nil { return err }
 	return nil
 }

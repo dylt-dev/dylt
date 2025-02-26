@@ -15,7 +15,7 @@ type CallCommand struct {
 }
 
 func NewCallCommand () *CallCommand {
-	flagSet := flag.NewFlagSet("call", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("call", flag.ExitOnError)
 	cmd := CallCommand{FlagSet: flagSet}
 	flagSet.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 	return &cmd
