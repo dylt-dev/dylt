@@ -23,7 +23,7 @@ type VmInfo struct {
 	Name string
 }
 
-func (o *VmInfo) Get (field string) (interface{}, error) {
+func (o *VmInfo) Get (field string) (any, error) {
 	switch field {
 	case "Address":
 		return o.Address, nil
@@ -35,7 +35,7 @@ func (o *VmInfo) Get (field string) (interface{}, error) {
 	}
 }
 
-func (o *VmInfo) Set (field string, value interface{}) error {
+func (o *VmInfo) Set (field string, value any) error {
 	switch field {
 	case "Address":
 	{
@@ -106,6 +106,14 @@ func (cli *VmClient) All () (VmInfoMap, error) {
 // }
 
 
+func (cli *VmClient) Del(name string) ([]byte, error) {
+	key := getKeyFromName(name)
+	prevVal, err := cli.EtcdClient.Delete(key)
+	if err != nil { return nil, err }
+	return prevVal, nil
+}
+
+
 func (cli *VmClient) Get(name string) (*VmInfo, error) {
 	key := getKeyFromName(name)
 	data, err := cli.EtcdClient.Get(key)
@@ -114,6 +122,31 @@ func (cli *VmClient) Get(name string) (*VmInfo, error) {
 	err = json.Unmarshal(data, &vm)
 	if err != nil { return nil, err }
 	return &vm, nil
+}
+
+
+func (cli *VmClient) Names() ([]string, error) {
+	resp, err := cli.Client.Get(context.Background(), PRE_vm, clientV3.WithPrefix())
+	if err != nil { return nil, err }
+	var names []string
+	for _, kv := range resp.Kvs {
+		name := getNameFromKey(string(kv.Key))
+		names = append(names, name)
+	}
+	return names, nil
+}
+
+
+func (cli* VmClient) Put (name string, vm *VmInfo) (*VmInfo, error) {
+	key := getKeyFromName(name)
+	value, err := json.Marshal(vm)
+	if err != nil { return nil, err }
+	ctx := context.Background()
+	_, err = cli.KV.Put(ctx, key, string(value))
+	if err != nil { return nil, err }
+	vmNew, err := cli.Get(name)
+	if err != nil { return nil, err }
+	return vmNew, nil
 }
 
 
@@ -131,24 +164,10 @@ func GetValue (kv *mvccpb.KeyValue) (*VmInfo, error) {
 	return &vm, nil
 }
 
-
-func (cli *VmClient) Names() ([]string, error) {
-	resp, err := cli.Client.Get(context.Background(), PRE_vm, clientV3.WithPrefix())
-	if err != nil { return nil, err }
-	var names []string
-	for _, kv := range resp.Kvs {
-		name := getNameFromKey(string(kv.Key))
-		names = append(names, name)
-	}
-	return names, nil
-}
-
 func CreateVmClientFromConfig () (*VmClient, error) {
-	config := Config{}
-	config.Load()
-	domain, err := config.GetEtcDomain()
+	cfg, err := LoadConfig()
 	if err != nil { return nil, err }
-	vmClient, err := NewVmClient(domain)
+	vmClient, err := NewVmClient(cfg.EtcdDomain)
 	return vmClient, err
 }
 
@@ -166,7 +185,7 @@ func NewVmClient(domain string) (*VmClient, error) {
 func NewVmInfo (kv *mvccpb.KeyValue) (*VmInfo, error) {
 	jsonData, err := json.Marshal(kv)
 	if err != nil { return nil, err }
-	fmt.Printf(string(jsonData))
+	fmt.Print(string(jsonData))
 	return nil, nil
 }
 

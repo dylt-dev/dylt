@@ -1,25 +1,29 @@
 package cmd
 
 import (
+	"flag"
 	"fmt"
+	"log/slog"
 
-	"github.com/spf13/cobra"
-
-	dylt "github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/lib"
 )
 
-func CreateListCommand () *cobra.Command {
-	command := cobra.Command {
-		Use: "list",
-		Short: "List all keys",
-		Long: "List all keys in etcd cluster",
-		RunE: runCommand,
-	}
-	return &command
+type ListCommand struct {
+	*flag.FlagSet
 }
 
-func runCommand (cmd *cobra.Command, args []string) error {
-	cli, err := dylt.CreateEtcdClientFromConfig()
+func NewListCommand () *ListCommand {
+	flagSet := flag.NewFlagSet("list", flag.PanicOnError)
+	return &ListCommand {
+		FlagSet: flagSet,
+	}
+}
+
+func (cmd *ListCommand) Run (args []string) error {
+	slog.Debug("ListCommand.Run()", "args", args)
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	cli, err := lib.CreateEtcdClientFromConfig()
 	if err != nil { return err }
 	kvs, err := cli.List()
 	if err != nil { return err }

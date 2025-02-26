@@ -13,20 +13,20 @@ type EtcdClient struct {
 	*clientV3.Client
 }
 
-
-func (cli *EtcdClient) Delete (key string) ([]byte, error) {
+func (cli *EtcdClient) Delete(key string) ([]byte, error) {
 	ctx := context.Background()
 	oldVal, err := cli.Get(key)
 	if err != nil {
 		fmt.Println("Error getting old value")
 	}
 	_, err = cli.Client.Delete(ctx, key)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return oldVal, nil
 }
 
-
-func (cli *EtcdClient) Get (key string) ([]byte, error) {
+func (cli *EtcdClient) Get(key string) ([]byte, error) {
 	ctx := context.Background()
 	resp, err := cli.Client.Get(ctx, key)
 	if err != nil {
@@ -40,11 +40,12 @@ func (cli *EtcdClient) Get (key string) ([]byte, error) {
 	return val, err
 }
 
-
-func (cli *EtcdClient) GetKeys (prefix string) ([]string, error) {
+func (cli *EtcdClient) GetKeys(prefix string) ([]string, error) {
 	ctx := context.Background()
 	resp, err := cli.Client.Get(ctx, prefix, clientV3.WithPrefix())
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	keys := []string{}
 	for _, kv := range resp.Kvs {
 		keys = append(keys, string(kv.Key))
@@ -52,39 +53,46 @@ func (cli *EtcdClient) GetKeys (prefix string) ([]string, error) {
 	return keys, nil
 }
 
-
-func (cli *EtcdClient) List () ([]*mvccpb.KeyValue, error) {
+func (cli *EtcdClient) List() ([]*mvccpb.KeyValue, error) {
 	ctx := context.Background()
 	resp, err := cli.Client.Get(ctx, "", clientV3.WithPrefix())
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return resp.Kvs, nil
 }
 
-func CreateEtcdClientFromConfig () (*EtcdClient, error) {
-	config := Config{}
-	config.Load()
-	domain, err := config.GetEtcDomain()
-	if err != nil { return nil, err }
+func CreateEtcdClientFromConfig() (*EtcdClient, error) {
+	cfg, err := LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	domain := cfg.EtcdDomain
 	cli, err := NewEtcdClient(domain)
 	return cli, err
 }
 
-func NewEtcdClient (domain string) (*EtcdClient, error) {
+func NewEtcdClient(domain string) (*EtcdClient, error) {
 	endpoints, err := getEndpoints(domain)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	cfg := clientV3.Config{Endpoints: endpoints}
 	cli, err := clientV3.New(cfg)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	client := &EtcdClient{Client: cli}
 	return client, err
 }
 
-
-func getEndpoints (domain string) ([]string, error) {
+func getEndpoints(domain string) ([]string, error) {
 	endpoints := []string{}
 	srvs, err := GetSrvs(domain, "etcd-server", "tcp", true)
-	if err != nil { return nil, err }
-	for _, srv := range(srvs) {
+	if err != nil {
+		return nil, err
+	}
+	for _, srv := range srvs {
 		ip := srv.Ips[0]
 		port := srv.Port
 		endpoint := fmt.Sprintf("http://%s:%d", ip, port)
