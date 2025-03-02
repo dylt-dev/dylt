@@ -1,0 +1,15 @@
+[Unit]
+Description=Watch cluster for /daylight.sh 
+
+[Service]
+ExecStart=/opt/svc/watch-daylight/run.sh
+Restart=on-failure
+RestartMode=normal
+RestartSec=60
+Type=exec
+User=rayray
+WorkingDirectory=/opt/svc/watch-daylight
+
+[Install]
+WantedBy=multi-user.target
+
