@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -18,11 +19,11 @@ const CFG_Type = "yaml"
 
 // type Config struct {
 // 	Viper      *viper.Viper
-// 	EtcdDomain string `yaml:"etcd_domain"`
+// 	EtcdDomain string `yaml:"etcd-domain"`
 // }
 
 type ConfigStruct struct {
-	EtcdDomain string `yaml:"etcd_domain"`
+	EtcdDomain string `yaml:"etcd-domain"`
 }
 
 // func (o *Config) Get (name string) (interface{}, error) {
@@ -30,7 +31,7 @@ type ConfigStruct struct {
 // }
 
 // func (o *Config) GetEtcDomain () (string, error) {
-// 	key := "etcd_domain"
+// 	key := "etcd-domain"
 // 	isSet := o.Viper.IsSet(key)
 // 	if !isSet { return "", nil }
 // 	domain := o.Viper.GetString(key)
@@ -38,12 +39,12 @@ type ConfigStruct struct {
 // }
 
 // func (o *Config) SetEtcDomain (domain string) (error) {
-// 	o.Viper.Set("etcd_domain", domain)
+// 	o.Viper.Set("etcd-domain", domain)
 // 	return nil
 // }
 
 // func (o *Config) SetEtcDomainAndSave (domain string) (error) {
-// 	o.Viper.Set("etcd_domain", domain)
+// 	o.Viper.Set("etcd-domain", domain)
 // 	err := o.Save()
 // 	return err
 // }
@@ -74,12 +75,16 @@ type ConfigStruct struct {
 // 	return err
 // }
 
-func CreateConfigFile () error {
+func CreateConfigFile() error {
 	err := CreateConfigFolder()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	cfgFilePath := GetConfigFilePath()
 	f, err := os.OpenFile(cfgFilePath, os.O_RDONLY|os.O_CREATE, 0644)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 	return err
 }
@@ -102,6 +107,16 @@ func GetConfigFolderPath() string {
 	return cfgFolder
 }
 
+func GetConfigValue(key string) (any, error) {
+	f, err := OpenConfigFile()
+	if err != nil { return nil, err }
+	val, err := GetYamlValue(key, f)
+	slog.Debug("GetConfigValue()", "key", key, "val", val)
+	if err != nil { return nil, err }
+
+	return val, nil
+}
+
 // func InitConfig() {
 // 	viper.SetConfigName(CFG_Filename)
 // 	viper.SetConfigType(CFG_Type)
@@ -117,37 +132,47 @@ func GetConfigFolderPath() string {
 func LoadConfig() (ConfigStruct, error) {
 	cfg := ConfigStruct{}
 	cfgFile, err := OpenConfigFile()
-	if err != nil { return cfg, err }
+	if err != nil {
+		return cfg, err
+	}
 	decoder := yaml.NewDecoder(cfgFile)
 	err = decoder.Decode(&cfg)
 	return cfg, err
 }
 
-func OpenConfigFile () (*os.File, error) {
+func OpenConfigFile() (*os.File, error) {
 	cfgFilePath := GetConfigFilePath()
 	f, err := os.Open(cfgFilePath)
 	return f, err
 }
 
-func SaveConfig (cfg ConfigStruct) error {
+func SaveConfig(cfg ConfigStruct) error {
 	cfgFilePath := GetConfigFilePath()
 	f, err := os.Create(cfgFilePath)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 	encoder := yaml.NewEncoder(f)
 	err = encoder.Encode(cfg)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func WriteConfig (data configMap) error {
+func WriteConfig(data configMap) error {
 	cfgFilePath := GetConfigFilePath()
 	slog.Debug("WriteConfig", "cfgFilePath", cfgFilePath)
 	f, err := os.Create(cfgFilePath)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 	err = WriteYaml(data, f)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -160,29 +185,37 @@ func ShowConfig(out io.Writer) error {
 	defer cfgFile.Close()
 	// Read file as yaml
 	data, err := ReadYaml(cfgFile)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = WriteYaml(data, out)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return err
 }
 
-
-func GetByKey (key string, in io.Reader) (any, error) {
+func GetYamlValue(key string, in io.Reader) (any, error) {
 	keyParts := strings.Split(key, ".")
 	data, err := ReadYaml(in)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	var curr any = data
 	for _, currKey := range keyParts {
-		curr = curr.(configMap)[currKey]
+		currMap := curr.(configMap)
+		var ok bool
+		curr, ok = currMap[currKey]
+		if !ok { return nil, fmt.Errorf("missing key: %s", key) }
 	}
 	value := curr
 	return value, nil
 }
 
-func SetKey (data configMap, key string, val string) (configMap, error) {
+func SetKey(data configMap, key string, val string) (configMap, error) {
 	dataOrig := data
 	keyParts := strings.Split(key, ".")
-	for i := range(len(keyParts)-1) {
+	for i := range len(keyParts) - 1 {
 		keyPart := keyParts[i]
 		if data[keyPart] == nil {
 			data[keyPart] = map[string]any{}
@@ -194,18 +227,19 @@ func SetKey (data configMap, key string, val string) (configMap, error) {
 	return dataOrig, nil
 }
 
-
 type configMap map[string]any
 
-func ReadYaml (in io.Reader) (configMap, error) {
+func ReadYaml(in io.Reader) (configMap, error) {
 	decoder := yaml.NewDecoder(in)
 	var data configMap
 	err := decoder.Decode(&data)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return data, nil
 }
 
-func WriteYaml (data configMap, out io.Writer) error {
+func WriteYaml(data configMap, out io.Writer) error {
 	encoder := yaml.NewEncoder(out)
 	err := encoder.Encode(data)
 	return err
