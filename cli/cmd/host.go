@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+
+	"github.com/dylt-dev/dylt/lib"
 )
 
 type HostCommand struct {
@@ -106,6 +108,9 @@ func (cmd *HostInitCommand) Run(args []string) error {
 
 func RunHostInit() error {
 	fmt.Println("init!")
-	
+
+	err := lib.CreateWatchDaylightService()
+	if err != nil { return err }
+
 	return nil
 }

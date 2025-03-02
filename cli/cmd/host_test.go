@@ -15,6 +15,17 @@ func TestRunHost (t *testing.T) {
 }
 
 func TestHostCmd0 (t *testing.T) {
+	cmd := fmt.Sprintf("%s host", PATH_Dylt)
+	err := CheckRunCommandSuccess(cmd, t)
+	assert.Nil(t, err)
+}
+
+func TestRunHostInit (t *testing.T) {
+	err := RunHostInit()
+	assert.Nil(t, err)
+}
+
+func TestHostInitCmd0 (t *testing.T) {
 	cmd := fmt.Sprintf("%s host init", PATH_Dylt)
 	err := CheckRunCommandSuccess(cmd, t)
 	assert.Nil(t, err)

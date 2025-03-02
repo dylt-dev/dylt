@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,9 +11,6 @@ import (
 
 const LOG_File = "dylt.log"
 const LOG_Folder = "/var/log/dylt"
-
-//go:embed svc
-var svc embed.FS
 
 func initLogging () {
 	err := os.MkdirAll(LOG_Folder, 0744)
