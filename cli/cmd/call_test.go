@@ -18,16 +18,10 @@ func TestRunCall0 (t *testing.T) {
 
 func TestRunCallCmd0 (t *testing.T) {
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt call --script-path /tmp/daylight.sh hello"
-	var cmdline Cmdline = strings.Split(sCmdline, " ")
-	t.Log("cmdline.Command()", cmdline.Command(), "cmdline.Args()", cmdline.Args())
-	rc, stdout, err := lib.RunCommand(cmdline.Command(), cmdline.Args()...)
-	assert.Equal(t, 0, rc)
-	assert.NotEmpty(t, stdout)
-	assert.Nil(t, err)
-	t.Log(string(stdout))
+	CheckRunCommandSuccess(sCmdline, t)
 }
 
-func TestRunCallNoScript (t *testing.T) {
+func TestCallNoScript (t *testing.T) {
 	sCmdline := "XXX call --script-path /tmp/daylight.sh hello"
 	var cmdline Cmdline = strings.Split(sCmdline, " ")
 	t.Log("cmdline.Command()", cmdline.Command(), "cmdline.Args()", cmdline.Args())
