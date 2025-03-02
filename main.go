@@ -33,6 +33,7 @@ func createSubCommand (cmd string) (clicmd.Command, error) {
 	case "call": return clicmd.NewCallCommand(), nil
 	case "config": return clicmd.NewConfigCommand(), nil
 	case "get": return clicmd.NewGetCommand(), nil
+	case "host": return clicmd.NewHostCommand(), nil
 	case "init": return clicmd.NewInitCommand(), nil
 	case "list": return clicmd.NewListCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
