@@ -4,7 +4,7 @@
 ```
 $ source sunbeam.sh
 
-$ git-push-nightly-release v0.0.7
+$ git-do-nightly-release
 
 $ open https://github.com/dylt-dev/dylt/actions
 ```

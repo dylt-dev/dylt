@@ -1,5 +1,8 @@
 package lib
 
+import "embed"
+
+
 // All data specified in flags to the `init` subcommand
 type InitStruct struct {
 	EtcdDomain string
