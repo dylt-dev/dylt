@@ -63,14 +63,14 @@ func RunScript (path string, args []string) (int, []byte, error) {
 		return 1, []byte{}, err
 	}
 	cmd := exec.Command(path, args...)
-	stdout, err := cmd.Output()
+	s, err := cmd.Output()
 	var rc int
 	if err != nil {
 		log.Fatalf("rc=%d\n", err.(*exec.ExitError).ExitCode())
-		stdout = []byte{}
+		s = []byte{}
 		rc = err.(*exec.ExitError).ExitCode()
 	} else {
 		rc = 0
 	}
-	return rc, stdout, nil
+	return rc, s, nil
 }

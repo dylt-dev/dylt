@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestYamlNode0 (t *testing.T) {
+func TestYamlNode0(t *testing.T) {
 	var node yaml.Node
 	path := GetConfigFilePath()
 	f, err := os.Open(path)
@@ -28,7 +28,7 @@ func TestYamlNode0 (t *testing.T) {
 	}
 }
 
-func TestYamlMap1 (t *testing.T) {
+func TestYamlMap1(t *testing.T) {
 	sYaml := `
 foo:
   bar: 13
@@ -36,12 +36,13 @@ foo:
 
 	key := "foo.bar"
 	f := strings.NewReader(sYaml)
-	value, err := GetByKey(key, f)
-	assert.NotNil(t, value)
+	val, err := GetYamlValue(key, f)
+	assert.NotNil(t, val)
+	assert.Equal(t, 13, val.(int))
 	assert.Nil(t, err)
 }
 
-func TestSetByKey (t *testing.T) {
+func TestSetByKey(t *testing.T) {
 	// Initial data
 	data := map[string]any{}
 	bar := map[string]any{"bar": 13}
@@ -50,5 +51,18 @@ func TestSetByKey (t *testing.T) {
 	val := "mold"
 	key := "yesterday.i.felt.so"
 	SetKey(data, key, val)
-	WriteYaml(data, os.Stdout)	
+	WriteYaml(data, os.Stdout)
+}
+
+
+func TestGetYamlValueNoKey (t *testing.T) {
+	sYaml := `
+foo:
+  bar: 13
+`
+	f := strings.NewReader(sYaml)
+	key := "XXX"
+	val, err := GetYamlValue(key, f)
+	assert.NotNil(t, err)
+	assert.Nil(t, val)
 }

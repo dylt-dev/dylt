@@ -119,7 +119,7 @@ func TestStrings(t *testing.T) {
 func TestPostViper(t *testing.T) {
 	// Setup YAML string of config info
 	var yml = `
-etcd_domain: hello.dylt.dev
+etcd-domain: hello.dylt.dev
 `
 	cfg1 := ConfigStruct{
 		EtcdDomain: "hello.dylt.dev",

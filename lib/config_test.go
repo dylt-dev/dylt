@@ -1,12 +1,16 @@
 package lib
 
 import (
-//	"fmt"
+	//	"fmt"
+
+	"io"
 	"os"
-//	"path"
+
+	//	"path"
 	"testing"
 
-//	"github.com/spf13/viper"
+	//	"github.com/spf13/viper"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,10 +47,35 @@ func TestLoadConfig (t *testing.T) {
 	if err != nil {
 		panic(fmt.Errorf("fatal error config file: %s", err.Error()))
 	}
-	field := "etcd_domain"
+	field := "etcd-domain"
 	etcdDomain := viper.GetString(field)
 	assert.NotNil(t, etcdDomain)
 	assert.Equal(t, "hello.dylt.dev", etcdDomain)
 }
 */
 
+func TestOpenConfigFile(t *testing.T) {
+	f, err := OpenConfigFile()
+	assert.Nil(t, err)
+	assert.NotNil(t, f)
+	buf, err := io.ReadAll(f)
+	assert.Nil(t, err)
+	assert.NotNil(t, buf)
+	assert.Greater(t, len(buf), 0)
+	t.Logf("%s", string(buf))
+}
+
+func TestGetConfigValue (t *testing.T) {
+	expected := "hello.dylt.dev"
+	key := "etcd-domain"
+	val, err := GetConfigValue(key)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, val)
+}
+
+func TestGetConfigValueNoKey (t *testing.T) {
+	key := "XXX"
+	val, err := GetConfigValue(key)
+	assert.NotNil(t, err)
+	assert.Nil(t, val)
+}

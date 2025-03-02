@@ -10,30 +10,50 @@ import (
 
 type CallCommand struct {
 	*flag.FlagSet
-	ScriptArgs []string
-	ScriptPath string
+	ScriptArgs []string		// args 0..n-1
+	ScriptPath string		// flag
 }
 
 func NewCallCommand () *CallCommand {
+	// create command
 	flagSet := flag.NewFlagSet("call", flag.ExitOnError)
 	cmd := CallCommand{FlagSet: flagSet}
+	// init flag vars
 	flagSet.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
+	
 	return &cmd
 }
 
-func (cmd *CallCommand) Run (args []string) error {
-	// Parse flags & get positional args
+func (cmd *CallCommand) HandleArgs (args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
-	cmd.ScriptArgs = cmd.Args()
+	// validate arg count (nop - command takes all remaining args, 0 or more)
+	cmdArgs := cmd.Args()
+	// init positional params
+	cmd.ScriptArgs = cmdArgs
+
+	return nil
+}
+
+func (cmd *CallCommand) Run (args []string) error {
+	slog.Debug("CallCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
 	// Execute command
-	return RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+	err = RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+	if err != nil { return err }
+
+	return nil
 }
 
 func RunCall (scriptPath string, scriptArgs[] string) error {
-	slog.Debug("In RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
-	_, stdout, err := lib.RunScript(scriptPath, scriptArgs)
+	slog.Debug("RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
+	// Call lib.RunScript() with script path and args, & output response
+	_, s, err := lib.RunScript(scriptPath, scriptArgs)
 	if err != nil { return err }
-	fmt.Printf("%s\n", stdout)
+	fmt.Printf("%s\n", s)
+
 	return nil
 }

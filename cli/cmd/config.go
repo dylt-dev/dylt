@@ -11,92 +11,161 @@ import (
 
 type ConfigCommand struct {
 	*flag.FlagSet
+	SubCommand string
+	SubArgs    []string
 }
 
-func NewConfigCommand () *ConfigCommand {
+func NewConfigCommand() *ConfigCommand {
+	// create command
 	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
-	return &ConfigCommand { FlagSet: flagSet }
+	cmd := ConfigCommand{FlagSet: flagSet}
+	// init flag vars (nop -- no flags)
+
+	return &cmd
 }
 
-
-func createConfigSubCommand (cmdName string) (Command, error) {
-	switch cmdName {
-	case "get": return NewConfigGetCommand(), nil
-	case "set": return NewConfigSetCommand(), nil
-	case "show": return NewConfigShowCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-	}
-}
-
-func (cmd *ConfigCommand) Run (args []string) error {
-	slog.Debug("ConfigCommand.Run()", "args", args)
-	// Pargs flags & get positional params
+func (cmd *ConfigCommand) HandleArgs(args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
-	var cmdline Cmdline = cmd.Args()
-	// Get the subcommand
-	if !cmdline.HasCommand() {
-		return fmt.Errorf("config requires subcommand")
-	}
-	subCmdName := cmdline.Command()
-	subCmd, err := createConfigSubCommand(subCmdName)
+	// validate arg count
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) < 1 { return fmt.Errorf("`config` expects >=1 argument(s); received %d", len(cmdArgs)) }
+	// init positional params
+	cmd.SubCommand = cmdArgs[0]
+	cmd.SubArgs = cmdArgs[1:]
+
+	return nil
+}
+
+func (cmd *ConfigCommand) Run(args []string) error {
+	slog.Debug("ConfigCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
 	if err != nil { return err }
-	subArgs := cmdline.Args()
-	slog.Debug("ConfigCommand.Run()", "subCmdName", subCmdName, "subArgs", subArgs)
-	err = subCmd.Run(subArgs)
+	// Execute command
+	err = RunConfig(cmd.SubCommand, cmd.SubArgs)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunConfig(subCommand string, subCmdArgs []string) error {
+	slog.Debug("RunConfig()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	// Create the subcommand and run it
+	subCmd, err := createConfigSubCommand(subCommand)
+	if err != nil { return err }
+	err = subCmd.Run(subCmdArgs)
 	if err != nil { return err }
 	return nil
+}
+
+func createConfigSubCommand(cmdName string) (Command, error) {
+	switch cmdName {
+	case "get":
+		return NewConfigGetCommand(), nil
+	case "set":
+		return NewConfigSetCommand(), nil
+	case "show":
+		return NewConfigShowCommand(), nil
+	default:
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	}
 }
 
 type ConfigGetCommand struct {
 	*flag.FlagSet
+	Key string
 }
 
-func (cmd *ConfigGetCommand) Run (args []string) error {
-	slog.Debug("ConfigGetCommand.Run()", "args", args)
+func NewConfigGetCommand() *ConfigGetCommand {
+	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
+	return &ConfigGetCommand{FlagSet: flagSet}
+}
+
+func (cmd *ConfigGetCommand) HandleArgs(args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
-	f, err := lib.OpenConfigFile()
-	if err != nil { return err }
-	key := cmd.Args()[0]
-	value, err := lib.GetByKey(key, f)
-	if err != nil { return err }
-	fmt.Printf("\n%s\n", value)
+	// validate arg count
+	cmdArgs := cmd.Args()
+	if len(cmdArgs) != 1 { return fmt.Errorf("`config get` expects 1 argument(s); received %d", len(cmdArgs)) }
+	// init positional params
+	cmd.Key = cmdArgs[0]
+
 	return nil
 }
 
-func NewConfigGetCommand () *ConfigGetCommand {
-	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
-	return &ConfigGetCommand { FlagSet: flagSet }
+func (cmd *ConfigGetCommand) Run(args []string) error {
+	slog.Debug("ConfigGetCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunConfigGet(cmd.Key)
+	if err != nil { return err }
+
+	return nil
+
+}
+
+func RunConfigGet(key string) error {
+	slog.Debug("RunConfigGet()", "key", key)
+	val, err := lib.GetConfigValue(key)	
+	if err != nil { return err }
+	fmt.Printf("\n%s\n", val)
+	
+	return nil
 }
 
 type ConfigSetCommand struct {
 	*flag.FlagSet
+	Key string	 		// arg 0
+	Value string			// arg 1
 }
 
-func NewConfigSetCommand () *ConfigSetCommand {
+func NewConfigSetCommand() *ConfigSetCommand {
 	flagSet := flag.NewFlagSet("config.set", flag.ExitOnError)
-	return &ConfigSetCommand { FlagSet: flagSet }
+	return &ConfigSetCommand{FlagSet: flagSet}
 }
 
-func (cmd *ConfigSetCommand) Run (args []string) error {
-	slog.Debug("ConfigSetCommand.Run()", "args", args)
+func (cmd *ConfigSetCommand) HandleArgs(args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 2 {
-		return fmt.Errorf("config set requires 2 arguments")
-	}
-	key := cmdArgs[0]
-	value := cmdArgs[1]
+	if len(cmdArgs) != 2 { return fmt.Errorf("`config set` expects 1 argument(s); received %d", len(cmdArgs)) }
+	// init positional params
+	cmd.Key = cmdArgs[0]
+	cmd.Value = cmdArgs[1]
+
+	return nil
+}
+
+func (cmd *ConfigSetCommand) Run(args []string) error {
+	slog.Debug("ConfigSetCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunConfigSet(cmd.Key, cmd.Value)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunConfigSet (key string, val string) error {
 	f, err := lib.OpenConfigFile()
 	if err != nil { return err }
 	data, err := lib.ReadYaml(f)
 	if err != nil { return err }
-	_, err = lib.SetKey(data, key, value)
+	_, err = lib.SetKey(data, key, val)
 	if err != nil { return err }
 	slog.Debug("ConfigSetCommand.Run()", "data", data)
-	lib.WriteConfig(data)
+	err = lib.WriteConfig(data)
+	if err != nil { return err }
+
 	return nil
 }
 
@@ -104,20 +173,42 @@ type ConfigShowCommand struct {
 	*flag.FlagSet
 }
 
-func NewConfigShowCommand () *ConfigShowCommand {
+func NewConfigShowCommand() *ConfigShowCommand {
 	flagSet := flag.NewFlagSet("config.show", flag.ExitOnError)
-	return &ConfigShowCommand { FlagSet: flagSet }
+	return &ConfigShowCommand{FlagSet: flagSet}
 }
 
-func (cmd *ConfigShowCommand) Run (args []string) error {
-	slog.Debug("ConfigShowCommand.Run()", "args", args)
+func (cmd *ConfigShowCommand) HandleArgs(args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
-	err = lib.ShowConfig(os.Stdout)
-	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	nExpected := 0
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`config set` expects %d argument(s); received %d", nExpected, len(cmdArgs)) }
+	// init positional params (nop - no positional params)
+
 	return nil
 }
 
+func (cmd *ConfigShowCommand) Run(args []string) error {
+	slog.Debug("ConfigShowCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunConfigShow()
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunConfigShow() error {
+	err := lib.ShowConfig(os.Stdout)
+	if err != nil { return err }
+	
+	return nil
+}
 
 // func CreateConfigCommand() *cobra.Command {
 // 	command := cobra.Command{
@@ -172,7 +263,7 @@ func (cmd *ConfigShowCommand) Run (args []string) error {
 
 // func CreateConfigSetDomainCommand() *cobra.Command {
 // 	command := cobra.Command{
-// 		Use:   "etcd_domain $etcd_domain",
+// 		Use:   "etcd-domain $etcd-domain",
 // 		Short: "Set the etcd domain",
 // 		Long:  "Set the etcd domain",
 // 		RunE:  runConfigSetDomainCommand,

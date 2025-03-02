@@ -3,6 +3,8 @@ package cmd
 import (
 	"errors"
 	"flag"
+	"fmt"
+	"log/slog"
 
 	"github.com/dylt-dev/dylt/lib"
 )
@@ -13,21 +15,52 @@ type InitCommand struct {
 }
 
 func NewInitCommand () *InitCommand {
+	// create command
 	flagSet := flag.NewFlagSet("init", flag.PanicOnError)
 	cmd := InitCommand { FlagSet: flagSet }
+	// init flag vars
 	flagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
+	
 	return &cmd
 }
 
-func (cmd *InitCommand) Run (args []string) error {
+func (cmd *InitCommand) HandleArgs(args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
-	if cmd.EtcdDomain == "" {
-		return errors.New("etcd-domain must be set")
-	}
-	cfg := lib.ConfigStruct{ EtcdDomain: cmd.EtcdDomain}
-	err = lib.SaveConfig(cfg)
-	return err
+	var requiredFlag string = "etcd-domain"
+	if cmd.Lookup(requiredFlag).Value.String() == "" { return fmt.Errorf("required flag missing: %s", requiredFlag)}
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "init"
+	nExpected := 0
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params (nop - no params)
+
+	return nil
+}
+
+func (cmd *InitCommand) Run (args []string) error {
+	slog.Debug("InitCommand.Run()", "args", args)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// execute command
+	err = RunInit(cmd.EtcdDomain)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunInit (etcdDomain string) error {
+	slog.Debug("RunInit()", "etcDomain", etcdDomain)
+	// create a new config file using the etcdDomain
+	if etcdDomain == "" { return errors.New("etcd-domain must be set") }
+	cfg := lib.ConfigStruct{ EtcdDomain: etcdDomain}
+	err := lib.SaveConfig(cfg)
+	if err != nil { return err }
+
+	return nil
 }
 
 

@@ -13,33 +13,123 @@ import (
 
 type VmCommand struct {
 	*flag.FlagSet
+	SubCommand string			// arg 0
+	SubArgs    []string			// args 1..n-1
+}
+
+func NewVmCommand() *VmCommand {
+	// create command
+	flagSet := flag.NewFlagSet("vm", flag.ExitOnError)
+	cmd := VmCommand{FlagSet: flagSet}
+	// init flag vars (nop -- no flags)
+
+	return &cmd
+}
+
+func (cmd *VmCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "vm"
+	nExpected := 1
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params
+	cmd.SubCommand = cmdArgs[0]
+	cmd.SubArgs = cmdArgs[1:]
+
+	return nil
+}
+
+func (cmd *VmCommand) Run(args []string) error {
+	slog.Debug("VmCommand.Run()", "args", args)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// execute command
+	err = RunVm(cmd.SubCommand, cmd.SubArgs)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunVm(subCommand string, subCmdArgs []string) error {
+	slog.Debug("RunVm()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	// create the subcommand and run it
+	subCmd, err := createVmSubCommand(subCommand)
+	if err != nil { return err }
+	err = subCmd.Run(subCmdArgs)
+	if err != nil { return err }
+
+	return nil
+}
+
+func createVmSubCommand (cmd string) (Command, error) {
+	switch cmd {
+	case "add": return NewVmAddCommand(), nil
+	case "all": return NewVmAllCommand(), nil
+	case "del": return NewVmDelCommand(), nil
+	case "get": return NewVmGetCommand(), nil
+	case "list": return NewVmListCommand(), nil
+	case "set": return NewVmSetCommand(), nil
+	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+	}
 }
 
 type VmAddCommand struct {
 	*flag.FlagSet
+	Name string			// arg 0
+	Fqdn string			// arg 1
 }
 
 func NewVmAddCommand () *VmAddCommand {
+	// create command
 	flagSet := flag.NewFlagSet("vm.add", flag.PanicOnError)
-	return &VmAddCommand{FlagSet: flagSet}
+	cmd := VmAddCommand{FlagSet: flagSet}
+	// init flag vars - (nop - no flags)
+
+	return &cmd
+
+}
+
+func (cmd *VmAddCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "vm add"
+	nExpected := 2
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params
+	cmd.Name = cmdArgs[0]
+	cmd.Fqdn = cmdArgs[1]
+
+	return nil
 }
 
 func (cmd VmAddCommand) Run (args []string) error {
-	// parse flags + setup positional args
 	slog.Debug("VmAddCommand.Run()", "args", args)
-	err := cmd.Parse(args)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
 	if err != nil { return err }
-	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 2 { return fmt.Errorf("vm add requires 2 args; found %d", len(cmdArgs))}
+	// execute command
+	err = RunVmAdd(cmd.Name, cmd.Fqdn)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunVmAdd (name string, fqdn string) error {	
 	// get vm-specific etcd client
 	cli, err := lib.CreateVmClientFromConfig()
 	if err != nil { return err }
 	// execute command
-	name := args[0]
-	address := args[1]
-	vm, err := cli.Add(name, address)
+	vm, err := cli.Add(name, fqdn)
 	if err != nil { return err }
 	fmt.Println(vm)
+
 	return nil
 }
 
@@ -50,94 +140,171 @@ type VmAllCommand struct {
 }
 
 func NewVmAllCommand () *VmAllCommand {
+	// create command
 	flagSet := flag.NewFlagSet("vm.all", flag.PanicOnError)
-	return &VmAllCommand{FlagSet: flagSet}
+	cmd := VmAllCommand{FlagSet: flagSet}
+	// init flag vars - (nop - no flags)
+
+	return &cmd
 }
 
-func (cmd VmAllCommand) Run (args[] string) error {
-	// parse flags + setup positional args
-	slog.Debug("VmAllCommand.Run()", "args", args)
+func (cmd *VmAllCommand) HandleArgs(args []string) error {
+	// parse flags
 	err := cmd.Parse(args)
 	if err != nil { return err }
+	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 0 { return fmt.Errorf("vm all requires 0 arguments; %d found", len(cmdArgs))}
-	// get vm-specific etcd client
+	cmdName := "vm all"
+	nExpected := 0
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params (nop - no params)
+
+	return nil
+}
+
+
+func (cmd VmAllCommand) Run (args[] string) error {
+	slog.Debug("VmAllCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunVmAll()
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunVmAll () error {
+	// get vm-specific etcd client, get all vm data, + show it
 	cli, err := lib.CreateVmClientFromConfig()
 	if err != nil { return err }
-	// execute command
  	vmInfoMap, err := cli.All()
 	if err != nil { return err }
 	jsonData, err := json.Marshal(vmInfoMap)
 	if err != nil { return err }
 	fmt.Println(string(jsonData))
+
 	return nil
 }
 
 type VmDelCommand struct {
 	*flag.FlagSet
-}
-
-func (cmd *VmDelCommand) ParseAndValidate (args []string, nArgs int) ([]string, error) {
-	err := cmd.Parse(args)
-	if err != nil { return nil, err }
-	cmdArgs := cmd.Args()
-	if len(cmdArgs) != nArgs { return nil, fmt.Errorf("vm all requires %d argument(s); %d found", nArgs, len(cmdArgs))}
-	return cmdArgs, nil
+	Name string			// arg 0
 }
 
 func NewVmDelCommand () *VmDelCommand {
+	// create command
 	flagSet := flag.NewFlagSet("vm.del", flag.PanicOnError)
-	return &VmDelCommand{FlagSet: flagSet}
+	cmd := VmDelCommand{FlagSet: flagSet}
+	// init flag vars
+	flagSet.StringVar(&cmd.Name, "key", "", "key")
+
+	return &cmd
 }
 
-func (cmd VmDelCommand) Run (args[] string) error {
-	// parse flags and setup positional args
-	slog.Debug("VmDelCommand.Run()", "args", args)
-	cmdArgs, err := cmd.ParseAndValidate(args, 1)
+func (cmd *VmDelCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
 	if err != nil { return err }
-	name := cmdArgs[0]
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "vm del"
+	nExpected := 1
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params (nop - no params)
+	cmd.Name = cmdArgs[0]
+
+	return nil
+}
+
+func (cmd *VmDelCommand) Run (args[] string) error {
+	slog.Debug("VmDelCommand.Run()", "args", args)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// execute command
+	err = RunVmDel(cmd.Name)
+	if err != nil { return err }
+
+	return nil
+}
+	
+func RunVmDel (name string) error {
+	slog.Debug("RunVmDel()", "name", name)
 	// get vm-specific etcd client
 	cli, err := lib.CreateVmClientFromConfig()
 	if err != nil { return err }
-	// execute command
+	// delete vm data from cluster
 	prevVal, err := cli.Del(name)
 	if err != nil { return err }
-	fmt.Printf("%s\n", string(prevVal))
+	// log deleted vm, if it existede
+	if prevVal == nil {
+		fmt.Printf("vm '%s' not found\n", name)
+	} else {
+		fmt.Printf("%s\n", string(prevVal))
+	}
+
 	return nil
 }
 
 type VmGetCommand struct {
 	*flag.FlagSet
+	Name string			// arg 0
 }
 
 func NewVmGetCommand () *VmGetCommand {
+	// create command
 	flagSet := flag.NewFlagSet("vm.get", flag.PanicOnError)
-	return &VmGetCommand{FlagSet: flagSet}
+	cmd := VmGetCommand{FlagSet: flagSet}
+	// init flag vars - (nop - no flags)
+
+	return &cmd
 }
 
-func ParseAndValidate (flagSet *flag.FlagSet, args []string, nArgs int) ([]string, error) {
-	err := flagSet.Parse(args)
-	if err != nil { return nil, err }
-	cmdArgs := flagSet.Args()
-	if len(cmdArgs) != nArgs { return nil, fmt.Errorf("vm all requires %d argument(s); %d found", nArgs, len(cmdArgs))}
-	return cmdArgs, nil
+func (cmd *VmGetCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "vm get"
+	nExpected := 1
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params
+	cmd.Name = cmdArgs[0]
+
+	return nil
 }
 
 func (cmd *VmGetCommand) Run (args[] string) error {
-	// parse flags and setup positional args
 	slog.Debug("VmGetCommand.Run()", "args", args)
-	cmdArgs, err := ParseAndValidate(cmd.FlagSet, args, 1)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
 	if err != nil { return err }
-	name := cmdArgs[0]
+	// execute command
+	err = RunVmGet(cmd.Name)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunVmGet (name string) error {
+	slog.Debug("RunVmGet()", "name", name)
 	// get vm-specific etcd client
 	cli, err := lib.CreateVmClientFromConfig()
 	if err != nil { return err }
-	// execute command
+	// get vm data from cluster
 	vm, err := cli.Get(name)
 	if err != nil { return err }
-	fmt.Println(vm)
+	// pritn vm data if vm was found
+	if vm == nil {
+		fmt.Printf("\nvm '%s' not found.\n\n", name)
+	} else {
+		fmt.Println(vm)
+	}
+	
 	return nil
-
 }
 
 type VmListCommand struct {
@@ -145,112 +312,145 @@ type VmListCommand struct {
 }
 
 func NewVmListCommand () *VmListCommand {
+	// create command
 	flagSet := flag.NewFlagSet("vm.list", flag.PanicOnError)
-	return &VmListCommand{FlagSet: flagSet}
+	cmd := VmListCommand{FlagSet: flagSet}
+	// init flag vars - (nop - no flags)
+
+	return &cmd
+}
+
+func (cmd *VmListCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "vm list"
+	nExpected := 0
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params (nop - no params)
+
+	return nil
 }
 
 func (cmd VmListCommand) Run (args[] string) error {
-	// parse flags and setup positional args
 	slog.Debug("VmListCommand.Run()", "args", args)
-	_, err := ParseAndValidate(cmd.FlagSet, args, 0)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
 	if err != nil { return err }
+	// execute command
+	err = RunVmList()
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunVmList () error {
+	slog.Debug("RunVmList()")
 	// get vm-specific etcd client
 	cli, err := lib.CreateVmClientFromConfig()
 	if err != nil { return err }
-	// execute command
+	// List all vm names, one per line
 	names, err := cli.Names()
 	if err != nil { return err }
-	jsonData, err := json.Marshal(names)
-	if err != nil { return err }
-	fmt.Println(string(jsonData))
+	fmt.Println()
+	for _, name := range(names) {
+		fmt.Println(name)
+	}
+	fmt.Println()
+
 	return nil
 }
 
 type VmSetCommand struct {
 	*flag.FlagSet
+	Name string			// arg 0
+	Key string			// arg 1
+	Value string		// arg 2	
 }
 
 func NewVmSetCommand () *VmSetCommand {
+	// create command
 	flagSet := flag.NewFlagSet("vm.set", flag.PanicOnError)
-	return &VmSetCommand{FlagSet: flagSet}
+	cmd := VmSetCommand{FlagSet: flagSet}
+	// init flag vars - (nop - no flags)
+
+	return &cmd
+}
+
+func (cmd *VmSetCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "vm set"
+	nExpected := 3
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params (nop - no params)
+	cmd.Name = cmdArgs[0]
+	cmd.Key = cmdArgs[1]
+	cmd.Value = cmdArgs[2]
+
+	return nil
 }
 
 func (cmd VmSetCommand) Run (args[] string) error {
-	// parse flags and setup positional args
 	slog.Debug("VmSetCommand.Run()", "args", args)
-	cmdArgs, err := ParseAndValidate(cmd.FlagSet, args, 3)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
 	if err != nil { return err }
-	name := cmdArgs[0]
-	key := cmdArgs[1]
-	val := cmdArgs[2]
+	// execute command
+	err = RunVmSet(cmd.Name, cmd.Key, cmd.Value)
+	if err != nil { return err }
+
+	return nil
+}
+	
+func RunVmSet (name string, key string, val string) error {
+	slog.Debug("RunVmSet()", "name", name, "key", key, "val", val)
 	// get vm-specific etcd client
 	cli, err := lib.CreateVmClientFromConfig()
 	if err != nil { return err }
-	// execute command
+	// get the vm data from the cluster, set the field (if it exists), and save updated object
 	vm, err := cli.Get(name)
 	if err != nil { return err }
 	err = vm.Set(key, val)
 	if err != nil { return err }
 	vm, err = cli.Put(name, vm)
 	if err != nil { return err }
-	fmt.Println(vm)
-	return nil
-}
-
-type VmShowCommand struct {
-	*flag.FlagSet
-}
-
-func NewVmShowCommand () *VmShowCommand {
-	flagSet := flag.NewFlagSet("vm.show", flag.PanicOnError)
-	return &VmShowCommand{FlagSet: flagSet}
-}
-
-func (cmd VmShowCommand) Run (args[] string) error {
-	slog.Debug("VmShowCommand.Run()", "args", args)
-	err := cmd.Parse(args)
-	if err != nil { return err }
-	return nil
-}
-
-
-func createVmSubCommand (cmd string) (Command, error) {
-	switch cmd {
-	case "add": return NewVmAddCommand(), nil
-	case "all": return NewVmAllCommand(), nil
-	case "del": return NewVmDelCommand(), nil
-	case "get": return NewVmGetCommand(), nil
-	case "list": return NewVmListCommand(), nil
-	case "set": return NewVmSetCommand(), nil
-	// case "show": return NewVmShowCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+	// print the updated vm if it exists
+	if vm == nil {
+		fmt.Printf("vm '%s' not found", name)
+	} else {
+		fmt.Println(vm)
 	}
-}
 
-func NewVmCommand () *VmCommand {
-	flagSet := flag.NewFlagSet("vm", flag.PanicOnError)
-	return &VmCommand{FlagSet: flagSet}
-}
-
-
-func (cmd *VmCommand) Run (args []string) error {
-	slog.Debug("VmCommand.Run()", "args", args)
-	// Parse flags & get positional params
-	err := cmd.Parse(args)
-	if err != nil { return err }
-	var cmdline Cmdline = cmd.Args()
-	// Get the subcommand
-	if !cmdline.HasCommand() {
-		return fmt.Errorf("vm requires subcommand")
-	}
-	subCmdName := cmdline.Command()
-	subCmd, err := createVmSubCommand(subCmdName)
-	if err != nil { return err }
-	subArgs := cmdline.Args()
-	err = subCmd.Run(subArgs)
-	if err != nil { return err }
 	return nil
 }
+
+// type VmShowCommand struct {
+// 	*flag.FlagSet
+// }
+
+// func NewVmShowCommand () *VmShowCommand {
+// 	// create command
+// 	flagSet := flag.NewFlagSet("vm.show", flag.ExitOnError)
+// 	cmd := VmShowCommand{FlagSet: flagSet}
+// 	// init flag vars (nop -- no flags)
+
+// 	return &cmd
+// }
+
+// func (cmd VmShowCommand) Run (args[] string) error {
+// 	slog.Debug("VmShowCommand.Run()", "args", args)
+// 	err := cmd.Parse(args)
+// 	if err != nil { return err }
+// 	return nil
+// }
+
+
 
 // func CreateVmCommand () *cobra.Command {
 // 	command := cobra.Command {

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"go.etcd.io/etcd/api/v3/mvccpb"
@@ -36,12 +37,12 @@ func (o *VmInfo) Get (field string) (any, error) {
 }
 
 func (o *VmInfo) Set (field string, value any) error {
-	switch field {
-	case "Address":
+	switch strings.ToLower(field) {
+	case "address":
 	{
 		o.Address = value.(string)
 	}
-	case "Name":
+	case "name":
 		o.Name = value.(string)
 	default:
 		errmsg := fmt.Sprintf("Unknown field: %s", field)
@@ -118,6 +119,8 @@ func (cli *VmClient) Get(name string) (*VmInfo, error) {
 	key := getKeyFromName(name)
 	data, err := cli.EtcdClient.Get(key)
 	if err != nil { return nil, err }
+	if data == nil { return nil, err }
+	slog.Debug("VmClient.Get()", "data", data)
 	vm := VmInfo{}
 	err = json.Unmarshal(data, &vm)
 	if err != nil { return nil, err }
