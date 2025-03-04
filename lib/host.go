@@ -4,24 +4,18 @@ import (
 	"embed"
 	"fmt"
 	"io"
-	"io/fs"
 )
 
 //go:embed svc/*
-var svc embed.FS
+var FOL_Svc embed.FS
+const FN_WatchDaylightRunScript = "run.sh"
+const FN_WatchDaylightUnitFile = "watch-daylight.service"
+const PATH_WatchDaylightRunScript = "svc/watch-daylight/run.sh"
+const PATH_WatchDaylightUnitFile = "svc/watch-daylight/watch-daylight.service"
 
 
 func CreateWatchDaylightService () error {
-	filename := "svc/watch-daylight/watch-daylight.service"
-
-	fs.WalkDir(svc, ".", func(p string, d fs.DirEntry, err error) error {
-		if !d.IsDir() {
-			fmt.Printf("%s\n", p)
-		}
-		return nil
-	})
-
-	f, err := svc.Open(filename)
+	f, err := FOL_Svc.Open(PATH_WatchDaylightUnitFile)
 	if err != nil { return err }
 	s, err := io.ReadAll(f)
 	if err != nil { return err }

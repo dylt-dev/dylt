@@ -2,8 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
 	"testing"
+	"text/template"
 
+	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,5 +32,38 @@ func TestRunHostInit (t *testing.T) {
 func TestHostInitCmd0 (t *testing.T) {
 	cmd := fmt.Sprintf("%s host init", PATH_Dylt)
 	err := CheckRunCommandSuccess(cmd, t)
+	assert.Nil(t, err)
+}
+
+func TestWalkSvcFolder (t *testing.T) {
+	fs.WalkDir(lib.FOL_Svc, ".", func(p string, d fs.DirEntry, err error) error {
+		if !d.IsDir() {
+			fmt.Printf("%s\n", p)
+		}
+		return nil
+	})
+}
+
+func TestEmitWatchDaylightRunScript(t *testing.T) {
+	// assert.True(t, lib.PATH_WatchDaylightRunScript)
+	tmpl, err := template.ParseFS(lib.FOL_Svc, "svc/watch-daylight/*")
+	assert.Nil(t, err)
+	assert.NotNil(t, tmpl)
+	tmpl = tmpl.Lookup(lib.FN_WatchDaylightRunScript)
+	assert.NotNil(t, tmpl)
+	data := map[string]string{}
+	err = tmpl.Execute(os.Stdout, data)
+	assert.Nil(t, err)
+}
+
+func TestEmitWatchDaylightUnitFile (t *testing.T) {
+	// assert.True(t, lib.PATH_WatchDaylightRunScript)
+	tmpl, err := template.ParseFS(lib.FOL_Svc, "svc/watch-daylight/*")
+	assert.Nil(t, err)
+	assert.NotNil(t, tmpl)
+	tmpl = tmpl.Lookup(lib.FN_WatchDaylightUnitFile)
+	assert.NotNil(t, tmpl)
+	data := map[string]string{}
+	err = tmpl.Execute(os.Stdout, data)
 	assert.Nil(t, err)
 }
