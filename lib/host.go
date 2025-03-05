@@ -54,7 +54,7 @@ func ChownR (folderPath string, uid int, gid int) error {
 }
 
 func ChownSvcFolder (svcName string, uid int, gid int) error {
-	svcFolder := "/opt/svc/watch-daylight-go"
+	svcFolder := "/opt/svc"
 	folder := filepath.Join(svcFolder, svcName)
 	err := ChownR(folder, uid, gid)
 	if err != nil { return err }

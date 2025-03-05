@@ -150,6 +150,9 @@ git-tag-nightly ()
 
 	local tagname; tagname=$(gen-nightly-tagname $version) || return
 	git tag "$tagname"
+	local releaseSpec="github.com/dylt-dev/dylt@$tagname"
+	go list -m "$releaseSpec"
+	echo "$releaseSpec"
 }
 
 
