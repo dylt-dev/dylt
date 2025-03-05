@@ -103,10 +103,10 @@ func GetRunScriptData (svcName string) (*TemplateData, error) {
 }
 
 
-func GetSvcWriter (svcName string, filename string) (io.Writer, error) {
+func GetSvcWriter (svcName string, filename string, perm os.FileMode) (io.Writer, error) {
 	svcFolder := GetServiceFolder(svcName)
 	unitFilePath := path.Join(svcFolder, filename)
-	w, err := os.OpenFile(unitFilePath, os.O_CREATE | os.O_WRONLY | os.O_TRUNC, 0644)
+	w, err := os.OpenFile(unitFilePath, os.O_CREATE | os.O_WRONLY | os.O_TRUNC, perm)
 	if err != nil { return nil, err }
 
 	return w, nil
@@ -127,6 +127,23 @@ func InitSvcFolder (svcName string) error {
 	// Create folder for service if necessary
 	svcFolder := GetServiceFolder(svcName)
 	err := os.MkdirAll(svcFolder, 0744)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RemoveService (svcName string) error {
+	name := "systemctl"
+	var cmd *exec.Cmd
+	// systemctl stop $svcName
+	slog.Debug("lib.RunService - exec.Command()", "args", []string{"stop", svcName})
+	cmd = exec.Command(name, "stop", svcName)
+	err := cmd.Run()
+	if err != nil { return err }
+	// systemctl disable $svcName
+	slog.Debug("lib.RunService - execCommand", "args", []string{name, "disable", svcName})
+	cmd = exec.Command(name, "disable", svcName)
+	err = cmd.Run()
 	if err != nil { return err }
 
 	return nil
@@ -160,7 +177,7 @@ func WriteRunScript (svcName string, data ServiceData) error {
 	runScriptData, err := GetRunScriptData(svcName)
 	if err != nil { return err }
 	runScriptFilename := "run.sh"
-	w, err := GetSvcWriter(svcName, runScriptFilename)
+	w, err := GetSvcWriter(svcName, runScriptFilename, 0755)
 	if err != nil { return err }
 	err = runScriptData.Write(w, data)
 	if err != nil { return err }
@@ -172,7 +189,7 @@ func WriteUnitFile (svcName string, data ServiceData) error {
 	unitFileData, err := GetUnitFileData(svcName)
 	if err != nil { return err }
 	unitFilename := fmt.Sprintf("%s.service", svcName)
-	w, err := GetSvcWriter(svcName, unitFilename)
+	w, err := GetSvcWriter(svcName, unitFilename, 0644)
 	if err != nil { return err }
 	err = unitFileData.Write(w, data)
 	if err != nil { return err }
