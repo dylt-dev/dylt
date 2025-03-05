@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"text/template"
@@ -123,6 +124,30 @@ func InitSvcFolder (svcName string) error {
 	// Create folder for service if necessary
 	svcFolder := GetServiceFolder(svcName)
 	err := os.MkdirAll(svcFolder, 0744)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunService (svcName string) error {
+	name := "systemctl"
+	var cmd *exec.Cmd
+	// systemctl daemon-reload
+	slog.Debug("lib.RunService - exec.Command()", "args", []string{"daemon-reload"})
+	cmd = exec.Command(name, "daemon-reload")
+	err := cmd.Run()
+	if err != nil { return err }
+	// systemctl enable $unitFilePath
+	unitFilename := fmt.Sprintf("%s.service", svcName)
+	unitFilePath := filepath.Join(PATH_SvcFolderRoot, svcName, unitFilename)
+	slog.Debug("lib.RunService - execCommand", "args", []string{name, "enable", unitFilePath})
+	cmd = exec.Command(name, "enable", unitFilePath)
+	err = cmd.Run()
+	if err != nil { return err }
+	// systemctl start $svcName
+	slog.Debug("lib.RunService - exec.Command()", "args", []string{"start", svcName})
+	cmd = exec.Command(name, "start", svcName)
+	err = cmd.Run()
 	if err != nil { return err }
 
 	return nil
