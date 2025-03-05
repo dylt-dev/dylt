@@ -73,11 +73,17 @@ func createHostSubCommand(cmdName string) (Command, error) {
 
 type HostInitCommand struct {
 	*flag.FlagSet
+	Gid int
+	Uid int
 }
 
 func NewHostInitCommand() *HostInitCommand {
 	flagSet := flag.NewFlagSet("host.init", flag.ExitOnError)
-	return &HostInitCommand{FlagSet: flagSet}
+	cmd := HostInitCommand{FlagSet: flagSet}
+	flagSet.IntVar(&cmd.Gid, "gid", 2000, "gid")
+	flagSet.IntVar(&cmd.Uid, "uid", 2000, "uid")
+
+	return &cmd
 }
 
 func (cmd *HostInitCommand) HandleArgs(args []string) error {
@@ -100,16 +106,16 @@ func (cmd *HostInitCommand) Run(args []string) error {
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
 	// Execute command
-	err = RunHostInit()
+	err = RunHostInit(cmd.Uid, cmd.Gid)
 	if err != nil { return err }
 
 	return nil
 }
 
-func RunHostInit() error {
+func RunHostInit(uid int, gid int) error {
 	fmt.Println("init!")
 
-	err := lib.CreateWatchDaylightService(2000, 2000)
+	err := lib.CreateWatchDaylightService(uid, gid)
 	if err != nil { return err }
 
 	return nil

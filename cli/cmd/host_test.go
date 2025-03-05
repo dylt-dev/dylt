@@ -25,7 +25,7 @@ func TestHostCmd0 (t *testing.T) {
 }
 
 func TestRunHostInit (t *testing.T) {
-	err := RunHostInit()
+	err := RunHostInit(501, 20)
 	assert.Nil(t, err)
 }
 
