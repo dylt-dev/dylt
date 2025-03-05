@@ -14,12 +14,17 @@ import (
 
 //go:embed svc/*
 var FOL_Svc embed.FS
-const FN_WatchDaylightRunScript = "run.sh"
-const FN_WatchDaylightUnitFile = "watch-daylight.service"
-const PATH_WatchDaylightRunScript = "svc/watch-daylight/run.sh"
-const PATH_WatchDaylightUnitFile = "svc/watch-daylight/watch-daylight.service"
+// const FN_WatchDaylightRunScript = "run.sh"
+// const FN_WatchDaylightUnitFile = "watch-daylight.service"
+// const PATH_WatchDaylightRunScript = "svc/watch-daylight/run.sh"
+// const PATH_WatchDaylightUnitFile = "svc/watch-daylight/watch-daylight.service"
 const UID_rayray = 2000
 const GID_rayray = 2000
+const PATH_SvcFolderRoot = "/opt/svc/"
+
+func GetServiceFolder (svcName string) string {
+	return filepath.Join(PATH_SvcFolderRoot, svcName)
+}
 
 
 type ServiceData map[string]string
@@ -67,10 +72,10 @@ func ChownSvcFolder (svcName string, uid int, gid int) error {
 func CreateWatchDaylightService (uid int, gid int) error {
 	svcName := "watch-daylight"
 	// Create folder for service if necessary
-	err := InitSvcFolder()
+	err := InitSvcFolder(svcName)
 	if err != nil { return err }
 	// Open destination unit file & execute the template into the file
-	data := map[string]string{}
+	data := ServiceData{}
 	err = WriteUnitFile(svcName, data)
 	if err != nil { return err }
 	err = WriteRunScript(svcName, data)
@@ -94,8 +99,8 @@ func GetRunScriptData (svcName string) (*TemplateData, error) {
 }
 
 
-func GetSvcWriter (filename string) (io.Writer, error) {
-	svcFolder := "/opt/svc/watch-daylight-go"
+func GetSvcWriter (svcName string, filename string) (io.Writer, error) {
+	svcFolder := GetServiceFolder(svcName)
 	unitFilePath := path.Join(svcFolder, filename)
 	w, err := os.OpenFile(unitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil { return nil, err }
@@ -114,9 +119,9 @@ func GetUnitFileData (svcName string) (*TemplateData, error) {
 	return &unitFileData, nil
 }
 
-func InitSvcFolder () error {
+func InitSvcFolder (svcName string) error {
 	// Create folder for service if necessary
-	svcFolder := "/opt/svc/watch-daylight-go"
+	svcFolder := GetServiceFolder(svcName)
 	err := os.MkdirAll(svcFolder, 0744)
 	if err != nil { return err }
 
@@ -127,7 +132,7 @@ func WriteRunScript (svcName string, data ServiceData) error {
 	runScriptData, err := GetRunScriptData(svcName)
 	if err != nil { return err }
 	runScriptFilename := "run.sh"
-	w, err := GetSvcWriter(runScriptFilename)
+	w, err := GetSvcWriter(svcName, runScriptFilename)
 	if err != nil { return err }
 	err = runScriptData.Write(w, data)
 	if err != nil { return err }
@@ -139,7 +144,7 @@ func WriteUnitFile (svcName string, data ServiceData) error {
 	unitFileData, err := GetUnitFileData(svcName)
 	if err != nil { return err }
 	unitFilename := fmt.Sprintf("%s.service", svcName)
-	w, err := GetSvcWriter(unitFilename)
+	w, err := GetSvcWriter(svcName, unitFilename)
 	if err != nil { return err }
 	err = unitFileData.Write(w, data)
 	if err != nil { return err }

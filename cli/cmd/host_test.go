@@ -49,7 +49,7 @@ func TestEmitWatchDaylightRunScript(t *testing.T) {
 	tmpl, err := template.ParseFS(lib.FOL_Svc, "svc/watch-daylight/*")
 	assert.Nil(t, err)
 	assert.NotNil(t, tmpl)
-	tmpl = tmpl.Lookup(lib.FN_WatchDaylightRunScript)
+	tmpl = tmpl.Lookup("run.sh")
 	assert.NotNil(t, tmpl)
 	data := map[string]string{}
 	err = tmpl.Execute(os.Stdout, data)
@@ -61,7 +61,7 @@ func TestEmitWatchDaylightUnitFile (t *testing.T) {
 	tmpl, err := template.ParseFS(lib.FOL_Svc, "svc/watch-daylight/*")
 	assert.Nil(t, err)
 	assert.NotNil(t, tmpl)
-	tmpl = tmpl.Lookup(lib.FN_WatchDaylightUnitFile)
+	tmpl = tmpl.Lookup("watch-daylight.service")
 	assert.NotNil(t, tmpl)
 	data := map[string]string{}
 	err = tmpl.Execute(os.Stdout, data)
@@ -69,7 +69,7 @@ func TestEmitWatchDaylightUnitFile (t *testing.T) {
 }
 
 func TestChmodR0 (t *testing.T) {
-	svcPath := "/opt/svc/watch-daylight-go"
+	svcPath := "/opt/svc/watch-daylight"
 	// uid + gid for local user on local workstation
 	err := lib.ChownR(svcPath, 501, 20)
 	assert.Nil(t, err)
