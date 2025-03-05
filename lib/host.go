@@ -91,7 +91,7 @@ func GetRunScriptData (svcName string) (*TemplateData, error) {
 	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
 	tmpl, err := template.ParseFS(FOL_Svc, svcPattern)
 	if err != nil { return nil, err }
-	runScriptFilename := fmt.Sprintf("%s.service", svcName)
+	runScriptFilename := "run.sh"
 	tmpl = tmpl.Lookup(runScriptFilename)
 	unitFileData := TemplateData{Template: *tmpl}
 
@@ -102,7 +102,7 @@ func GetRunScriptData (svcName string) (*TemplateData, error) {
 func GetSvcWriter (svcName string, filename string) (io.Writer, error) {
 	svcFolder := GetServiceFolder(svcName)
 	unitFilePath := path.Join(svcFolder, filename)
-	w, err := os.OpenFile(unitFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+	w, err := os.OpenFile(unitFilePath, os.O_CREATE | os.O_WRONLY | os.O_TRUNC, 0644)
 	if err != nil { return nil, err }
 
 	return w, nil
