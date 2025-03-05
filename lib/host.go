@@ -84,7 +84,10 @@ func CreateWatchDaylightService (uid int, gid int) error {
 	// chown service folder to daylight user
 	err = ChownSvcFolder("watch-daylight", uid, gid)
 	if err != nil { return err }
-
+	// run the service
+	err = RunService(svcName)
+	if err != nil { return err }
+	
 	return nil
 }
 
