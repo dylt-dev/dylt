@@ -109,7 +109,7 @@ func (cmd *HostInitCommand) Run(args []string) error {
 func RunHostInit() error {
 	fmt.Println("init!")
 
-	err := lib.CreateWatchDaylightService()
+	err := lib.CreateWatchDaylightService(501, 20)
 	if err != nil { return err }
 
 	return nil

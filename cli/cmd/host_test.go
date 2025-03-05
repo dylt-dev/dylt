@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"testing"
 	"text/template"
 
@@ -69,22 +68,21 @@ func TestEmitWatchDaylightUnitFile (t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestWalkWatchDaylightServiceFolder (t *testing.T) {
+func TestChmodR0 (t *testing.T) {
 	svcPath := "/opt/svc/watch-daylight-go"
-	dir := os.DirFS(svcPath)
-	assert.NotNil(t, dir)
-	
-	var fnWalk fs.WalkDirFunc = func (path string, d fs.DirEntry, err error) error {
-		assert.Nil(t, err)	
-		if err == nil {
-			t.Logf("path=%s d.Name()=%s d.Type=%s d.Type.isDir=%t", path, d.Name(), d.Type(), d.Type().IsDir())
-			fullPath := filepath.Join(svcPath, path)
-			err = os.Chown(fullPath, 501, 20)
-			if err != nil { return err }
-		}
-		return nil
-	}
-	
-	err := fs.WalkDir(dir, ".", fnWalk)
+	// uid + gid for local user on local workstation
+	err := lib.ChownR(svcPath, 501, 20)
+	assert.Nil(t, err)
+}
+
+func Test_WatchDaylight_WriteRunScript (t *testing.T) {
+	svcName := "watch-daylight"
+	err := lib.WriteRunScript(svcName, lib.ServiceData{})
+	assert.Nil(t, err)
+}
+
+func Test_WatchDaylight_WriteUnitFile (t *testing.T) {
+	svcName := "watch-daylight"
+	err := lib.WriteUnitFile(svcName, lib.ServiceData{})
 	assert.Nil(t, err)
 }
