@@ -3,6 +3,9 @@ package cmd
 type Cmdline []string
 
 func (o *Cmdline) Args () []string {
+	if len(*o) < 1 {
+		return nil
+	}
 	return (*o)[1:]
 }
 
