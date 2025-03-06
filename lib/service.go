@@ -32,6 +32,7 @@ func BuildStopServiceCommand(svcName string) *exec.Cmd {
 
 func BuildEnableServiceCommand(svcName string, svcFS *ServiceFS) *exec.Cmd {
 	unitFilePath := svcFS.GetUnitFilePath(svcName)
+	slog.Debug("BuildEnableServiceCommand", "unitFilePath", unitFilePath)
 	cmd := exec.Command("systemctl", "enable", unitFilePath)
 	return cmd
 }
