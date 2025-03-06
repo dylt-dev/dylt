@@ -71,11 +71,15 @@ func ChownSvcFolder (svcName string, uid int, gid int) error {
 
 
 func CreateWatchDaylightService (uid int, gid int) error {
+	slog.Debug("lib.CreateWatchDaylightService()", "uid", uid, "gid", gid)
 	svcName := "watch-daylight"
 	// Stop service
 
 	// Create folder for service if necessary
 	err := InitSvcFolder(svcName)
+	if err != nil { return err }
+	// Remove the service if it exists
+	err = RemoveService(svcName)
 	if err != nil { return err }
 	// Open destination unit file & execute the template into the file
 	data := ServiceData{}

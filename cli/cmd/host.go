@@ -114,7 +114,7 @@ func (cmd *HostInitCommand) Run(args []string) error {
 
 func RunHostInit(uid int, gid int) error {
 	fmt.Println("init!")
-
+	slog.Debug("lib.RunHostInit()", "uid", uid, "gid", gid)
 	err := lib.CreateWatchDaylightService(uid, gid)
 	if err != nil { return err }
 
