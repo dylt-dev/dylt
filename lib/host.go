@@ -140,15 +140,22 @@ func InitSvcFolder (svcName string) error {
 func RemoveService (svcName string) error {
 	name := "systemctl"
 	var cmd *exec.Cmd
+
 	// systemctl stop $svcName
 	slog.Debug("lib.RemoveService - exec.Command()", "args", []string{"stop", svcName})
 	cmd = exec.Command(name, "stop", svcName)
 	err := cmd.Run()
 	if err != nil { return err }
+
 	// systemctl disable $svcName
 	slog.Debug("lib.RemoveService - execCommand", "args", []string{name, "disable", svcName})
 	cmd = exec.Command(name, "disable", svcName)
 	err = cmd.Run()
+	if err != nil { return err }
+
+	// Remove service folder
+	svcFolder := GetServiceFolder(svcName)
+	err = os.RemoveAll(svcFolder)
 	if err != nil { return err }
 
 	return nil
