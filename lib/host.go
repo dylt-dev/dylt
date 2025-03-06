@@ -72,6 +72,8 @@ func ChownSvcFolder (svcName string, uid int, gid int) error {
 
 func CreateWatchDaylightService (uid int, gid int) error {
 	svcName := "watch-daylight"
+	// Stop service
+
 	// Create folder for service if necessary
 	err := InitSvcFolder(svcName)
 	if err != nil { return err }
@@ -101,7 +103,6 @@ func GetRunScriptData (svcName string) (*TemplateData, error) {
 
 	return &unitFileData, nil
 }
-
 
 func GetSvcWriter (svcName string, filename string, perm os.FileMode) (io.Writer, error) {
 	svcFolder := GetServiceFolder(svcName)
@@ -136,12 +137,12 @@ func RemoveService (svcName string) error {
 	name := "systemctl"
 	var cmd *exec.Cmd
 	// systemctl stop $svcName
-	slog.Debug("lib.RunService - exec.Command()", "args", []string{"stop", svcName})
+	slog.Debug("lib.RemoveService - exec.Command()", "args", []string{"stop", svcName})
 	cmd = exec.Command(name, "stop", svcName)
 	err := cmd.Run()
 	if err != nil { return err }
 	// systemctl disable $svcName
-	slog.Debug("lib.RunService - execCommand", "args", []string{name, "disable", svcName})
+	slog.Debug("lib.RemoveService - execCommand", "args", []string{name, "disable", svcName})
 	cmd = exec.Command(name, "disable", svcName)
 	err = cmd.Run()
 	if err != nil { return err }
