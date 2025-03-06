@@ -62,7 +62,7 @@ func (fs *ServiceFS) GetFolderPath(svcName string) string {
 }
 
 func (fs *ServiceFS) GetUnitFilePath(svcName string) string {
-	filename := fmt.Sprintf("%.service", svcName)
+	filename := fmt.Sprintf("%s.service", svcName)
 	return fs.GetPath(svcName, filename)
 }
 
