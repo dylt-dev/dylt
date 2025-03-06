@@ -77,12 +77,18 @@ func TestChmodR0 (t *testing.T) {
 
 func Test_WatchDaylight_WriteRunScript (t *testing.T) {
 	svcName := "watch-daylight"
-	err := lib.WriteRunScript(svcName, lib.ServiceData{})
+	svc := lib.NewServiceSpec(svcName)
+	svcFS := lib.ServiceFS{RootPath: "/opt/svc"}
+	templateFS := lib.ServiceTemplateFS{FS: lib.FOL_Svc}
+	err := svcFS.WriteRunScript(svc, &templateFS)
 	assert.Nil(t, err)
 }
 
 func Test_WatchDaylight_WriteUnitFile (t *testing.T) {
 	svcName := "watch-daylight"
-	err := lib.WriteUnitFile(svcName, lib.ServiceData{})
+	svc := lib.NewServiceSpec(svcName)
+	svcFS := lib.ServiceFS{RootPath: "/opt/svc"}
+	templateFS := lib.ServiceTemplateFS{FS: lib.FOL_Svc}
+	err := svcFS.WriteUnitFile(svc, &templateFS)
 	assert.Nil(t, err)
 }
