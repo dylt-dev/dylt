@@ -72,24 +72,28 @@ func ChownSvcFolder (svcName string, uid int, gid int) error {
 
 func CreateWatchDaylightService (uid int, gid int) error {
 	slog.Debug("lib.CreateWatchDaylightService()", "uid", uid, "gid", gid)
-	svcName := "watch-daylight"
-	// Stop service
+	const svcName = "watch-daylight"
+	var err error
 
-	// Create folder for service if necessary
-	err := InitSvcFolder(svcName)
-	if err != nil { return err }
 	// Remove the service if it exists
 	err = RemoveService(svcName)
 	if err != nil { return err }
+	
+	// Create folder for service if necessary
+	err = InitSvcFolder(svcName)
+	if err != nil { return err }
+
 	// Open destination unit file & execute the template into the file
 	data := ServiceData{}
 	err = WriteUnitFile(svcName, data)
 	if err != nil { return err }
 	err = WriteRunScript(svcName, data)
 	if err != nil { return err }
+
 	// chown service folder to daylight user
 	err = ChownSvcFolder("watch-daylight", uid, gid)
 	if err != nil { return err }
+
 	// run the service
 	err = RunService(svcName)
 	if err != nil { return err }
