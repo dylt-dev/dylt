@@ -30,7 +30,9 @@ func (cmd *ConfigCommand) HandleArgs(args []string) error {
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) < 1 { return fmt.Errorf("`config` expects >=1 argument(s); received %d", len(cmdArgs)) }
+	cmdName := "config"
+	nExpected := 1
+	if len(cmdArgs) < nExpected { return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
 	// init positional params
 	cmd.SubCommand = cmdArgs[0]
 	cmd.SubArgs = cmdArgs[1:]
@@ -57,6 +59,7 @@ func RunConfig(subCommand string, subCmdArgs []string) error {
 	if err != nil { return err }
 	err = subCmd.Run(subCmdArgs)
 	if err != nil { return err }
+
 	return nil
 }
 
@@ -184,8 +187,9 @@ func (cmd *ConfigShowCommand) HandleArgs(args []string) error {
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
+	cmdName := "config show"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`config set` expects %d argument(s); received %d", nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
 	// init positional params (nop - no positional params)
 
 	return nil

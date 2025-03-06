@@ -1,5 +1,6 @@
 package lib
 
+
 // All data specified in flags to the `init` subcommand
 type InitStruct struct {
 	EtcdDomain string
