@@ -112,7 +112,7 @@ func GetRunScriptData (svcName string) (*TemplateData, error) {
 	return &unitFileData, nil
 }
 
-func GetSvcWriter (svcName string, filename string, perm os.FileMode) (io.Writer, error) {
+func GetSvcWriter (svcName string, filename string, perm os.FileMode) (io.WriteCloser, error) {
 	svcFolder := GetServiceFolder(svcName)
 	unitFilePath := path.Join(svcFolder, filename)
 	w, err := os.OpenFile(unitFilePath, os.O_CREATE | os.O_WRONLY | os.O_TRUNC, perm)
@@ -168,20 +168,23 @@ func RemoveService (svcName string) error {
 func RunService (svcName string) error {
 	name := "systemctl"
 	var cmd *exec.Cmd
+
 	// systemctl daemon-reload
 	slog.Debug("lib.RunService - exec.Command()", "args", []string{"daemon-reload"})
 	cmd = exec.Command(name, "daemon-reload")
 	err := cmd.Run()
 	if err != nil { return err }
+
 	// systemctl enable $unitFilePath
 	unitFilename := fmt.Sprintf("%s.service", svcName)
 	unitFilePath := filepath.Join(PATH_SvcFolderRoot, svcName, unitFilename)
-	slog.Debug("lib.RunService - execCommand", "args", []string{name, "enable", unitFilePath})
+	slog.Debug("lib.RunService - exec - systemctl enable", "args", []string{name, "enable", unitFilePath})
 	cmd = exec.Command(name, "enable", unitFilePath)
 	err = cmd.Run()
 	if err != nil { return err }
+
 	// systemctl start $svcName
-	slog.Debug("lib.RunService - exec.Command()", "args", []string{"start", svcName})
+	slog.Debug("lib.RunService - exec - systemctl start", "args", []string{"start", svcName})
 	cmd = exec.Command(name, "start", svcName)
 	err = cmd.Run()
 	if err != nil { return err }
@@ -195,6 +198,7 @@ func WriteRunScript (svcName string, data ServiceData) error {
 	runScriptFilename := "run.sh"
 	w, err := GetSvcWriter(svcName, runScriptFilename, 0755)
 	if err != nil { return err }
+	defer w.Close()
 	err = runScriptData.Write(w, data)
 	if err != nil { return err }
 
@@ -207,6 +211,7 @@ func WriteUnitFile (svcName string, data ServiceData) error {
 	unitFilename := fmt.Sprintf("%s.service", svcName)
 	w, err := GetSvcWriter(svcName, unitFilename, 0644)
 	if err != nil { return err }
+	defer w.Close()
 	err = unitFileData.Write(w, data)
 	if err != nil { return err }
 
