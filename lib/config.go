@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -133,25 +134,31 @@ func LoadConfig() (ConfigStruct, error) {
 	cfg := ConfigStruct{}
 	cfgFile, err := OpenConfigFile()
 	if err != nil {
-		return cfg, err
+		return cfg, NewError(err)
 	}
 	decoder := yaml.NewDecoder(cfgFile)
 	err = decoder.Decode(&cfg)
-	return cfg, err
+	if err != nil { return cfg, NewError(err) }
+	
+	return cfg, nil
 }
 
 func OpenConfigFile() (*os.File, error) {
 	cfgFilePath := GetConfigFilePath()
+	slog.Debug("Opening config file", "cfgFilePath", cfgFilePath)
 	f, err := os.Open(cfgFilePath)
-	return f, err
+	if err != nil { return f, NewError(err) }
+
+	return f, nil
 }
 
 func SaveConfig(cfg ConfigStruct) error {
 	cfgFilePath := GetConfigFilePath()
+	cfgFileFolder := filepath.Dir(cfgFilePath)
+	err := os.MkdirAll(cfgFileFolder, 0755)
+	if err != nil { return NewError(err) }
 	f, err := os.Create(cfgFilePath)
-	if err != nil {
-		return err
-	}
+	if err != nil { return NewError(err) }
 	defer f.Close()
 	encoder := yaml.NewEncoder(f)
 	err = encoder.Encode(cfg)
