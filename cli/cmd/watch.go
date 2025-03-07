@@ -123,6 +123,7 @@ func RunWatchScript(scriptKey string, targetPath string) error {
 	
 	// Create watch
 	ctx := clientv3.WithRequireLeader(context.Background())
+	fmt.Printf("Watching %s ...", scriptKey)
 	chWatch := cli.Watch(ctx, scriptKey, clientv3.WithKeysOnly()) 
 	
 	// Loop over watch channel
@@ -132,7 +133,9 @@ func RunWatchScript(scriptKey string, targetPath string) error {
 			key := string(ev.Kv.Key)
 			fmt.Printf("%s updated\n", key)
 			slog.Debug("Update detected", "key", key)
+			
 			if key != scriptKey { return fmt.Errorf("key mismatch: execpted %s, got %s", scriptKey, key)}
+			
 			ctx := context.Background()
 			resp, err := cli.Client.Get(ctx, key)
 			if err != nil { return err }
@@ -140,11 +143,14 @@ func RunWatchScript(scriptKey string, targetPath string) error {
 				slog.Warn("No KVs found for watch")
 				return nil
 			}
+			
 			val := (*resp).Kvs[0].Value
 			slog.Debug("Value found", "len(val)", len(val))
 			fmt.Printf("Writing value to %s ...\n", targetPath)
 			err = os.WriteFile(targetPath, val, 0755)
 			if err != nil { return err }	
+
+			fmt.Printf("Watching %s ...", scriptKey)
 		}
 	}
 
