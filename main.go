@@ -44,6 +44,7 @@ func createSubCommand (cmd string) (clicmd.Command, error) {
 	case "init": return clicmd.NewInitCommand(), nil
 	case "list": return clicmd.NewListCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
+	case "watch": return clicmd.NewWatchCommand(), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
 	}
 }
