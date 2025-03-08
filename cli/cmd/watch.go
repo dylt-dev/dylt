@@ -150,7 +150,7 @@ func RunWatchScript(scriptKey string, targetPath string) error {
 			err = os.WriteFile(targetPath, val, 0755)
 			if err != nil { return err }	
 
-			fmt.Printf("Watching %s ...", scriptKey)
+			fmt.Printf("Watching %s ...\n", scriptKey)
 		}
 	}
 

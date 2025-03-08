@@ -1,16 +1,54 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
 
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
+	"github.com/dylt-dev/dylt/lib"
 )
 
 const LOG_File = "dylt.log"
 const LOG_Folder = "/var/log/dylt"
+
+
+func exit (err error) {
+	if err == nil {
+		os.Exit(0)
+	}
+	slog.Error(err.Error())
+	fmt.Println(err.Error())
+	switch err := err.(type) {
+	case *exec.ExitError:
+		os.Exit(err.ExitCode())
+	default:
+		os.Exit(1)
+	}
+
+}
+
+func firstTime () error {
+	fmt.Println("Welcome!")
+	fmt.Println()
+	fmt.Print("Please enter a domain for your etcd cluster -> ")
+	// This is the user's first time.
+	r := bufio.NewReader(os.Stdin)
+	etcdDomain, err := r.ReadString('\n')
+	etcdDomain = strings.TrimSpace(etcdDomain)
+	if err != nil { return lib.NewError(err) }
+	cfg := lib.ConfigStruct{ EtcdDomain: etcdDomain}
+	err = lib.SaveConfig(cfg)
+	if err != nil { return lib.NewError(err) }
+	fmt.Println("Saved!")
+	fmt.Println()
+
+	return nil
+}
 
 func initLogging () {
 	var logFile, logFolder, logPath string
@@ -35,6 +73,18 @@ func initLogging () {
 }
 
 
+func isFirstTime () (bool, error) {
+	configFilePath := lib.GetConfigFilePath()
+	_, err := os.Stat(configFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, nil
+		}
+		return false, err
+	}
+	return false, nil
+}
+
 func createSubCommand (cmd string) (clicmd.Command, error) {
 	switch cmd {
 	case "call": return clicmd.NewCallCommand(), nil
@@ -52,6 +102,18 @@ func createSubCommand (cmd string) (clicmd.Command, error) {
 func main () {
 	// lib.InitConfig()
 	initLogging()
+	var err error
+
+	// Check if it's the user's first time. If so, act accordingly.
+	is, err := isFirstTime()
+	fmt.Printf("is=%t err=%s\n", is, err)
+	if err != nil { exit(err) }
+	if is {
+		fmt.Println("Running firstTime() ...")
+		err = firstTime()
+		if err != nil { exit(err) }
+	}
+
 	var cmdline clicmd.Cmdline = os.Args[1:]
 	cmdName := cmdline.Command()
 	slog.Debug("main", "cmdName", cmdName)

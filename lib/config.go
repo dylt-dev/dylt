@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -22,6 +23,121 @@ const CFG_Type = "yaml"
 // 	Viper      *viper.Viper
 // 	EtcdDomain string `yaml:"etcd-domain"`
 // }
+
+type ConfigFile struct {
+	*ConfigMap
+	Path string
+}
+
+func (cf *ConfigFile) Init () error {
+	// Check if the file already exists, or if attempting to stat it fails
+	_, err := os.Stat(cf.Path)
+	if err == nil { return nil }
+	if !errors.Is(err, os.ErrNotExist) { return NewError(err) }
+
+	// Create all necessary folders
+	folderPath := filepath.Dir(cf.Path)
+	err = os.MkdirAll(folderPath, 0755)
+	if err != nil { return NewError(err) }
+
+	// Create file
+	f, err := os.OpenFile(cf.Path, os.O_CREATE, 0644)
+	if err != nil { return NewError(err) }
+	defer f.Close()
+
+	return nil
+}
+
+func (cf *ConfigFile) Load () error {
+	return nil
+}
+
+func (cf *ConfigFile) LoadFrom (path string) error {
+	return nil
+}
+
+func (cf *ConfigFile) Save () error {
+	return nil
+}
+
+func (cf *ConfigFile) SaveTo (path string) error {
+	return nil
+}
+
+type ConfigMap map[string]any
+
+/**
+ * If key="a.b.c" and value="foo", then this happens
+ *  ---
+ * |   |
+ *  ---
+ * | a | => ---
+ *  ---    |   |
+ * |   |    ---
+ *  ---    | b | =>  ---
+ * |   |    ---     |   |
+ *  ---    |   |     ---
+ * |   |    ---     |   |
+ *  ---              ---
+ *                  | c | => "foo"
+ *                   ---
+ *                  |   |
+ *                   ---
+ *
+ * On Get(), all submaps will be traversed as needed
+ * On Set(), all submaps will be created as needed
+
+ * @note it would be nice to cleverly use generics to constrain submaps to
+ *       be configmaps. then map values would be strings or configmaps.
+ */
+
+func (data ConfigMap) Get(key string) string {
+	if key == "" {
+		return ""
+	}
+	keyParts := strings.Split(key, ".")
+
+	// Stop when we get to the last key part. For a simple key we stop immediately.
+	var dataCurr ConfigMap = data
+	for i := range len(keyParts) - 1 {
+		keyPart := keyParts[i]
+		var ok bool
+		dataCurr, ok = dataCurr[keyPart].(ConfigMap)
+		if !ok {
+			return ""
+		}
+	}
+	lastKey := keyParts[len(keyParts)-1]
+	val, ok := dataCurr[lastKey].(string)
+	if !ok {
+		return ""
+	}
+
+	return val
+}
+
+func (data ConfigMap) Set(key string, val string) ConfigMap {
+	// Initialize current map pointer, split key on '.' into parts,
+	// and begin map-walking
+	var dataCurr ConfigMap = data
+	keyParts := strings.Split(key, ".")
+
+	// Stop when we get to the last key part. For a simple key we stop immediately.
+	for i := range len(keyParts) - 1 {
+		keyPart := keyParts[i]
+		if dataCurr[keyPart] == nil {
+			dataCurr[keyPart] = ConfigMap{}
+		}
+		dataCurr = dataCurr[keyPart].(ConfigMap)
+	}
+
+	// Use the final key-part to set the current map to the specified value
+	lastKey := keyParts[len(keyParts)-1]
+	dataCurr[lastKey] = val
+
+	return data
+
+}
 
 type ConfigStruct struct {
 	EtcdDomain string `yaml:"etcd-domain"`
@@ -110,10 +226,14 @@ func GetConfigFolderPath() string {
 
 func GetConfigValue(key string) (any, error) {
 	f, err := OpenConfigFile()
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	val, err := GetYamlValue(key, f)
 	slog.Debug("GetConfigValue()", "key", key, "val", val)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 
 	return val, nil
 }
@@ -138,8 +258,10 @@ func LoadConfig() (ConfigStruct, error) {
 	}
 	decoder := yaml.NewDecoder(cfgFile)
 	err = decoder.Decode(&cfg)
-	if err != nil { return cfg, NewError(err) }
-	
+	if err != nil {
+		return cfg, NewError(err)
+	}
+
 	return cfg, nil
 }
 
@@ -147,7 +269,9 @@ func OpenConfigFile() (*os.File, error) {
 	cfgFilePath := GetConfigFilePath()
 	slog.Debug("Opening config file", "cfgFilePath", cfgFilePath)
 	f, err := os.Open(cfgFilePath)
-	if err != nil { return f, NewError(err) }
+	if err != nil {
+		return f, NewError(err)
+	}
 
 	return f, nil
 }
@@ -156,9 +280,13 @@ func SaveConfig(cfg ConfigStruct) error {
 	cfgFilePath := GetConfigFilePath()
 	cfgFileFolder := filepath.Dir(cfgFilePath)
 	err := os.MkdirAll(cfgFileFolder, 0755)
-	if err != nil { return NewError(err) }
+	if err != nil {
+		return NewError(err)
+	}
 	f, err := os.Create(cfgFilePath)
-	if err != nil { return NewError(err) }
+	if err != nil {
+		return NewError(err)
+	}
 	defer f.Close()
 	encoder := yaml.NewEncoder(f)
 	err = encoder.Encode(cfg)
@@ -168,7 +296,7 @@ func SaveConfig(cfg ConfigStruct) error {
 	return nil
 }
 
-func WriteConfig(data configMap) error {
+func WriteConfig(data ConfigMap) error {
 	cfgFilePath := GetConfigFilePath()
 	slog.Debug("WriteConfig", "cfgFilePath", cfgFilePath)
 	f, err := os.Create(cfgFilePath)
@@ -210,16 +338,23 @@ func GetYamlValue(key string, in io.Reader) (any, error) {
 	}
 	var curr any = data
 	for _, currKey := range keyParts {
-		currMap := curr.(configMap)
+		currMap := curr.(ConfigMap)
 		var ok bool
 		curr, ok = currMap[currKey]
-		if !ok { return nil, fmt.Errorf("missing key: %s", key) }
+		if !ok {
+			return nil, fmt.Errorf("missing key: %s", key)
+		}
 	}
 	value := curr
 	return value, nil
 }
 
-func SetKey(data configMap, key string, val string) (configMap, error) {
+/*
+Set a config map yaml key to a value.
+
+Hierarchical keys are supported.
+*/
+func SetKey(data ConfigMap, key string, val string) (ConfigMap, error) {
 	dataOrig := data
 	keyParts := strings.Split(key, ".")
 	for i := range len(keyParts) - 1 {
@@ -234,11 +369,9 @@ func SetKey(data configMap, key string, val string) (configMap, error) {
 	return dataOrig, nil
 }
 
-type configMap map[string]any
-
-func ReadYaml(in io.Reader) (configMap, error) {
+func ReadYaml(in io.Reader) (ConfigMap, error) {
 	decoder := yaml.NewDecoder(in)
-	var data configMap
+	var data ConfigMap
 	err := decoder.Decode(&data)
 	if err != nil {
 		return nil, err
@@ -246,7 +379,7 @@ func ReadYaml(in io.Reader) (configMap, error) {
 	return data, nil
 }
 
-func WriteYaml(data configMap, out io.Writer) error {
+func WriteYaml(data ConfigMap, out io.Writer) error {
 	encoder := yaml.NewEncoder(out)
 	err := encoder.Encode(data)
 	return err
