@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"bufio"
 	"flag"
+	"io"
 	"strings"
 	"testing"
 
@@ -75,4 +77,14 @@ func TestWeirdArgs (t *testing.T) {
 	dylt.Parse(args[1:])
 	argz := dylt.Args()
 	t.Log(strings.Join(argz, " "))
+}
+
+func TestRead(t *testing.T) {
+	stdin, _ := io.Pipe()
+	scanner := bufio.NewScanner(stdin)
+	scanner.Scan()
+	s := scanner.Text()
+	err := scanner.Err()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, s)
 }

@@ -159,14 +159,30 @@ func (cmd *ConfigSetCommand) Run(args []string) error {
 }
 
 func RunConfigSet (key string, val string) error {
-	f, err := lib.OpenConfigFile()
-	if err != nil { return err }
+	slog.Debug("RunConfigSet()", "key", key, "val", val)
+	
+	// Open the dylt config file for read+write. Create if necessasry.
+	cfgFilePath := lib.GetConfigFilePath()
+	slog.Debug("Opening config file", "cfgFilePath", cfgFilePath)
+	f, err := os.OpenFile(cfgFilePath, os.O_CREATE | os.O_RDWR, 0644)
+	if err != nil { return lib.NewError(err) }
+	defer f.Close()
+
+	// Read the dylt config file as YAML
 	data, err := lib.ReadYaml(f)
 	if err != nil { return err }
-	_, err = lib.SetKey(data, key, val)
+
+	// Truncate the file to 0 and rewrite 
+	err = f.Truncate(0)
 	if err != nil { return err }
-	slog.Debug("ConfigSetCommand.Run()", "data", data)
+	_, err = f.Seek(0, 0)
+	if err != nil { return err }
+	
+	// Set the config map value and write the updated config map
+	data.Set(key, val)
 	err = lib.WriteConfig(data)
+	if err != nil { return err }
+	err = lib.WriteYaml(data, f)
 	if err != nil { return err }
 
 	return nil
