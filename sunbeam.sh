@@ -135,10 +135,11 @@ git-do-nightly-release ()
 			return 0 
 		fi
 	fi
-	tag=$(git-tag-nightly "$version") || return
-	day ssh h0 GOBIN=/opt/bin /usr/local/go/bin/go install "github.com/dylt-dev/dylt@$tag"
-	day ssh h1 GOBIN=/opt/bin /usr/local/go/bin/go install "github.com/dylt-dev/dylt@$tag"
-	day ssh h2 GOBIN=/opt/bin /usr/local/go/bin/go install "github.com/dylt-dev/dylt@$tag"
+	local tag
+	git-tag-nightly tag "$version" || return
+	day ssh h0 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
+	day ssh h1 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
+	day ssh h2 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
 }
 
 
@@ -146,10 +147,12 @@ git-do-nightly-release ()
 git-tag-nightly ()
 {
 	# shellcheck disable=SC2016
-	(( $# == 1 )) || { printf 'Usage: git-tag-nightly $version\n' >&2; return 1; }
-	local version=$1
+	(( $# == 2 )) || { printf 'Usage: git-tag-nightly varname $version\n' >&2; return 1; }
+	# shellcheck disable=SC2178
+	[[ $1 != tagname ]] && { local -n tagname; tagname=$1; }
+	local version=$2
 
-	local tagname; tagname=$(gen-nightly-tagname $version) || return
+	tagname=$(gen-nightly-tagname $version) || return
 	git tag "$tagname"
 	git push
 	git push --tags
