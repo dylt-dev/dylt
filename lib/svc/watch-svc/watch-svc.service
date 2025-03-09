@@ -1,0 +1,17 @@
+[Unit]
+Description=Watch cluster for /svc/ 
+
+[Service]
+ExecStart=/opt/svc/watch-svc/run.sh
+Restart=on-failure
+RestartMaxDelaySec=3600
+RestartMode=normal
+RestartSec=1
+RestartSteps=3600
+Type=exec
+User=rayray
+WorkingDirectory=/opt/svc/watch-svc
+
+[Install]
+WantedBy=multi-user.target
+
