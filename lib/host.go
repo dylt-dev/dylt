@@ -126,7 +126,7 @@ func InstallService (svc *ServiceSpec, templateFS *ServiceTemplateFS, svcFS *Ser
 
 	// chown service folder to daylight user
 	slog.Info("Chown'ing service ...")
-	err = svcFS.ChownSvc("watch-daylight", uid, gid)
+	err = svcFS.ChownSvc(svc.Name, uid, gid)
 	if err != nil { return err }
 
 	return nil

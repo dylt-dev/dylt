@@ -141,7 +141,7 @@ func (cmd *WatchSvcCommand) HandleArgs(args []string) error {
 	// validate arg count
 	cmdArgs := cmd.Args()
 	cmdName := "watch svc"
-	nExpected := 2
+	nExpected := 0
 	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
 	// init positional params
 
