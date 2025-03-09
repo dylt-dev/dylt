@@ -69,6 +69,8 @@ func createWatchSubCommand(cmdName string) (Command, error) {
 	switch cmdName {
 	case "script":
 		return NewWatchScriptCommand(), nil
+	case "svc":
+		return NewWatchSvcCommand(), nil
 	default:
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
@@ -81,9 +83,14 @@ type WatchScriptCommand struct {
 }
 
 func NewWatchScriptCommand() *WatchScriptCommand {
+	// create command
 	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
-	return &WatchScriptCommand{FlagSet: flagSet}
+	cmd := WatchScriptCommand{FlagSet: flagSet}
+	// init flag vars (nop -- no flags)
+
+	return &cmd
 }
+
 
 func (cmd *WatchScriptCommand) HandleArgs(args []string) error {
 	// parse flags
@@ -113,6 +120,47 @@ func (cmd *WatchScriptCommand) Run(args []string) error {
 	return nil
 
 }
+
+type WatchSvcCommand struct {
+	*flag.FlagSet
+}
+
+func NewWatchSvcCommand() *WatchSvcCommand {
+	// create command
+	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
+	cmd := WatchSvcCommand{FlagSet: flagSet}
+	// init flag vars (nop -- no flags)
+
+	return &cmd
+}
+
+func (cmd *WatchSvcCommand) HandleArgs(args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "watch svc"
+	nExpected := 2
+	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	// init positional params
+
+	return nil
+}
+
+func (cmd *WatchSvcCommand) Run(args []string) error {
+	slog.Debug("WatchSvcCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunWatchSvc()
+	if err != nil { return err }
+
+	return nil
+
+}
+
 
 func RunWatchScript(scriptKey string, targetPath string) error {
 	slog.Debug("RunWatchScript()", "scriptKey", scriptKey, targetPath, "targetPath")
@@ -151,6 +199,36 @@ func RunWatchScript(scriptKey string, targetPath string) error {
 			if err != nil { return err }	
 
 			fmt.Printf("Watching %s ...\n", scriptKey)
+		}
+	}
+
+	fmt.Println("Done.")
+	return nil
+}
+
+
+func RunWatchSvc () error {
+	slog.Debug("RunWatchSvc()")
+	
+	slog.Info("Creating etcd client ...")
+	cli, err := lib.CreateEtcdClientFromConfig()
+	if err != nil { return err }
+	
+	// Create watch
+	prefix := "svc/"
+	ctx := clientv3.WithRequireLeader(context.Background())
+	fmt.Printf("Watching %s ...", prefix)
+	chWatch := cli.Watch(ctx, prefix, clientv3.WithKeysOnly(), clientv3.WithPrefix()) 
+	
+	// Loop over watch channel
+	var resp clientv3.WatchResponse
+	for resp = range chWatch {
+		for _, ev := range resp.Events {
+			key := string(ev.Kv.Key)
+			fmt.Printf("%s updated\n", key)
+			slog.Debug("Update detected", "key", key)
+			
+			fmt.Printf("Watching %s ...\n", prefix)
 		}
 	}
 

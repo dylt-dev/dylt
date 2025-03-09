@@ -80,6 +80,32 @@ func CreateWatchDaylightService(uid int, gid int) error {
 	return nil
 }
 
+func CreateWatchSvcService(uid int, gid int) error {
+	slog.Debug("lib.CreateWatchSvcService()", "uid", uid, "gid", gid)
+	const svcName = "watch-svc"
+	var svc ServiceSpec = ServiceSpec{svcName, ServiceData{}}
+	var svcFS ServiceFS = ServiceFS{RootPath: PATH_SvcFolderRoot}
+	var templateFS ServiceTemplateFS = ServiceTemplateFS{FS: FOL_Svc}
+	var err error
+
+	// Remove the service if it exists
+	slog.Info("Removing service ...")
+	err = RemoveService(svcName, &svcFS)
+	if err != nil { return err }
+
+	// install the service
+	slog.Info("Installing service ...")
+	err = InstallService(&svc, &templateFS, &svcFS, uid, gid)
+	if err != nil { return err }
+
+	// run the service
+	slog.Info("Running service ...")
+	err = RunService(svcName, &svcFS)
+	if err != nil { return err }
+
+	return nil
+}
+
 func InstallService (svc *ServiceSpec, templateFS *ServiceTemplateFS, svcFS *ServiceFS, uid int, gid int) error {
 	var err error
 
