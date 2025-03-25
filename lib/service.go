@@ -131,6 +131,16 @@ func (fs* ServiceFS) WriteUnitFile(svc *ServiceSpec, templateFS *ServiceTemplate
 }
 
 
+// A filesystem (fs.FS) that contains templates for each file of a service
+// As such, it can generate the various files of a service
+//
+// @note now that I understand templates, template themselves are collections
+// of templates so substructing Template might make make more sense than substructing
+// FS.
+//
+// @note do I really only need one substruct for all services? Or will I end up with
+// a different substruct for each type of service that's supported. Perhaps time
+// will tell.
 type ServiceTemplateFS struct {
 	fs.FS
 }
