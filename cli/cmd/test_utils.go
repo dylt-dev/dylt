@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const PATH_Dylt = "/Users/chris/src/dylt-dev/dylt/dylt"
+// const PATH_Dylt = "/Users/chris/src/dylt-dev/dylt/dylt"
 
 func CheckRunCommandSuccess (sCmdline string, t *testing.T) error {
 	var cmdline Cmdline = strings.Split(sCmdline, " ")

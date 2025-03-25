@@ -37,14 +37,27 @@ func BuildEnableServiceCommand(svcName string, svcFS *ServiceFS) *exec.Cmd {
 	return cmd
 }
 
+// simple typedef
 type ServiceData map[string]string
 
+// A service installed on a host.
+// @note some ServiceFS methods take a service name. Seems like maybe
+// if ServiceFS represents a service, then a svcName parameter doesn't
+// make much sense.
 type ServiceFS struct {
+	Name string
 	RootPath string
 }
 
-func (fs* ServiceFS) ChownSvc(svcName string, uid int, gid int) error {
-	folderPath := fs.GetFolderPath(svcName)
+func NewServiceFS (name string, rootPath string) *ServiceFS {
+	return &ServiceFS{
+		Name: name,
+		RootPath: rootPath,
+	}
+}
+
+func (fs* ServiceFS) ChownSvc(uid int, gid int) error {
+	folderPath := fs.GetFolderPath()
 	err := ChownR(folderPath, uid, gid)
 	if err != nil {
 		return err
@@ -53,23 +66,23 @@ func (fs* ServiceFS) ChownSvc(svcName string, uid int, gid int) error {
 	return nil
 }
 
-func (fs *ServiceFS) GetPath(svcName string, filename string) string {
-	return filepath.Join(fs.GetFolderPath(svcName), filename)
+func (fs *ServiceFS) GetPath(filename string) string {
+	return filepath.Join(fs.GetFolderPath(), filename)
 }
 
-func (fs *ServiceFS) GetFolderPath(svcName string) string {
-	return filepath.Join(fs.RootPath, svcName)
+func (fs *ServiceFS) GetFolderPath() string {
+	return filepath.Join(fs.RootPath)
 }
 
 func (fs *ServiceFS) GetUnitFilePath(svcName string) string {
 	filename := fmt.Sprintf("%s.service", svcName)
-	return fs.GetPath(svcName, filename)
+	return fs.GetPath(filename)
 }
 
 
-func (fs *ServiceFS) InitSvcFolder(svcName string) error {
+func (fs *ServiceFS) InitSvcFolder() error {
 	// Create folder for service if necessary
-	svcPath := fs.GetFolderPath(svcName)
+	svcPath := fs.GetFolderPath()
 	err := os.MkdirAll(svcPath, 0744)
 	if err != nil {
 		return err
@@ -78,8 +91,8 @@ func (fs *ServiceFS) InitSvcFolder(svcName string) error {
 	return nil
 }
 
-func (fs *ServiceFS) OpenFile(svcName string, filename string, flag int, perm os.FileMode) (*os.File, error) {
-	path := fs.GetPath(svcName, filename)
+func (fs *ServiceFS) OpenFile(filename string, flag int, perm os.FileMode) (*os.File, error) {
+	path := fs.GetPath(filename)
 	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
 		return nil, err
@@ -88,8 +101,8 @@ func (fs *ServiceFS) OpenFile(svcName string, filename string, flag int, perm os
 	return f, nil
 }
 
-func (fs *ServiceFS) OpenWriter(svcName string, filename string, perm os.FileMode) (*os.File, error) {
-	return fs.OpenFile(svcName, filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, perm)
+func (fs *ServiceFS) OpenWriter(filename string, perm os.FileMode) (*os.File, error) {
+	return fs.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, perm)
 }
 
 func (fs* ServiceFS) WriteRunScript(svc *ServiceSpec, templateFS *ServiceTemplateFS) error {
@@ -98,7 +111,7 @@ func (fs* ServiceFS) WriteRunScript(svc *ServiceSpec, templateFS *ServiceTemplat
 		return err
 	}
 	runScriptFilename := "run.sh"
-	w, err := fs.OpenWriter(svc.Name, runScriptFilename, 0755)
+	w, err := fs.OpenWriter(runScriptFilename, 0755)
 	if err != nil {
 		return err
 	}
@@ -117,7 +130,7 @@ func (fs* ServiceFS) WriteUnitFile(svc *ServiceSpec, templateFS *ServiceTemplate
 		return err
 	}
 	unitFilename := fmt.Sprintf("%s.service", svc.Name)
-	w, err := fs.OpenWriter(svc.Name, unitFilename, 0644)
+	w, err := fs.OpenWriter(unitFilename, 0644)
 	if err != nil {
 		return err
 	}
@@ -130,47 +143,10 @@ func (fs* ServiceFS) WriteUnitFile(svc *ServiceSpec, templateFS *ServiceTemplate
 	return nil
 }
 
-
-// A filesystem (fs.FS) that contains templates for each file of a service
-// As such, it can generate the various files of a service
-//
-// @note now that I understand templates, template themselves are collections
-// of templates so substructing Template might make make more sense than substructing
-// FS.
-//
-// @note do I really only need one substruct for all services? Or will I end up with
-// a different substruct for each type of service that's supported. Perhaps time
-// will tell.
-type ServiceTemplateFS struct {
-	fs.FS
-}
-
-func (fs *ServiceTemplateFS) GetRunScriptData(svcName string) (*TemplateData, error) {
-	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
-	tmpl, err := template.ParseFS(fs.FS, svcPattern)
-	if err != nil {
-		return nil, err
-	}
-	runScriptFilename := "run.sh"
-	tmpl = tmpl.Lookup(runScriptFilename)
-	unitFileData := TemplateData{Template: *tmpl}
-
-	return &unitFileData, nil
-}
-
-func (fs *ServiceTemplateFS) GetUnitFileData(svcName string) (*TemplateData, error) {
-	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
-	tmpl, err := template.ParseFS(fs.FS, svcPattern)
-	if err != nil {
-		return nil, err
-	}
-	unitFilename := fmt.Sprintf("%s.service", svcName)
-	tmpl = tmpl.Lookup(unitFilename)
-	unitFileData := TemplateData{Template: *tmpl}
-
-	return &unitFileData, nil
-}
-
+// Struct representing a systemd service. It consists of a service's name,
+// and the data making up the service.
+// @note this might be a tad redundant with ServiceData, since it's just ServiceData
+// plus a name. ServiceData is a map, giving this the illusion this makes sense
 type ServiceSpec struct {
 	Name string
 	Data ServiceData
@@ -185,30 +161,37 @@ func NewServiceSpec(name string) *ServiceSpec {
 	return &spec
 }
 
+// eg systemctl disable $service
 func (svc *ServiceSpec) BuildDisableCommand () *exec.Cmd {
 	return BuildDisableServiceCommand(svc.Name)
 }
 
+// eg systemctl is-enabled $service
 func (svc *ServiceSpec) BuildDoesExistCommand () *exec.Cmd {
 	return BuildDoesServiceExistCommand(svc.Name)
 }
 
+// eg systemctl enable /path/to/unit/file.service
 func (svc *ServiceSpec) BuildEnableCommand (svcFS ServiceFS) *exec.Cmd {
 	return BuildEnableServiceCommand(svc.Name, &svcFS)
 }
 
+// eg systemctl is-active $service
 func (svc *ServiceSpec) BuildIsActiveCommand() *exec.Cmd {
 	return BuildIsServiceActiveCommand(svc.Name)
 }
 
+// eg systemctl is-enabled $service
 func (svc* ServiceSpec) BuildIsEnabledCommand() *exec.Cmd {
 	return BuildIsServiceEnabledCommand(svc.Name)
 }
 
+// eg systemctl start $service
 func (svc *ServiceSpec) BuildStartCommand () *exec.Cmd {
 	return BuildStartServiceCommand(svc.Name)
 }
 
+// eg systemctl stop $service
 func (svc *ServiceSpec) BuildStopCommand () *exec.Cmd {
 	return BuildStopServiceCommand(svc.Name)
 }
@@ -310,7 +293,7 @@ func (svc *ServiceSpec) Remove (svcFS *ServiceFS) error {
 	}	
 
 	// Remove service folder
-	folderPath := svcFS.GetFolderPath(svc.Name)
+	folderPath := svcFS.GetFolderPath()
 	err = os.RemoveAll(folderPath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -366,4 +349,44 @@ func (svc *ServiceSpec) Stop () error {
 	if err != nil { return err }
 
 	return nil
+}
+
+// A filesystem (fs.FS) that contains templates for each file of a service
+// As such, it can generate the various files of a service
+//
+// @note now that I understand templates, template themselves are collections
+// of templates so substructing Template might make make more sense than substructing
+// FS.
+//
+// @note do I really only need one substruct for all services? Or will I end up with
+// a different substruct for each type of service that's supported. Perhaps time
+// will tell.
+type ServiceTemplateFS struct {
+	fs.FS
+}
+
+func (fs *ServiceTemplateFS) GetRunScriptData(svcName string) (*TemplateData, error) {
+	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
+	tmpl, err := template.ParseFS(fs.FS, svcPattern)
+	if err != nil {
+		return nil, err
+	}
+	runScriptFilename := "run.sh"
+	tmpl = tmpl.Lookup(runScriptFilename)
+	unitFileData := TemplateData{Template: *tmpl}
+
+	return &unitFileData, nil
+}
+
+func (fs *ServiceTemplateFS) GetUnitFileData(svcName string) (*TemplateData, error) {
+	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
+	tmpl, err := template.ParseFS(fs.FS, svcPattern)
+	if err != nil {
+		return nil, err
+	}
+	unitFilename := fmt.Sprintf("%s.service", svcName)
+	tmpl = tmpl.Lookup(unitFilename)
+	unitFileData := TemplateData{Template: *tmpl}
+
+	return &unitFileData, nil
 }
