@@ -8,13 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 	textTemplate "text/template"
-
-	"github.com/dylt-dev/dylt/lib"
 )
 
-func GetServiceTemplate (svcName string) (*Template, error) {
-	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
-	if err != nil { return nil, err }
+func GetServiceTemplate (fsSvcFiles fs.FS, svcName string) (*Template, error) {
 	fsSvc, err := fs.Sub(fsSvcFiles, svcName)
 	if err != nil { return nil, err }
 	tmpl := New(svcName)
@@ -121,17 +117,17 @@ func (t *Template) GetUnitFilePath () string {
 	return path
 }
 
-func (t *Template) WriteRunScript (w io.Writer, svc *lib.ServiceSpec) error {
+func (t *Template) WriteRunScript (w io.Writer, data map[string]string) error {
 	path := t.GetRunScriptPath()
-	err := t.ExecuteTemplate(w, path, svc.Data)
+	err := t.ExecuteTemplate(w, path, data)
 	if err != nil { return err }
 
 	return nil
 }
 
-func (t *Template) WriteUnitFile (w io.Writer, svc *lib.ServiceSpec) error {
+func (t *Template) WriteUnitFile (w io.Writer, data map[string]string) error {
 	path := t.GetUnitFilePath()
-	err := t.ExecuteTemplate(w, path, svc.Data)
+	err := t.ExecuteTemplate(w, path, data)
 	if err != nil { return err }
 
 	return nil

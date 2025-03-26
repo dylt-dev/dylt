@@ -1,22 +1,22 @@
-package template
+package lib
 
 import (
 	"io/fs"
 	"testing"
 
-	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/dylt-dev/dylt/template"
 )
 
 func init () {
-	lib.InitLogging()
+	InitLogging()
 }
 
 func TestAddContentFolder (t *testing.T) {
-	fsContent, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	fsContent, err := fs.Sub(EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
-	tmpl := New("content")
+	tmpl := template.New("content")
 	_, err = tmpl.AddContentFS(fsContent)
 	assert.NoError(t, err)
 	for _, tmplChild := range tmpl.Templates() {
@@ -25,9 +25,9 @@ func TestAddContentFolder (t *testing.T) {
 }
 
 func TestAddContentFS (t *testing.T) {
-	fsContent, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	fsContent, err := fs.Sub(EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
-	tmpl := New("content")
+	tmpl := template.New("content")
 	_, err = tmpl.AddContentFS(fsContent)
 	assert.NoError(t, err)
 	for _, tmplChild := range tmpl.Templates() {
@@ -36,12 +36,13 @@ func TestAddContentFS (t *testing.T) {
 }
 
 func TestGetServiceTemplate (t *testing.T) {
+	fsSvcFiles, err := fs.Sub(EMBED_SvcFiles, "svcfiles")
+	assert.NoError(t, err)
 	svcName := "watch-daylight"
-	tmpl, err := GetServiceTemplate(svcName)
+	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	require.NotNil(t, tmpl)
 	for _, tmplChild := range tmpl.Templates() {
 		t.Log(tmplChild.Name())
 	}	
 }
-

@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"text/template"
+	"github.com/dylt-dev/dylt/template"
 )
 
 //go:embed svcfiles/*
@@ -59,7 +59,8 @@ func CreateWatchDaylightService(uid int, gid int) error {
 	const svcName = "watch-daylight"
 	var svc ServiceSpec = ServiceSpec{svcName, ServiceData{}}
 	var svcFS ServiceFS = ServiceFS{RootPath: DEF_SvcFolderRootPath}
-	var templateFS ServiceTemplateFS = ServiceTemplateFS{FS: EMBED_SvcFiles}
+	// var templateFS ServiceTemplateFS = ServiceTemplateFS{FS: EMBED_SvcFiles}
+	var tmpl *template.Template = template.New(svcName)
 	var err error
 
 	// Remove the service if it exists
@@ -71,7 +72,7 @@ func CreateWatchDaylightService(uid int, gid int) error {
 
 	// install the service
 	slog.Info("Installing service ...")
-	err = InstallService(&svc, &templateFS, &svcFS, uid, gid)
+	err = InstallService(&svc, tmpl, &svcFS, uid, gid)
 	if err != nil {
 		return err
 	}
@@ -91,7 +92,7 @@ func CreateWatchSvcService(uid int, gid int) error {
 	const svcName = "watch-svc"
 	var svc ServiceSpec = ServiceSpec{svcName, ServiceData{}}
 	var svcFS *ServiceFS = NewServiceFS(svcName, DEF_SvcFolderRootPath)
-	var templateFS ServiceTemplateFS = ServiceTemplateFS{FS: EMBED_SvcFiles}
+	var tmpl *template.Template = template.New(svcName)
 	var err error
 
 	// Remove the service if it exists
@@ -103,7 +104,7 @@ func CreateWatchSvcService(uid int, gid int) error {
 
 	// install the service
 	slog.Info("Installing service ...")
-	err = InstallService(&svc, &templateFS, svcFS, uid, gid)
+	err = InstallService(&svc, tmpl, svcFS, uid, gid)
 	if err != nil {
 		return err
 	}
@@ -118,7 +119,7 @@ func CreateWatchSvcService(uid int, gid int) error {
 	return nil
 }
 
-func InstallService(svc *ServiceSpec, templateFS *ServiceTemplateFS, svcFS *ServiceFS, uid int, gid int) error {
+func InstallService(svc *ServiceSpec, tmpl *template.Template, svcFS *ServiceFS, uid int, gid int) error {
 	var err error
 
 	// Create folder for service if necessary
@@ -130,14 +131,14 @@ func InstallService(svc *ServiceSpec, templateFS *ServiceTemplateFS, svcFS *Serv
 
 	// Execute unit file template & write to file
 	slog.Info("Writing Unit file ...")
-	err = svcFS.WriteUnitFile(svc, templateFS)
+	err = svcFS.WriteUnitFile(svc, tmpl)
 	if err != nil {
 		return err
 	}
 
 	// Execute run script template & write to file
 	slog.Info("Writing run script ...")
-	err = svcFS.WriteRunScript(svc, templateFS)
+	err = svcFS.WriteRunScript(svc, tmpl)
 	if err != nil {
 		return err
 	}

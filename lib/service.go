@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"text/template"
+	"github.com/dylt-dev/dylt/template"
 )
 
 func BuildDisableServiceCommand(svcName string) *exec.Cmd {
@@ -79,7 +79,6 @@ func (fs *ServiceFS) GetUnitFilePath(svcName string) string {
 	return fs.GetPath(filename)
 }
 
-
 func (fs *ServiceFS) InitSvcFolder() error {
 	// Create folder for service if necessary
 	svcPath := fs.GetFolderPath()
@@ -105,18 +104,14 @@ func (fs *ServiceFS) OpenWriter(filename string, perm os.FileMode) (*os.File, er
 	return fs.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, perm)
 }
 
-func (fs* ServiceFS) WriteRunScript(svc *ServiceSpec, templateFS *ServiceTemplateFS) error {
-	runScriptData, err := templateFS.GetRunScriptData(svc.Name)
-	if err != nil {
-		return err
-	}
-	runScriptFilename := "run.sh"
-	w, err := fs.OpenWriter(runScriptFilename, 0755)
+func (fs* ServiceFS) WriteRunScript(svc *ServiceSpec, tmpl *template.Template) error {
+	path := tmpl.GetRunScriptPath()
+	w, err := fs.OpenWriter(path, 0755)
 	if err != nil {
 		return err
 	}
 	defer w.Close()
-	err = runScriptData.Write(w, svc.Data)
+	err = tmpl.WriteRunScript(w, svc.Data)
 	if err != nil {
 		return err
 	}
@@ -124,18 +119,14 @@ func (fs* ServiceFS) WriteRunScript(svc *ServiceSpec, templateFS *ServiceTemplat
 	return nil
 }
 
-func (fs* ServiceFS) WriteUnitFile(svc *ServiceSpec, templateFS *ServiceTemplateFS) error {
-	unitFileData, err := templateFS.GetUnitFileData(svc.Name)
-	if err != nil {
-		return err
-	}
-	unitFilename := fmt.Sprintf("%s.service", svc.Name)
-	w, err := fs.OpenWriter(unitFilename, 0644)
+func (fs* ServiceFS) WriteUnitFile(svc *ServiceSpec, tmpl *template.Template) error {
+	path := tmpl.GetUnitFilePath()
+	w, err := fs.OpenWriter(path, 0644)
 	if err != nil {
 		return err
 	}
 	defer w.Close()
-	err = unitFileData.Write(w, svc.Data)
+	err = tmpl.WriteUnitFile(w, svc.Data)
 	if err != nil {
 		return err
 	}
@@ -361,32 +352,32 @@ func (svc *ServiceSpec) Stop () error {
 // @note do I really only need one substruct for all services? Or will I end up with
 // a different substruct for each type of service that's supported. Perhaps time
 // will tell.
-type ServiceTemplateFS struct {
-	fs.FS
-}
+// type ServiceTemplateFS struct {
+// 	fs.FS
+// }
 
-func (fs *ServiceTemplateFS) GetRunScriptData(svcName string) (*TemplateData, error) {
-	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
-	tmpl, err := template.ParseFS(fs.FS, svcPattern)
-	if err != nil {
-		return nil, err
-	}
-	runScriptFilename := "run.sh"
-	tmpl = tmpl.Lookup(runScriptFilename)
-	unitFileData := TemplateData{Template: *tmpl}
+// func (fs *ServiceTemplateFS) GetRunScriptData(svcName string) (*TemplateData, error) {
+// 	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
+// 	tmpl, err := template.ParseFS(fs.FS, svcPattern)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	runScriptFilename := "run.sh"
+// 	tmpl = tmpl.Lookup(runScriptFilename)
+// 	unitFileData := TemplateData{Template: *tmpl}
 
-	return &unitFileData, nil
-}
+// 	return &unitFileData, nil
+// }
 
-func (fs *ServiceTemplateFS) GetUnitFileData(svcName string) (*TemplateData, error) {
-	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
-	tmpl, err := template.ParseFS(fs.FS, svcPattern)
-	if err != nil {
-		return nil, err
-	}
-	unitFilename := fmt.Sprintf("%s.service", svcName)
-	tmpl = tmpl.Lookup(unitFilename)
-	unitFileData := TemplateData{Template: *tmpl}
+// func (fs *ServiceTemplateFS) GetUnitFileData(svcName string) (*TemplateData, error) {
+// 	svcPattern := fmt.Sprintf("svc/%s/*", svcName)
+// 	tmpl, err := template.ParseFS(fs.FS, svcPattern)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	unitFilename := fmt.Sprintf("%s.service", svcName)
+// 	tmpl = tmpl.Lookup(unitFilename)
+// 	unitFileData := TemplateData{Template: *tmpl}
 
-	return &unitFileData, nil
-}
+// 	return &unitFileData, nil
+// }

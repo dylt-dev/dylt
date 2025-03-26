@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/dylt-dev/dylt/lib"
-	"github.com/dylt-dev/dylt/lib/template"
+	"github.com/dylt-dev/dylt/template"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,7 +66,9 @@ func TestWalkSvcFolder(t *testing.T) {
 }
 
 func TestEmitWatchDaylightRunScript(t *testing.T) {
-	tmplSvc, err := template.GetServiceTemplate("watch-daylight")
+	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	assert.NoError(t, err)
+	tmplSvc, err := template.GetServiceTemplate(fsSvcFiles, "watch-daylight")
 	assert.NoError(t, err)
 	assert.NotNil(t, tmplSvc)
 	tmpl := tmplSvc.Lookup("/run.sh")
@@ -76,7 +78,9 @@ func TestEmitWatchDaylightRunScript(t *testing.T) {
 }
 
 func TestEmitWatchDaylightUnitFile(t *testing.T) {
-	tmplSvc, err := template.GetServiceTemplate("watch-daylight")
+	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	assert.NoError(t, err)
+	tmplSvc, err := template.GetServiceTemplate(fsSvcFiles, "watch-daylight")
 	assert.NoError(t, err)
 	assert.NotNil(t, tmplSvc)
 	tmpl := tmplSvc.Lookup("/watch-daylight.service")
@@ -93,21 +97,25 @@ func TestChmodR0(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteRunScript(t *testing.T) {
+	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	assert.NoError(t, err)
 	svcName := "watch-daylight"
-	tmpl, err := template.GetServiceTemplate(svcName)
+	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpl)
 	svc := lib.NewServiceSpec(svcName)
-	err = tmpl.WriteRunScript(os.Stdout, svc)
+	err = tmpl.WriteRunScript(os.Stdout, svc.Data)
 	assert.NoError(t, err)
 }
 
 func Test_WatchDaylight_WriteUnitFile(t *testing.T) {
+	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	assert.NoError(t, err)
 	svcName := "watch-daylight"
-	tmpl, err := template.GetServiceTemplate(svcName)
+	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpl)
 	svc := lib.NewServiceSpec(svcName)
-	err = tmpl.WriteUnitFile(os.Stdout, svc)
+	err = tmpl.WriteUnitFile(os.Stdout, svc.Data)
 	assert.NoError(t, err)
 }
