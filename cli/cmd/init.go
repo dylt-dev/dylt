@@ -16,7 +16,7 @@ type InitCommand struct {
 
 func NewInitCommand () *InitCommand {
 	// create command
-	flagSet := flag.NewFlagSet("init", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("init", flag.ExitOnError)
 	cmd := InitCommand { FlagSet: flagSet }
 	// init flag vars
 	flagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")

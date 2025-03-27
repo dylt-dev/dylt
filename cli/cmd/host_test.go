@@ -6,7 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/service"
 	"github.com/dylt-dev/dylt/template"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -92,7 +94,7 @@ func TestEmitWatchDaylightUnitFile(t *testing.T) {
 func TestChmodR0(t *testing.T) {
 	svcPath := "/opt/svc/watch-daylight"
 	// uid + gid for local user on local workstation
-	err := lib.ChownR(svcPath, 501, 20)
+	err := common.ChownR(svcPath, 501, 20)
 	assert.Nil(t, err)
 }
 
@@ -103,7 +105,7 @@ func Test_WatchDaylight_WriteRunScript(t *testing.T) {
 	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpl)
-	svc := lib.NewServiceSpec(svcName)
+	svc := service.NewServiceSpec(svcName)
 	err = tmpl.WriteRunScript(os.Stdout, svc.Data)
 	assert.NoError(t, err)
 }
@@ -115,7 +117,7 @@ func Test_WatchDaylight_WriteUnitFile(t *testing.T) {
 	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpl)
-	svc := lib.NewServiceSpec(svcName)
+	svc := service.NewServiceSpec(svcName)
 	err = tmpl.WriteUnitFile(os.Stdout, svc.Data)
 	assert.NoError(t, err)
 }

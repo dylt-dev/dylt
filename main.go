@@ -51,6 +51,19 @@ func firstTime () error {
 }
 
 func initLogging () {
+	logToFile, ok := os.LookupEnv("DYLT_LogToFile")
+	if ok  && logToFile != "" {
+		initLoggingToFile()
+	} else {
+		opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
+		var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+		slog.SetDefault(logger)
+		slog.Debug("logging successfully initialized")
+	}
+}
+
+
+func initLoggingToFile () {
 	var logFile, logFolder, logPath string
 	envLogPath, ok := os.LookupEnv("DYLT_LogPath")
 	if ok {

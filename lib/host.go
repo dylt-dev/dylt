@@ -2,12 +2,10 @@ package lib
 
 import (
 	"embed"
-	"io"
-	"io/fs"
 	"log/slog"
-	"os"
 	"os/exec"
-	"path/filepath"
+
+	"github.com/dylt-dev/dylt/service"
 	"github.com/dylt-dev/dylt/template"
 )
 
@@ -18,52 +16,16 @@ const DEF_uid_rayray = 2000
 const DEF_gid_rayray = 2000
 const DEF_SvcFolderRootPath = "/opt/svc/"
 
-type TemplateData struct {
-	template.Template
-}
-
-func (unitFile *TemplateData) Write(w io.Writer, data map[string]string) error {
-	err := unitFile.Execute(w, data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ChownR(folderPath string, uid int, gid int) error {
-	var fnWalk fs.WalkDirFunc = func(path string, d fs.DirEntry, err error) error {
-		if err == nil {
-			slog.Debug("lib.ChownR.fnWalk", "path", path, "d.Name()", d.Name())
-			fullPath := filepath.Join(folderPath, path)
-			err = os.Chown(fullPath, uid, gid)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	slog.Debug("lib.ChownR()", "folderPath", folderPath, "uid", uid, "gid", gid)
-	dir := os.DirFS(folderPath)
-	err := fs.WalkDir(dir, ".", fnWalk)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func CreateWatchDaylightService(uid int, gid int) error {
 	slog.Debug("lib.CreateWatchDaylightService()", "uid", uid, "gid", gid)
 	const svcName = "watch-daylight"
-	var svc ServiceSpec = ServiceSpec{svcName, ServiceData{}}
-	var svcFS ServiceFS = ServiceFS{RootPath: DEF_SvcFolderRootPath}
-	// var templateFS ServiceTemplateFS = ServiceTemplateFS{FS: EMBED_SvcFiles}
+	var svc service.ServiceSpec = service.ServiceSpec{Name: svcName, Data: service.ServiceData{}}
+	var svcFS service.ServiceFS = service.ServiceFS{RootPath: DEF_SvcFolderRootPath}
 	var tmpl *template.Template = template.New(svcName)
 	var err error
 
-	// Remove the service if it exists
+	// remove the service if it exists
 	slog.Info("Removing service ...")
 	err = RemoveService(svcName, &svcFS)
 	if err != nil {
@@ -90,8 +52,8 @@ func CreateWatchDaylightService(uid int, gid int) error {
 func CreateWatchSvcService(uid int, gid int) error {
 	slog.Debug("lib.CreateWatchSvcService()", "uid", uid, "gid", gid)
 	const svcName = "watch-svc"
-	var svc ServiceSpec = ServiceSpec{svcName, ServiceData{}}
-	var svcFS *ServiceFS = NewServiceFS(svcName, DEF_SvcFolderRootPath)
+	var svc service.ServiceSpec = service.ServiceSpec{Name: svcName, Data: service.ServiceData{}}
+	var svcFS *service.ServiceFS = service.NewServiceFS(svcName, DEF_SvcFolderRootPath)
 	var tmpl *template.Template = template.New(svcName)
 	var err error
 
@@ -119,7 +81,7 @@ func CreateWatchSvcService(uid int, gid int) error {
 	return nil
 }
 
-func InstallService(svc *ServiceSpec, tmpl *template.Template, svcFS *ServiceFS, uid int, gid int) error {
+func InstallService(svc *service.ServiceSpec, tmpl *template.Template, svcFS *service.ServiceFS, uid int, gid int) error {
 	var err error
 
 	// Create folder for service if necessary
@@ -153,9 +115,9 @@ func InstallService(svc *ServiceSpec, tmpl *template.Template, svcFS *ServiceFS,
 	return nil
 }
 
-func RemoveService(svcName string, fs *ServiceFS) error {
+func RemoveService(svcName string, fs *service.ServiceFS) error {
 	slog.Debug("lib.RemoveService()", "svcName", svcName)
-	var svc ServiceSpec = ServiceSpec{Name: svcName}
+	var svc service.ServiceSpec = service.ServiceSpec{Name: svcName}
 	var err error
 
 	// Stop service
@@ -182,9 +144,9 @@ func RemoveService(svcName string, fs *ServiceFS) error {
 	return nil
 }
 
-func RunService(svcName string, svcFS *ServiceFS) error {
+func RunService(svcName string, svcFS *service.ServiceFS) error {
 	slog.Debug("lib.RunService()", "svcName", svcName)
-	var svc *ServiceSpec = NewServiceSpec(svcName)
+	var svc *service.ServiceSpec = service.NewServiceSpec(svcName)
 	var err error
 
 	// systemctl daemon-reload
