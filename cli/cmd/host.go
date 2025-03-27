@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/api"
 )
 
 type HostCommand struct {
@@ -117,10 +117,10 @@ func RunHostInit(uid int, gid int) error {
 	var err error
 	fmt.Println("init!")
 
-	err = lib.CreateWatchDaylightService(uid, gid)
+	err = api.CreateWatchDaylightService(uid, gid)
 	if err != nil { return err }
 	
-	err = lib.CreateWatchSvcService(uid, gid)
+	err = api.CreateWatchSvcService(uid, gid)
 	if err != nil { return err }
 
 	return nil

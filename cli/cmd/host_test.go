@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
-	"github.com/dylt-dev/dylt/lib"
-	"github.com/dylt-dev/dylt/service"
+	"github.com/dylt-dev/dylt/systemd"
 	"github.com/dylt-dev/dylt/template"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,7 +59,7 @@ func TestHostInitCmd0(t *testing.T) {
 // not-a-test
 // Print out all the files in EMBED_SvcFiles. Useful sanity check.
 func TestWalkSvcFolder(t *testing.T) {
-	fs.WalkDir(lib.EMBED_SvcFiles, ".", func(p string, d fs.DirEntry, err error) error {
+	fs.WalkDir(api.EMBED_SvcFiles, ".", func(p string, d fs.DirEntry, err error) error {
 		if !d.IsDir() {
 			fmt.Printf("%s\n", p)
 		}
@@ -68,9 +68,9 @@ func TestWalkSvcFolder(t *testing.T) {
 }
 
 func TestEmitWatchDaylightRunScript(t *testing.T) {
-	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
-	tmplSvc, err := template.GetServiceTemplate(fsSvcFiles, "watch-daylight")
+	tmplSvc, err := template.NewTemplate(fsSvcFiles, "watch-daylight")
 	assert.NoError(t, err)
 	assert.NotNil(t, tmplSvc)
 	tmpl := tmplSvc.Lookup("/run.sh")
@@ -80,9 +80,9 @@ func TestEmitWatchDaylightRunScript(t *testing.T) {
 }
 
 func TestEmitWatchDaylightUnitFile(t *testing.T) {
-	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
-	tmplSvc, err := template.GetServiceTemplate(fsSvcFiles, "watch-daylight")
+	tmplSvc, err := template.NewTemplate(fsSvcFiles, "watch-daylight")
 	assert.NoError(t, err)
 	assert.NotNil(t, tmplSvc)
 	tmpl := tmplSvc.Lookup("/watch-daylight.service")
@@ -99,25 +99,25 @@ func TestChmodR0(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteRunScript(t *testing.T) {
-	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	svcName := "watch-daylight"
-	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
+	tmpl, err := template.NewTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpl)
-	svc := service.NewServiceSpec(svcName)
+	svc := systemd.NewServiceSpec(svcName)
 	err = tmpl.WriteRunScript(os.Stdout, svc.Data)
 	assert.NoError(t, err)
 }
 
 func Test_WatchDaylight_WriteUnitFile(t *testing.T) {
-	fsSvcFiles, err := fs.Sub(lib.EMBED_SvcFiles, "svcfiles")
+	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	svcName := "watch-daylight"
-	tmpl, err := template.GetServiceTemplate(fsSvcFiles, svcName)
+	tmpl, err := template.NewTemplate(fsSvcFiles, svcName)
 	assert.NoError(t, err)
 	assert.NotNil(t, tmpl)
-	svc := service.NewServiceSpec(svcName)
+	svc := systemd.NewServiceSpec(svcName)
 	err = tmpl.WriteUnitFile(os.Stdout, svc.Data)
 	assert.NoError(t, err)
 }

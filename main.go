@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/common"
 )
 
 const LOG_File = "dylt.log"
@@ -40,10 +40,10 @@ func firstTime () error {
 	r := bufio.NewReader(os.Stdin)
 	etcdDomain, err := r.ReadString('\n')
 	etcdDomain = strings.TrimSpace(etcdDomain)
-	if err != nil { return lib.NewError(err) }
-	cfg := lib.ConfigStruct{ EtcdDomain: etcdDomain}
-	err = lib.SaveConfig(cfg)
-	if err != nil { return lib.NewError(err) }
+	if err != nil { return common.NewError(err) }
+	cfg := common.ConfigStruct{ EtcdDomain: etcdDomain}
+	err = common.SaveConfig(cfg)
+	if err != nil { return common.NewError(err) }
 	fmt.Println("Saved!")
 	fmt.Println()
 
@@ -87,7 +87,7 @@ func initLoggingToFile () {
 
 
 func isFirstTime () (bool, error) {
-	configFilePath := lib.GetConfigFilePath()
+	configFilePath := common.GetConfigFilePath()
 	_, err := os.Stat(configFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {

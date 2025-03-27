@@ -1,11 +1,11 @@
-package lib
+package api
 
 import (
 	"embed"
 	"log/slog"
 	"os/exec"
 
-	"github.com/dylt-dev/dylt/service"
+	"github.com/dylt-dev/dylt/systemd"
 	"github.com/dylt-dev/dylt/template"
 )
 
@@ -20,8 +20,8 @@ const DEF_SvcFolderRootPath = "/opt/svc/"
 func CreateWatchDaylightService(uid int, gid int) error {
 	slog.Debug("lib.CreateWatchDaylightService()", "uid", uid, "gid", gid)
 	const svcName = "watch-daylight"
-	var svc service.ServiceSpec = service.ServiceSpec{Name: svcName, Data: service.ServiceData{}}
-	var svcFS service.ServiceFS = service.ServiceFS{RootPath: DEF_SvcFolderRootPath}
+	var svc systemd.ServiceSpec = systemd.ServiceSpec{Name: svcName, Data: systemd.ServiceData{}}
+	var svcFS systemd.ServiceFS = systemd.ServiceFS{RootPath: DEF_SvcFolderRootPath}
 	var tmpl *template.Template = template.New(svcName)
 	var err error
 
@@ -52,8 +52,8 @@ func CreateWatchDaylightService(uid int, gid int) error {
 func CreateWatchSvcService(uid int, gid int) error {
 	slog.Debug("lib.CreateWatchSvcService()", "uid", uid, "gid", gid)
 	const svcName = "watch-svc"
-	var svc service.ServiceSpec = service.ServiceSpec{Name: svcName, Data: service.ServiceData{}}
-	var svcFS *service.ServiceFS = service.NewServiceFS(svcName, DEF_SvcFolderRootPath)
+	var svc systemd.ServiceSpec = systemd.ServiceSpec{Name: svcName, Data: systemd.ServiceData{}}
+	var svcFS *systemd.ServiceFS = systemd.NewServiceFS(svcName, DEF_SvcFolderRootPath)
 	var tmpl *template.Template = template.New(svcName)
 	var err error
 
@@ -81,7 +81,7 @@ func CreateWatchSvcService(uid int, gid int) error {
 	return nil
 }
 
-func InstallService(svc *service.ServiceSpec, tmpl *template.Template, svcFS *service.ServiceFS, uid int, gid int) error {
+func InstallService(svc *systemd.ServiceSpec, tmpl *template.Template, svcFS *systemd.ServiceFS, uid int, gid int) error {
 	var err error
 
 	// Create folder for service if necessary
@@ -115,9 +115,9 @@ func InstallService(svc *service.ServiceSpec, tmpl *template.Template, svcFS *se
 	return nil
 }
 
-func RemoveService(svcName string, fs *service.ServiceFS) error {
+func RemoveService(svcName string, fs *systemd.ServiceFS) error {
 	slog.Debug("lib.RemoveService()", "svcName", svcName)
-	var svc service.ServiceSpec = service.ServiceSpec{Name: svcName}
+	var svc systemd.ServiceSpec = systemd.ServiceSpec{Name: svcName}
 	var err error
 
 	// Stop service
@@ -144,9 +144,9 @@ func RemoveService(svcName string, fs *service.ServiceFS) error {
 	return nil
 }
 
-func RunService(svcName string, svcFS *service.ServiceFS) error {
+func RunService(svcName string, svcFS *systemd.ServiceFS) error {
 	slog.Debug("lib.RunService()", "svcName", svcName)
-	var svc *service.ServiceSpec = service.NewServiceSpec(svcName)
+	var svc *systemd.ServiceSpec = systemd.NewServiceSpec(svcName)
 	var err error
 
 	// systemctl daemon-reload

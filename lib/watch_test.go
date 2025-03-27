@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -41,7 +42,7 @@ func TestWatchHello (t *testing.T) {
 	
 	ctx := clientv3.WithRequireLeader(context.Background())
 	assert.NotNil(t, ctx)
-	cli, err := CreateEtcdClientFromConfig()
+	cli, err := common.CreateEtcdClientFromConfig()
 	assert.Nil(t, err)
 	chWatch := cli.Watch(ctx, "/hello", clientv3.WithKeysOnly()) 
 	var resp clientv3.WatchResponse

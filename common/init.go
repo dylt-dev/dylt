@@ -1,4 +1,4 @@
-package lib
+package common
 
 
 // All data specified in flags to the `init` subcommand
