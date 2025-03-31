@@ -24,7 +24,6 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	var ops = []etcd.Op{}
 	var kind reflect.Kind = ty.Kind()
 	var val reflect.Value = reflect.ValueOf(i)
-	var value []byte
 	var err error
 	ctx.printf("Switching on kind=%s ...\n", kind.String())
 	switch kind {
@@ -34,12 +33,9 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 		reflect.Float32,
 		reflect.Float64,
 		reflect.String:
-		value, err = json.Marshal(i)
-		if err != nil {
-			return nil, err
-		}
-		opPut := etcd.OpPut(key, string(value))
-		ops = append(ops, opPut)
+		opsPut, err := encodeDefault(ctx, key, val)
+		if err != nil { return nil, err }
+		ops = append(ops, opsPut...)
 	case reflect.Array:
 		opsArray, err := encodeSlice(ctx, key, val)
 		if err != nil { return nil, err }
@@ -156,6 +152,17 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	}
 	ctx.println("conditions were not met; returning Invalid")
 	return Invalid
+}
+
+func encodeDefault (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+	i := val.Interface()
+	j, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	opPut := etcd.OpPut(key, string(j))
+
+	return []etcd.Op{opPut}, nil
 }
 
 func encodeMap (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
@@ -478,65 +485,3 @@ func structKind(ctx *ecoContext, ty reflect.Type) kind {
 	ctx.println("All fields passed; returning SimpleStruct")
 	return SimpleStruct
 }
-
-func writeSlice (ctx *ecoContext, builder *strings.Builder, val *reflect.Value) (*strings.Builder, error) {
-	ctx.println("writeValue()")
-	ctx.inc()
-	defer ctx.dec()
-
-	ty := val.Type()
-	if getTypeKind(ctx, ty) != SimpleSlice {
-		return nil, fmt.Errorf("invalid type (%s); expected SimpleSlice", fullTypeName(ty))
-	}
-	len := val.Len()
-	ctx.printf("len=%d\n", len)
-	builder.WriteRune('[')
-	for i := range len {
-		el := val.Index(i)
-		inf := el.Interface()
-		b, err := json.Marshal(inf)
-		if err != nil { return nil, err }
-		if i > 0 {
-			_, err = builder.WriteRune(',')
-			if err != nil { return nil, err }
-		}
-		_, err = builder.Write(b)
-		if err != nil { return nil, err }
-	}
-	builder.WriteRune(']')
-
-	return builder, nil
-}
-
-
-	/*
-	var i any
-	switch val.Type().Kind() {
-	case reflect.Bool:
-		i = val.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return intEncoder
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return uintEncoder
-	case reflect.Float32:
-		return float32Encoder
-	case reflect.Float64:
-		return float64Encoder
-	case reflect.String:
-		return stringEncoder
-	case reflect.Interface:
-		return interfaceEncoder
-	case reflect.Struct:
-		return newStructEncoder(t)
-	case reflect.Map:
-		return newMapEncoder(t)
-	case reflect.Slice:
-		return newSliceEncoder(t)
-	case reflect.Array:
-		return newArrayEncoder(t)
-	case reflect.Pointer:
-		return newPtrEncoder(t)
-	default:
-		return unsupportedTypeEncoder
-	}
-*/
