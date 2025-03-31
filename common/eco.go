@@ -14,6 +14,11 @@ import (
 )
 
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
+	ctx.printf("Encoding key=%s (type=%s) ...)\n", key, fullTypeName(reflect.TypeOf(i)))
+	if _, ok := i.(reflect.Value); ok { ctx.println("* arg i is of type reflect.Value; did you mean to call i.Interface()?")}
+	ctx.inc()
+	defer ctx.dec()
+
 	var ty reflect.Type = reflect.TypeOf(i)
 	// var _ reflect.Value = reflect.ValueOf(i)
 	var ops = []etcd.Op{}
@@ -21,6 +26,7 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	var val reflect.Value = reflect.ValueOf(i)
 	var value []byte
 	var err error
+	ctx.printf("Switching on kind=%s ...\n", kind.String())
 	switch kind {
 	case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -153,7 +159,31 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 }
 
 func encodeMap (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	return nil, errors.New("tbd")
+	ctx.printf("encodeMap() - key=%s\n", key)
+	ctx.inc()
+	defer ctx.dec()
+
+	ty := val.Type()
+	ctx.printf("Confirming type (%s) is SimpleMap ... ", fullTypeName(ty))
+	if getTypeKind(ctx, ty) != SimpleMap {
+		ctx.println("incorrect.")
+		return nil, fmt.Errorf("expecting SimpleMap; got %s", fullTypeName(ty))
+	}
+
+	ctx.println("confirmed.")
+	ctx.println("Encoding keys and values ...")
+	var ops = []etcd.Op{}
+	mapIter := val.MapRange()
+	for mapIter.Next() {
+		miKey := fmt.Sprintf("%v", mapIter.Key().Interface())
+		elKey := filepath.Join(key, string(miKey))
+		elVal := mapIter.Value()
+		elOps, err := Encode(ctx, elKey, elVal.Interface())
+		if err != nil { return nil, err }
+		ops = append(ops, elOps...)
+	}
+
+	return ops, nil
 }
 
 func encodeSlice (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
@@ -174,7 +204,31 @@ func encodeSlice (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, er
 }
 
 func encodeStruct (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	return nil, errors.New("tbd")
+	ctx.printf("encodeStruct() - key=%s\n", key)
+	ctx.inc()
+	defer ctx.dec()
+
+	ty := val.Type()
+	ctx.printf("Confirming type (%s) is SimpleStruct ... ", fullTypeName(ty))
+	if getTypeKind(ctx, ty) != SimpleStruct {
+		ctx.println("incorrect.")
+		return nil, fmt.Errorf("expecting SimpleStruct; got %s", fullTypeName(ty))
+	}
+
+	ctx.println("confirmed.")
+	ctx.println("Encoding fields ...")
+	var ops = []etcd.Op{}
+	for i := range ty.NumField() {
+		sf := ty.Field(i)
+		sfName := getFieldName(sf)
+		sfVal := val.Field(i)
+		sfKey := filepath.Join(key, sfName)
+		sfOps, err := Encode(ctx, sfKey, sfVal.Interface())
+		if err != nil { return nil, err }
+		ops = append(ops, sfOps...)
+	}
+
+	return ops, nil
 }
 
 func fullTypeName(ty reflect.Type) string {

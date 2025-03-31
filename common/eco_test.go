@@ -61,6 +61,17 @@ func TestEncodeEtcd_Bool(t *testing.T) {
 	testEncodeBool(t, key, i)
 }
 
+
+func TestEncodeEtcd_EcoTest (t *testing.T) {
+	key := "key"
+	i := EcoTest{Name: "MEAT", LuckyNumber: 13}
+	ctx := newEcoContext()
+
+	ops, err := Encode(ctx, key, i)
+	assert.NoError(t, err)
+	dumpOps(t, ops)
+}
+
 func TestEncodeEtcd_Float(t *testing.T) {
 	key := "key"
 	i := 42.0
@@ -85,6 +96,37 @@ func TestEncodeEtcd_IntSlice(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, key, string(ops[0].KeyBytes()))
 	assert.Equal(t, sJson, string(ops[0].ValueBytes()))
+}
+
+func TestEncodeEtcd_MapOfMaps (t *testing.T) {
+	key := "stros"
+	map0 := map[string]string{"Name": "Altuve", "Position": "LF"}
+	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
+	map2 := map[string]string{"Name": "Javier", "Position": "P"}
+	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
+	ops, err := Encode(newEcoContext(), key, mapStros)	
+	assert.NoError(t, err)
+	dumpOps(t, ops)
+}
+
+
+func TestEncodeEtcd_MapWithIntKeys (t *testing.T) {
+	key := "key"
+	i := map[int]string{10: "print 'daylight is great'", 20: "print 'say it again'", 30: "goto 10"}
+	ctx := newEcoContext()
+
+	ops, err := Encode(ctx, key, i)
+	assert.NoError(t, err)
+	dumpOps(t, ops)
+}
+func TestEncodeEtcd_SimpleMap (t *testing.T) {
+	key := "key"
+	i := map[string]string{"foo": "13", "bar": "thirteen", "bum": "th1rt33n"}
+	ctx := newEcoContext()
+
+	ops, err := Encode(ctx, key, i)
+	assert.NoError(t, err)
+	dumpOps(t, ops)
 }
 
 func TestEncodeEtcd_String(t *testing.T) {
