@@ -155,6 +155,9 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 }
 
 func encodeDefault (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+	ctx.printf("encodeDefault() - key=%s\n", key)
+	ctx.inc(); defer ctx.dec()
+	
 	i := val.Interface()
 	j, err := json.Marshal(i)
 	if err != nil {
@@ -167,8 +170,7 @@ func encodeDefault (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, 
 
 func encodeMap (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.printf("encodeMap() - key=%s\n", key)
-	ctx.inc()
-	defer ctx.dec()
+	ctx.inc(); defer ctx.dec()
 
 	ty := val.Type()
 	ctx.printf("Confirming type (%s) is SimpleMap ... ", fullTypeName(ty))

@@ -44,7 +44,6 @@ func TestEncodeEtcd_Interface(t *testing.T) {
 	assert.Error(t, err)
 }
 
-
 func TestEncodeEtcd_IntSlice(t *testing.T) {
 	ctx := newEcoContext()
 	slice := []int{5, 8, 13}

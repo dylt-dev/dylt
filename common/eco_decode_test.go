@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,11 +32,39 @@ func decode (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 		ctx.printf("getVal()=%v (%s)\n", getVal, getVal)
 		err = json.Unmarshal(getVal, i)
 		if err != nil { return err }
-	} else if getTypeKind(ctx, ty.Elem()) == SimpleSlice {
+	}
+
+	kindElem := getTypeKind(ctx, ty.Elem())
+
+	if kindElem == SimpleMap {
+		return decodeMap(ctx, etcdClient, key, i)
+
+	} else if kindElem == SimpleSlice {
 		return decodeSlice(ctx, etcdClient, key, i)
+	
+	} else if kindElem == SimpleStruct {
+		return decodeStruct(ctx, etcdClient, key, i)
+	
 	} else {
 		return errors.New("unsupported type")
 	}
+}
+
+func decodeMap (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
+	ctx.printf("decodeMap() - key=%s\n", key)
+	ctx.inc(); defer ctx.dec()
+
+	ty := reflect.TypeOf(i)
+	if ty.Kind() != reflect.Pointer { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))}
+	kind := getTypeKind(ctx, ty.Elem())
+	if kind != SimpleMap { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem())) }
+
+	if !strings.HasSuffix(key, string(filepath.Separator)) {
+		key += string(filepath.Separator)
+	}
+
+	_, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
+	if err != nil { return err }
 
 	return nil
 }
@@ -60,6 +90,23 @@ func decodeSlice (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 	return nil
 }
 
+func decodeStruct (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
+	ctx.inc(); defer ctx.dec()
+	ty := reflect.TypeOf(i)
+	if ty.Kind() != reflect.Pointer { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))}
+	kind := getTypeKind(ctx, ty.Elem())
+	if kind != SimpleStruct { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem())) }
+
+	if !strings.HasSuffix(key, string(filepath.Separator)) {
+		key += string(filepath.Separator)
+	}
+
+	_, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
+	if err != nil { return err }
+
+	return nil
+}
+
 
 func TestMisc (t *testing.T) {
 	etcdClient, err := NewEtcdClientFromConfig()
@@ -79,10 +126,7 @@ func TestMisc (t *testing.T) {
 }
 
 func TestBool (t *testing.T) {
-	ctx := newEcoContext()
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	ctx, etcdClient := initAndTest(t)
 
 	key := "/test/flag"
 	val := bool(false)
@@ -90,17 +134,14 @@ func TestBool (t *testing.T) {
 
 	var decodedVal bool
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err := decode(ctx, etcdClient, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestBoolSlice (t *testing.T) {
-	ctx := newEcoContext()
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	ctx, etcdClient := initAndTest(t)
 
 	key := "/test/boolslice"
 	val := []bool{ true, true, false }
@@ -109,17 +150,14 @@ func TestBoolSlice (t *testing.T) {
 	type boolslice []bool
 	var decodedVal boolslice
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err := decode(ctx, etcdClient, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, boolslice(val), decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestFloat (t *testing.T) {
-	ctx := newEcoContext()
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	ctx, etcdClient := initAndTest(t)
 
 	key := "/test/f"
 	val := float32(42.0)
@@ -127,17 +165,14 @@ func TestFloat (t *testing.T) {
 
 	var decodedVal float32
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err := decode(ctx, etcdClient, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestFloatSlice (t *testing.T) {
-	ctx := newEcoContext()
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	ctx, etcdClient := initAndTest(t)
 
 	key := "/test/float32slice"
 	val := []float32{ 42.0, 1764.0, 6.54321 }
@@ -146,17 +181,14 @@ func TestFloatSlice (t *testing.T) {
 	type float32slice []float32
 	var decodedVal float32slice
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err := decode(ctx, etcdClient, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, float32slice(val), decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestInt (t *testing.T) {
-	ctx := newEcoContext()
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	ctx, etcdClient := initAndTest(t)
 
 	key := "/test/n"
 	val := int(-13)
@@ -164,19 +196,16 @@ func TestInt (t *testing.T) {
 
 	var decodedVal int
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err := decode(ctx, etcdClient, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestIntSlice (t *testing.T) {
-	ctx := newEcoContext()
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	ctx, etcdClient := initAndTest(t)
 
-	key := "/test/slice"
+	key := "/test/intslice"
 	val := []int{5, 8, 13}
 	putAndTest(t, etcdClient, key, val)
 
@@ -184,9 +213,34 @@ func TestIntSlice (t *testing.T) {
 	var decodedVal intslice
 	// var decodedVal []int
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err := decode(ctx, etcdClient, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, intslice(val), decodedVal)
+	t.Log(decodedVal)
+}
+
+func TestMapStringString (t *testing.T) {
+	ctx, etcdClient := initAndTest(t)
+
+	key := "/test/map/stringstring"
+	val1 := "meat"
+	val2 := "Meat"
+	val3 := "MEEEEAT"
+	val := map[string]string {
+		"foo": val1,
+		"bar": val2,
+		"bum": val3,
+	}
+	putAndTest(t, etcdClient, filepath.Join(key, "foo"), val1)
+	putAndTest(t, etcdClient, filepath.Join(key, "bar"), val2)
+	putAndTest(t, etcdClient, filepath.Join(key, "baz"), val3)
+
+	type mapstringstring map[string]string
+	var decodedVal mapstringstring
+	var i = &decodedVal
+	err := decode(ctx, etcdClient, key, i)
+	require.NoError(t, err)
+	assert.Equal(t, (val), decodedVal)
 	t.Log(decodedVal)
 }
 
@@ -227,6 +281,25 @@ func TestStringSlice (t *testing.T) {
 	t.Log(decodedVal)
 }
 
+func TestStructEcoTest (t *testing.T) {
+	ctx, etcdClient := initAndTest(t)
+
+	key := "/test/struct/ecotest"
+	name := "Me"
+	luckyNumber := 13
+	val := NewEcoTest(name, float64(luckyNumber))
+	putAndTest(t, etcdClient, filepath.Join(key, "name"), val.Name)
+	putAndTest(t, etcdClient, filepath.Join(key, "lucky_number"), val.LuckyNumber)
+	putAndTest(t, etcdClient, filepath.Join(key, "Anon"), val.Anon)
+
+	var decodedVal EcoTest
+	var i = &decodedVal
+	err := decode(ctx, etcdClient, key, i)
+	require.NoError(t, err)
+	assert.Equal(t, (val), decodedVal)
+	t.Log(decodedVal)
+}
+
 func TestUint (t *testing.T) {
 	ctx := newEcoContext()
 	etcdClient, err := NewEtcdClientFromConfig()
@@ -262,6 +335,15 @@ func TestUintSlice (t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, uintslice(val), decodedVal)
 	t.Log(decodedVal)
+}
+
+func initAndTest (t *testing.T) (*ecoContext, *EtcdClient) {
+	ctx := newEcoContext()
+	etcdClient, err := NewEtcdClientFromConfig()
+	require.NoError(t, err)
+	require.NotNil(t, etcdClient)
+
+	return ctx, etcdClient
 }
 
 
