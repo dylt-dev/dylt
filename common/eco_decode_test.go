@@ -56,8 +56,8 @@ func decodeMap (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) erro
 	ctx.inc(); defer ctx.dec()
 
 	ty := reflect.TypeOf(i)
-	var ss  = color.Styledstring(fullTypeName(ty)).FgBg(color.Ansi256.Color194, color.Ansi256.Color201)
-	ctx.printf("ty=%s\n", ss)
+	var s  = highlight(fullTypeName(ty))
+	ctx.printf("ty=%s\n", s)
 	if ty.Kind() != reflect.Pointer { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))}
 	kind := getTypeKind(ctx, ty.Elem())
 	if kind != SimpleMap { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem())) }
@@ -66,7 +66,11 @@ func decodeMap (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) erro
 		key += string(filepath.Separator)
 	}
 
-	_, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
+	resp, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
+	for _, kv := range resp.Kvs {
+		ctx.printf("%s %s\n", kv.Key, kv.Value)
+	}
+
 	if err != nil { return err }
 
 	return nil
@@ -339,6 +343,12 @@ func TestUintSlice (t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, uintslice(val), decodedVal)
 	t.Log(decodedVal)
+}
+
+func highlight (s string) string {
+	var ss  = color.Styledstring(s).FgBg(color.Ansi256.Color194, color.Ansi256.Color201)
+
+	return string(ss)
 }
 
 func initAndTest (t *testing.T) (*ecoContext, *EtcdClient) {
