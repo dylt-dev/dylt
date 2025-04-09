@@ -364,7 +364,7 @@ func isTypeSimple(ty reflect.Type) bool {
 }
 
 func mapKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf("In mapKind(): ty=%s\n", fullTypeName(ty))
+	ctx.printf(" mapKind(%s)\n", fullTypeName(ty))
 	ctx.inc()
 	defer ctx.dec()
 
