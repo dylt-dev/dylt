@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	etcd "go.etcd.io/etcd/client/v3"
+	"github.com/dylt-dev/dylt/color"
 )
 
 func decode (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
@@ -55,6 +56,8 @@ func decodeMap (ctx *ecoContext, etcdClient *EtcdClient, key string, i any) erro
 	ctx.inc(); defer ctx.dec()
 
 	ty := reflect.TypeOf(i)
+	var ss  = color.Styledstring(fullTypeName(ty)).FgBg(color.Ansi256.Color194, color.Ansi256.Color201)
+	ctx.printf("ty=%s\n", ss)
 	if ty.Kind() != reflect.Pointer { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))}
 	kind := getTypeKind(ctx, ty.Elem())
 	if kind != SimpleMap { return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem())) }
@@ -237,7 +240,8 @@ func TestMapStringString (t *testing.T) {
 
 	type mapstringstring map[string]string
 	var decodedVal mapstringstring
-	var i = &decodedVal
+	type pmapstringstring *mapstringstring
+	var i pmapstringstring = &decodedVal
 	err := decode(ctx, etcdClient, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, (val), decodedVal)
