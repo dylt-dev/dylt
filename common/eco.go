@@ -10,12 +10,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dylt-dev/dylt/color"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	ctx.printf("Encoding key=%s (type=%s) ...)\n", key, fullTypeName(reflect.TypeOf(i)))
-	if _, ok := i.(reflect.Value); ok { ctx.println("* arg i is of type reflect.Value; did you mean to call i.Interface()?")}
+	if _, ok := i.(reflect.Value); ok {
+		ctx.println("* arg i is of type reflect.Value; did you mean to call i.Interface()?")
+	}
 	ctx.inc()
 	defer ctx.dec()
 
@@ -34,23 +37,33 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 		reflect.Float64,
 		reflect.String:
 		opsPut, err := encodeDefault(ctx, key, val)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, opsPut...)
 	case reflect.Array:
 		opsArray, err := encodeSlice(ctx, key, val)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, opsArray...)
 	case reflect.Map:
 		opsMap, err := encodeMap(ctx, key, val)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, opsMap...)
 	case reflect.Slice:
 		opsSlice, err := encodeSlice(ctx, key, val)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, opsSlice...)
 	case reflect.Struct:
 		opsStruct, err := encodeStruct(ctx, key, val)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, opsStruct...)
 	default:
 		err = errors.New("unsupported")
@@ -68,17 +81,17 @@ func newEcoContext() *ecoContext {
 	return &ecoContext{Context: context.Background(), level: 0}
 }
 
-func (ctx *ecoContext) dec () *ecoContext {
+func (ctx *ecoContext) dec() *ecoContext {
 	ctx.level--
 	return ctx
 }
 
-func (ctx *ecoContext) inc () *ecoContext {
+func (ctx *ecoContext) inc() *ecoContext {
 	ctx.level++
 	return ctx
 }
 
-func (ctx *ecoContext) indent () string {
+func (ctx *ecoContext) indent() string {
 	return strings.Repeat("  ", ctx.level)
 }
 
@@ -143,7 +156,7 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 		ctx.println("type is not a array; returning Invalid")
 		return Invalid
 	}
-	
+
 	tyElem := ty.Elem()
 	ctx.printf("Checking element type (%s) ... ", fullTypeName(tyElem))
 	if isTypeSimple(ty.Elem()) {
@@ -154,10 +167,11 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	return Invalid
 }
 
-func encodeDefault (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+func encodeDefault(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.printf("encodeDefault() - key=%s\n", key)
-	ctx.inc(); defer ctx.dec()
-	
+	ctx.inc()
+	defer ctx.dec()
+
 	i := val.Interface()
 	j, err := json.Marshal(i)
 	if err != nil {
@@ -168,9 +182,10 @@ func encodeDefault (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, 
 	return []etcd.Op{opPut}, nil
 }
 
-func encodeMap (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.printf("encodeMap() - key=%s\n", key)
-	ctx.inc(); defer ctx.dec()
+	ctx.inc()
+	defer ctx.dec()
 
 	ty := val.Type()
 	ctx.printf("Confirming type (%s) is SimpleMap ... ", fullTypeName(ty))
@@ -188,14 +203,16 @@ func encodeMap (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, erro
 		elKey := filepath.Join(key, string(miKey))
 		elVal := mapIter.Value()
 		elOps, err := Encode(ctx, elKey, elVal.Interface())
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, elOps...)
 	}
 
 	return ops, nil
 }
 
-func encodeSlice (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.printf("encodeSlice() - key=%s", key)
 	ctx.inc()
 	defer ctx.dec()
@@ -206,13 +223,15 @@ func encodeSlice (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, er
 	}
 
 	j, err := json.Marshal(val.Interface())
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	op := etcd.OpPut(key, string(j))
-	
+
 	return []etcd.Op{op}, nil
 }
 
-func encodeStruct (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+func encodeStruct(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.printf("encodeStruct() - key=%s\n", key)
 	ctx.inc()
 	defer ctx.dec()
@@ -229,16 +248,45 @@ func encodeStruct (ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, e
 	var ops = []etcd.Op{}
 	for i := range ty.NumField() {
 		sf := ty.Field(i)
-		sfName := getFieldName(sf)
+		sfName := getFieldKey(sf)
 		sfVal := val.Field(i)
 		sfKey := filepath.Join(key, sfName)
 		sfOps, err := Encode(ctx, sfKey, sfVal.Interface())
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ops = append(ops, sfOps...)
 	}
 
 	return ops, nil
 }
+
+func fieldNameMap (i any) (map[string]reflect.Value, error) {
+	var tyElem reflect.Type
+	var valElem reflect.Value
+	ty := reflect.TypeOf(i)
+	if ty.Kind() != reflect.Pointer {
+		return nil, fmt.Errorf("expecting pointer; got %s", fullTypeName(ty))
+	}
+	tyElem = ty.Elem()
+	if tyElem.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("expecting pointer to struct; got %s", tyElem.Kind().String())
+	}
+	val := reflect.ValueOf(i)
+	valElem = val.Elem()
+	
+	fieldNameMap := map[string]reflect.Value{}
+	for i := range tyElem.NumField() {
+		tyField := tyElem.Field(i)
+		fieldKey := getFieldKey(tyField)
+		fieldName := tyField.Name
+		valField := valElem.FieldByName(fieldName)
+		fieldNameMap[fieldKey] = valField
+	}
+
+	return fieldNameMap, nil
+}
+
 
 func fullTypeName(ty reflect.Type) string {
 	pkgPath := ty.PkgPath()
@@ -258,7 +306,7 @@ func fullTypeName(ty reflect.Type) string {
 	return fmt.Sprintf("%s.%s", pkgPath, typeName)
 }
 
-func getFieldName(sf reflect.StructField) string {
+func getFieldKey(sf reflect.StructField) string {
 	tagValue, ok := sf.Tag.Lookup("eco")
 	var fieldName string
 	if ok {
@@ -293,7 +341,7 @@ func getFieldValue(val reflect.Value) (string, error) {
 	return s, nil
 }
 
-func getKind (ctx *ecoContext, i any) kind {
+func getKind(ctx *ecoContext, i any) kind {
 	// ty := reflect.TypeOf(i)
 	// if fullTypeName(ty) == "reflect.Type" {
 	// 	fmt.Println("Warning - GetKind() called with reflect.Type(). Did you mean GetTypeKind()?")
@@ -349,13 +397,13 @@ func interfaceKind(ctx *ecoContext, ty reflect.Type) kind {
 func isSimple(kind reflect.Kind) bool {
 	switch kind {
 	case reflect.Bool,
-		 reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-	     reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		 reflect.Float32, reflect.Float64,
-		 reflect.String:
-		 return true
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.String:
+		return true
 	default:
-		return false 
+		return false
 	}
 }
 
@@ -364,7 +412,8 @@ func isTypeSimple(ty reflect.Type) bool {
 }
 
 func mapKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf(" mapKind(%s)\n", fullTypeName(ty))
+	sig := fullTypeName(ty)
+	ctx.printf("%s(%s)\n", highlight("mapKind"), lowlight(sig))
 	ctx.inc()
 	defer ctx.dec()
 
@@ -373,32 +422,35 @@ func mapKind(ctx *ecoContext, ty reflect.Type) kind {
 		return Invalid
 	}
 
-	ctx.printf("Checking key (%s) ... ", fullTypeName(ty.Key()))
+	ctx.println(lowlight(fmt.Sprintf("Checking key (%s) ...", fullTypeName(ty.Key()))))
 	if !isTypeSimple(ty.Key()) {
-		ctx.printf("non-simple; returning Invalid\n")
+		ctx.printf("%-32s: %-32s; %s\n", "key", "non-simple", highlight("returning Invalid"))
 		return Invalid
 	}
-	ctx.printf("key type is simple; continuing\n")
+	ctx.printf("%-16s %-16s; continuing\n", "key", "simple")
 
 	tyElem := ty.Elem()
-	ctx.printf("Checking element type (%s) ...\n", fullTypeName(tyElem))
+	ctx.println(lowlight(fmt.Sprintf("Checking element type (%s) ...", fullTypeName(tyElem))))
 	ctx.inc()
 	kindElem := getTypeKind(ctx, tyElem)
 	ctx.dec()
-
 	if isTypeSimple(tyElem) {
-		ctx.printf("element type is simple; returning SimpleMap\n")
+		ctx.printf("%-16s %-16s; %s\n", "type", "simple", highlight("returning SimpleMap"))
 		return SimpleMap
 	}
+	ctx.printf("type: not simple; continuing\n")
+	ctx.printf("%-16s %-16s; continuing\n", "type", "not simple")
 
+	ctx.println(lowlight(fmt.Sprintf("Checking element kind (%s) ...", kindElem.String())))
 	if kindElem == SimpleMap ||
 		kindElem == SimpleStruct ||
 		kindElem == SimpleSlice {
-		ctx.printf("element Kind is %s; returning SimpleMap\n", kindElem.String())
+		ctx.printf("kind: simple; returning SimpleMap\n", kindElem.String())
 		return SimpleMap
 	}
+	ctx.printf("type: not simple; continuing\n")
 
-	ctx.println("conditions were not met; returning Invalid")
+	ctx.println(highlight("conditions were not met; returning Invalid"))
 	return Invalid
 }
 
@@ -451,6 +503,7 @@ func structKind(ctx *ecoContext, ty reflect.Type) kind {
 
 	if ty.Kind() != reflect.Struct {
 		ctx.println("type is not a struct; returning Invalid")
+
 		return Invalid
 	}
 
@@ -486,4 +539,19 @@ func structKind(ctx *ecoContext, ty reflect.Type) kind {
 
 	ctx.println("All fields passed; returning SimpleStruct")
 	return SimpleStruct
+}
+
+/* log styles */
+
+func highlight(s string) string {
+
+	var ss = color.Styledstring(s).Style("\033[1;97m")
+
+	return string(ss)
+}
+
+func lowlight(s string) string {
+	var ss = color.Styledstring(s).Fg(color.Sys.BrightBlack)
+
+	return string(ss)
 }

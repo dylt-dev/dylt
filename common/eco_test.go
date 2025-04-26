@@ -23,6 +23,7 @@ type mapOfIntSlice map[string][]int
 type pointerToInt *int
 type sliceOfInt []int
 type sliceOfStruct []emptyStruct
+
 var VAL_MapSimple = map[string]int{}
 var VAL_MapUnsimple = map[struct{}]struct{}{}
 var VAL_MapUnsimpleKey = map[struct{}]int{}
@@ -40,6 +41,7 @@ type EcoTest struct {
 	LuckyNumber float64 `eco:"lucky_number"`
 	Anon        string
 }
+type pEcoTest *EcoTest
 
 type structWithMap struct {
 	M map[int]string
@@ -256,7 +258,7 @@ func TestReflection0(t *testing.T) {
 		default:
 			s = "N/A"
 		}
-		t.Logf("%s=%s", getFieldName(sf), s)
+		t.Logf("%s=%s", getFieldKey(sf), s)
 	}
 }
 
@@ -325,7 +327,7 @@ func reflectStructNoCycle(ty reflect.Type, val reflect.Value, lastPtr uintptr) (
 	}
 }
 
-func dumpOps (t *testing.T, ops []etcd.Op) {
+func dumpOps(t *testing.T, ops []etcd.Op) {
 	for _, op := range ops {
 		if op.IsGet() {
 			key := string(op.KeyBytes())
@@ -346,7 +348,7 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 	for i := range ty.NumField() {
 		var sf reflect.StructField = ty.Field(i)
 		var sfv reflect.Value = val.Field(i)
-		fieldName := getFieldName(sf)
+		fieldName := getFieldKey(sf)
 		fieldValue, err := getFieldValue(sfv)
 		assert.NoError(t, err)
 		t.Logf("%s=%s", fieldName, fieldValue)
