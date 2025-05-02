@@ -1,9 +1,106 @@
 package color
 
 var Ansi256 = struct {
-	Color0   color_ansi256
-	Color1   color_ansi256
-	Color10  color_ansi256
+	Color0 color_ansi256
+	Color1 color_ansi256
+	Color2 color_ansi256
+	Color3 color_ansi256
+	Color4 color_ansi256
+	Color5 color_ansi256
+	Color6 color_ansi256
+	Color7 color_ansi256
+	Color8 color_ansi256
+	Color9 color_ansi256
+	Color10 color_ansi256
+	Color11 color_ansi256
+	Color12 color_ansi256
+	Color13 color_ansi256
+	Color14 color_ansi256
+	Color15 color_ansi256
+	Color16 color_ansi256
+	Color17 color_ansi256
+	Color18 color_ansi256
+	Color19 color_ansi256
+	Color20 color_ansi256
+	Color21 color_ansi256
+	Color22 color_ansi256
+	Color23 color_ansi256
+	Color24 color_ansi256
+	Color25 color_ansi256
+	Color26 color_ansi256
+	Color27 color_ansi256
+	Color28 color_ansi256
+	Color29 color_ansi256
+	Color30 color_ansi256
+	Color31 color_ansi256
+	Color32 color_ansi256
+	Color33 color_ansi256
+	Color34 color_ansi256
+	Color35 color_ansi256
+	Color36 color_ansi256
+	Color37 color_ansi256
+	Color38 color_ansi256
+	Color39 color_ansi256
+	Color40 color_ansi256
+	Color41 color_ansi256
+	Color42 color_ansi256
+	Color43 color_ansi256
+	Color44 color_ansi256
+	Color45 color_ansi256
+	Color46 color_ansi256
+	Color47 color_ansi256
+	Color48 color_ansi256
+	Color49 color_ansi256
+	Color50 color_ansi256
+	Color51 color_ansi256
+	Color52 color_ansi256
+	Color53 color_ansi256
+	Color54 color_ansi256
+	Color55 color_ansi256
+	Color56 color_ansi256
+	Color57 color_ansi256
+	Color58 color_ansi256
+	Color59 color_ansi256
+	Color60 color_ansi256
+	Color61 color_ansi256
+	Color62 color_ansi256
+	Color63 color_ansi256
+	Color64 color_ansi256
+	Color65 color_ansi256
+	Color66 color_ansi256
+	Color67 color_ansi256
+	Color68 color_ansi256
+	Color69 color_ansi256
+	Color70 color_ansi256
+	Color71 color_ansi256
+	Color72 color_ansi256
+	Color73 color_ansi256
+	Color74 color_ansi256
+	Color75 color_ansi256
+	Color76 color_ansi256
+	Color77 color_ansi256
+	Color78 color_ansi256
+	Color79 color_ansi256
+	Color80 color_ansi256
+	Color81 color_ansi256
+	Color82 color_ansi256
+	Color83 color_ansi256
+	Color84 color_ansi256
+	Color85 color_ansi256
+	Color86 color_ansi256
+	Color87 color_ansi256
+	Color88 color_ansi256
+	Color89 color_ansi256
+	Color90 color_ansi256
+	Color91 color_ansi256
+	Color92 color_ansi256
+	Color93 color_ansi256
+	Color94 color_ansi256
+	Color95 color_ansi256
+	Color96 color_ansi256
+	Color97 color_ansi256
+	Color98 color_ansi256
+	Color99 color_ansi256
 	Color100 color_ansi256
 	Color101 color_ansi256
 	Color102 color_ansi256
@@ -14,7 +111,6 @@ var Ansi256 = struct {
 	Color107 color_ansi256
 	Color108 color_ansi256
 	Color109 color_ansi256
-	Color11  color_ansi256
 	Color110 color_ansi256
 	Color111 color_ansi256
 	Color112 color_ansi256
@@ -25,7 +121,6 @@ var Ansi256 = struct {
 	Color117 color_ansi256
 	Color118 color_ansi256
 	Color119 color_ansi256
-	Color12  color_ansi256
 	Color120 color_ansi256
 	Color121 color_ansi256
 	Color122 color_ansi256
@@ -36,7 +131,6 @@ var Ansi256 = struct {
 	Color127 color_ansi256
 	Color128 color_ansi256
 	Color129 color_ansi256
-	Color13  color_ansi256
 	Color130 color_ansi256
 	Color131 color_ansi256
 	Color132 color_ansi256
@@ -47,7 +141,6 @@ var Ansi256 = struct {
 	Color137 color_ansi256
 	Color138 color_ansi256
 	Color139 color_ansi256
-	Color14  color_ansi256
 	Color140 color_ansi256
 	Color141 color_ansi256
 	Color142 color_ansi256
@@ -58,7 +151,6 @@ var Ansi256 = struct {
 	Color147 color_ansi256
 	Color148 color_ansi256
 	Color149 color_ansi256
-	Color15  color_ansi256
 	Color150 color_ansi256
 	Color151 color_ansi256
 	Color152 color_ansi256
@@ -69,7 +161,6 @@ var Ansi256 = struct {
 	Color157 color_ansi256
 	Color158 color_ansi256
 	Color159 color_ansi256
-	Color16  color_ansi256
 	Color160 color_ansi256
 	Color161 color_ansi256
 	Color162 color_ansi256
@@ -80,7 +171,6 @@ var Ansi256 = struct {
 	Color167 color_ansi256
 	Color168 color_ansi256
 	Color169 color_ansi256
-	Color17  color_ansi256
 	Color170 color_ansi256
 	Color171 color_ansi256
 	Color172 color_ansi256
@@ -91,7 +181,6 @@ var Ansi256 = struct {
 	Color177 color_ansi256
 	Color178 color_ansi256
 	Color179 color_ansi256
-	Color18  color_ansi256
 	Color180 color_ansi256
 	Color181 color_ansi256
 	Color182 color_ansi256
@@ -102,7 +191,6 @@ var Ansi256 = struct {
 	Color187 color_ansi256
 	Color188 color_ansi256
 	Color189 color_ansi256
-	Color19  color_ansi256
 	Color190 color_ansi256
 	Color191 color_ansi256
 	Color192 color_ansi256
@@ -113,8 +201,6 @@ var Ansi256 = struct {
 	Color197 color_ansi256
 	Color198 color_ansi256
 	Color199 color_ansi256
-	Color2   color_ansi256
-	Color20  color_ansi256
 	Color200 color_ansi256
 	Color201 color_ansi256
 	Color202 color_ansi256
@@ -125,7 +211,6 @@ var Ansi256 = struct {
 	Color207 color_ansi256
 	Color208 color_ansi256
 	Color209 color_ansi256
-	Color21  color_ansi256
 	Color210 color_ansi256
 	Color211 color_ansi256
 	Color212 color_ansi256
@@ -136,7 +221,6 @@ var Ansi256 = struct {
 	Color217 color_ansi256
 	Color218 color_ansi256
 	Color219 color_ansi256
-	Color22  color_ansi256
 	Color220 color_ansi256
 	Color221 color_ansi256
 	Color222 color_ansi256
@@ -147,7 +231,6 @@ var Ansi256 = struct {
 	Color227 color_ansi256
 	Color228 color_ansi256
 	Color229 color_ansi256
-	Color23  color_ansi256
 	Color230 color_ansi256
 	Color231 color_ansi256
 	Color232 color_ansi256
@@ -158,7 +241,6 @@ var Ansi256 = struct {
 	Color237 color_ansi256
 	Color238 color_ansi256
 	Color239 color_ansi256
-	Color24  color_ansi256
 	Color240 color_ansi256
 	Color241 color_ansi256
 	Color242 color_ansi256
@@ -169,98 +251,113 @@ var Ansi256 = struct {
 	Color247 color_ansi256
 	Color248 color_ansi256
 	Color249 color_ansi256
-	Color25  color_ansi256
 	Color250 color_ansi256
 	Color251 color_ansi256
 	Color252 color_ansi256
 	Color253 color_ansi256
 	Color254 color_ansi256
 	Color255 color_ansi256
-	Color26  color_ansi256
-	Color27  color_ansi256
-	Color28  color_ansi256
-	Color29  color_ansi256
-	Color3   color_ansi256
-	Color30  color_ansi256
-	Color31  color_ansi256
-	Color32  color_ansi256
-	Color33  color_ansi256
-	Color34  color_ansi256
-	Color35  color_ansi256
-	Color36  color_ansi256
-	Color37  color_ansi256
-	Color38  color_ansi256
-	Color39  color_ansi256
-	Color4   color_ansi256
-	Color40  color_ansi256
-	Color41  color_ansi256
-	Color42  color_ansi256
-	Color43  color_ansi256
-	Color44  color_ansi256
-	Color45  color_ansi256
-	Color46  color_ansi256
-	Color47  color_ansi256
-	Color48  color_ansi256
-	Color49  color_ansi256
-	Color5   color_ansi256
-	Color50  color_ansi256
-	Color51  color_ansi256
-	Color52  color_ansi256
-	Color53  color_ansi256
-	Color54  color_ansi256
-	Color55  color_ansi256
-	Color56  color_ansi256
-	Color57  color_ansi256
-	Color58  color_ansi256
-	Color59  color_ansi256
-	Color6   color_ansi256
-	Color60  color_ansi256
-	Color61  color_ansi256
-	Color62  color_ansi256
-	Color63  color_ansi256
-	Color64  color_ansi256
-	Color65  color_ansi256
-	Color66  color_ansi256
-	Color67  color_ansi256
-	Color68  color_ansi256
-	Color69  color_ansi256
-	Color7   color_ansi256
-	Color70  color_ansi256
-	Color71  color_ansi256
-	Color72  color_ansi256
-	Color73  color_ansi256
-	Color74  color_ansi256
-	Color75  color_ansi256
-	Color76  color_ansi256
-	Color77  color_ansi256
-	Color78  color_ansi256
-	Color79  color_ansi256
-	Color8   color_ansi256
-	Color80  color_ansi256
-	Color81  color_ansi256
-	Color82  color_ansi256
-	Color83  color_ansi256
-	Color84  color_ansi256
-	Color85  color_ansi256
-	Color86  color_ansi256
-	Color87  color_ansi256
-	Color88  color_ansi256
-	Color89  color_ansi256
-	Color9   color_ansi256
-	Color90  color_ansi256
-	Color91  color_ansi256
-	Color92  color_ansi256
-	Color93  color_ansi256
-	Color94  color_ansi256
-	Color95  color_ansi256
-	Color96  color_ansi256
-	Color97  color_ansi256
-	Color98  color_ansi256
-	Color99  color_ansi256
-}{
-	Color0:   color_ansi256{Val: 0, colorbase: colorbase{R: 0, G: 0, B: 0}},
-	Color1:   color_ansi256{Val: 1, colorbase: colorbase{R: 128, G: 0, B: 0}},
-	Color10:  color_ansi256{Val: 10, colorbase: colorbase{R: 0, G: 255, B: 0}},
+} {
+	Color0: color_ansi256{Val: 0, colorbase: colorbase{R: 0, G: 0, B: 0}},
+	Color1: color_ansi256{Val: 1, colorbase: colorbase{R: 128, G: 0, B: 0}},
+	Color2: color_ansi256{Val: 2, colorbase: colorbase{R: 0, G: 128, B: 0}},
+	Color3: color_ansi256{Val: 3, colorbase: colorbase{R: 128, G: 128, B: 0}},
+	Color4: color_ansi256{Val: 4, colorbase: colorbase{R: 0, G: 0, B: 128}},
+	Color5: color_ansi256{Val: 5, colorbase: colorbase{R: 128, G: 0, B: 128}},
+	Color6: color_ansi256{Val: 6, colorbase: colorbase{R: 0, G: 128, B: 128}},
+	Color7: color_ansi256{Val: 7, colorbase: colorbase{R: 192, G: 192, B: 192}},
+	Color8: color_ansi256{Val: 8, colorbase: colorbase{R: 128, G: 128, B: 128}},
+	Color9: color_ansi256{Val: 9, colorbase: colorbase{R: 255, G: 0, B: 0}},
+	Color10: color_ansi256{Val: 10, colorbase: colorbase{R: 0, G: 255, B: 0}},
+	Color11: color_ansi256{Val: 11, colorbase: colorbase{R: 255, G: 255, B: 0}},
+	Color12: color_ansi256{Val: 12, colorbase: colorbase{R: 0, G: 0, B: 255}},
+	Color13: color_ansi256{Val: 13, colorbase: colorbase{R: 255, G: 0, B: 255}},
+	Color14: color_ansi256{Val: 14, colorbase: colorbase{R: 0, G: 255, B: 255}},
+	Color15: color_ansi256{Val: 15, colorbase: colorbase{R: 255, G: 255, B: 255}},
+	Color16: color_ansi256{Val: 16, colorbase: colorbase{R: 0, G: 0, B: 0}},
+	Color17: color_ansi256{Val: 17, colorbase: colorbase{R: 0, G: 0, B: 95}},
+	Color18: color_ansi256{Val: 18, colorbase: colorbase{R: 0, G: 0, B: 135}},
+	Color19: color_ansi256{Val: 19, colorbase: colorbase{R: 0, G: 0, B: 175}},
+	Color20: color_ansi256{Val: 20, colorbase: colorbase{R: 0, G: 0, B: 215}},
+	Color21: color_ansi256{Val: 21, colorbase: colorbase{R: 0, G: 0, B: 255}},
+	Color22: color_ansi256{Val: 22, colorbase: colorbase{R: 0, G: 95, B: 0}},
+	Color23: color_ansi256{Val: 23, colorbase: colorbase{R: 0, G: 95, B: 95}},
+	Color24: color_ansi256{Val: 24, colorbase: colorbase{R: 0, G: 95, B: 135}},
+	Color25: color_ansi256{Val: 25, colorbase: colorbase{R: 0, G: 95, B: 175}},
+	Color26: color_ansi256{Val: 26, colorbase: colorbase{R: 0, G: 95, B: 215}},
+	Color27: color_ansi256{Val: 27, colorbase: colorbase{R: 0, G: 95, B: 255}},
+	Color28: color_ansi256{Val: 28, colorbase: colorbase{R: 0, G: 135, B: 0}},
+	Color29: color_ansi256{Val: 29, colorbase: colorbase{R: 0, G: 135, B: 95}},
+	Color30: color_ansi256{Val: 30, colorbase: colorbase{R: 0, G: 135, B: 135}},
+	Color31: color_ansi256{Val: 31, colorbase: colorbase{R: 0, G: 135, B: 175}},
+	Color32: color_ansi256{Val: 32, colorbase: colorbase{R: 0, G: 135, B: 215}},
+	Color33: color_ansi256{Val: 33, colorbase: colorbase{R: 0, G: 135, B: 255}},
+	Color34: color_ansi256{Val: 34, colorbase: colorbase{R: 0, G: 175, B: 0}},
+	Color35: color_ansi256{Val: 35, colorbase: colorbase{R: 0, G: 175, B: 95}},
+	Color36: color_ansi256{Val: 36, colorbase: colorbase{R: 0, G: 175, B: 135}},
+	Color37: color_ansi256{Val: 37, colorbase: colorbase{R: 0, G: 175, B: 175}},
+	Color38: color_ansi256{Val: 38, colorbase: colorbase{R: 0, G: 175, B: 215}},
+	Color39: color_ansi256{Val: 39, colorbase: colorbase{R: 0, G: 175, B: 255}},
+	Color40: color_ansi256{Val: 40, colorbase: colorbase{R: 0, G: 215, B: 0}},
+	Color41: color_ansi256{Val: 41, colorbase: colorbase{R: 0, G: 215, B: 95}},
+	Color42: color_ansi256{Val: 42, colorbase: colorbase{R: 0, G: 215, B: 135}},
+	Color43: color_ansi256{Val: 43, colorbase: colorbase{R: 0, G: 215, B: 175}},
+	Color44: color_ansi256{Val: 44, colorbase: colorbase{R: 0, G: 215, B: 215}},
+	Color45: color_ansi256{Val: 45, colorbase: colorbase{R: 0, G: 215, B: 255}},
+	Color46: color_ansi256{Val: 46, colorbase: colorbase{R: 0, G: 255, B: 0}},
+	Color47: color_ansi256{Val: 47, colorbase: colorbase{R: 0, G: 255, B: 95}},
+	Color48: color_ansi256{Val: 48, colorbase: colorbase{R: 0, G: 255, B: 135}},
+	Color49: color_ansi256{Val: 49, colorbase: colorbase{R: 0, G: 255, B: 175}},
+	Color50: color_ansi256{Val: 50, colorbase: colorbase{R: 0, G: 255, B: 215}},
+	Color51: color_ansi256{Val: 51, colorbase: colorbase{R: 0, G: 255, B: 255}},
+	Color52: color_ansi256{Val: 52, colorbase: colorbase{R: 95, G: 0, B: 0}},
+	Color53: color_ansi256{Val: 53, colorbase: colorbase{R: 95, G: 0, B: 95}},
+	Color54: color_ansi256{Val: 54, colorbase: colorbase{R: 95, G: 0, B: 135}},
+	Color55: color_ansi256{Val: 55, colorbase: colorbase{R: 95, G: 0, B: 175}},
+	Color56: color_ansi256{Val: 56, colorbase: colorbase{R: 95, G: 0, B: 215}},
+	Color57: color_ansi256{Val: 57, colorbase: colorbase{R: 95, G: 0, B: 255}},
+	Color58: color_ansi256{Val: 58, colorbase: colorbase{R: 95, G: 95, B: 0}},
+	Color59: color_ansi256{Val: 59, colorbase: colorbase{R: 95, G: 95, B: 95}},
+	Color60: color_ansi256{Val: 60, colorbase: colorbase{R: 95, G: 95, B: 135}},
+	Color61: color_ansi256{Val: 61, colorbase: colorbase{R: 95, G: 95, B: 175}},
+	Color62: color_ansi256{Val: 62, colorbase: colorbase{R: 95, G: 95, B: 215}},
+	Color63: color_ansi256{Val: 63, colorbase: colorbase{R: 95, G: 95, B: 255}},
+	Color64: color_ansi256{Val: 64, colorbase: colorbase{R: 95, G: 135, B: 0}},
+	Color65: color_ansi256{Val: 65, colorbase: colorbase{R: 95, G: 135, B: 95}},
+	Color66: color_ansi256{Val: 66, colorbase: colorbase{R: 95, G: 135, B: 135}},
+	Color67: color_ansi256{Val: 67, colorbase: colorbase{R: 95, G: 135, B: 175}},
+	Color68: color_ansi256{Val: 68, colorbase: colorbase{R: 95, G: 135, B: 215}},
+	Color69: color_ansi256{Val: 69, colorbase: colorbase{R: 95, G: 135, B: 255}},
+	Color70: color_ansi256{Val: 70, colorbase: colorbase{R: 95, G: 175, B: 0}},
+	Color71: color_ansi256{Val: 71, colorbase: colorbase{R: 95, G: 175, B: 95}},
+	Color72: color_ansi256{Val: 72, colorbase: colorbase{R: 95, G: 175, B: 135}},
+	Color73: color_ansi256{Val: 73, colorbase: colorbase{R: 95, G: 175, B: 175}},
+	Color74: color_ansi256{Val: 74, colorbase: colorbase{R: 95, G: 175, B: 215}},
+	Color75: color_ansi256{Val: 75, colorbase: colorbase{R: 95, G: 175, B: 255}},
+	Color76: color_ansi256{Val: 76, colorbase: colorbase{R: 95, G: 215, B: 0}},
+	Color77: color_ansi256{Val: 77, colorbase: colorbase{R: 95, G: 215, B: 95}},
+	Color78: color_ansi256{Val: 78, colorbase: colorbase{R: 95, G: 215, B: 135}},
+	Color79: color_ansi256{Val: 79, colorbase: colorbase{R: 95, G: 215, B: 175}},
+	Color80: color_ansi256{Val: 80, colorbase: colorbase{R: 95, G: 215, B: 215}},
+	Color81: color_ansi256{Val: 81, colorbase: colorbase{R: 95, G: 215, B: 255}},
+	Color82: color_ansi256{Val: 82, colorbase: colorbase{R: 95, G: 255, B: 0}},
+	Color83: color_ansi256{Val: 83, colorbase: colorbase{R: 95, G: 255, B: 95}},
+	Color84: color_ansi256{Val: 84, colorbase: colorbase{R: 95, G: 255, B: 135}},
+	Color85: color_ansi256{Val: 85, colorbase: colorbase{R: 95, G: 255, B: 175}},
+	Color86: color_ansi256{Val: 86, colorbase: colorbase{R: 95, G: 255, B: 215}},
+	Color87: color_ansi256{Val: 87, colorbase: colorbase{R: 95, G: 255, B: 255}},
+	Color88: color_ansi256{Val: 88, colorbase: colorbase{R: 135, G: 0, B: 0}},
+	Color89: color_ansi256{Val: 89, colorbase: colorbase{R: 135, G: 0, B: 95}},
+	Color90: color_ansi256{Val: 90, colorbase: colorbase{R: 135, G: 0, B: 135}},
+	Color91: color_ansi256{Val: 91, colorbase: colorbase{R: 135, G: 0, B: 175}},
+	Color92: color_ansi256{Val: 92, colorbase: colorbase{R: 135, G: 0, B: 215}},
+	Color93: color_ansi256{Val: 93, colorbase: colorbase{R: 135, G: 0, B: 255}},
+	Color94: color_ansi256{Val: 94, colorbase: colorbase{R: 135, G: 95, B: 0}},
+	Color95: color_ansi256{Val: 95, colorbase: colorbase{R: 135, G: 95, B: 95}},
+	Color96: color_ansi256{Val: 96, colorbase: colorbase{R: 135, G: 95, B: 135}},
+	Color97: color_ansi256{Val: 97, colorbase: colorbase{R: 135, G: 95, B: 175}},
+	Color98: color_ansi256{Val: 98, colorbase: colorbase{R: 135, G: 95, B: 215}},
+	Color99: color_ansi256{Val: 99, colorbase: colorbase{R: 135, G: 95, B: 255}},
 	Color100: color_ansi256{Val: 100, colorbase: colorbase{R: 135, G: 135, B: 0}},
 	Color101: color_ansi256{Val: 101, colorbase: colorbase{R: 135, G: 135, B: 95}},
 	Color102: color_ansi256{Val: 102, colorbase: colorbase{R: 135, G: 135, B: 135}},
@@ -271,7 +368,6 @@ var Ansi256 = struct {
 	Color107: color_ansi256{Val: 107, colorbase: colorbase{R: 135, G: 175, B: 95}},
 	Color108: color_ansi256{Val: 108, colorbase: colorbase{R: 135, G: 175, B: 135}},
 	Color109: color_ansi256{Val: 109, colorbase: colorbase{R: 135, G: 175, B: 175}},
-	Color11:  color_ansi256{Val: 11, colorbase: colorbase{R: 255, G: 255, B: 0}},
 	Color110: color_ansi256{Val: 110, colorbase: colorbase{R: 135, G: 175, B: 215}},
 	Color111: color_ansi256{Val: 111, colorbase: colorbase{R: 135, G: 175, B: 255}},
 	Color112: color_ansi256{Val: 112, colorbase: colorbase{R: 135, G: 215, B: 0}},
@@ -282,7 +378,6 @@ var Ansi256 = struct {
 	Color117: color_ansi256{Val: 117, colorbase: colorbase{R: 135, G: 215, B: 255}},
 	Color118: color_ansi256{Val: 118, colorbase: colorbase{R: 135, G: 255, B: 0}},
 	Color119: color_ansi256{Val: 119, colorbase: colorbase{R: 135, G: 255, B: 95}},
-	Color12:  color_ansi256{Val: 12, colorbase: colorbase{R: 0, G: 0, B: 255}},
 	Color120: color_ansi256{Val: 120, colorbase: colorbase{R: 135, G: 255, B: 135}},
 	Color121: color_ansi256{Val: 121, colorbase: colorbase{R: 135, G: 255, B: 175}},
 	Color122: color_ansi256{Val: 122, colorbase: colorbase{R: 135, G: 255, B: 215}},
@@ -293,7 +388,6 @@ var Ansi256 = struct {
 	Color127: color_ansi256{Val: 127, colorbase: colorbase{R: 175, G: 0, B: 175}},
 	Color128: color_ansi256{Val: 128, colorbase: colorbase{R: 175, G: 0, B: 215}},
 	Color129: color_ansi256{Val: 129, colorbase: colorbase{R: 175, G: 0, B: 255}},
-	Color13:  color_ansi256{Val: 13, colorbase: colorbase{R: 255, G: 0, B: 255}},
 	Color130: color_ansi256{Val: 130, colorbase: colorbase{R: 175, G: 95, B: 0}},
 	Color131: color_ansi256{Val: 131, colorbase: colorbase{R: 175, G: 95, B: 95}},
 	Color132: color_ansi256{Val: 132, colorbase: colorbase{R: 175, G: 95, B: 135}},
@@ -304,7 +398,6 @@ var Ansi256 = struct {
 	Color137: color_ansi256{Val: 137, colorbase: colorbase{R: 175, G: 135, B: 95}},
 	Color138: color_ansi256{Val: 138, colorbase: colorbase{R: 175, G: 135, B: 135}},
 	Color139: color_ansi256{Val: 139, colorbase: colorbase{R: 175, G: 135, B: 175}},
-	Color14:  color_ansi256{Val: 14, colorbase: colorbase{R: 0, G: 255, B: 255}},
 	Color140: color_ansi256{Val: 140, colorbase: colorbase{R: 175, G: 135, B: 215}},
 	Color141: color_ansi256{Val: 141, colorbase: colorbase{R: 175, G: 135, B: 255}},
 	Color142: color_ansi256{Val: 142, colorbase: colorbase{R: 175, G: 175, B: 0}},
@@ -315,7 +408,6 @@ var Ansi256 = struct {
 	Color147: color_ansi256{Val: 147, colorbase: colorbase{R: 175, G: 175, B: 255}},
 	Color148: color_ansi256{Val: 148, colorbase: colorbase{R: 175, G: 215, B: 0}},
 	Color149: color_ansi256{Val: 149, colorbase: colorbase{R: 175, G: 215, B: 95}},
-	Color15:  color_ansi256{Val: 15, colorbase: colorbase{R: 255, G: 255, B: 255}},
 	Color150: color_ansi256{Val: 150, colorbase: colorbase{R: 175, G: 215, B: 135}},
 	Color151: color_ansi256{Val: 151, colorbase: colorbase{R: 175, G: 215, B: 175}},
 	Color152: color_ansi256{Val: 152, colorbase: colorbase{R: 175, G: 215, B: 215}},
@@ -326,7 +418,6 @@ var Ansi256 = struct {
 	Color157: color_ansi256{Val: 157, colorbase: colorbase{R: 175, G: 255, B: 175}},
 	Color158: color_ansi256{Val: 158, colorbase: colorbase{R: 175, G: 255, B: 215}},
 	Color159: color_ansi256{Val: 159, colorbase: colorbase{R: 175, G: 255, B: 255}},
-	Color16:  color_ansi256{Val: 16, colorbase: colorbase{R: 0, G: 0, B: 0}},
 	Color160: color_ansi256{Val: 160, colorbase: colorbase{R: 215, G: 0, B: 0}},
 	Color161: color_ansi256{Val: 161, colorbase: colorbase{R: 215, G: 0, B: 95}},
 	Color162: color_ansi256{Val: 162, colorbase: colorbase{R: 215, G: 0, B: 135}},
@@ -337,7 +428,6 @@ var Ansi256 = struct {
 	Color167: color_ansi256{Val: 167, colorbase: colorbase{R: 215, G: 95, B: 95}},
 	Color168: color_ansi256{Val: 168, colorbase: colorbase{R: 215, G: 95, B: 135}},
 	Color169: color_ansi256{Val: 169, colorbase: colorbase{R: 215, G: 95, B: 175}},
-	Color17:  color_ansi256{Val: 17, colorbase: colorbase{R: 0, G: 0, B: 95}},
 	Color170: color_ansi256{Val: 170, colorbase: colorbase{R: 215, G: 95, B: 215}},
 	Color171: color_ansi256{Val: 171, colorbase: colorbase{R: 215, G: 95, B: 255}},
 	Color172: color_ansi256{Val: 172, colorbase: colorbase{R: 215, G: 135, B: 0}},
@@ -348,7 +438,6 @@ var Ansi256 = struct {
 	Color177: color_ansi256{Val: 177, colorbase: colorbase{R: 215, G: 135, B: 255}},
 	Color178: color_ansi256{Val: 178, colorbase: colorbase{R: 215, G: 175, B: 0}},
 	Color179: color_ansi256{Val: 179, colorbase: colorbase{R: 215, G: 175, B: 95}},
-	Color18:  color_ansi256{Val: 18, colorbase: colorbase{R: 0, G: 0, B: 135}},
 	Color180: color_ansi256{Val: 180, colorbase: colorbase{R: 215, G: 175, B: 135}},
 	Color181: color_ansi256{Val: 181, colorbase: colorbase{R: 215, G: 175, B: 175}},
 	Color182: color_ansi256{Val: 182, colorbase: colorbase{R: 215, G: 175, B: 215}},
@@ -359,7 +448,6 @@ var Ansi256 = struct {
 	Color187: color_ansi256{Val: 187, colorbase: colorbase{R: 215, G: 215, B: 175}},
 	Color188: color_ansi256{Val: 188, colorbase: colorbase{R: 215, G: 215, B: 215}},
 	Color189: color_ansi256{Val: 189, colorbase: colorbase{R: 215, G: 215, B: 255}},
-	Color19:  color_ansi256{Val: 19, colorbase: colorbase{R: 0, G: 0, B: 175}},
 	Color190: color_ansi256{Val: 190, colorbase: colorbase{R: 215, G: 255, B: 0}},
 	Color191: color_ansi256{Val: 191, colorbase: colorbase{R: 215, G: 255, B: 95}},
 	Color192: color_ansi256{Val: 192, colorbase: colorbase{R: 215, G: 255, B: 135}},
@@ -370,8 +458,6 @@ var Ansi256 = struct {
 	Color197: color_ansi256{Val: 197, colorbase: colorbase{R: 255, G: 0, B: 95}},
 	Color198: color_ansi256{Val: 198, colorbase: colorbase{R: 255, G: 0, B: 135}},
 	Color199: color_ansi256{Val: 199, colorbase: colorbase{R: 255, G: 0, B: 175}},
-	Color2:   color_ansi256{Val: 2, colorbase: colorbase{R: 0, G: 128, B: 0}},
-	Color20:  color_ansi256{Val: 20, colorbase: colorbase{R: 0, G: 0, B: 215}},
 	Color200: color_ansi256{Val: 200, colorbase: colorbase{R: 255, G: 0, B: 215}},
 	Color201: color_ansi256{Val: 201, colorbase: colorbase{R: 255, G: 0, B: 255}},
 	Color202: color_ansi256{Val: 202, colorbase: colorbase{R: 255, G: 95, B: 0}},
@@ -382,7 +468,6 @@ var Ansi256 = struct {
 	Color207: color_ansi256{Val: 207, colorbase: colorbase{R: 255, G: 95, B: 255}},
 	Color208: color_ansi256{Val: 208, colorbase: colorbase{R: 255, G: 135, B: 0}},
 	Color209: color_ansi256{Val: 209, colorbase: colorbase{R: 255, G: 135, B: 95}},
-	Color21:  color_ansi256{Val: 21, colorbase: colorbase{R: 0, G: 0, B: 255}},
 	Color210: color_ansi256{Val: 210, colorbase: colorbase{R: 255, G: 135, B: 135}},
 	Color211: color_ansi256{Val: 211, colorbase: colorbase{R: 255, G: 135, B: 175}},
 	Color212: color_ansi256{Val: 212, colorbase: colorbase{R: 255, G: 135, B: 215}},
@@ -393,7 +478,6 @@ var Ansi256 = struct {
 	Color217: color_ansi256{Val: 217, colorbase: colorbase{R: 255, G: 175, B: 175}},
 	Color218: color_ansi256{Val: 218, colorbase: colorbase{R: 255, G: 175, B: 215}},
 	Color219: color_ansi256{Val: 219, colorbase: colorbase{R: 255, G: 175, B: 255}},
-	Color22:  color_ansi256{Val: 22, colorbase: colorbase{R: 0, G: 95, B: 0}},
 	Color220: color_ansi256{Val: 220, colorbase: colorbase{R: 255, G: 215, B: 0}},
 	Color221: color_ansi256{Val: 221, colorbase: colorbase{R: 255, G: 215, B: 95}},
 	Color222: color_ansi256{Val: 222, colorbase: colorbase{R: 255, G: 215, B: 135}},
@@ -404,7 +488,6 @@ var Ansi256 = struct {
 	Color227: color_ansi256{Val: 227, colorbase: colorbase{R: 255, G: 255, B: 95}},
 	Color228: color_ansi256{Val: 228, colorbase: colorbase{R: 255, G: 255, B: 135}},
 	Color229: color_ansi256{Val: 229, colorbase: colorbase{R: 255, G: 255, B: 175}},
-	Color23:  color_ansi256{Val: 23, colorbase: colorbase{R: 0, G: 95, B: 95}},
 	Color230: color_ansi256{Val: 230, colorbase: colorbase{R: 255, G: 255, B: 215}},
 	Color231: color_ansi256{Val: 231, colorbase: colorbase{R: 255, G: 255, B: 255}},
 	Color232: color_ansi256{Val: 232, colorbase: colorbase{R: 8, G: 8, B: 8}},
@@ -415,7 +498,6 @@ var Ansi256 = struct {
 	Color237: color_ansi256{Val: 237, colorbase: colorbase{R: 58, G: 58, B: 58}},
 	Color238: color_ansi256{Val: 238, colorbase: colorbase{R: 68, G: 68, B: 68}},
 	Color239: color_ansi256{Val: 239, colorbase: colorbase{R: 78, G: 78, B: 78}},
-	Color24:  color_ansi256{Val: 24, colorbase: colorbase{R: 0, G: 95, B: 135}},
 	Color240: color_ansi256{Val: 240, colorbase: colorbase{R: 88, G: 88, B: 88}},
 	Color241: color_ansi256{Val: 241, colorbase: colorbase{R: 98, G: 98, B: 98}},
 	Color242: color_ansi256{Val: 242, colorbase: colorbase{R: 108, G: 108, B: 108}},
@@ -426,92 +508,10 @@ var Ansi256 = struct {
 	Color247: color_ansi256{Val: 247, colorbase: colorbase{R: 158, G: 158, B: 158}},
 	Color248: color_ansi256{Val: 248, colorbase: colorbase{R: 168, G: 168, B: 168}},
 	Color249: color_ansi256{Val: 249, colorbase: colorbase{R: 178, G: 178, B: 178}},
-	Color25:  color_ansi256{Val: 25, colorbase: colorbase{R: 0, G: 95, B: 175}},
 	Color250: color_ansi256{Val: 250, colorbase: colorbase{R: 188, G: 188, B: 188}},
 	Color251: color_ansi256{Val: 251, colorbase: colorbase{R: 198, G: 198, B: 198}},
 	Color252: color_ansi256{Val: 252, colorbase: colorbase{R: 208, G: 208, B: 208}},
 	Color253: color_ansi256{Val: 253, colorbase: colorbase{R: 218, G: 218, B: 218}},
 	Color254: color_ansi256{Val: 254, colorbase: colorbase{R: 228, G: 228, B: 228}},
 	Color255: color_ansi256{Val: 255, colorbase: colorbase{R: 238, G: 238, B: 238}},
-	Color26:  color_ansi256{Val: 26, colorbase: colorbase{R: 0, G: 95, B: 215}},
-	Color27:  color_ansi256{Val: 27, colorbase: colorbase{R: 0, G: 95, B: 255}},
-	Color28:  color_ansi256{Val: 28, colorbase: colorbase{R: 0, G: 135, B: 0}},
-	Color29:  color_ansi256{Val: 29, colorbase: colorbase{R: 0, G: 135, B: 95}},
-	Color3:   color_ansi256{Val: 3, colorbase: colorbase{R: 128, G: 128, B: 0}},
-	Color30:  color_ansi256{Val: 30, colorbase: colorbase{R: 0, G: 135, B: 135}},
-	Color31:  color_ansi256{Val: 31, colorbase: colorbase{R: 0, G: 135, B: 175}},
-	Color32:  color_ansi256{Val: 32, colorbase: colorbase{R: 0, G: 135, B: 215}},
-	Color33:  color_ansi256{Val: 33, colorbase: colorbase{R: 0, G: 135, B: 255}},
-	Color34:  color_ansi256{Val: 34, colorbase: colorbase{R: 0, G: 175, B: 0}},
-	Color35:  color_ansi256{Val: 35, colorbase: colorbase{R: 0, G: 175, B: 95}},
-	Color36:  color_ansi256{Val: 36, colorbase: colorbase{R: 0, G: 175, B: 135}},
-	Color37:  color_ansi256{Val: 37, colorbase: colorbase{R: 0, G: 175, B: 175}},
-	Color38:  color_ansi256{Val: 38, colorbase: colorbase{R: 0, G: 175, B: 215}},
-	Color39:  color_ansi256{Val: 39, colorbase: colorbase{R: 0, G: 175, B: 255}},
-	Color4:   color_ansi256{Val: 4, colorbase: colorbase{R: 0, G: 0, B: 128}},
-	Color40:  color_ansi256{Val: 40, colorbase: colorbase{R: 0, G: 215, B: 0}},
-	Color41:  color_ansi256{Val: 41, colorbase: colorbase{R: 0, G: 215, B: 95}},
-	Color42:  color_ansi256{Val: 42, colorbase: colorbase{R: 0, G: 215, B: 135}},
-	Color43:  color_ansi256{Val: 43, colorbase: colorbase{R: 0, G: 215, B: 175}},
-	Color44:  color_ansi256{Val: 44, colorbase: colorbase{R: 0, G: 215, B: 215}},
-	Color45:  color_ansi256{Val: 45, colorbase: colorbase{R: 0, G: 215, B: 255}},
-	Color46:  color_ansi256{Val: 46, colorbase: colorbase{R: 0, G: 255, B: 0}},
-	Color47:  color_ansi256{Val: 47, colorbase: colorbase{R: 0, G: 255, B: 95}},
-	Color48:  color_ansi256{Val: 48, colorbase: colorbase{R: 0, G: 255, B: 135}},
-	Color49:  color_ansi256{Val: 49, colorbase: colorbase{R: 0, G: 255, B: 175}},
-	Color5:   color_ansi256{Val: 5, colorbase: colorbase{R: 128, G: 0, B: 128}},
-	Color50:  color_ansi256{Val: 50, colorbase: colorbase{R: 0, G: 255, B: 215}},
-	Color51:  color_ansi256{Val: 51, colorbase: colorbase{R: 0, G: 255, B: 255}},
-	Color52:  color_ansi256{Val: 52, colorbase: colorbase{R: 95, G: 0, B: 0}},
-	Color53:  color_ansi256{Val: 53, colorbase: colorbase{R: 95, G: 0, B: 95}},
-	Color54:  color_ansi256{Val: 54, colorbase: colorbase{R: 95, G: 0, B: 135}},
-	Color55:  color_ansi256{Val: 55, colorbase: colorbase{R: 95, G: 0, B: 175}},
-	Color56:  color_ansi256{Val: 56, colorbase: colorbase{R: 95, G: 0, B: 215}},
-	Color57:  color_ansi256{Val: 57, colorbase: colorbase{R: 95, G: 0, B: 255}},
-	Color58:  color_ansi256{Val: 58, colorbase: colorbase{R: 95, G: 95, B: 0}},
-	Color59:  color_ansi256{Val: 59, colorbase: colorbase{R: 95, G: 95, B: 95}},
-	Color6:   color_ansi256{Val: 6, colorbase: colorbase{R: 0, G: 128, B: 128}},
-	Color60:  color_ansi256{Val: 60, colorbase: colorbase{R: 95, G: 95, B: 135}},
-	Color61:  color_ansi256{Val: 61, colorbase: colorbase{R: 95, G: 95, B: 175}},
-	Color62:  color_ansi256{Val: 62, colorbase: colorbase{R: 95, G: 95, B: 215}},
-	Color63:  color_ansi256{Val: 63, colorbase: colorbase{R: 95, G: 95, B: 255}},
-	Color64:  color_ansi256{Val: 64, colorbase: colorbase{R: 95, G: 135, B: 0}},
-	Color65:  color_ansi256{Val: 65, colorbase: colorbase{R: 95, G: 135, B: 95}},
-	Color66:  color_ansi256{Val: 66, colorbase: colorbase{R: 95, G: 135, B: 135}},
-	Color67:  color_ansi256{Val: 67, colorbase: colorbase{R: 95, G: 135, B: 175}},
-	Color68:  color_ansi256{Val: 68, colorbase: colorbase{R: 95, G: 135, B: 215}},
-	Color69:  color_ansi256{Val: 69, colorbase: colorbase{R: 95, G: 135, B: 255}},
-	Color7:   color_ansi256{Val: 7, colorbase: colorbase{R: 192, G: 192, B: 192}},
-	Color70:  color_ansi256{Val: 70, colorbase: colorbase{R: 95, G: 175, B: 0}},
-	Color71:  color_ansi256{Val: 71, colorbase: colorbase{R: 95, G: 175, B: 95}},
-	Color72:  color_ansi256{Val: 72, colorbase: colorbase{R: 95, G: 175, B: 135}},
-	Color73:  color_ansi256{Val: 73, colorbase: colorbase{R: 95, G: 175, B: 175}},
-	Color74:  color_ansi256{Val: 74, colorbase: colorbase{R: 95, G: 175, B: 215}},
-	Color75:  color_ansi256{Val: 75, colorbase: colorbase{R: 95, G: 175, B: 255}},
-	Color76:  color_ansi256{Val: 76, colorbase: colorbase{R: 95, G: 215, B: 0}},
-	Color77:  color_ansi256{Val: 77, colorbase: colorbase{R: 95, G: 215, B: 95}},
-	Color78:  color_ansi256{Val: 78, colorbase: colorbase{R: 95, G: 215, B: 135}},
-	Color79:  color_ansi256{Val: 79, colorbase: colorbase{R: 95, G: 215, B: 175}},
-	Color8:   color_ansi256{Val: 8, colorbase: colorbase{R: 128, G: 128, B: 128}},
-	Color80:  color_ansi256{Val: 80, colorbase: colorbase{R: 95, G: 215, B: 215}},
-	Color81:  color_ansi256{Val: 81, colorbase: colorbase{R: 95, G: 215, B: 255}},
-	Color82:  color_ansi256{Val: 82, colorbase: colorbase{R: 95, G: 255, B: 0}},
-	Color83:  color_ansi256{Val: 83, colorbase: colorbase{R: 95, G: 255, B: 95}},
-	Color84:  color_ansi256{Val: 84, colorbase: colorbase{R: 95, G: 255, B: 135}},
-	Color85:  color_ansi256{Val: 85, colorbase: colorbase{R: 95, G: 255, B: 175}},
-	Color86:  color_ansi256{Val: 86, colorbase: colorbase{R: 95, G: 255, B: 215}},
-	Color87:  color_ansi256{Val: 87, colorbase: colorbase{R: 95, G: 255, B: 255}},
-	Color88:  color_ansi256{Val: 88, colorbase: colorbase{R: 135, G: 0, B: 0}},
-	Color89:  color_ansi256{Val: 89, colorbase: colorbase{R: 135, G: 0, B: 95}},
-	Color9:   color_ansi256{Val: 9, colorbase: colorbase{R: 255, G: 0, B: 0}},
-	Color90:  color_ansi256{Val: 90, colorbase: colorbase{R: 135, G: 0, B: 135}},
-	Color91:  color_ansi256{Val: 91, colorbase: colorbase{R: 135, G: 0, B: 175}},
-	Color92:  color_ansi256{Val: 92, colorbase: colorbase{R: 135, G: 0, B: 215}},
-	Color93:  color_ansi256{Val: 93, colorbase: colorbase{R: 135, G: 0, B: 255}},
-	Color94:  color_ansi256{Val: 94, colorbase: colorbase{R: 135, G: 95, B: 0}},
-	Color95:  color_ansi256{Val: 95, colorbase: colorbase{R: 135, G: 95, B: 95}},
-	Color96:  color_ansi256{Val: 96, colorbase: colorbase{R: 135, G: 95, B: 135}},
-	Color97:  color_ansi256{Val: 97, colorbase: colorbase{R: 135, G: 95, B: 175}},
-	Color98:  color_ansi256{Val: 98, colorbase: colorbase{R: 135, G: 95, B: 215}},
-	Color99:  color_ansi256{Val: 99, colorbase: colorbase{R: 135, G: 95, B: 255}},
 }

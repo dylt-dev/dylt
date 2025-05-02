@@ -106,6 +106,7 @@ func createSubCommand (cmd string) (clicmd.Command, error) {
 	case "host": return clicmd.NewHostCommand(), nil
 	case "init": return clicmd.NewInitCommand(), nil
 	case "list": return clicmd.NewListCommand(), nil
+	case "misc": return clicmd.NewMiscCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
 	case "watch": return clicmd.NewWatchCommand(), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
@@ -119,7 +120,7 @@ func main () {
 
 	// Check if it's the user's first time. If so, act accordingly.
 	is, err := isFirstTime()
-	fmt.Printf("is=%t err=%s\n", is, err)
+	slog.Debug("main", "isFirstTime()", is)
 	if err != nil { exit(err) }
 	if is {
 		fmt.Println("Running firstTime() ...")

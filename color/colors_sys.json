@@ -1,0 +1,19 @@
+[
+	{"name": "Black", "fg": 30, "bg": 40, "r": 0, "g": 0, "b": 0},
+	{"name": "Red", "fg": 31, "bg": 41, "r": 128, "g": 0, "b": 0},
+	{"name": "Green", "fg": 32, "bg": 42, "r": 0, "g": 128, "b": 0},
+	{"name": "Yellow", "fg": 33, "bg": 43, "r": 128, "g": 128, "b": 0},
+	{"name": "Blue", "fg": 34, "bg": 44, "r": 0, "g": 0, "b": 128},
+	{"name": "Magenta", "fg": 35, "bg": 45, "r": 128, "g": 0, "b": 128},
+	{"name": "Cyan", "fg": 36, "bg": 46, "r": 0, "g": 128, "b": 128},
+	{"name": "White", "fg": 37, "bg": 47, "r": 192, "g": 192, "b": 192},
+	{"name": "Default", "fg": 39, "bg": 49, "r": 128, "g": 128, "b": 128},
+	{"name": "BrightBlack", "fg": 90, "bg": 100, "r": 128, "g": 128, "b": 128},
+	{"name": "BrightRed", "fg": 91, "bg": 101, "r": 255, "g": 0, "b": 0},
+	{"name": "BrightGreen", "fg": 92, "bg": 102, "r": 0, "g": 255, "b": 0},
+	{"name": "BrightYellow", "fg": 93, "bg": 103, "r": 255, "g": 255, "b": 0},
+	{"name": "BrightBlue", "fg": 94, "bg": 104, "r": 0, "g": 0, "b": 255},
+	{"name": "BrightMagenta", "fg": 95, "bg": 105, "r": 255, "g": 0, "b": 255},
+	{"name": "BrightCyan", "fg": 96, "bg": 106, "r": 0, "g": 255, "b": 255},
+	{"name": "BrightWhite", "fg": 97, "bg": 107, "r": 255, "g": 255, "b": 255}
+]

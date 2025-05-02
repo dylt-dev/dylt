@@ -18,25 +18,22 @@ import (
 	"golang.org/x/text/language"
 )
 
-type colorStruct struct {
-	R    byte   `json:"r"`
-	G    byte   `json:"g"`
-	B    byte   `json:"b"`
-	Name string `json:"name"`
-}
-
-// type color16Struct struct {
+// A color is a named RGB tri-variant
+// colorStruct gets that
+// type colorStruct struct {
+// 	R    byte   `json:"r"`
+// 	G    byte   `json:"g"`
+// 	B    byte   `json:"b"`
 // 	Name string `json:"name"`
-// 	Fg   byte   `json:"fg"`
-// 	Bg   byte   `json:"bg"`
 // }
 
-func (c colorStruct) rgb() uint32 {
-	r32 := uint32(c.R)
-	g32 := uint32(c.G)
-	b32 := uint32(c.B)
-	return uint32(r32<<16 + g32<<8 + b32)
-}
+// Convert a colorStruct's RGB into a single uint32
+// func (c colorStruct) rgb() uint32 {
+// 	r32 := uint32(c.R)
+// 	g32 := uint32(c.G)
+// 	b32 := uint32(c.B)
+// 	return uint32(r32<<16 + g32<<8 + b32)
+// }
 
 // type _color_16 uint32
 
@@ -64,15 +61,30 @@ func (c colorStruct) rgb() uint32 {
 
 // type _color_256 uint32
 
+// X11 color names have a couple of snags.
+// - Some are well-behaved alphabetical CamelCase
+// - Some end in digits
+// - Some have spaces
+//
+// Eg
+// "antique white"
+// "AntiqueWhite"
+// "AntiqueWhite1"
+// "AntiqueWhite2"
+// "AntiqueWhite3"
+// "AntiqueWhite4"
+//
+// In all cases, the 'space version' is the same as the non-space version, eg the RGB
+// values for "antique white" and "AntiqueWhite" are the same. We don't want to support both
+// so the space version needs to be discarded. That means it's important to confirm there
+// are no names-with-spaces without a non-spaced alternative.
+//
+// Names ending in digits are ok. They are just alternatives for a simpler name, eg AntiqueWhite1
+// (or 2, 3, etc) for AntiqueWhite. These are simply treated as valid names and get no special treatment.
+//
+// If a name does not fit into any categories, it is considered a dirty name. The presence of any dirty
+// names fails the test.
 func TestFilterX11Names(t *testing.T) {
-	/*
-		    "antique white"
-		    "AntiqueWhite"
-			"AntiqueWhite1"
-			"AntiqueWhite2"
-			"AntiqueWhite3"
-			"AntiqueWhite4"
-	*/
 	var colors []color_x11 = readAndTestColorsX11(t)
 
 	var spaceNames = map[string]color_x11{}
@@ -81,7 +93,7 @@ func TestFilterX11Names(t *testing.T) {
 
 	// Step 1 - sort all names into 3 catgeories: names with spaces, names ending in digits, and 'clean' names
 	for _, color := range colors {
-		if isSpace(color.Name) {
+		if isHasSpace(color.Name) {
 			spaceNames[color.Name] = color
 		} else if isClean(color.Name) {
 			cleanNames[color.Name] = color
@@ -118,7 +130,7 @@ func TestGenColorsAnsi256Go(t *testing.T) {
 
 	w, err := os.Create("./colors_ansi256.go")
 	require.NoError(t, err)
-	var colors []color_ansi256 = readAndTestColorsAnsi256(t)
+	var colors map[int]color_ansi256 = readAndTestColorsAnsi256(t)
 	err = tmpl.Execute(w, colors)
 	require.NoError(t, err)
 }
@@ -132,7 +144,7 @@ func TestGenColorsSysGo(t *testing.T) {
 
 	w, err := os.Create("./colors_sys.go")
 	require.NoError(t, err)
-	var colors []color_sys = readAndTestColorsSys(t)
+	var colors []Color_sys = readAndTestColorsSys(t)
 	err = tmpl.Execute(w, colors)
 	require.NoError(t, err)
 }
@@ -224,33 +236,48 @@ func TestIsClean(t *testing.T) {
 	assert.True(t, isClean("AntiqueWhite1"))
 }
 
-func TestIsDigit(t *testing.T) {
+func TestIsEndsWithDigit(t *testing.T) {
 	s0 := "hello"
 	s1 := "hello9"
 	s2 := "hello999"
 	s3 := "hell9o"
-	assert.False(t, isDigit(s0))
-	assert.True(t, isDigit(s1))
-	assert.True(t, isDigit(s2))
-	assert.False(t, isDigit(s3))
+	assert.False(t, isEndsWithDigit(s0))
+	assert.True(t, isEndsWithDigit(s1))
+	assert.True(t, isEndsWithDigit(s2))
+	assert.False(t, isEndsWithDigit(s3))
 
 }
 
-func TestIsSpace(t *testing.T) {
+func TestHasIsSpace(t *testing.T) {
 	s0 := "hello"
 	s1 := " hello"
 	s2 := "hello "
 	s3 := "he llo"
-	assert.False(t, isSpace(s0))
-	assert.True(t, isSpace(s1))
-	assert.True(t, isSpace(s2))
-	assert.True(t, isSpace(s3))
+	assert.False(t, isHasSpace(s0))
+	assert.True(t, isHasSpace(s1))
+	assert.True(t, isHasSpace(s2))
+	assert.True(t, isHasSpace(s3))
 }
 
 func TestNormalize(t *testing.T) {
 	assert.Equal(t, "AntiqueWhite", normalize("antique white"))
 	assert.Equal(t, "LightGoldenrodYellow", normalize("light goldenrod yellow"))
 	assert.Equal(t, "DeepSkyBlue", normalize("deep sky blue"))
+}
+
+func TestReadColors256Json(t *testing.T) {
+	var colors map[int]color_ansi256 = readAndTestColorsAnsi256(t)
+	t.Logf("%#v", colors)
+}
+
+func TestReadColorsSysJson(t *testing.T) {
+	var colors []Color_sys = readAndTestColorsSys(t)
+	t.Logf("%#v", colors)
+}
+
+func TestReadColorsX11Json(t *testing.T) {
+	var colors []color_x11 = readAndTestColorsX11(t)
+	t.Logf("%#v", colors)
 }
 
 func TestStripTrailingDigits(t *testing.T) {
@@ -260,54 +287,39 @@ func TestStripTrailingDigits(t *testing.T) {
 	assert.Equal(t, "DodgerBlue", stripTrailingDigits("DodgerBlue2"))
 }
 
-func TestReadColors256Json(t *testing.T) {
-	var colors []color_ansi256 = readAndTestColorsAnsi256(t)
-	t.Logf("%#v", colors)
-}
+// func TestRgb(t *testing.T) {
+// 	white := colorStruct{R: 255, G: 255, B: 255, Name: "white"}
+// 	rgb := white.rgb()
+// 	t.Logf("rgb=%X", rgb)
+// }
 
-func TestReadColorsSysJson(t *testing.T) {
-	var colors []color_sys = readAndTestColorsSys(t)
-	t.Logf("%#v", colors)
-}
+// func TestStyledString(t *testing.T) {
+// 	var ss Styledstring = "hello"
+// 	ss.FgBg(color_ansi256.Color201, Ansi256.Color194)
+// 	fmt.Println(ss)
+// }
 
-func TestReadColorsX11Json(t *testing.T) {
-	var colors []color_x11 = readAndTestColorsX11(t)
-	t.Logf("%#v", colors)
-}
+// func TestWriteAnsi256(t *testing.T) {
+// 	sBg := Ansi256.Color194.AnsiBg()
+// 	sFg := Ansi256.Color201.AnsiFg()
+// 	s := fmt.Sprintf("%s%shello%s", sFg, sBg, Ansi.Reset)
+// 	fmt.Println()
+// 	fmt.Println()
+// 	fmt.Println(s)
+// 	fmt.Println()
+// 	fmt.Println()
+// }
 
-func TestRgb(t *testing.T) {
-	white := colorStruct{R: 255, G: 255, B: 255, Name: "white"}
-	rgb := white.rgb()
-	t.Logf("rgb=%X", rgb)
-}
-
-func TestStyledString(t *testing.T) {
-	var ss Styledstring = "hello"
-	ss.FgBg(Ansi256.Color201, Ansi256.Color194)
-	fmt.Println(ss)
-}
-
-func TestWriteAnsi256(t *testing.T) {
-	sBg := Ansi256.Color194.AnsiBg()
-	sFg := Ansi256.Color201.AnsiFg()
-	s := fmt.Sprintf("%s%shello%s", sFg, sBg, Ansi.Reset)
-	fmt.Println()
-	fmt.Println()
-	fmt.Println(s)
-	fmt.Println()
-	fmt.Println()
-}
-
-func TestWriteSys(t *testing.T) {
-	sBg := Sys.Green.AnsiBg()
-	sFg := Sys.Red.AnsiFg()
-	s := fmt.Sprintf("%s%shello%s", sFg, sBg, Ansi.Reset)
-	fmt.Println()
-	fmt.Println()
-	fmt.Println(s)
-	fmt.Println()
-	fmt.Println()
-}
+// func TestWriteSys(t *testing.T) {
+// 	sBg := Sys.Green.AnsiBg()
+// 	sFg := Sys.Red.AnsiFg()
+// 	s := fmt.Sprintf("%s%shello%s", sFg, sBg, Ansi.Reset)
+// 	fmt.Println()
+// 	fmt.Println()
+// 	fmt.Println(s)
+// 	fmt.Println()
+// 	fmt.Println()
+// }
 
 func TestWriteX11(t *testing.T) {
 	sBg := X11.AntiqueWhite.AnsiBg()
@@ -320,19 +332,33 @@ func TestWriteX11(t *testing.T) {
 	fmt.Println()
 }
 
+func TestReadAndTestColorsAnsi256(t *testing.T) {
+	_ = readAndTestColorsAnsi256(t)
+}
+
+func TestReadAndTestColorsSys(t *testing.T) {
+	_ = readAndTestColorsSys(t)
+}
+
+// Test method for helper function
+func TestReadAndTestColorsX11(t *testing.T) {
+	_ = readAndTestColorsX11(t)
+}
+
+// Clean names are nice and simple names. Nothing but alnum.
 func isClean(name string) bool {
 	rx := regexp.MustCompile("^[[:alnum:]]*$")
 
 	return rx.MatchString(name)
 }
 
-func isDigit(name string) bool {
+func isEndsWithDigit(name string) bool {
 	rx := regexp.MustCompile(`.*\d$`)
 
 	return rx.MatchString(name)
 }
 
-func isSpace(name string) bool {
+func isHasSpace(name string) bool {
 	return strings.ContainsRune(name, ' ')
 }
 
@@ -352,13 +378,13 @@ func normalize(name string) string {
 	return normalName
 }
 
-func readAndTestColorsAnsi256(t *testing.T) []color_ansi256 {
+func readAndTestColorsAnsi256(t *testing.T) map[int]color_ansi256 {
 	path := "./colors_ansi256.json"
 	r, err := os.Open(path)
 	require.NoError(t, err)
 	require.NotNil(t, r)
 
-	var colors []color_ansi256
+	var colors map[int]color_ansi256
 	decoder := json.NewDecoder(r)
 	err = decoder.Decode(&colors)
 	require.NoError(t, err)
@@ -368,13 +394,13 @@ func readAndTestColorsAnsi256(t *testing.T) []color_ansi256 {
 	return colors
 }
 
-func readAndTestColorsSys(t *testing.T) []color_sys {
+func readAndTestColorsSys(t *testing.T) []Color_sys {
 	path := "./colors_sys.json"
 	r, err := os.Open(path)
 	require.NoError(t, err)
 	require.NotNil(t, r)
 
-	var colors []color_sys
+	var colors []Color_sys
 	decoder := json.NewDecoder(r)
 	err = decoder.Decode(&colors)
 	require.NoError(t, err)
@@ -384,6 +410,10 @@ func readAndTestColorsSys(t *testing.T) []color_sys {
 	return colors
 }
 
+// Helper function
+// - Read in the file of x11 colors.
+// - Decode the file s valid JSON
+// = Confirm the file contains 1 or more colors
 func readAndTestColorsX11(t *testing.T) []color_x11 {
 	path := "./colors_x11.json"
 	r, err := os.Open(path)
@@ -399,12 +429,14 @@ func readAndTestColorsX11(t *testing.T) []color_x11 {
 	return colors
 }
 
-func stripTrailingDigits(name string) string {
+// Return a string with the trailing digit or digits
+// removed, if any.
+func stripTrailingDigits(s string) string {
 	rx := regexp.MustCompile(`^(.*)(\d+)$`)
-	matches := rx.FindStringSubmatch(name)
+	matches := rx.FindStringSubmatch(s)
 	if len(matches) == 0 {
-		fmt.Printf("No match - %s (len(matches)=%d)\n", name, len(matches))
-		return name
+		fmt.Printf("No match - %s (len(matches)=%d)\n", s, len(matches))
+		return s
 	}
 
 	return matches[1]

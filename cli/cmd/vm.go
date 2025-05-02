@@ -34,7 +34,12 @@ func (cmd *VmCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm"
 	nExpected := 1
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdName,
+			nExpected,
+			len(cmdArgs))
+		}
 	// init positional params
 	cmd.SubCommand = cmdArgs[0]
 	cmd.SubArgs = cmdArgs[1:]
