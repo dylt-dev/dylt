@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type ConfigCommand struct {
@@ -114,7 +114,7 @@ func (cmd *ConfigGetCommand) Run(args []string) error {
 
 func RunConfigGet(key string) error {
 	slog.Debug("RunConfigGet()", "key", key)
-	val, err := lib.GetConfigValue(key)	
+	val, err := common.GetConfigValue(key)	
 	if err != nil { return err }
 	fmt.Printf("\n%s\n", val)
 	
@@ -162,14 +162,14 @@ func RunConfigSet (key string, val string) error {
 	slog.Debug("RunConfigSet()", "key", key, "val", val)
 	
 	// Open the dylt config file for read+write. Create if necessasry.
-	cfgFilePath := lib.GetConfigFilePath()
+	cfgFilePath := common.GetConfigFilePath()
 	slog.Debug("Opening config file", "cfgFilePath", cfgFilePath)
 	f, err := os.OpenFile(cfgFilePath, os.O_CREATE | os.O_RDWR, 0644)
-	if err != nil { return lib.NewError(err) }
+	if err != nil { return common.NewError(err) }
 	defer f.Close()
 
 	// Read the dylt config file as YAML
-	data, err := lib.ReadYaml(f)
+	data, err := common.ReadYaml(f)
 	if err != nil { return err }
 
 	// Truncate the file to 0 and rewrite 
@@ -180,9 +180,9 @@ func RunConfigSet (key string, val string) error {
 	
 	// Set the config map value and write the updated config map
 	data.Set(key, val)
-	err = lib.WriteConfig(data)
+	err = common.WriteConfig(data)
 	if err != nil { return err }
-	err = lib.WriteYaml(data, f)
+	err = common.WriteYaml(data, f)
 	if err != nil { return err }
 
 	return nil
@@ -224,7 +224,7 @@ func (cmd *ConfigShowCommand) Run(args []string) error {
 }
 
 func RunConfigShow() error {
-	err := lib.ShowConfig(os.Stdout)
+	err := common.ShowConfig(os.Stdout)
 	if err != nil { return err }
 	
 	return nil

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type ListCommand struct {
@@ -50,7 +50,7 @@ func (cmd *ListCommand) Run (args []string) error {
 
 func RunList () error {
 	// get etcd client + list all keys, one per line
-	cli, err := lib.CreateEtcdClientFromConfig()
+	cli, err := common.CreateEtcdClientFromConfig()
 	if err != nil { return err }
 	kvs, err := cli.List()
 	if err != nil { return err }

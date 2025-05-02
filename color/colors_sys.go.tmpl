@@ -1,0 +1,11 @@
+package color
+
+var Sys = struct {
+{{- range . }}
+	{{ .Name }} Color_sys
+{{- end }}
+}{
+	{{- range . }}
+	{{ .Name }}: Color_sys{Name: "{{ .Name }}", Fg: {{ .Fg }}, Bg: {{ .Bg }}, colorbase: colorbase{R: {{ .R }}, G: {{ .G }}, B: {{ .B }}} },
+	{{- end }}
+}

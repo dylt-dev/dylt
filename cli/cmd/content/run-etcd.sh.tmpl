@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+/opt/etcd/etcd --name {{.Name}} \
+     --data-dir {{or .DataDir "/home/rayray/etcd-data"}} \
+     --advertise-client-urls={{ join .AdvertiseClientUrls "," }} \
+     --listen-client-urls={{ join .ListenClientUrls "," }} \
+     {{ if .ClientCertAuth }}--client-cert-auth \{{- else}}{{- end }}
+     --trusted-ca-file=./mc15.ca.crt \
+     --cert-file=./mc15.server.crt \
+     --key-file=./mc15.server.key \
+     --peer-auto-tls 
+

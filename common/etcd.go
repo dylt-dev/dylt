@@ -1,4 +1,4 @@
-package lib
+package common
 
 import (
 	"context"
@@ -72,6 +72,21 @@ func CreateEtcdClientFromConfig() (*EtcdClient, error) {
 	return cli, err
 }
 
+func getEndpoints(domain string) ([]string, error) {
+	endpoints := []string{}
+	srvs, err := GetSrvs(domain, "etcd-server", "tcp", true)
+	if err != nil {
+		return nil, err
+	}
+	for _, srv := range srvs {
+		ip := srv.Ips[0]
+		port := srv.Port
+		endpoint := fmt.Sprintf("http://%s:%d", ip, port)
+		endpoints = append(endpoints, endpoint)
+	}
+	return endpoints, nil
+}
+
 func NewEtcdClient(domain string) (*EtcdClient, error) {
 	endpoints, err := getEndpoints(domain)
 	if err != nil {
@@ -86,17 +101,12 @@ func NewEtcdClient(domain string) (*EtcdClient, error) {
 	return client, err
 }
 
-func getEndpoints(domain string) ([]string, error) {
-	endpoints := []string{}
-	srvs, err := GetSrvs(domain, "etcd-server", "tcp", true)
+func NewEtcdClientFromConfig() (*EtcdClient, error) {
+	cfg, err := LoadConfig()
 	if err != nil {
-		return nil, err
+		return nil, NewError(err)
 	}
-	for _, srv := range srvs {
-		ip := srv.Ips[0]
-		port := srv.Port
-		endpoint := fmt.Sprintf("http://%s:%d", ip, port)
-		endpoints = append(endpoints, endpoint)
-	}
-	return endpoints, nil
+	domain := cfg.EtcdDomain
+	cli, err := NewEtcdClient(domain)
+	return cli, err
 }

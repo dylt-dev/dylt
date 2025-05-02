@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type VmCommand struct {
@@ -34,7 +34,12 @@ func (cmd *VmCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm"
 	nExpected := 1
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdName,
+			nExpected,
+			len(cmdArgs))
+		}
 	// init positional params
 	cmd.SubCommand = cmdArgs[0]
 	cmd.SubArgs = cmdArgs[1:]
@@ -123,7 +128,7 @@ func (cmd VmAddCommand) Run (args []string) error {
 
 func RunVmAdd (name string, fqdn string) error {	
 	// get vm-specific etcd client
-	cli, err := lib.CreateVmClientFromConfig()
+	cli, err := common.CreateVmClientFromConfig()
 	if err != nil { return err }
 	// execute command
 	vm, err := cli.Add(name, fqdn)
@@ -177,7 +182,7 @@ func (cmd VmAllCommand) Run (args[] string) error {
 
 func RunVmAll () error {
 	// get vm-specific etcd client, get all vm data, + show it
-	cli, err := lib.CreateVmClientFromConfig()
+	cli, err := common.CreateVmClientFromConfig()
 	if err != nil { return err }
  	vmInfoMap, err := cli.All()
 	if err != nil { return err }
@@ -233,7 +238,7 @@ func (cmd *VmDelCommand) Run (args[] string) error {
 func RunVmDel (name string) error {
 	slog.Debug("RunVmDel()", "name", name)
 	// get vm-specific etcd client
-	cli, err := lib.CreateVmClientFromConfig()
+	cli, err := common.CreateVmClientFromConfig()
 	if err != nil { return err }
 	// delete vm data from cluster
 	prevVal, err := cli.Del(name)
@@ -292,7 +297,7 @@ func (cmd *VmGetCommand) Run (args[] string) error {
 func RunVmGet (name string) error {
 	slog.Debug("RunVmGet()", "name", name)
 	// get vm-specific etcd client
-	cli, err := lib.CreateVmClientFromConfig()
+	cli, err := common.CreateVmClientFromConfig()
 	if err != nil { return err }
 	// get vm data from cluster
 	vm, err := cli.Get(name)
@@ -349,7 +354,7 @@ func (cmd VmListCommand) Run (args[] string) error {
 func RunVmList () error {
 	slog.Debug("RunVmList()")
 	// get vm-specific etcd client
-	cli, err := lib.CreateVmClientFromConfig()
+	cli, err := common.CreateVmClientFromConfig()
 	if err != nil { return err }
 	// List all vm names, one per line
 	names, err := cli.Names()
@@ -411,7 +416,7 @@ func (cmd VmSetCommand) Run (args[] string) error {
 func RunVmSet (name string, key string, val string) error {
 	slog.Debug("RunVmSet()", "name", name, "key", key, "val", val)
 	// get vm-specific etcd client
-	cli, err := lib.CreateVmClientFromConfig()
+	cli, err := common.CreateVmClientFromConfig()
 	if err != nil { return err }
 	// get the vm data from the cluster, set the field (if it exists), and save updated object
 	vm, err := cli.Get(name)

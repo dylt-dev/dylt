@@ -1,0 +1,11 @@
+package color
+
+var Ansi256 = struct {
+{{- range . }}
+	Color{{.Val}} color_ansi256
+{{- end }}
+} {
+	{{- range . }}
+	Color{{.Val}}: color_ansi256{Val: {{.Val}}, colorbase: colorbase{R: {{.R}}, G: {{.G}}, B: {{.B}}}},
+	{{- end }}
+}

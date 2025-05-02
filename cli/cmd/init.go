@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type InitCommand struct {
@@ -16,7 +16,7 @@ type InitCommand struct {
 
 func NewInitCommand () *InitCommand {
 	// create command
-	flagSet := flag.NewFlagSet("init", flag.PanicOnError)
+	flagSet := flag.NewFlagSet("init", flag.ExitOnError)
 	cmd := InitCommand { FlagSet: flagSet }
 	// init flag vars
 	flagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
@@ -56,8 +56,8 @@ func RunInit (etcdDomain string) error {
 	slog.Debug("RunInit()", "etcDomain", etcdDomain)
 	// create a new config file using the etcdDomain
 	if etcdDomain == "" { return errors.New("etcd-domain must be set") }
-	cfg := lib.ConfigStruct{ EtcdDomain: etcdDomain}
-	err := lib.SaveConfig(cfg)
+	cfg := common.ConfigStruct{ EtcdDomain: etcdDomain}
+	err := common.SaveConfig(cfg)
 	if err != nil { return err }
 
 	return nil

@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/common"
 )
 
 const LOG_File = "dylt.log"
@@ -40,10 +40,10 @@ func firstTime () error {
 	r := bufio.NewReader(os.Stdin)
 	etcdDomain, err := r.ReadString('\n')
 	etcdDomain = strings.TrimSpace(etcdDomain)
-	if err != nil { return lib.NewError(err) }
-	cfg := lib.ConfigStruct{ EtcdDomain: etcdDomain}
-	err = lib.SaveConfig(cfg)
-	if err != nil { return lib.NewError(err) }
+	if err != nil { return common.NewError(err) }
+	cfg := common.ConfigStruct{ EtcdDomain: etcdDomain}
+	err = common.SaveConfig(cfg)
+	if err != nil { return common.NewError(err) }
 	fmt.Println("Saved!")
 	fmt.Println()
 
@@ -51,6 +51,19 @@ func firstTime () error {
 }
 
 func initLogging () {
+	logToFile, ok := os.LookupEnv("DYLT_LogToFile")
+	if ok  && logToFile != "" {
+		initLoggingToFile()
+	} else {
+		opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
+		var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+		slog.SetDefault(logger)
+		slog.Debug("logging successfully initialized")
+	}
+}
+
+
+func initLoggingToFile () {
 	var logFile, logFolder, logPath string
 	envLogPath, ok := os.LookupEnv("DYLT_LogPath")
 	if ok {
@@ -74,7 +87,7 @@ func initLogging () {
 
 
 func isFirstTime () (bool, error) {
-	configFilePath := lib.GetConfigFilePath()
+	configFilePath := common.GetConfigFilePath()
 	_, err := os.Stat(configFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -93,6 +106,7 @@ func createSubCommand (cmd string) (clicmd.Command, error) {
 	case "host": return clicmd.NewHostCommand(), nil
 	case "init": return clicmd.NewInitCommand(), nil
 	case "list": return clicmd.NewListCommand(), nil
+	case "misc": return clicmd.NewMiscCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
 	case "watch": return clicmd.NewWatchCommand(), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
@@ -106,7 +120,7 @@ func main () {
 
 	// Check if it's the user's first time. If so, act accordingly.
 	is, err := isFirstTime()
-	fmt.Printf("is=%t err=%s\n", is, err)
+	slog.Debug("main", "isFirstTime()", is)
 	if err != nil { exit(err) }
 	if is {
 		fmt.Println("Running firstTime() ...")

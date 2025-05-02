@@ -1,4 +1,4 @@
-package lib
+package common
 
 import (
 	"errors"
@@ -249,6 +249,14 @@ func GetConfigValue(key string) (any, error) {
 // 		panic(fmt.Errorf("fatal error config file: %s", err.Error()))
 // 	}
 // }
+
+func InitLogging () {
+	opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
+	w := os.Stdout
+	var logger *slog.Logger = slog.New(slog.NewTextHandler(w, &opts))
+	slog.SetDefault(logger)
+	slog.Debug("logging successfully initialized")
+}
 
 func LoadConfig() (ConfigStruct, error) {
 	cfg := ConfigStruct{}
