@@ -5,7 +5,6 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"text/template"
 )
@@ -50,7 +49,7 @@ func (cmd *MiscCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *MiscCommand) Run(args []string) error {
-	slog.Debug("MiscCommand.Run()", "args", args)
+	Logger.Debug("MiscCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -62,7 +61,7 @@ func (cmd *MiscCommand) Run(args []string) error {
 }
 
 func RunMisc (subCommand string, subCmdArgs []string) error {
-	slog.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	Logger.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
 	// create the subcommand and run it
 	subCmd, err := createMiscSubCommand(subCommand)
 	if err != nil { return err }
@@ -112,7 +111,7 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
-	slog.Debug("CreateTwoNodeClusterCommand.Run()", "args", args)
+	Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -125,7 +124,7 @@ func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
 }
 
 func RunCreateTwoNodeCluster() error {
-	slog.Debug("RunCreateTwoNodeCluster()")
+	Logger.Debug("RunCreateTwoNodeCluster()")
 	var err error
 
 	r := bufio.NewReader(os.Stdin)
@@ -176,7 +175,7 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
-	slog.Debug("GenEtcdRunScriptCommand.Run()", "args", args)
+	Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -189,7 +188,7 @@ func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
 }
 
 func RunGenEtcdRunScript() error {
-	slog.Debug("RunGenEtcdRunScript()", )
+	Logger.Debug("RunGenEtcdRunScript()", )
 
 	fmt.Println("I'm gennin a script!")
 
