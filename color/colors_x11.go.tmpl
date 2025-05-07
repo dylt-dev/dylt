@@ -1,0 +1,22 @@
+package color
+
+var X11 = struct {
+{{- range .CleanColors }}
+    {{ .Name }} color_x11
+{{- end }}
+    // Capitalized Aliases
+{{- range .CapAliases }}
+    {{ .CapColor.Name }} color_x11
+{{- end }}
+} {
+    {{- range .CleanColors }}
+    {{ .Name }}: color_x11{Name: "{{.Name}}", colorbase: colorbase{R: {{.R}}, G: {{.G}}, B: {{.B}}}},
+    {{- end }}
+}
+
+func init () {
+    // Capitalized Aliases
+    {{- range .CapAliases }}
+    X11.{{ .CapColor.Name }} = X11.{{.OriginalName}}
+    {{- end }}
+}

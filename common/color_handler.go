@@ -27,7 +27,7 @@ func (h *ColorHandler) Enabled(ctx context.Context, level slog.Level) bool {
 func (h *ColorHandler) Handle(ctx context.Context, rec slog.Record) error {
 	var s = color.Styledstring(rec.Message)
 	if rec.Level == slog.LevelDebug {
-		s = s.Fg(color.X11.gray30)
+		s = s.Fg(color.X11.Gray50)
 	}
 	fmt.Println(s)
 
