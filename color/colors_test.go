@@ -3,6 +3,7 @@ package color
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
 	"os"
 	"regexp"
@@ -17,6 +18,44 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+type capColorStruct struct {
+	CapColor color_x11
+	OriginalName string
+}
+
+func TestCapitalizeName (t *testing.T) {
+	s0 := "hello"
+	s1 := "Hello"
+	s2 := "13"
+	s3 := ""
+	assert.Equal(t, "Hello", createCapitalName(s0))
+	assert.Equal(t, "Hello", createCapitalName(s1))
+	assert.Equal(t, "13", createCapitalName(s2))
+	assert.Equal(t, "", createCapitalName(s3))
+}
+
+func TestCleanColorsX11Go (t *testing.T) {
+	var tmpl template.Template = *loadAndTestTemplate(t, "./colors_x11.go.clean.tmpl")
+	w, err := os.Create("./colors_x11.go")
+	require.NoError(t, err)
+	tmpl.Execute(w, struct{}{})
+}
+
+
+func TestCreateCapColors (t *testing.T) {
+	var colors = readAndTestColorsX11(t)
+	var capAliases = createCapitalColorAliases(colors)
+	require.NotEmpty(t, capAliases)
+	require.LessOrEqual(t, len(capAliases), len(colors))
+	for _, capAlias := range capAliases {
+		var rx = regexp.MustCompile("^[A-Z].*")
+		assert.True(t, rx.Match([]byte(capAlias.CapColor.Name)))
+	}
+	t.Log(capAliases)
+}
+
+
 
 // A color is a named RGB tri-variant
 // colorStruct gets that
@@ -150,23 +189,13 @@ func TestGenColorsSysGo(t *testing.T) {
 }
 
 func TestGenColorsX11Go(t *testing.T) {
-	tmpl := template.New("go")
-	bufTmpl, err := os.ReadFile("./colors_x11.go.tmpl")
-	require.NoError(t, err)
-	_, err = tmpl.Parse(string(bufTmpl))
-	require.NoError(t, err)
-
 	w, err := os.Create("./colors_x11.go")
 	require.NoError(t, err)
-	var colors []color_x11 = readAndTestColorsX11(t)
-	var cleanColors []color_x11 = make([]color_x11, 0, len(colors))
-	for _, color := range colors {
-		if !strings.Contains(color.Name, " ") {
-			cleanColors = append(cleanColors, color)
-		}
-	}
-	err = tmpl.Execute(w, cleanColors)
-	require.NoError(t, err)
+	genColorsX11Go(t, w)
+}
+
+func TestGenColorsX11GoStdout(t *testing.T) {
+	genColorsX11Go(t, os.Stdout)
 }
 
 func TestGenAnsi256Json(t *testing.T) {
@@ -245,7 +274,20 @@ func TestIsEndsWithDigit(t *testing.T) {
 	assert.True(t, isEndsWithDigit(s1))
 	assert.True(t, isEndsWithDigit(s2))
 	assert.False(t, isEndsWithDigit(s3))
+}
 
+func TestIsLower (t *testing.T) {
+	s0 := "h"
+	// s1 := "H"
+	// s2 := ""
+	// s3 := "hello"
+	// s4 := "hELLO"
+	// s5 := "HELLO"
+	// s6 := "Hello"
+	// s7 := "hElLo"
+	// s8 := "HeLlO"
+	// s9 := "13"
+	assert.True(t, isLowercase(s0))
 }
 
 func TestHasIsSpace(t *testing.T) {
@@ -375,6 +417,62 @@ func TestX11CheckForDupes(t *testing.T) {
 	require.Equalf(t, len(data), n, "Only expecting to see duplication frequencies of 1 (ie no dupes)")
 }
 
+func createCapitalColorAliases (colors []color_x11) []capColorStruct {
+	var capColors = make([]capColorStruct, 0, len(colors))
+	for _, color := range colors {
+		if isLowercase(color.Name) {
+			capName := createCapitalName(color.Name)
+			var capColor = color_x11 {
+				colorbase: color.colorbase,
+				Name: capName,
+			}
+			capColors = append(capColors, capColorStruct{CapColor: capColor, OriginalName: color.Name})
+		}
+	}
+
+	return capColors
+}
+
+func createCapitalName (name string) string {
+	if name == "" { return "" }
+	return strings.ToUpper(name[0:1]) + name[1:]
+}
+
+func createCleanColors (colors []color_x11) []color_x11 {
+	var cleanColors []color_x11 = make([]color_x11, 0, len(colors))
+	for _, color := range colors {
+		if !strings.Contains(color.Name, " ") {
+			cleanColors = append(cleanColors, color)
+		}
+	}
+
+	return cleanColors
+}
+
+func genColorsX11Go(t *testing.T, w io.Writer) {
+	tmpl := template.New("go")
+	bufTmpl, err := os.ReadFile("./colors_x11.go.tmpl")
+	require.NoError(t, err)
+	_, err = tmpl.Parse(string(bufTmpl))
+	require.NoError(t, err)
+
+	var colors []color_x11 = readAndTestColorsX11(t)
+	var cleanColors []color_x11 = createCleanColors(colors)
+	var capAliases []capColorStruct = createCapitalColorAliases(cleanColors)
+
+	// Anonymous struct to hold template data
+	var templateData = struct {
+		CleanColors []color_x11
+		CapAliases []capColorStruct
+	}{
+		CleanColors: cleanColors,
+		CapAliases: capAliases,
+	}
+	
+	err = tmpl.Execute(w, templateData)
+	require.NoError(t, err)
+}
+
 // Clean names are nice and simple names. Nothing but alnum.
 func isClean(name string) bool {
 	rx := regexp.MustCompile("^[[:alnum:]]*$")
@@ -390,6 +488,21 @@ func isEndsWithDigit(name string) bool {
 
 func isHasSpace(name string) bool {
 	return strings.ContainsRune(name, ' ')
+}
+
+func isLowercase (name string) bool {
+	rx := regexp.MustCompile("^[a-z].*")
+	return rx.Match([]byte(name))
+}
+
+func loadAndTestTemplate (t *testing.T, path string) *template.Template {
+	tmpl := template.New("go")
+	bufTmpl, err := os.ReadFile(path)
+	require.NoError(t, err)
+	_, err = tmpl.Parse(string(bufTmpl))
+	require.NoError(t, err)
+
+	return tmpl
 }
 
 func normalize(name string) string {
