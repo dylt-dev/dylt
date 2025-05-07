@@ -345,6 +345,36 @@ func TestReadAndTestColorsX11(t *testing.T) {
 	_ = readAndTestColorsX11(t)
 }
 
+// Check for colors with the same name that differ only by case
+func TestX11CheckForDupes(t *testing.T) {
+	var data = map[string][]color_x11{}
+	var colors = readAndTestColorsX11(t)
+	
+	// Create map keyed by lowercased name
+	for _, color := range colors {
+		name := strings.ToLower(color.Name)
+		colorList, is := data[name]
+		if !is {
+			colorList = []color_x11{}
+		}
+		colorList = append(colorList, color)
+		data[name] = colorList
+	}
+	t.Logf("len(colors)=%d", len(colors))
+
+	// Create and print histogram of color frequencies aka list lengths
+	var dupeFreqs = map[int]int{}
+	for _, colorList := range data {
+		dupeFreqs[len(colorList)]++
+	}
+	t.Logf("#%v", dupeFreqs)
+
+	require.Equalf(t, 1, len(dupeFreqs), "Only expecting to see duplication frequencies of 1 (ie no dupes)")
+	n, ok := dupeFreqs[1]
+	require.True(t, ok)
+	require.Equalf(t, len(data), n, "Only expecting to see duplication frequencies of 1 (ie no dupes)")
+}
+
 // Clean names are nice and simple names. Nothing but alnum.
 func isClean(name string) bool {
 	rx := regexp.MustCompile("^[[:alnum:]]*$")

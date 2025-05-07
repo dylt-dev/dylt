@@ -1,0 +1,11 @@
+package json
+
+var X11 = struct {
+{{- range . }}
+    {{ .Name }} color_x11
+{{- end }}
+} {
+    {{- range . }}
+    {{ .Name }}: color_x11{Name: "{{.Name}}", color: color{R: {{.R}}, G: {{.G}}, B: {{.B}}}},
+    {{- end }}
+}
