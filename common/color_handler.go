@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"reflect"
 	"sync"
 
 	"github.com/dylt-dev/dylt/color"
@@ -44,7 +43,6 @@ func (h *ColorHandler) Handle(ctx context.Context, rec slog.Record) error {
 	})
 
 	attrMap, err = createAttrMap(meta)
-	fmt.Printf("%#v\n", attrMap)
 	if err != nil { return err }
 	sMap := fmt.Sprintf("%#v", attrMap)
 	var sOut = color.Styledstring(fmt.Sprintf("%s: %s\n", rec.Message, sMap))
@@ -91,7 +89,7 @@ func createAttrMap (l metaarglist) (map[string]string, error) {
 	var key string
 
 	arg, err = sq.Next()
-	fmt.Printf("arg=%v type(arg)=%s err=%s\n", arg, reflect.TypeOf(arg), err)
+	// fmt.Printf("arg=%v type(arg)=%s err=%s\n", arg, reflect.TypeOf(arg), err)
 	for true {
 		// Loop  + add group names until a non-groupname is found	
 		for true {
@@ -99,12 +97,12 @@ func createAttrMap (l metaarglist) (map[string]string, error) {
 			if err != nil { return nil, err }
 
 			gn, is = arg.(groupName)
-			fmt.Printf("gn=%s is=%t\n", gn, is)
+			// fmt.Printf("gn=%s is=%t\n", gn, is)
 			if !is { break }
 			groupNames = append(groupNames, gn)
 
 			arg, err = sq.Next()
-			fmt.Printf("arg=%v type(arg)=%s err=%s\n", arg, reflect.TypeOf(arg), err)
+			// fmt.Printf("arg=%v type(arg)=%s err=%s\n", arg, reflect.TypeOf(arg), err)
 		}
 
 		// Loop + add qualified attrs to map until a non-attr is found
@@ -113,16 +111,16 @@ func createAttrMap (l metaarglist) (map[string]string, error) {
 			if err != nil { return nil, err }
 			
 			attr, is = arg.(slog.Attr)
-			fmt.Printf("attr=%s is=%t\n", attr, is)
+			// fmt.Printf("attr=%s is=%t\n", attr, is)
 			if !is { break }
 			
 			key = fmt.Sprintf("%s.%s", join(groupNames...), attr.Key)
 			val = attr.Value.String()
-			fmt.Printf("key=%s val=%s", key, val)
+			// fmt.Printf("key=%s val=%s", key, val)
 			attrMap[key] = val
 		
 			arg, err = sq.Next()
-			fmt.Printf("arg=%v type(arg)=%s err=%s\n", arg, reflect.TypeOf(arg), err)
+			// fmt.Printf("arg=%v type(arg)=%s err=%s\n", arg, reflect.TypeOf(arg), err)
 		}
 
 		if err != nil {
