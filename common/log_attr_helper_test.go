@@ -7,8 +7,10 @@ import (
 	"log/slog"
 	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/dylt-dev/seq"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -122,3 +124,28 @@ func TestArraySeq0 (t *testing.T) {
 	require.ErrorIs(t, err, io.EOF)
 	require.Equal(t, 0, el)
 }
+
+func TestCopyAndAppend0 (t *testing.T) {
+	l := []int64{1, 2, 3}
+	var elNew int64 = 4
+	// lNew := copyAndAppend(l, elNew)
+	lNew := append(l, elNew)
+	assert.Equal(t, len(l)+1, len(lNew))
+	assert.Equal(t, l[:], lNew[:len(l)])
+	assert.Equal(t, elNew, lNew[len(lNew)-1])
+	oldEl0 := l[0]
+	lNew[0] = 13
+	assert.Equal(t, oldEl0, l[0])
+	t.Logf("#l: %p\n", unsafe.Pointer(&l))
+	t.Logf("#l[0]: %p\n", unsafe.Pointer(&(l[0])))
+	t.Logf("#lNew: %p\n", unsafe.Pointer(&lNew))
+}
+
+func copyAndAppend[T any] (l []T, el T) []T {
+	var lNew = make ([]T, len(l)+1)
+	n := copy(lNew, l)
+	lNew[n] = el
+	
+	return lNew
+}
+	

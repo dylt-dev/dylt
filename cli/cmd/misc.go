@@ -184,6 +184,9 @@ func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
 	err = RunGenEtcdRunScript()
 	if err != nil { return err }
 
+	Logger.WithGroup("g")
+	Logger.With("bar", "thirteen")
+	Logger.Debug("testing logger", "foo", "13")
 	return nil
 }
 
