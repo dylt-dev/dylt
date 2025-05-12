@@ -1,10 +1,12 @@
-package common
+package eco
 
 import (
 	"context"
 	"fmt"
 	"os"
 
+	"github.com/dylt-dev/dylt/common"
+	"github.com/dylt-dev/dylt/dns"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
@@ -63,9 +65,9 @@ func (cli *EtcdClient) List() ([]*mvccpb.KeyValue, error) {
 }
 
 func CreateEtcdClientFromConfig() (*EtcdClient, error) {
-	cfg, err := LoadConfig()
+	cfg, err := common.LoadConfig()
 	if err != nil {
-		return nil, NewError(err)
+		return nil, common.NewError(err)
 	}
 	domain := cfg.EtcdDomain
 	cli, err := NewEtcdClient(domain)
@@ -74,7 +76,7 @@ func CreateEtcdClientFromConfig() (*EtcdClient, error) {
 
 func getEndpoints(domain string) ([]string, error) {
 	endpoints := []string{}
-	srvs, err := GetSrvs(domain, "etcd-server", "tcp", true)
+	srvs, err := dns.GetSrvs(domain, "etcd-server", "tcp", true)
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +104,9 @@ func NewEtcdClient(domain string) (*EtcdClient, error) {
 }
 
 func NewEtcdClientFromConfig() (*EtcdClient, error) {
-	cfg, err := LoadConfig()
+	cfg, err := common.LoadConfig()
 	if err != nil {
-		return nil, NewError(err)
+		return nil, common.NewError(err)
 	}
 	domain := cfg.EtcdDomain
 	cli, err := NewEtcdClient(domain)

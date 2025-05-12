@@ -1,4 +1,4 @@
-package common
+package eco
 
 import (
 	"context"
@@ -19,11 +19,17 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	ctx.inc()
 	defer ctx.dec()
 
+	// decode() only works if it's passed a pointer. The stdlin json Decoder has
+	// the same constraint.
+	// @note I'm not sure why this is better than just returning the object. Stack v heap?
 	ty := reflect.TypeOf(i)
 	if ty.Kind() != reflect.Pointer {
 		return fmt.Errorf("expected pointer; got %s", fullTypeName(ty))
 	}
-	if isSimple(ty.Elem().Kind()) {
+
+	// Simple objects are easy to deal with. Just use json.Unmarhsal()
+	if isScalar(ty.Elem().Kind()) {
+		// Get object from etcd + make sure there's only 1
 		resp, err := etcdClient.Client.Get(ctx, key)
 		if err != nil {
 			return err
@@ -32,14 +38,18 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 			return fmt.Errorf("expected one key; got %d", len(resp.Kvs))
 		}
 
+		// Unmarshal the result
 		getVal := resp.Kvs[0].Value
-		ctx.printf("getVal()=%v (%s)\n", getVal, getVal)
+		logger.infof(ctx, "getVal()=%v (%s)", getVal, getVal)
 		err = json.Unmarshal(getVal, i)
 		if err != nil {
 			return err
 		}
+		// @note - should we return here?
 	}
 
+	// Some non-simple type are supported. The rest of the function checks for them.
+	// Note - we want the type of the underlying element, not the type of the pointer
 	kindElem := getTypeKind(ctx, ty.Elem())
 
 	if kindElem == SimpleMap {
@@ -56,50 +66,65 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	}
 }
 
+// eco stores maps as a number of sub-KVs with a common prefix. Go requires all
+// KV values in a map are the same type, but etcd has no way of enforcing this. To
+// etcd they're all just KVs.
 func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
-	sig := fmt.Sprintf("key=%s i=%s typeof(i)=%s)", key, i, fullTypeName(reflect.TypeOf(i)))
-	ctx.printf("%s(%s)\n", highlight("decodeMap"), lowlight(sig))
+	logger.signature(ctx, "decodeMap", "-etcdClient-", key, reflect.TypeOf(i))
 	ctx.inc()
 	defer ctx.dec()
 
-	ctx.printf("i=%v ValueOf(i)=%v Elem()=%v ValueOf(Elem())=%v\n", i, reflect.ValueOf(i), reflect.ValueOf(i).Elem(), reflect.ValueOf(reflect.ValueOf(i).Elem()))
+	logger.infof(ctx, "i=%v ValueOf(i)=%v Elem()=%v ValueOf(Elem())=%v", i, reflect.ValueOf(i), reflect.ValueOf(i).Elem(), reflect.ValueOf(reflect.ValueOf(i).Elem()))
 
 	ty := reflect.TypeOf(i)
 	// ctx.println(subtle(fmt.Sprintf("ty=%s", fullTypeName(ty))))
+	// Only pointers are supported
 	if ty.Kind() != reflect.Pointer {
 		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))
 	}
+
+	// Only simple maps are supported
 	kind := getTypeKind(ctx, ty.Elem())
 	if kind != SimpleMap {
 		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem()))
 	}
 
-	// a/key => a/key/
+	// add trailing slash. a/key => a/key/
 	if !strings.HasSuffix(key, string(filepath.Separator)) {
 		key += string(filepath.Separator)
 	}
 
+	// Get entire object tree
+	// @note this might be quite large. ideally pagination would avoid issues with huge maps
 	resp, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
-	ctx.println(highlight("Keys"))
+	logger.info(ctx, highlight("Keys"))
 	var valMap reflect.Value
+	// The caller may have specified a nil map, or an existing map
+	// If nil, create a new map. If not, use the existing map
 	if reflect.ValueOf(i).Elem().IsNil() {
-		ctx.println("map is nil; initializing new map")
+		logger.info(ctx, "map is nil; initializing new map")
 		valMap = reflect.MakeMap(ty.Elem())
 		reflect.ValueOf(i).Elem().Set(valMap)
 	} else {
-		ctx.println("pointer is not nil; using existing map")
+		logger.info(ctx, "pointer is not nil; using existing map")
 		valMap = reflect.Indirect(reflect.ValueOf(i))
 	}
 	for _, kv := range resp.Kvs {
+		// Print a nice log statement
+		// @note this is a lot of clutter for logging, esp when the real code
+		// is a simple json.Unmarshal()
 		skey := strings.TrimPrefix(string(kv.Key), key)
 		skeyQuoted := fmt.Sprintf("\"%s\"", skey)
-		ctx.printf("%-16s %-16s\n", skeyQuoted, kv.Value)
+		logger.infof(ctx, "%-16s %-16s", skeyQuoted, kv.Value)
 		// (*i)[skey] = kv.Value
+		// simple json.Unmarshal() of value
+		// @note this only supports maps of scalars. it needs to support nested maps since those are allowed. I think.
 		var sval string
 		err = json.Unmarshal(kv.Value, &sval)
 		if err != nil {
 			return err
 		}
+		// set a map value, reflection-style
 		valMap.SetMapIndex(reflect.ValueOf(skey), reflect.ValueOf(sval))
 	}
 
@@ -107,7 +132,7 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 		return err
 	}
 
-	ctx.println(highlight("returning nil"))
+	logger.info(ctx, highlight("returning nil"))
 	return nil
 }
 
@@ -132,7 +157,7 @@ func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) err
 	}
 
 	getVal := resp.Kvs[0].Value
-	ctx.printf("getVal()=%v (%s)\n", getVal, getVal)
+	logger.infof(ctx, "getVal()=%v (%s)", getVal, getVal)
 	err = json.Unmarshal(getVal, i)
 	if err != nil {
 		return err
@@ -142,8 +167,7 @@ func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) err
 }
 
 func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
-	sig := fmt.Sprintf("key=%s i=%s typeof(i)=%s)", key, i, fullTypeName(reflect.TypeOf(i)))
-	ctx.printf("%s(%s)\n", highlight("decodeStruct"), lowlight(sig))
+	logger.signature(ctx, "decodeStruct", "-etcdClient", key, reflect.TypeOf(i))
 	ctx.inc()
 	defer ctx.dec()
 
@@ -157,10 +181,10 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem()))
 	}
 	nFields := tyElem.NumField()
-	ctx.printf("%-16s %-16d\n", "nFields", nFields)
+	logger.infof(ctx, "%-16s %-16d", "nFields", nFields)
 	for iField := range nFields {
 		field := tyElem.Field(iField)
-		ctx.println(lowlight(fmt.Sprintf("%-16d %-16s %-16s", iField, field.Name, field.Tag.Get("eco"))))
+		logger.info(ctx, string(lowlight(fmt.Sprintf("%-16d %-16s %-16s", iField, field.Name, field.Tag.Get("eco")))))
 	}
 
 	if !strings.HasSuffix(key, string(filepath.Separator)) {
@@ -172,7 +196,9 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 	}
 
 	fieldNameMap, err := fieldNameMap(i)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	for _, kv := range resp.Kvs {
 		skey := strings.TrimPrefix(string(kv.Key), key)
 		skeyQuoted := fmt.Sprintf("\"%s\"", skey)
@@ -183,7 +209,7 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 		}
 		field := fieldNameMap[skey]
 		field.Set(reflect.ValueOf(sval))
-		ctx.printf("%-16s %-16v\n", skeyQuoted, sval)
+		logger.infof(ctx, "%-16s %-16v", skeyQuoted, sval)
 	}
 
 	return nil
@@ -235,9 +261,9 @@ func TestFloat(t *testing.T) {
 	t.Log(decodedVal)
 }
 
-func TestFieldNameMap (t *testing.T) {
+func TestFieldNameMap(t *testing.T) {
 	var ecoTest = EcoTest{}
-	var p pEcoTest = &ecoTest
+	var p *EcoTest = &ecoTest
 
 	fieldNameMap, err := fieldNameMap(p)
 	require.NoError(t, err)
@@ -449,7 +475,7 @@ func TestStructSetField1(t *testing.T) {
 
 	t.Logf("fullTypeName(val.Type())=%s", fullTypeName(val.Type()))
 	t.Logf("val.Type().Kind()=%s", val.Type().Kind().String())
-	
+
 	require.True(t, val.CanSet())
 	require.True(t, val.Field(0).CanSet())
 

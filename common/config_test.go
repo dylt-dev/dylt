@@ -1,16 +1,11 @@
 package common
 
 import (
-	//	"fmt"
-
 	"errors"
 	"io"
 	"os"
 
-	//	"path"
 	"testing"
-
-	//	"github.com/spf13/viper"
 
 	"github.com/stretchr/testify/assert"
 )

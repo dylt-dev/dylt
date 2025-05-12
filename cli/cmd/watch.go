@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/dylt-dev/dylt/common"
+	"github.com/dylt-dev/dylt/eco"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -166,7 +166,7 @@ func RunWatchScript(scriptKey string, targetPath string) error {
 	slog.Debug("RunWatchScript()", "scriptKey", scriptKey, targetPath, "targetPath")
 	// Get etcd client
 	slog.Info("Creating etcd client ...")
-	cli, err := common.CreateEtcdClientFromConfig()
+	cli, err := eco.CreateEtcdClientFromConfig()
 	if err != nil { return err }
 	
 	// Create watch
@@ -211,7 +211,7 @@ func RunWatchSvc () error {
 	slog.Debug("RunWatchSvc()")
 	
 	slog.Info("Creating etcd client ...")
-	cli, err := common.CreateEtcdClientFromConfig()
+	cli, err := eco.CreateEtcdClientFromConfig()
 	if err != nil { return err }
 	
 	// Create watch

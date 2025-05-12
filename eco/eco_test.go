@@ -1,4 +1,4 @@
-package common
+package eco
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
+// Sample types for tests (named types look better in a log file than anonymous types)
 type emptyStruct struct{}
 type arrayOfInt [0]int
 type arrayOfStruct [0]emptyStruct
@@ -23,25 +24,29 @@ type mapOfIntSlice map[string][]int
 type pointerToInt *int
 type sliceOfInt []int
 type sliceOfStruct []emptyStruct
+type map_emptyStruct_emptyStruct map[struct{}]struct{}
+type map_emptyStruct_int map[struct{}]int
+type map_int_emptyStruct map[int]struct{}
+type map_string_int map[string]int
+type map_string_struct map[string]EcoTest
 
-var VAL_MapSimple = map[string]int{}
-var VAL_MapUnsimple = map[struct{}]struct{}{}
-var VAL_MapUnsimpleKey = map[struct{}]int{}
-var VAL_MapUnsimpleValue = map[int]struct{}{}
+// Sample objects for tests
+var VAL_MapSimple = map_string_int{}
+var VAL_MapUnsimple = map_emptyStruct_emptyStruct{}
+var VAL_MapUnsimpleKey = map_emptyStruct_int{}
+var VAL_MapUnsimpleValue = map_int_emptyStruct{}
 var VAL_SliceSimple = []int{5, 8, 13}
-var VAL_SliceUnsimple = []struct{}{}
+var VAL_SliceUnsimple = []emptyStruct{}
 var VAL_SimplePointer = new(int)
-var VAL_UnsimplePointer = &(struct{}{})
-
+var VAL_UnsimplePointer = &(emptyStruct{})
 var VAL_MapWithStructKey = map[EcoTest]string{}
-var VAL_MapWithStructValue = map[string]EcoTest{}
+var VAL_Map_String_Struct = map_string_struct{"test": *NewEcoTest("me", 13)}
 
 type EcoTest struct {
 	Name        string  `eco:"name"`
 	LuckyNumber float64 `eco:"lucky_number"`
 	Anon        string
 }
-type pEcoTest *EcoTest
 
 type structWithMap struct {
 	M map[int]string
@@ -54,6 +59,12 @@ type UnsimpleStruct struct {
 
 func NewEcoTest(name string, luckyNumber float64) *EcoTest {
 	return &EcoTest{Name: name, LuckyNumber: luckyNumber}
+}
+
+// For logging
+func TestCreateSignature0 (t *testing.T) {
+	sig := createSignature("greatness", "foo", "bar")
+	t.Log(sig)
 }
 
 func TestGetObject(t *testing.T) {
@@ -332,14 +343,14 @@ func dumpOps(t *testing.T, ops []etcd.Op) {
 		if op.IsGet() {
 			key := string(op.KeyBytes())
 			s := fmt.Sprintf("%s %s", "GET", key)
-			t.Log(s)
+			fmt.Println(s)
 		} else if op.IsPut() {
 			key := string(op.KeyBytes())
 			val := string(op.ValueBytes())
-			s := fmt.Sprintf("%s %s %s", "PUT", key, val)
-			t.Log(s)
+			s := fmt.Sprintf("%s %s %s", "PUT", lowlight(key), val)
+			fmt.Println(s)
 		} else {
-			t.Logf("%#v", op)
+			fmt.Printf("%#v\n", op)
 		}
 	}
 }

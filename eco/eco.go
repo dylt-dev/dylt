@@ -1,10 +1,13 @@
-package common
+package eco
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log/slog"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
@@ -15,9 +18,9 @@ import (
 )
 
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
-	ctx.printf("Encoding key=%s (type=%s) ...)\n", key, fullTypeName(reflect.TypeOf(i)))
+	logger.signature(ctx, "Encode", key, reflect.TypeOf(i))
 	if _, ok := i.(reflect.Value); ok {
-		ctx.println("* arg i is of type reflect.Value; did you mean to call i.Interface()?")
+		logger.info(ctx, "arg i is of type reflect.Value; did you mean to call i.Interface()?")
 	}
 	ctx.inc()
 	defer ctx.dec()
@@ -28,45 +31,38 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	var kind reflect.Kind = ty.Kind()
 	var val reflect.Value = reflect.ValueOf(i)
 	var err error
-	ctx.printf("Switching on kind=%s ...\n", kind.String())
+
+	// ctx.println(color.Styledstring("Check object type to confirm it can be encoded").Fg(color.X11.CornflowerBlue))
+	logger.comment(ctx, "Check object type to confirm it can be encoded")
+	logger.infof(ctx, "Switching on kind=%s ...", kind.String())
 	switch kind {
+
+	// simple case for simple types
 	case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32,
 		reflect.Float64,
 		reflect.String:
-		opsPut, err := encodeDefault(ctx, key, val)
-		if err != nil {
-			return nil, err
-		}
-		ops = append(ops, opsPut...)
+		ops, err = encodeDefault(ctx, key, val)
+
 	case reflect.Array:
-		opsArray, err := encodeSlice(ctx, key, val)
-		if err != nil {
-			return nil, err
-		}
-		ops = append(ops, opsArray...)
+		ops, err = encodeSlice(ctx, key, val)
+
 	case reflect.Map:
-		opsMap, err := encodeMap(ctx, key, val)
-		if err != nil {
-			return nil, err
-		}
-		ops = append(ops, opsMap...)
+		ops, err = encodeMap(ctx, key, val)
+
 	case reflect.Slice:
-		opsSlice, err := encodeSlice(ctx, key, val)
-		if err != nil {
-			return nil, err
-		}
-		ops = append(ops, opsSlice...)
+		ops, err = encodeSlice(ctx, key, val)
+
 	case reflect.Struct:
-		opsStruct, err := encodeStruct(ctx, key, val)
-		if err != nil {
-			return nil, err
-		}
-		ops = append(ops, opsStruct...)
+		ops, err = encodeStruct(ctx, key, val)
+
 	default:
 		err = errors.New("unsupported")
+	}
+
+	if err != nil {
 		return nil, err
 	}
 	return ops, nil
@@ -91,19 +87,20 @@ func (ctx *ecoContext) inc() *ecoContext {
 	return ctx
 }
 
-func (ctx *ecoContext) indent() string {
-	return strings.Repeat("  ", ctx.level)
-}
+// func (ctx *ecoContext) indent() string {
+// 	const tab = "  "
+// 	return strings.Repeat(tab, ctx.level)
+// }
 
-func (ctx *ecoContext) printf(format string, a ...any) (int, error) {
-	format = fmt.Sprintf("%s%s", ctx.indent(), format)
-	return fmt.Printf(format, a...)
-}
+// func (ctx *ecoContext) printf(format string, a ...any) (int, error) {
+// 	format = fmt.Sprintf("%s%s", ctx.indent(), format)
+// 	return fmt.Printf(format, a...)
+// }
 
-func (ctx *ecoContext) println(a ...any) (int, error) {
-	args := fmt.Sprintln(a...)
-	return fmt.Printf("%s%s", ctx.indent(), args)
-}
+// func (ctx *ecoContext) println(a ...any) (int, error) {
+// 	args := fmt.Sprintln(a...)
+// 	return fmt.Printf("%s%s", ctx.indent(), args)
+// }
 
 type kind uint
 
@@ -148,27 +145,27 @@ func (k kind) String() string {
 }
 
 func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf("In arrayKind(): ty=%s\n", fullTypeName(ty))
+	logger.signature(ctx, "arrayKind", ty)
 	ctx.inc()
 	defer ctx.dec()
 
 	if ty.Kind() != reflect.Array {
-		ctx.println("type is not a array; returning Invalid")
+		logger.info(ctx, "type is not a array; returning Invalid")
 		return Invalid
 	}
 
 	tyElem := ty.Elem()
-	ctx.printf("Checking element type (%s) ... ", fullTypeName(tyElem))
-	if isTypeSimple(ty.Elem()) {
-		ctx.println("element type is simple; returning SimpleArray", fullTypeName(tyElem))
+	logger.infof(ctx, "Checking element type (%s) ... ", fullTypeName(tyElem))
+	if isTypeScalar(ty.Elem()) {
+		logger.infof(ctx, "element type (%s) is scalar; returning SimpleArray", fullTypeName(tyElem))
 		return SimpleArray
 	}
-	ctx.println("conditions were not met; returning Invalid")
+	logger.info(ctx, "conditions were not met; returning Invalid")
 	return Invalid
 }
 
 func encodeDefault(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	ctx.printf("encodeDefault() - key=%s\n", key)
+	logger.signature(ctx, "encodeDefault", key, val.Type())
 	ctx.inc()
 	defer ctx.dec()
 
@@ -183,19 +180,19 @@ func encodeDefault(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, e
 }
 
 func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	ctx.printf("encodeMap() - key=%s\n", key)
+	logger.signature(ctx, "encodeMap", key, val.Type())
 	ctx.inc()
 	defer ctx.dec()
 
 	ty := val.Type()
-	ctx.printf("Confirming type (%s) is SimpleMap ... ", fullTypeName(ty))
+	logger.infof(ctx, "Confirming type (%s) is SimpleMap ...", fullTypeName(ty))
 	if getTypeKind(ctx, ty) != SimpleMap {
-		ctx.println("incorrect.")
+		logger.comment(ctx, "incorrect.")
 		return nil, fmt.Errorf("expecting SimpleMap; got %s", fullTypeName(ty))
 	}
 
-	ctx.println("confirmed.")
-	ctx.println("Encoding keys and values ...")
+	logger.comment(ctx, "confirmed.")
+	logger.info(ctx, "Encoding keys and values ...")
 	var ops = []etcd.Op{}
 	mapIter := val.MapRange()
 	for mapIter.Next() {
@@ -213,7 +210,7 @@ func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error
 }
 
 func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	ctx.printf("encodeSlice() - key=%s", key)
+	logger.signature(ctx, "encodeSlice", key, val.Type())
 	ctx.inc()
 	defer ctx.dec()
 
@@ -232,19 +229,19 @@ func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, err
 }
 
 func encodeStruct(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	ctx.printf("encodeStruct() - key=%s\n", key)
+	logger.signature(ctx, "encodeStruct", key, val.Type())
 	ctx.inc()
 	defer ctx.dec()
 
 	ty := val.Type()
-	ctx.printf("Confirming type (%s) is SimpleStruct ... ", fullTypeName(ty))
+	logger.commentf(ctx, "Confirming type (%s) is SimpleStruct ...", fullTypeName(ty))
 	if getTypeKind(ctx, ty) != SimpleStruct {
-		ctx.println("incorrect.")
+		logger.comment(ctx, "incorrect.")
 		return nil, fmt.Errorf("expecting SimpleStruct; got %s", fullTypeName(ty))
 	}
 
-	ctx.println("confirmed.")
-	ctx.println("Encoding fields ...")
+	logger.info(ctx, "confirmed.")
+	logger.info(ctx, "Encoding fields ...")
 	var ops = []etcd.Op{}
 	for i := range ty.NumField() {
 		sf := ty.Field(i)
@@ -261,7 +258,7 @@ func encodeStruct(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, er
 	return ops, nil
 }
 
-func fieldNameMap (i any) (map[string]reflect.Value, error) {
+func fieldNameMap(i any) (map[string]reflect.Value, error) {
 	var tyElem reflect.Type
 	var valElem reflect.Value
 	ty := reflect.TypeOf(i)
@@ -274,7 +271,7 @@ func fieldNameMap (i any) (map[string]reflect.Value, error) {
 	}
 	val := reflect.ValueOf(i)
 	valElem = val.Elem()
-	
+
 	fieldNameMap := map[string]reflect.Value{}
 	for i := range tyElem.NumField() {
 		tyField := tyElem.Field(i)
@@ -286,7 +283,6 @@ func fieldNameMap (i any) (map[string]reflect.Value, error) {
 
 	return fieldNameMap, nil
 }
-
 
 func fullTypeName(ty reflect.Type) string {
 	pkgPath := ty.PkgPath()
@@ -382,19 +378,19 @@ func getTypeKind(ctx *ecoContext, ty reflect.Type) kind {
 }
 
 func interfaceKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf("In interfaceKind(): ty=%s\n", fullTypeName(ty))
+	logger.signature(ctx, "interfaceKind", ty)
 	ctx.inc()
 	defer ctx.dec()
 
 	if ty.Kind() != reflect.Interface {
-		ctx.println("type is not an interface; returning Invalid")
+		logger.info(ctx, "type is not an interface; returning Invalid")
 		return Invalid
 	}
 
 	return Invalid
 }
 
-func isSimple(kind reflect.Kind) bool {
+func isScalar(kind reflect.Kind) bool {
 	switch kind {
 	case reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -407,137 +403,137 @@ func isSimple(kind reflect.Kind) bool {
 	}
 }
 
-func isTypeSimple(ty reflect.Type) bool {
-	return isSimple(ty.Kind())
+func isTypeScalar(ty reflect.Type) bool {
+	return isScalar(ty.Kind())
 }
 
 func mapKind(ctx *ecoContext, ty reflect.Type) kind {
 	sig := fullTypeName(ty)
-	ctx.printf("%s(%s)\n", highlight("mapKind"), lowlight(sig))
+	logger.infof(ctx, "%s(%s)", highlight("mapKind"), lowlight(sig))
 	ctx.inc()
 	defer ctx.dec()
 
 	if ty.Kind() != reflect.Map {
-		ctx.println("type is not a map; returning Invalid")
+		logger.info(ctx, "type is not a map; returning Invalid")
 		return Invalid
 	}
 
-	ctx.println(lowlight(fmt.Sprintf("Checking key (%s) ...", fullTypeName(ty.Key()))))
-	if !isTypeSimple(ty.Key()) {
-		ctx.printf("%-32s: %-32s; %s\n", "key", "non-simple", highlight("returning Invalid"))
+	logger.infof(ctx, "%-70s", lowlight(fmt.Sprintf("checking key (%s) ...", fullTypeName(ty.Key()))))
+	if !isTypeScalar(ty.Key()) {
+		logger.infof(ctx, "%-32s: %-32s; %s", "key", "non-scalar", highlight("returning Invalid"))
 		return Invalid
 	}
-	ctx.printf("%-16s %-16s; continuing\n", "key", "simple")
+	logger.infof(ctx, "%-16s %-16s; continuing", "key", "scalar")
 
 	tyElem := ty.Elem()
-	ctx.println(lowlight(fmt.Sprintf("Checking element type (%s) ...", fullTypeName(tyElem))))
+	logger.info(ctx, lowlight(fmt.Sprintf("checking element type (%s) ...", fullTypeName(tyElem))))
 	ctx.inc()
 	kindElem := getTypeKind(ctx, tyElem)
 	ctx.dec()
-	if isTypeSimple(tyElem) {
-		ctx.printf("%-16s %-16s; %s\n", "type", "simple", highlight("returning SimpleMap"))
+	if isTypeScalar(tyElem) {
+		logger.infof(ctx, "%-16s %-16s; %s", "type", "scalar", highlight("returning SimpleMap"))
 		return SimpleMap
 	}
-	ctx.printf("type: not simple; continuing\n")
-	ctx.printf("%-16s %-16s; continuing\n", "type", "not simple")
+	logger.infof(ctx, "%-16s %-16s; continuing", fullTypeName(tyElem), "not scalar")
 
-	ctx.println(lowlight(fmt.Sprintf("Checking element kind (%s) ...", kindElem.String())))
+	logger.infof(ctx, "%-70s", lowlight(fmt.Sprintf("Checking element kind (%s) ...", kindElem.String())))
 	if kindElem == SimpleMap ||
 		kindElem == SimpleStruct ||
 		kindElem == SimpleSlice {
-		ctx.printf("kind: simple; returning SimpleMap\n", kindElem.String())
+		logger.infof(ctx, "%s: simple; returning SimpleMap", kindElem.String())
 		return SimpleMap
 	}
-	ctx.printf("type: not simple; continuing\n")
+	logger.info(ctx, "type: not simple; continuing")
 
-	ctx.println(highlight("conditions were not met; returning Invalid"))
+	logger.info(ctx, highlight("conditions were not met; returning Invalid"))
 	return Invalid
 }
 
 func pointerKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf("In pointerKind(): ty=%s\n", fullTypeName(ty))
+	logger.signature(ctx, "pointerKind", ty)
 	ctx.inc()
 	defer ctx.dec()
 
 	if ty.Kind() != reflect.Pointer {
-		ctx.println("type is not a pointer; returning Invalid")
+		logger.info(ctx, "type is not a pointer; returning Invalid")
 		return Invalid
 	}
 
 	tyElem := ty.Elem()
-	ctx.printf("Checking pointer type (%s) ... ", fullTypeName(tyElem))
-	if isTypeSimple(tyElem) {
-		ctx.println("pointer type is simple; returning SimplePointer")
+	logger.infof(ctx, "Checking pointer type (%s) ... ", fullTypeName(tyElem))
+	if isTypeScalar(tyElem) {
+		logger.info(ctx, "pointer type is scalar; returning SimplePointer")
 		return SimplePointer
 	}
 
-	ctx.println("conditions were not met; returning Invalid")
+	logger.info(ctx, "conditions were not met; returning Invalid")
 	return Invalid
 }
 
 func sliceKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf("In sliceKind(): ty=%s\n", fullTypeName(ty))
+	logger.signature(ctx, "sliceKind", ty)
 	ctx.inc()
 	defer ctx.dec()
 
 	if ty.Kind() != reflect.Slice {
-		ctx.println("type is not a slice; returning Invalid")
+		logger.info(ctx, "type is not a slice; returning Invalid")
 		return Invalid
 	}
 
 	tyElem := ty.Elem()
-	ctx.printf("Checking element type (%s) ... ", fullTypeName(tyElem))
-	if isTypeSimple(tyElem) {
-		ctx.println("element type is simple; returning SimpleSlice")
+	logger.infof(ctx, "Checking element type (%s) ... ", fullTypeName(tyElem))
+	if isTypeScalar(tyElem) {
+		logger.info(ctx, "element type is scalar; returning SimpleSlice")
 		return SimpleSlice
 	}
 
-	ctx.println("conditions were not met; returning Invalid")
+	logger.info(ctx, "conditions were not met; returning Invalid")
 	return Invalid
 }
 
 func structKind(ctx *ecoContext, ty reflect.Type) kind {
-	ctx.printf("In structKind(): ty=%s\n", fullTypeName(ty))
+	// ctx.printf("%s(%s)\n", highlight("structKind"), lowlight(fullTypeName(ty)))
+	logger.signature(ctx, "structKind", fullTypeName(ty))
 	ctx.inc()
 	defer ctx.dec()
 
 	if ty.Kind() != reflect.Struct {
-		ctx.println("type is not a struct; returning Invalid")
+		logger.info(ctx, "type is not a struct; returning Invalid")
 
 		return Invalid
 	}
 
-	ctx.printf("%d field(s)\n", ty.NumField())
+	logger.infof(ctx, "%d field(s)", ty.NumField())
 	for i := range ty.NumField() {
 		sf := ty.Field(i)
 		sfType := sf.Type
-		ctx.printf("checking field '%s': type name = %s ...\n", sf.Name, fullTypeName(sfType))
+		logger.infof(ctx, "%-70s", lowlight(fmt.Sprintf("checking field '%s' (%s) ...", sf.Name, fullTypeName(sfType))))
 		sfReflectKind := sfType.Kind()
 
-		if isTypeSimple(sfType) {
-			ctx.println("field type is simple; continuing")
+		if isTypeScalar(sfType) {
+			logger.infof(ctx, "%-16s %-16s; %s", sfType, "scalar", "continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Map && mapKind(ctx, sfType) == SimpleMap {
-			ctx.println("field type is SimpleMap; continuing")
+			logger.info(ctx, "field type is SimpleMap; continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Slice && sliceKind(ctx, sfType) == SimpleSlice {
-			ctx.println("field type is SimpleSlice; continuing")
+			logger.info(ctx, "field type is SimpleSlice; continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Struct && structKind(ctx, sf.Type) == SimpleStruct {
-			ctx.println("field type is SimpleStruct; continuing")
+			logger.info(ctx, "field type is SimpleStruct; continuing")
 			continue
 		}
 
 		return Invalid
 	}
 
-	ctx.println("All fields passed; returning SimpleStruct")
+	logger.infof(ctx, "%s; %s", "All fields passed", highlight("returning SimpleStruct"))
 	return SimpleStruct
 }
 
@@ -551,7 +547,73 @@ func highlight(s string) string {
 }
 
 func lowlight(s string) string {
-	var ss = color.Styledstring(s).Fg(color.Sys.BrightBlack)
+	var ss = color.Styledstring(s).Fg(color.X11.Gray50)
 
 	return string(ss)
+}
+
+type ecoLogger struct {
+	*slog.Logger
+}
+
+func newEcoLogger (w io.Writer) *ecoLogger{
+	options := color.ColorOptions{Level: slog.LevelDebug}
+	handler := color.NewColorHandler(w, options)
+	return &ecoLogger {
+		Logger: slog.New(handler),
+	}
+}
+
+func (l *ecoLogger) comment(ctx *ecoContext, msg string) {
+	l.Logger.InfoContext(ctx, l.indent(ctx) + string(color.Styledstring(msg).Fg(color.X11.CornflowerBlue)))
+}
+
+func (l *ecoLogger) commentf(ctx *ecoContext, sFmt string, args ...any) {
+	msg := fmt.Sprintf(sFmt, args...)
+	l.comment(ctx, l.indent(ctx) + msg)
+}
+
+func (l *ecoLogger) indent(ctx *ecoContext) string {
+	const tab = "  "
+	return strings.Repeat(tab, ctx.level)
+}
+
+func (l *ecoLogger) info(ctx *ecoContext, s string) {
+	l.Logger.InfoContext(ctx, l.indent(ctx) + s)
+}
+
+func (l *ecoLogger) infof(ctx *ecoContext, sfmt string, args ...any) {
+	s := fmt.Sprintf(sfmt, args...)
+	l.Logger.InfoContext(ctx, l.indent(ctx) + s)
+}
+
+func (l *ecoLogger) signature (ctx *ecoContext, name string, args ...any) {
+	sig := createSignature(name, args...)
+	l.Logger.InfoContext(ctx, l.indent(ctx) + sig)
+}
+
+func createSignature (name string, args ...any) string {
+	// highlight, concat, all that good stuff
+	sFmt := fmt.Sprintf("%%s(%s)", strings.Repeat("%v, ", len(args)-1) + "%v")
+	args2 := make([]any, len(args)+1)
+	args2[0] = highlight(name)
+	for i, arg := range args {
+		ty, is := arg.(reflect.Type) 
+		var sArg string
+		if is {
+			sArg = fmt.Sprintf("-%s-", fullTypeName(ty))
+		} else {
+			sArg = fmt.Sprintf("%v", arg)
+		}
+		args2[i+1] = lowlight(sArg)
+	}
+	s := fmt.Sprintf(sFmt, args2...)
+
+	return s
+}
+
+var logger *ecoLogger
+
+func init () {
+	logger = newEcoLogger(os.Stdout)
 }

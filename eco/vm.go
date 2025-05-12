@@ -1,4 +1,4 @@
-package common
+package eco
 
 import (
 	// "encoding/json"
@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/dylt-dev/dylt/common"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientV3 "go.etcd.io/etcd/client/v3"
 )
@@ -168,7 +169,7 @@ func GetValue (kv *mvccpb.KeyValue) (*VmInfo, error) {
 }
 
 func CreateVmClientFromConfig () (*VmClient, error) {
-	cfg, err := LoadConfig()
+	cfg, err := common.LoadConfig()
 	if err != nil { return nil, err }
 	vmClient, err := NewVmClient(cfg.EtcdDomain)
 	return vmClient, err

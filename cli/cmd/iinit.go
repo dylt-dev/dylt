@@ -1,15 +1,16 @@
 package cmd
 
 import (
-
 	"log/slog"
-	"github.com/dylt-dev/dylt/common"
+	"os"
+
+	"github.com/dylt-dev/dylt/color"
 )
 
 var Logger *slog.Logger
 
 func init () {
-	options := common.ColorOptions{Level: slog.LevelDebug}
-	handler := common.NewColorHandler(options)
+	options := color.ColorOptions{Level: slog.LevelDebug}
+	handler := color.NewColorHandler(os.Stdout, options)
 	Logger = slog.New(handler)
 }

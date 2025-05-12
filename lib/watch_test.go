@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"github.com/dylt-dev/dylt/eco"
 )
 
 func TestGetServiceKey (t *testing.T) {
@@ -42,7 +42,7 @@ func TestWatchHello (t *testing.T) {
 	
 	ctx := clientv3.WithRequireLeader(context.Background())
 	assert.NotNil(t, ctx)
-	cli, err := common.CreateEtcdClientFromConfig()
+	cli, err := eco.CreateEtcdClientFromConfig()
 	assert.Nil(t, err)
 	chWatch := cli.Watch(ctx, "/hello", clientv3.WithKeysOnly()) 
 	var resp clientv3.WatchResponse
