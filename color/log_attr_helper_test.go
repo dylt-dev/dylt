@@ -1,4 +1,4 @@
-package common
+package color
 
 import (
 	"errors"
@@ -140,12 +140,3 @@ func TestCopyAndAppend0 (t *testing.T) {
 	t.Logf("#l[0]: %p\n", unsafe.Pointer(&(l[0])))
 	t.Logf("#lNew: %p\n", unsafe.Pointer(&lNew))
 }
-
-func copyAndAppend[T any] (l []T, el T) []T {
-	var lNew = make ([]T, len(l)+1)
-	n := copy(lNew, l)
-	lNew[n] = el
-	
-	return lNew
-}
-	

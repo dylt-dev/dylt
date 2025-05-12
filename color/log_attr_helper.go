@@ -1,4 +1,4 @@
-package common
+package color
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package common
+package color
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/seq"
 )
 
@@ -44,11 +43,16 @@ func (h *ColorHandler) Handle(ctx context.Context, rec slog.Record) error {
 
 	attrMap, err = createAttrMap(meta)
 	if err != nil { return err }
-	sMap := fmt.Sprintf("%#v", attrMap)
-	var sOut = color.Styledstring(fmt.Sprintf("%s: %s\n", rec.Message, sMap))
+	var sOut Styledstring
+	if len(attrMap) == 0 {
+		sOut = Styledstring(fmt.Sprintf("%s\n", rec.Message))
+	} else {
+		sMap := fmt.Sprintf("%#v", attrMap)
+		sOut = Styledstring(fmt.Sprintf("%s: %s\n", rec.Message, sMap))
+	}
 	
 	if rec.Level == slog.LevelDebug {
-		sOut = color.Styledstring(sOut).Fg(color.X11.Gray50)
+		sOut = Styledstring(sOut).Fg(X11.Gray50)
 	}
 
 	h.mutex.Lock()

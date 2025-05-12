@@ -1,4 +1,4 @@
-package common
+package eco
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	}
 
 	// Simple objects are easy to deal with. Just use json.Unmarhsal()
-	if isSimple(ty.Elem().Kind()) {
+	if isScalar(ty.Elem().Kind()) {
 		// Get object from etcd + make sure there's only 1
 		resp, err := etcdClient.Client.Get(ctx, key)
 		if err != nil {
@@ -66,8 +66,7 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	}
 }
 
-
-// eco stores maps as a number of sub-KVs with a common prefix. Go requires all 
+// eco stores maps as a number of sub-KVs with a common prefix. Go requires all
 // KV values in a map are the same type, but etcd has no way of enforcing this. To
 // etcd they're all just KVs.
 func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
@@ -199,7 +198,9 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 	}
 
 	fieldNameMap, err := fieldNameMap(i)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	for _, kv := range resp.Kvs {
 		skey := strings.TrimPrefix(string(kv.Key), key)
 		skeyQuoted := fmt.Sprintf("\"%s\"", skey)
@@ -262,9 +263,9 @@ func TestFloat(t *testing.T) {
 	t.Log(decodedVal)
 }
 
-func TestFieldNameMap (t *testing.T) {
+func TestFieldNameMap(t *testing.T) {
 	var ecoTest = EcoTest{}
-	var p pEcoTest = &ecoTest
+	var p *EcoTest = &ecoTest
 
 	fieldNameMap, err := fieldNameMap(p)
 	require.NoError(t, err)
@@ -476,7 +477,7 @@ func TestStructSetField1(t *testing.T) {
 
 	t.Logf("fullTypeName(val.Type())=%s", fullTypeName(val.Type()))
 	t.Logf("val.Type().Kind()=%s", val.Type().Kind().String())
-	
+
 	require.True(t, val.CanSet())
 	require.True(t, val.Field(0).CanSet())
 

@@ -1,4 +1,4 @@
-package common
+package color
 
 import (
 	"log/slog"
@@ -13,6 +13,7 @@ func TestColorHandler0(t *testing.T) {
 	options := ColorOptions{Level: slog.LevelDebug}
 	handler := NewColorHandler(os.Stdout, options)
 	logger := slog.New(handler)
+	t.Logf("%#v", handler)
 	logger.Debug("MEAT")
 	logger.Info("hiii")
 }

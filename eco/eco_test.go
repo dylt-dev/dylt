@@ -1,4 +1,4 @@
-package common
+package eco
 
 import (
 	"context"
@@ -29,6 +29,7 @@ type map_emptyStruct_int map[struct{}]int
 type map_int_emptyStruct map[int]struct{}
 type map_string_int map[string]int
 type map_string_struct map[string]EcoTest
+
 // Sample objects for tests
 var VAL_MapSimple = map_string_int{}
 var VAL_MapUnsimple = map_emptyStruct_emptyStruct{}
@@ -39,14 +40,13 @@ var VAL_SliceUnsimple = []emptyStruct{}
 var VAL_SimplePointer = new(int)
 var VAL_UnsimplePointer = &(emptyStruct{})
 var VAL_MapWithStructKey = map[EcoTest]string{}
-var VAL_MapWithStructValue = map_string_struct{}
+var VAL_Map_String_Struct = map_string_struct{"test": *NewEcoTest("me", 13)}
 
 type EcoTest struct {
 	Name        string  `eco:"name"`
 	LuckyNumber float64 `eco:"lucky_number"`
 	Anon        string
 }
-type pEcoTest *EcoTest
 
 type structWithMap struct {
 	M map[int]string
@@ -59,6 +59,12 @@ type UnsimpleStruct struct {
 
 func NewEcoTest(name string, luckyNumber float64) *EcoTest {
 	return &EcoTest{Name: name, LuckyNumber: luckyNumber}
+}
+
+// For logging
+func TestCreateSignature0 (t *testing.T) {
+	sig := createSignature("greatness", "foo", "bar")
+	t.Log(sig)
 }
 
 func TestGetObject(t *testing.T) {
@@ -337,14 +343,14 @@ func dumpOps(t *testing.T, ops []etcd.Op) {
 		if op.IsGet() {
 			key := string(op.KeyBytes())
 			s := fmt.Sprintf("%s %s", "GET", key)
-			t.Log(s)
+			fmt.Println(s)
 		} else if op.IsPut() {
 			key := string(op.KeyBytes())
 			val := string(op.ValueBytes())
-			s := fmt.Sprintf("%s %s %s", "PUT", key, val)
-			t.Log(s)
+			s := fmt.Sprintf("%s %s %s", "PUT", lowlight(key), val)
+			fmt.Println(s)
 		} else {
-			t.Logf("%#v", op)
+			fmt.Printf("%#v\n", op)
 		}
 	}
 }

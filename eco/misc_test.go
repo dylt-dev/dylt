@@ -1,4 +1,4 @@
-package common
+package eco
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
@@ -84,13 +85,13 @@ func TestSimplePut(t *testing.T) {
 func TestInit(t *testing.T) {
 	// Init the config
 	const etcdDomain = "hello.dylt.dev"
-	initInfo := InitStruct{
+	initInfo := common.InitStruct{
 		EtcdDomain: etcdDomain,
 	}
-	err := Init(&initInfo)
+	err := common.Init(&initInfo)
 	assert.Nil(t, err)
 	// Test the file exists
-	cfg, err := LoadConfig()
+	cfg, err := common.LoadConfig()
 	assert.Nil(t, err)
 	t.Logf("%#v", cfg)
 	assert.Nil(t, err)
@@ -99,7 +100,8 @@ func TestInit(t *testing.T) {
 }
 
 func TestShowConfig(t *testing.T) {
-	err := ShowConfig(os.Stdout)
+	err := common.ShowConfig(os.Stdout)
+
 	assert.Nil(t, err)
 }
 
@@ -121,18 +123,18 @@ func TestPostViper(t *testing.T) {
 	var yml = `
 etcd-domain: hello.dylt.dev
 `
-	cfg1 := ConfigStruct{
+	cfg1 := common.ConfigStruct{
 		EtcdDomain: "hello.dylt.dev",
 	}
 
-	cfg2 := ConfigStruct{}
+	cfg2 := common.ConfigStruct{}
 	err := yaml.Unmarshal([]byte(yml), &cfg2)
 	assert.Nil(t, err)
 	assert.Equal(t, cfg1.EtcdDomain, cfg2.EtcdDomain)
 }
 
 func TestPostViperWrite(t *testing.T) {
-	cfg := ConfigStruct{
+	cfg := common.ConfigStruct{
 		EtcdDomain: "hello.dylt.dev",
 	}
 	path := "/tmp/dylt.cfg"
