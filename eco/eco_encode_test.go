@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestEncodeEtcd_Bool(t *testing.T) {
 func TestEncodeEtcd_EcoTest(t *testing.T) {
 	key := "key"
 	i := EcoTest{Name: "MEAT", LuckyNumber: 13}
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 
 	ops, err := Encode(ctx, key, i)
 	assert.NoError(t, err)
@@ -41,12 +42,12 @@ func TestEncodeEtcd_Int(t *testing.T) {
 func TestEncodeEtcd_Interface(t *testing.T) {
 	type inf interface{}
 	var infy = new(inf)
-	_, err := Encode(newEcoContext(), "key", infy)
+	_, err := Encode(newEcoContext(os.Stdout), "key", infy)
 	assert.Error(t, err)
 }
 
 func TestEncodeEtcd_IntSlice(t *testing.T) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	slice := []int{5, 8, 13}
 	j, err := json.Marshal(slice)
 	assert.NoError(t, err)
@@ -66,7 +67,7 @@ func TestEncodeEtcd_MapOfMaps(t *testing.T) {
 	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
 	map2 := map[string]string{"Name": "Javier", "Position": "P"}
 	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
-	ops, err := Encode(newEcoContext(), key, mapStros)
+	ops, err := Encode(newEcoContext(os.Stdout), key, mapStros)
 	assert.NoError(t, err)
 	dumpOps(t, ops)
 }
@@ -74,7 +75,7 @@ func TestEncodeEtcd_MapOfMaps(t *testing.T) {
 func TestEncodeEtcd_MapWithIntKeys(t *testing.T) {
 	key := "key"
 	i := map[int]string{10: "print 'daylight is great'", 20: "print 'say it again'", 30: "goto 10"}
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 
 	ops, err := Encode(ctx, key, i)
 	assert.NoError(t, err)
@@ -83,7 +84,7 @@ func TestEncodeEtcd_MapWithIntKeys(t *testing.T) {
 func TestEncodeEtcd_SimpleMap(t *testing.T) {
 	key := "key"
 	i := map[string]string{"foo": "13", "bar": "thirteen", "bum": "th1rt33n"}
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 
 	ops, err := Encode(ctx, key, i)
 	assert.NoError(t, err)
@@ -91,7 +92,7 @@ func TestEncodeEtcd_SimpleMap(t *testing.T) {
 }
 
 func TestEncode_Map_String_Struct(t *testing.T) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	ops, err := Encode(ctx, "/test/map_string_struct", VAL_Map_String_Struct)
 	require.NoError(t, err)
 	fmt.Println()
