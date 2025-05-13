@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -40,7 +41,7 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 
 		// Unmarshal the result
 		getVal := resp.Kvs[0].Value
-		logger.infof(ctx, "getVal()=%v (%s)", getVal, getVal)
+		ctx.logger.Infof("getVal()=%v (%s)", getVal, getVal)
 		err = json.Unmarshal(getVal, i)
 		if err != nil {
 			return err
@@ -70,11 +71,11 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 // KV values in a map are the same type, but etcd has no way of enforcing this. To
 // etcd they're all just KVs.
 func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
-	logger.signature(ctx, "decodeMap", "-etcdClient-", key, reflect.TypeOf(i))
+	ctx.logger.signature("decodeMap", "-etcdClient-", key, reflect.TypeOf(i))
 	ctx.inc()
 	defer ctx.dec()
 
-	logger.infof(ctx, "i=%v ValueOf(i)=%v Elem()=%v ValueOf(Elem())=%v", i, reflect.ValueOf(i), reflect.ValueOf(i).Elem(), reflect.ValueOf(reflect.ValueOf(i).Elem()))
+	ctx.logger.Infof("i=%v ValueOf(i)=%v Elem()=%v ValueOf(Elem())=%v", i, reflect.ValueOf(i), reflect.ValueOf(i).Elem(), reflect.ValueOf(reflect.ValueOf(i).Elem()))
 
 	ty := reflect.TypeOf(i)
 	// ctx.println(subtle(fmt.Sprintf("ty=%s", fullTypeName(ty))))
@@ -97,16 +98,16 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 	// Get entire object tree
 	// @note this might be quite large. ideally pagination would avoid issues with huge maps
 	resp, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
-	logger.info(ctx, highlight("Keys"))
+	ctx.logger.info(highlight("Keys"))
 	var valMap reflect.Value
 	// The caller may have specified a nil map, or an existing map
 	// If nil, create a new map. If not, use the existing map
 	if reflect.ValueOf(i).Elem().IsNil() {
-		logger.info(ctx, "map is nil; initializing new map")
+		ctx.logger.info("map is nil; initializing new map")
 		valMap = reflect.MakeMap(ty.Elem())
 		reflect.ValueOf(i).Elem().Set(valMap)
 	} else {
-		logger.info(ctx, "pointer is not nil; using existing map")
+		ctx.logger.info("pointer is not nil; using existing map")
 		valMap = reflect.Indirect(reflect.ValueOf(i))
 	}
 	for _, kv := range resp.Kvs {
@@ -115,7 +116,7 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 		// is a simple json.Unmarshal()
 		skey := strings.TrimPrefix(string(kv.Key), key)
 		skeyQuoted := fmt.Sprintf("\"%s\"", skey)
-		logger.infof(ctx, "%-16s %-16s", skeyQuoted, kv.Value)
+		ctx.logger.Infof("%-16s %-16s", skeyQuoted, kv.Value)
 		// (*i)[skey] = kv.Value
 		// simple json.Unmarshal() of value
 		// @note this only supports maps of scalars. it needs to support nested maps since those are allowed. I think.
@@ -132,7 +133,7 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 		return err
 	}
 
-	logger.info(ctx, highlight("returning nil"))
+	ctx.logger.info(highlight("returning nil"))
 	return nil
 }
 
@@ -157,7 +158,7 @@ func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) err
 	}
 
 	getVal := resp.Kvs[0].Value
-	logger.infof(ctx, "getVal()=%v (%s)", getVal, getVal)
+	ctx.logger.Infof("getVal()=%v (%s)", getVal, getVal)
 	err = json.Unmarshal(getVal, i)
 	if err != nil {
 		return err
@@ -167,7 +168,7 @@ func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) err
 }
 
 func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
-	logger.signature(ctx, "decodeStruct", "-etcdClient", key, reflect.TypeOf(i))
+	ctx.logger.signature("decodeStruct", "-etcdClient", key, reflect.TypeOf(i))
 	ctx.inc()
 	defer ctx.dec()
 
@@ -181,10 +182,10 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem()))
 	}
 	nFields := tyElem.NumField()
-	logger.infof(ctx, "%-16s %-16d", "nFields", nFields)
+	ctx.logger.Infof("%-16s %-16d", "nFields", nFields)
 	for iField := range nFields {
 		field := tyElem.Field(iField)
-		logger.info(ctx, string(lowlight(fmt.Sprintf("%-16d %-16s %-16s", iField, field.Name, field.Tag.Get("eco")))))
+		ctx.logger.info(string(lowlight(fmt.Sprintf("%-16d %-16s %-16s", iField, field.Name, field.Tag.Get("eco")))))
 	}
 
 	if !strings.HasSuffix(key, string(filepath.Separator)) {
@@ -209,7 +210,7 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 		}
 		field := fieldNameMap[skey]
 		field.Set(reflect.ValueOf(sval))
-		logger.infof(ctx, "%-16s %-16v", skeyQuoted, sval)
+		ctx.logger.Infof("%-16s %-16v", skeyQuoted, sval)
 	}
 
 	return nil
@@ -352,7 +353,7 @@ func TestMapStringString(t *testing.T) {
 
 func TestMisc(t *testing.T) {
 	etcdClient, err := NewEtcdClientFromConfig()
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 
 	key1 := "/test/f"
 	key2 := "/test/f"
@@ -400,7 +401,7 @@ func TestNilPointer(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
@@ -418,7 +419,7 @@ func TestString(t *testing.T) {
 }
 
 func TestStringSlice(t *testing.T) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
@@ -485,7 +486,7 @@ func TestStructSetField1(t *testing.T) {
 }
 
 func TestUint(t *testing.T) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
@@ -503,7 +504,7 @@ func TestUint(t *testing.T) {
 }
 
 func TestUintSlice(t *testing.T) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
@@ -522,7 +523,7 @@ func TestUintSlice(t *testing.T) {
 }
 
 func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
-	ctx := newEcoContext()
+	ctx := newEcoContext(os.Stdout)
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)

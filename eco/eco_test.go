@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
@@ -72,17 +73,17 @@ func TestGetObject(t *testing.T) {
 }
 
 func TestKind_ArrayOfInt(t *testing.T) {
-	kind := getKind(newEcoContext(), arrayOfInt{})
+	kind := getKind(newEcoContext(os.Stdout), arrayOfInt{})
 	assert.Equal(t, SimpleArray, kind)
 }
 
 func TestKind_ArrayOfStruct(t *testing.T) {
-	kind := getKind(newEcoContext(), arrayOfStruct{})
+	kind := getKind(newEcoContext(os.Stdout), arrayOfStruct{})
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapOfIntSlice(t *testing.T) {
-	kind := getKind(newEcoContext(), mapOfIntSlice{})
+	kind := getKind(newEcoContext(os.Stdout), mapOfIntSlice{})
 	assert.Equal(t, SimpleMap, kind)
 
 }
@@ -90,50 +91,50 @@ func TestKind_MapOfIntSlice(t *testing.T) {
 func TestKind_MapOfSliceOfStruct(t *testing.T) {
 	type emptyStruct struct{}
 	type mapOfSlice map[string][]emptyStruct
-	kind := getKind(newEcoContext(), mapOfSlice{})
+	kind := getKind(newEcoContext(os.Stdout), mapOfSlice{})
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapSimple(t *testing.T) {
-	kind := getKind(newEcoContext(), VAL_MapSimple)
+	kind := getKind(newEcoContext(os.Stdout), VAL_MapSimple)
 	assert.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_MapUnsimple(t *testing.T) {
-	kind := getKind(newEcoContext(), VAL_MapUnsimple)
+	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimple)
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapUnsimpleKey(t *testing.T) {
-	kind := getKind(newEcoContext(), VAL_MapUnsimpleKey)
+	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimpleKey)
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapUnsimpleValue(t *testing.T) {
-	kind := getKind(newEcoContext(), VAL_MapUnsimpleValue)
+	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimpleValue)
 	assert.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_PointerToInt(t *testing.T) {
 	var pint pointerToInt
-	kind := getKind(newEcoContext(), pint)
+	kind := getKind(newEcoContext(os.Stdout), pint)
 	assert.Equal(t, SimplePointer, kind)
 }
 
 func TestKind_PointerToIntSlice(t *testing.T) {
-	kind := getKind(newEcoContext(), new(sliceOfInt))
+	kind := getKind(newEcoContext(os.Stdout), new(sliceOfInt))
 	assert.Equal(t, SimplePointer, kind)
 }
 
 func TestKind_PointerToStructSlice(t *testing.T) {
-	kind := getKind(newEcoContext(), new(sliceOfStruct))
+	kind := getKind(newEcoContext(os.Stdout), new(sliceOfStruct))
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_SliceSimple(t *testing.T) {
 	type intSlice []int
 	i := intSlice{1, 2, 3}
-	kind := getKind(newEcoContext(), i)
+	kind := getKind(newEcoContext(os.Stdout), i)
 	assert.Equal(t, SimpleSlice, kind)
 }
 
@@ -141,7 +142,7 @@ func TestKind_SliceOfMap(t *testing.T) {
 	type simpleMap map[int]int
 	type sliceOfMap []simpleMap
 	i := sliceOfMap{}
-	kind := getKind(newEcoContext(), i)
+	kind := getKind(newEcoContext(os.Stdout), i)
 	assert.Equal(t, Invalid, kind)
 }
 
@@ -149,35 +150,35 @@ func TestKind_SliceUnsimple(t *testing.T) {
 	type emptyStruct struct{}
 	type emptyStructSlice []emptyStruct
 	i := emptyStructSlice{}
-	kind := getKind(newEcoContext(), i)
+	kind := getKind(newEcoContext(os.Stdout), i)
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_StructSimple(t *testing.T) {
-	kind := getKind(newEcoContext(), EcoTest{})
+	kind := getKind(newEcoContext(os.Stdout), EcoTest{})
 	assert.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructUnsimple(t *testing.T) {
-	kind := getKind(newEcoContext(), UnsimpleStruct{})
+	kind := getKind(newEcoContext(os.Stdout), UnsimpleStruct{})
 	assert.Equal(t, Invalid, kind)
 }
 
 func TestKind_StructWithMap(t *testing.T) {
-	kind := getKind(newEcoContext(), structWithMap{})
+	kind := getKind(newEcoContext(os.Stdout), structWithMap{})
 	assert.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithSlice(t *testing.T) {
 	type structWithSlice struct{ Slice []int }
-	kind := getKind(newEcoContext(), structWithSlice{})
+	kind := getKind(newEcoContext(os.Stdout), structWithSlice{})
 	assert.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithMapWithSlice(t *testing.T) {
 	type mapWithSlice map[string][]int
 	type structWithMapWithSlice struct{ M mapWithSlice }
-	kind := getKind(newEcoContext(), structWithMapWithSlice{})
+	kind := getKind(newEcoContext(os.Stdout), structWithMapWithSlice{})
 	assert.Equal(t, SimpleStruct, kind)
 }
 
@@ -185,7 +186,7 @@ func TestKind_StructWithMapWithStruct(t *testing.T) {
 	type innerStruct struct{}
 	type mapWithStruct map[string]innerStruct
 	type structWithMapWithSlice struct{ MapField mapWithStruct }
-	kind := getKind(newEcoContext(), structWithMapWithSlice{})
+	kind := getKind(newEcoContext(os.Stdout), structWithMapWithSlice{})
 	assert.Equal(t, SimpleStruct, kind)
 }
 
@@ -370,7 +371,7 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 func testEncodeBool(t *testing.T, key string, b any) {
 	valExpected, err := json.Marshal(b)
 	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(), key, b)
+	ops, err := Encode(newEcoContext(os.Stdout), key, b)
 	require.NoError(t, err)
 	dumpOps(t, ops)
 	require.NotEmpty(t, ops)
@@ -385,7 +386,7 @@ func testEncodeBool(t *testing.T, key string, b any) {
 func testEncodeNumber(t *testing.T, key string, n any) {
 	valExpected, err := json.Marshal(n)
 	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(), key, n)
+	ops, err := Encode(newEcoContext(os.Stdout), key, n)
 	require.NoError(t, err)
 	dumpOps(t, ops)
 	require.NotEmpty(t, ops)
@@ -398,7 +399,7 @@ func testEncodeNumber(t *testing.T, key string, n any) {
 }
 
 func testEncodeString(t *testing.T, key string, s string) {
-	ops, err := Encode(newEcoContext(), key, s)
+	ops, err := Encode(newEcoContext(os.Stdout), key, s)
 	dumpOps(t, ops)
 	// valExpected := fmt.Sprintf(`"%s"`, s)
 	require.NoError(t, err)
