@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -517,26 +518,26 @@ func structKind(ctx *ecoContext, ty reflect.Type) kind {
 	for i := range ty.NumField() {
 		sf := ty.Field(i)
 		sfType := sf.Type
-		ctx.logger.Infof("%-70s", lowlight(fmt.Sprintf("checking field '%s' (%s) ...", sf.Name, fullTypeName(sfType))))
+		ctx.logger.Appendf("%-70s", lowlight(fmt.Sprintf("checking field '%s' (%s) ...", sf.Name, fullTypeName(sfType))))
 		sfReflectKind := sfType.Kind()
 
 		if isTypeScalar(sfType) {
-			ctx.logger.Infof("%-16s %-16s; %s", sfType, "scalar", "continuing")
+			ctx.logger.Flushf(slog.LevelInfo, "%-16s %-16s; %s", sfType, "scalar", "continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Map && mapKind(ctx, sfType) == SimpleMap {
-			ctx.logger.info("field type is SimpleMap; continuing")
+			ctx.logger.Flush(slog.LevelInfo, "field type is SimpleMap; continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Slice && sliceKind(ctx, sfType) == SimpleSlice {
-			ctx.logger.info("field type is SimpleSlice; continuing")
+			ctx.logger.Flush(slog.LevelInfo, "field type is SimpleSlice; continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Struct && structKind(ctx, sf.Type) == SimpleStruct {
-			ctx.logger.info("field type is SimpleStruct; continuing")
+			ctx.logger.Flush(slog.LevelInfo, "field type is SimpleStruct; continuing")
 			continue
 		}
 
@@ -567,6 +568,7 @@ type Depther interface {
 }
 
 type ecoLogger struct {
+	buf []byte
 	*slog.Logger
 	depther Depther
 }
@@ -577,7 +579,19 @@ func newEcoLogger(w io.Writer, depther Depther) *ecoLogger {
 	return &ecoLogger{
 		Logger:  slog.New(handler),
 		depther: depther,
+		buf: make([]byte, 1000),
 	}
+}
+
+func (l *ecoLogger) Append (s string) *ecoLogger {
+	l.buf = slices.Concat(l.buf, []byte(s))
+	
+	return l
+}
+
+func (l *ecoLogger) Appendf (sfmt string, args ...any) *ecoLogger {
+	s := fmt.Sprintf(sfmt, args...)
+	return l.Append(s) 
 }
 
 func (l *ecoLogger) Debugf(sfmt string, args ...any) {
@@ -608,6 +622,17 @@ func (l *ecoLogger) Infof(sfmt string, args ...any) {
 func (l *ecoLogger) InfoContextf(ctx context.Context, sfmt string, args ...any) {
 	s := fmt.Sprintf(sfmt, args...)
 	l.Logger.InfoContext(ctx, l.indent() + s)
+}
+
+func (l *ecoLogger) Flush (level slog.Level, msg string) {
+	s := fmt.Sprintf("%s%s%s", l.indent(), string(l.buf), msg)
+	l.Logger.Log(context.Background(), level, s)
+	l.buf = make([]byte, 1000)
+}
+
+func (l *ecoLogger) Flushf (level slog.Level, sfmt string, args ...any) {
+	msg := fmt.Sprintf(sfmt, args...)
+	l.Flush(level, msg)
 }
 
 func (l *ecoLogger) Warnf(sfmt string, args ...any) {
