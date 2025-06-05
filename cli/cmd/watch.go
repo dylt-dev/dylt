@@ -19,7 +19,7 @@ type WatchCommand struct {
 
 func NewWatchCommand() *WatchCommand {
 	// create command
-	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
+	flagSet := flag.NewFlagSet("watch", flag.ExitOnError)
 	cmd := WatchCommand{FlagSet: flagSet}
 	// init flag vars (nop -- no flags)
 
@@ -31,13 +31,13 @@ func (cmd *WatchCommand) HandleArgs(args []string) error {
 	err := cmd.Parse(args)
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "config"
+	var cmdArgs Cmdline = cmd.Args()
+	cmdName := "watch"
 	nExpected := 1
 	if len(cmdArgs) < nExpected { return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
 	// init positional params
-	cmd.SubCommand = cmdArgs[0]
-	cmd.SubArgs = cmdArgs[1:]
+	cmd.SubCommand = cmdArgs.Command()
+	cmd.SubArgs = cmdArgs.Args()
 
 	return nil
 }
@@ -67,12 +67,9 @@ func RunWatch(subCommand string, subCmdArgs []string) error {
 
 func createWatchSubCommand(cmdName string) (Command, error) {
 	switch cmdName {
-	case "script":
-		return NewWatchScriptCommand(), nil
-	case "svc":
-		return NewWatchSvcCommand(), nil
-	default:
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	case "script": return NewWatchScriptCommand(), nil
+	case "svc": return NewWatchSvcCommand(), nil
+	default: return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 }
 

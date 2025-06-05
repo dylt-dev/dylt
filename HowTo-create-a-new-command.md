@@ -14,3 +14,140 @@ Create an instance of the command and add it to the rootCmd
 ```
 
 To write the actual implementation, look for a xxx_test.go file in lib. If you find one it should have one more more examples of how to call the command's implementation.
+
+### Skeleton of command
+
+Most commands follow the same pattern
+* type *Name*Command* struct { // fields }
+* func (*cmd) New*Name*Command () // Create command object
+* func (*cmd) HandleArgs () // Boiler plate to populate command object from cmdline args
+* func (*cmd) Run () // Tease args out of cmd objecr & call 'real' Run*** function
+* func () Run*Name* () // Package-level 'real' run() function that executes the command
+```
+type <Name>Command struct {
+	// fields
+}
+```
+
+```
+// Create a new command object
+func New<Name>Command() *<Name>Command>{
+	// create command
+	// init flag vars
+
+	return &cmd
+}
+```
+
+```
+// Parse flags validate arg count, and initialize positional parameters
+func (cmd *<Name>Command) HandleArgs (args []string) error {
+	// parse flags
+	// validate arg count (nop - command takes all remaining args, 0 or more)
+	// init positional params
+
+	return nil
+}
+```
+
+```
+// Tease all necessary data out of the command object, and call the package-level Run<Name> function
+func (cmd *<Name>Command) Run (args []string) error {
+	// Tease out necessary data
+	// Execute Run<Name> command
+
+	return nil
+}
+
+// Execute the command.
+// Making this function package-level, with explicit arguments, means it can be tested & called explicitly, not just via `dylt` invocation
+func Run<Name> (scriptPath string, scriptArgs[] string) error {
+	slog.Debug("RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
+	// Call lib.RunScript() with script path and args, & output response
+	_, s, err := lib.RunScript(scriptPath, scriptArgs)
+	if err != nil { return err }
+	fmt.Printf("%s\n", s)
+
+	return nil
+}
+
+```
+
+```
+func NewCallCommand () *CallCommand {
+	// create command
+	flagSet := flag.NewFlagSet("call", flag.ExitOnError)
+	cmd := CallCommand{FlagSet: flagSet}
+	// init flag vars
+	flagSet.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
+	
+	return &cmd
+}
+
+func (cmd *CallCommand) HandleArgs (args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count (nop - command takes all remaining args, 0 or more)
+	cmdArgs := cmd.Args()
+	// init positional params
+	cmd.ScriptArgs = cmdArgs
+
+	return nil
+}
+
+func (cmd *CallCommand) Run (args []string) error {
+	slog.Debug("CallCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunCall (scriptPath string, scriptArgs[] string) error {
+	slog.Debug("RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
+	// Call lib.RunScript() with script path and args, & output response
+	_, s, err := lib.RunScript(scriptPath, scriptArgs)
+	if err != nil { return err }
+	fmt.Printf("%s\n", s)
+
+	return nil
+}
+```
+
+### Subcommands
+
+Commands that have subcommands typically create an additional package-level function: `create<Name>SubCommand`
+
+Example (from `watch.go`)
+```
+func createWatchSubCommand(cmdName string) (Command, error) {
+	switch cmdName {
+	case "script": return NewWatchScriptCommand(), nil
+	case "svc": return NewWatchSvcCommand(), nil
+	default: return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	}
+}
+```
+
+Each subcommand object will have its own implementation of the above pattern.
+
+Note that when a command has subcommands, the execution of the command might consist of creating a subcommand and then delegating execution to the new subcommand. Such functions might themselves follow a standard pattern.
+
+```
+func RunWatch(subCommand string, subCmdArgs []string) error {
+	slog.Debug("RunWatch()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	// Create the subcommand and run it
+	subCmd, err := createWatchSubCommand(subCommand)
+	if err != nil { return err }
+	err = subCmd.Run(subCmdArgs)
+	if err != nil { return err }
+
+	return nil
+}
+
+```
