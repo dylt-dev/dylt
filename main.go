@@ -105,17 +105,17 @@ func initLoggingToFile () {
 
 func isFirstTime () (bool, error) {
 	configFilePath := common.GetConfigFilePath()
-	slog.Debug(fmt.Sprintf("%s=%s", "configFilePath", configFilePath))
+	cmd.Logger.Debugf("%s=%s", "configFilePath", configFilePath)
 	_, err := os.Stat(configFilePath)
 	if err != nil && !os.IsNotExist(err) { return false, err }
 
 	if err == nil {
-		slog.Debug("config file found - not first time")
+		cmd.Logger.Comment("config file found - not first time")
 		return false, nil
 	}
 
 	// os.IsNotExist(err)
-	slog.Debug("config file does not exist - first time")
+	cmd.Logger.Comment("config file does not exist - first time")
 	return false, nil
 }
 
@@ -141,7 +141,7 @@ func main () {
 
 	// Check if it's the user's first time. If so, act accordingly.
 	is, err := isFirstTime()
-	slog.Debug(fmt.Sprintf("%s=%t", "isFirstTime()", is))
+	cmd.Logger.Debugf("%s=%t", "isFirstTime()", is)
 	if err != nil { exit(err) }
 	if is {
 		fmt.Println("Running firstTime() ...")
@@ -151,7 +151,7 @@ func main () {
 
 	var cmdline cmd.Cmdline = os.Args[1:]
 	cmdName := cmdline.Command()
-	slog.Debug(fmt.Sprintf("%s=%s", "cmdName", cmdName))
+	cmd.Logger.Debugf("%s=%s", "cmdName", cmdName)
 	cmdArgs := cmdline.Args()
 	cmd, err := createSubCommand(cmdName)
 	if err != nil { os.Exit(1) }
