@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
+	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/dylt/common"
 )
 
@@ -53,11 +54,18 @@ func firstTime () error {
 
 func initLogging () {
 	logToFile, ok := os.LookupEnv("DYLT_LogToFile")
+
 	if ok  && logToFile != "" {
+
 		initLoggingToFile()
+
 	} else {
-		opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
-		var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+		
+		// opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
+		// var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+		opts := color.ColorOptions{Level: slog.LevelDebug}
+		var logger *slog.Logger = slog.New(color.NewColorHandler(os.Stdout, opts))
+
 		slog.SetDefault(logger)
 		slog.Debug("logging successfully initialized")
 	}
@@ -67,21 +75,30 @@ func initLogging () {
 func initLoggingToFile () {
 	var logFile, logFolder, logPath string
 	envLogPath, ok := os.LookupEnv("DYLT_LogPath")
+
 	if ok {
+
 		logFile = path.Base(envLogPath)
 		logFolder = path.Dir(envLogPath)
 		logPath = envLogPath
+
 	} else {
+
 		logFile = LOG_File
 		logFolder = LOG_Folder
 		logPath = path.Join(logFolder, logFile)
+	
 	}
+
 	err := os.MkdirAll(logFolder, 0744)
 	if err != nil { panic(fmt.Sprintf("Couldn't create or open log folder: %s", logFolder)) }
+
 	logWriter, err := os.OpenFile(logPath, os.O_CREATE | os.O_APPEND | os.O_RDWR, 0777)
 	if err != nil { panic(fmt.Sprintf("Couldn't open logfile path: logFile=%s logFolder=%s logPath=%s", logFile, logFolder, logPath)) }
+
 	opts := slog.HandlerOptions{AddSource: true, Level: slog.LevelDebug}
 	var logger *slog.Logger = slog.New(slog.NewJSONHandler(logWriter, &opts))
+
 	slog.SetDefault(logger)
 	slog.Debug("logging successfully initialized")
 }
@@ -89,18 +106,22 @@ func initLoggingToFile () {
 
 func isFirstTime () (bool, error) {
 	configFilePath := common.GetConfigFilePath()
+	clicmd.Logger.Debugf("%s=%s", "configFilePath", configFilePath)
 	_, err := os.Stat(configFilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return true, nil
-		}
-		return false, err
+	if err != nil && !os.IsNotExist(err) { return false, err }
+
+	if err == nil {
+		clicmd.Logger.Comment("config file found - not first time")
+		return false, nil
 	}
+
+	// os.IsNotExist(err)
+	clicmd.Logger.Comment("config file does not exist - first time")
 	return false, nil
 }
 
-func createMainSubCommand (cmd string) (clicmd.Command, error) {
-	switch cmd {
+func createMainSubCommand (sCmd string) (clicmd.Command, error) {
+	switch sCmd {
 	case "call": return clicmd.NewCallCommand(), nil
 	case "config": return clicmd.NewConfigCommand(), nil
 	case "get": return clicmd.NewGetCommand(), nil
@@ -110,7 +131,7 @@ func createMainSubCommand (cmd string) (clicmd.Command, error) {
 	case "misc": return clicmd.NewMiscCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
 	case "watch": return clicmd.NewWatchCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+	default: return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
 	}
 }
 
