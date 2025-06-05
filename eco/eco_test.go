@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	"slices"
 	"strconv"
 	"testing"
 	"unsafe"
@@ -31,6 +34,30 @@ type map_int_emptyStruct map[int]struct{}
 type map_string_int map[string]int
 type map_string_struct map[string]EcoTest
 
+type Stat struct {
+	Name string
+	Value float64
+}
+
+type MiscMap map[string]string
+type StatSlice []Stat
+  
+type Player struct {
+	Id int
+	Name string
+	Weight float64
+	IsActive bool
+	Stats StatSlice
+	Misc MiscMap
+}
+
+type PlayerMap map[string]Player
+  
+type Team struct {
+	Name string
+	Players PlayerMap
+}
+
 // Sample objects for tests
 var VAL_MapSimple = map_string_int{}
 var VAL_MapUnsimple = map_emptyStruct_emptyStruct{}
@@ -43,6 +70,63 @@ var VAL_UnsimplePointer = &(emptyStruct{})
 var VAL_MapWithStructKey = map[EcoTest]string{}
 var VAL_Map_String_Struct = map_string_struct{"test": *NewEcoTest("me", 13)}
 
+var VAL_AltuveStats = StatSlice{
+	{Name: "All-Stars", Value: 9},
+	{Name: "Height", Value: 5.5},
+}
+var VAL_AltuveMisc = map[string]string {
+	"Born": "Venezuela",
+}
+var VAL_Altuve = Player{
+	Name: "Jose Altuve",
+	Id: 1,
+	IsActive: true,
+	Weight: 1.0,
+	Stats: VAL_AltuveStats,
+	Misc: VAL_AltuveMisc,
+}
+
+var VAL_JavierStats = []Stat{
+	{Name: "Number", Value: 53},
+	{Name: "Debut", Value: 2020},
+}
+var VAL_JavierMisc = map[string]string{
+	"Born": "Dominican Republic",
+}
+var VAL_Javier = Player{
+	Name: "Christian Javier",
+	Id: 2,
+	IsActive: false,
+	Weight: 0.5,
+	Stats: VAL_JavierStats,
+	Misc: VAL_JavierMisc,
+}
+
+var VAL_PenaStats = []Stat{
+	{Name: "Gold Gloves", Value: 1},
+}
+var VAL_PenaMisc = map[string]string{
+	"Raised": "Rhode Island",
+}
+var VAL_Pena = Player{
+	Name: "Jeremy Pena",
+	Id: 3,
+	IsActive: true,
+	Weight: 0.9,
+	Stats: VAL_PenaStats,
+	Misc: VAL_PenaMisc,
+}
+
+var VAL_Players = map[string]Player{
+	"altuve": VAL_Altuve,
+	"javier": VAL_Javier,
+	"pena": VAL_Pena,
+}
+
+var VAL_Astros = Team{
+	Name: "Astros",
+	Players: VAL_Players,
+}
 type EcoTest struct {
 	Name        string  `eco:"name"`
 	LuckyNumber float64 `eco:"lucky_number"`
@@ -68,8 +152,87 @@ func TestCreateSignature0 (t *testing.T) {
 	t.Log(sig)
 }
 
+func TestGetChildKeys (t *testing.T) {
+	cli, err := CreateEtcdClientFromConfig()
+	require.NoError(t, err)
+	prefix := "/test/team/astros/Players"
+	resp, err := cli.Client.Get(context.Background(), prefix, etcd.WithKeysOnly(), etcd.WithPrefix())
+	require.NoError(t, err)
+	var allKeys = make([][]byte, len(resp.Kvs))
+	for i, kv := range resp.Kvs {
+		allKeys[i] = kv.Key
+	}
+	// t.Logf("%#v", allKeys)
+
+	var srx string = fmt.Sprintf(`^%s/?\w+$`, prefix)
+	var rx *regexp.Regexp = regexp.MustCompile(srx)
+	for _, key := range allKeys {
+		t.Logf("Matching %s ...", key)
+		if rx.Match(key) {
+			t.Log(string(key))
+		}
+	}
+}
+
+
+var childKeys = []string {
+    "/test/team/astros/Players/altuve/Id",
+    "/test/team/astros/Players/altuve/IsActive",
+    "/test/team/astros/Players/altuve/Misc/Born",
+    "/test/team/astros/Players/altuve/Name",
+    "/test/team/astros/Players/altuve/Stats/0/Name",
+    "/test/team/astros/Players/altuve/Stats/0/Value",
+    "/test/team/astros/Players/altuve/Stats/1/Name",
+    "/test/team/astros/Players/altuve/Stats/1/Value",
+    "/test/team/astros/Players/altuve/Weight",
+    "/test/team/astros/Players/javier/Id",
+    "/test/team/astros/Players/javier/IsActive",
+    "/test/team/astros/Players/javier/Misc/Born",
+    "/test/team/astros/Players/javier/Name",
+    "/test/team/astros/Players/javier/Stats/0/Name",
+    "/test/team/astros/Players/javier/Stats/0/Value",
+    "/test/team/astros/Players/javier/Stats/1/Name",
+    "/test/team/astros/Players/javier/Stats/1/Value",
+    "/test/team/astros/Players/javier/Weight",
+    "/test/team/astros/Players/pena/Id",
+    "/test/team/astros/Players/pena/IsActive",
+    "/test/team/astros/Players/pena/Misc/Raised",
+    "/test/team/astros/Players/pena/Name",
+    "/test/team/astros/Players/pena/Stats/0/Name",
+    "/test/team/astros/Players/pena/Stats/0/Value",
+    "/test/team/astros/Players/pena/Weight",
+}
+
+// func TestGetChildKeys1 (t *testing.T) {
+// 	prefix := "/test/team/astros/Players/javier/Stats"
+// 	var sliceKeys []int
+// 	sliceKeys, err := getSliceKeys(nil, prefix)
+// 	require.NoError(t, err)
+// 	t.Logf("%v", sliceKeys)
+// 	var maxKey = slices.Max(sliceKeys)
+// 	t.Logf("maxKey=%d", maxKey)
+// 	var len = maxKey+1
+// 	t.Logf("len=%d", len)
+// }
+
+func TestMatchChildKey (t *testing.T) {
+	prefix := "/test/team/astros/Players"
+	var srx string = fmt.Sprintf(`^%s/?\w+$`, prefix)
+	var rx *regexp.Regexp = regexp.MustCompile(srx)
+	key := "/test/team/astros/Players/altuve"
+	require.True(t, rx.Match([]byte(key)))
+	badkey := "/test/team/astros/Players/altuve/Misc"
+	require.False(t, rx.Match([]byte(badkey)))
+}
+
+
 func TestGetObject(t *testing.T) {
 
+}
+
+func TestFullTypeName_StatSlice (t *testing.T) {
+	s := fullTypeName(reflect.TypeOf(*new(StatSlice)))
+	t.Log(s)
 }
 
 func TestKind_ArrayOfInt(t *testing.T) {
@@ -152,6 +315,12 @@ func TestKind_SliceUnsimple(t *testing.T) {
 	i := emptyStructSlice{}
 	kind := getKind(newEcoContext(os.Stdout), i)
 	assert.Equal(t, Invalid, kind)
+}
+
+func TestKind_StatSlice (t *testing.T) {
+	val := StatSlice{}
+	kind := getKind(newEcoContext(os.Stdout), val)
+	assert.Equal(t, SimpleSlice, kind, fmt.Sprintf("Expected %s, got %s", SimpleSlice.String(), kind.String()))
 }
 
 func TestKind_StructSimple(t *testing.T) {
@@ -365,8 +534,29 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 		assert.NoError(t, err)
 		t.Logf("%s=%s", fieldName, fieldValue)
 	}
-
 }
+
+func getSliceKeys (ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error) {
+	ctx.logger.signature("getSliceKeys", prefix)
+	childKeys, err := cli.GetKeys(prefix)
+	if err != nil { return nil, err }
+	srx := fmt.Sprintf(`^%s/(\d)`, prefix)
+	rx := regexp.MustCompile(srx)
+	matchMap := map[int]struct{}{}
+	for _, key := range childKeys {
+		if rx.MatchString(key) {
+			matches := rx.FindStringSubmatch(key)
+			i, err := strconv.Atoi(matches[1])
+			if err != nil { return nil, err }
+			matchMap[i] = struct{}{}
+		}
+	}
+
+	var mapKeys []int = slices.Collect(maps.Keys(matchMap))
+
+	return mapKeys, nil
+}
+
 
 func testEncodeBool(t *testing.T, key string, b any) {
 	valExpected, err := json.Marshal(b)

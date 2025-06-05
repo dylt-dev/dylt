@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"runtime/debug"
 	"testing"
+	"unsafe"
 
 	"github.com/dylt-dev/dylt/common"
+	"github.com/dylt-dev/dylt/internal/abi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -145,4 +149,172 @@ func TestPostViperWrite(t *testing.T) {
 	err = encoder.Encode(cfg)
 	assert.Nil(t, err)
 	assert.Nil(t, err)
+}
+
+func TestTypeName0 (t *testing.T) {
+	type stringAlias string
+	t.Logf("fullTypeName(stringAlias)=%s", fullTypeName(reflect.TypeOf(*new(stringAlias))))
+	t.Logf("%#v", reflect.TypeOf(*new(stringAlias)))
+	t.Logf("%#v", reflect.TypeOf(stringAlias("")))
+	t.Logf("%#v", reflect.TypeOf(*new(stringAlias)).Name())
+}
+
+func TestTypeName1 (t *testing.T) {
+	type stringsAlias []string
+	t.Logf("fullTypeName(stringsAlias)=%s", fullTypeName(reflect.TypeOf(*new(stringsAlias))))
+	t.Logf("%#v", reflect.TypeOf(*new(stringsAlias)))
+	t.Logf("%#v", reflect.TypeOf(stringsAlias{}))
+	t.Logf("%#v", reflect.TypeOf(*new(stringsAlias)).Name())
+	var i any = *new(stringsAlias)
+	t.Logf("%#v", reflect.TypeOf(i).Name())
+}
+
+func TestReflectionIntPointer (t *testing.T) {
+	var buf []byte
+	var n int = 13
+	var err error
+
+	// Encode an int into a []byte using the JSON encoder
+	buf, err = json.Marshal(n)
+	require.NoError(t, err)
+
+	// Create a slice 1 int long 
+	var valSlice reflect.Value = reflect.MakeSlice(reflect.TypeOf([]int{}), 1, 1)
+	t.Logf("Before: %d", valSlice.Index(0).Int())
+
+	// See if Addr works with the slice index
+	valPtr := valSlice.Index(0).Addr()
+	ptr := valPtr.Interface()
+	t.Logf("valPtr Kind=%s", valPtr.Kind().String())
+	t.Logf("ptr Kind=%s", reflect.TypeOf(ptr).Kind().String())
+	t.Logf("ptr Elem Kind=%s", reflect.TypeOf(ptr).Elem().Kind().String())
+	err = json.Unmarshal(buf, ptr)
+	t.Logf("After (valPtr): %d", valSlice.Index(0).Int())
+
+
+	// Get an Interface{} to the slice element. Interfaces are useful: type plus storage
+	var el reflect.Value = valSlice.Index(0)
+	var el2 any = el.Interface()
+	t.Logf("el2 TypeOf = %s", reflect.TypeOf(el2).Name())
+	
+	// Decode the byte[] into our Interface
+	err = json.Unmarshal(buf, &el2)
+	t.Logf("el2 TypeOf = %s", reflect.TypeOf(el2).Name())
+	require.NoError(t, err)
+	t.Logf("el2=%v", el2)
+
+	// see if updating the Interface also updated the slice
+	t.Logf("After: %d", valSlice.Index(0).Int())
+
+	// set slice element explicitlyA
+	tyElem := valSlice.Type().Elem()
+	t.Logf("tyElem=%s", tyElem.Name())
+	valSlice.Index(0).Set(reflect.ValueOf(el2).Convert(tyElem))
+	t.Logf("After-After: %d", valSlice.Index(0).Int())
+
+	// Now try it without the slice: create a single int and get its interface
+	ty := reflect.TypeFor[int]()
+	valInt := reflect.New(ty)
+	n2 := valInt.Interface()
+
+	// Unmarshal into the pointer to the interface
+	err = json.Unmarshal(buf, &n2)
+
+	// Print the interface value and the Value value
+	t.Logf("n2=%v", el2)
+	t.Logf("valInt Kind=%s", valInt.Kind().String())
+	t.Logf("valInt Elem Kind = %s", valInt.Elem().Kind().String())
+	t.Logf("valInt Elem Int = %d", valInt.Elem().Int())
+	t.Logf("Indirect(valInt) Int = %d", reflect.Indirect(valInt).Int())
+}
+func TestReflectionSlice (t *testing.T) {
+	var ints = make([]int, 3)
+	t.Logf("Before: %v", ints)
+	var v = reflect.ValueOf(ints)
+	var el = v.Index(1)
+	require.True(t, el.CanSet())
+	el.Set(reflect.ValueOf(13))
+	t.Logf("After: %v", ints)
+
+}
+
+type emptyInterface struct {
+	typ *abi.Type
+	word unsafe.Pointer
+}
+
+func TestReflectionMisc0 (t *testing.T) {
+	var n8  int8 = 13
+	dump(n8)
+	var u8  uint8 = 13
+	dump(u8)
+	var n16 int16 = 13
+	dump(n16)
+	var u16 uint16 = 13
+	dump(u16)
+	var n32 int32 = 13
+	dump(n32)
+	var u32 uint32 = 13
+	dump(u32)
+	var n64 int64 = 13
+	dump(n64)
+	var u64 uint64 = 13
+	dump(u64)
+	var b bool = false
+	dump(b)
+	var s string = "ASS"
+	dump(s)
+	var sss string = "THAT ASSSSSSSS"
+	dump(sss)
+}
+
+func dump[T any] (arg T) {
+	// ptr := unsafe.Pointer(&arg)
+	// t.Logf("*ptr=%v", *((*T)(ptr)))
+
+	var emp emptyInterface
+	var i any = arg
+	var iptr = unsafe.Pointer(&i)
+	emp = *(*emptyInterface)(iptr)
+	// t.Logf("emp.type: %#v", emp.typ)
+
+	var wptr unsafe.Pointer = emp.word
+	var valptr *T = (*T)(wptr)
+	// t.Logf("emp.word: %v", *valptr)
+
+	var typ abi.Type = *emp.typ
+	var nkind uint8 = typ.Kind_
+	var skind string = abi.KindNames[nkind]
+	var size uintptr = typ.Size_
+	// t.Logf("%d %s %d", nkind, skind, size)
+
+	fmt.Printf("I have news ... your variable is of type %s, it is %d bytes long, and its value is %v\n", skind, size, *valptr)
+}
+
+//go:nosplit
+func noescape(p unsafe.Pointer) unsafe.Pointer {
+	x := uintptr(p)
+	return unsafe.Pointer(x ^ 0)
+}
+
+func TestNoEscape (t *testing.T) {
+	var n int8 = 13
+	uptr := unsafe.Pointer(&n)
+	t.Log(fmt.Sprintf("%-12s: %p", "uptr", uptr))
+	nuptr := noescape(uptr)
+	t.Log(fmt.Sprintf("%-12s: %p", "nuptr", nuptr))
+}
+
+func TestXor (t *testing.T) {
+	n := 13
+	t.Logf("%d %d", n, n^0)
+}
+
+func TestPrints (t *testing.T) {
+	var ns int16 = 13
+	var us uint16 = 13
+	t.Logf("%#v %#v", ns, us)
+	var ans any = ns
+	var aus any = us
+	t.Logf("%#v %#v", ans, aus)
 }

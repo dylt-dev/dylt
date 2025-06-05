@@ -1,3 +1,4 @@
+default: install
 
 build: *.go
 	go build

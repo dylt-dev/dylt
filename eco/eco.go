@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path"
 	"path/filepath"
 	"reflect"
 	"slices"
@@ -117,6 +118,7 @@ type kind uint
 
 const (
 	Invalid kind = iota
+	InvalidSlice
 	Bool
 	Number
 	String
@@ -128,10 +130,33 @@ const (
 	SimpleStruct
 )
 
+func (k kind) IsScalar () bool {
+	switch k {
+	case Bool,
+		 Number,
+		 String: return true
+	default: return false
+	}
+}
+
+func (k kind) IsSimple () bool {
+	switch k {
+	case SimpleArray,
+		 SimpleInterface,
+		 SimpleMap,
+		 SimplePointer,
+		 SimpleSlice,
+		 SimpleStruct: return true
+	default: return false
+	}
+}
+
 func (k kind) String() string {
 	switch k {
 	case Invalid:
 		return "Invalid"
+	case InvalidSlice:
+		return "InvalidSlice"
 	case Bool:
 		return "Bool"
 	case Number:
@@ -230,13 +255,22 @@ func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, err
 		return nil, fmt.Errorf("expecting SimpleSlice; got %s", fullTypeName(ty))
 	}
 
-	j, err := json.Marshal(val.Interface())
-	if err != nil {
-		return nil, err
+	n := val.Len()
+	ops := []etcd.Op{}
+	for i := range n {
+		el := val.Index(i)
+		elKey := path.Join(key, strconv.Itoa(i))
+		op, err := Encode(ctx, elKey, el.Interface())
+		if err != nil { return nil, err }
+		ops = slices.Concat(ops, op)
 	}
-	op := etcd.OpPut(key, string(j))
+	// j, err := json.Marshal(val.Interface())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// op := etcd.OpPut(key, string(j))
 
-	return []etcd.Op{op}, nil
+	return ops, nil
 }
 
 func encodeStruct(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
@@ -296,12 +330,12 @@ func fieldNameMap(i any) (map[string]reflect.Value, error) {
 }
 
 func fullTypeName(ty reflect.Type) string {
-	pkgPath := ty.PkgPath()
-	typeName := ty.Name()
+	var typeName = ty.Name()
 	if typeName == "" {
 		typeName = "(anon)"
 	}
-
+	
+	pkgPath := ty.PkgPath()
 	if pkgPath == "" {
 		return typeName
 	}
@@ -349,10 +383,15 @@ func getFieldValue(val reflect.Value) (string, error) {
 }
 
 func getKind(ctx *ecoContext, i any) kind {
-	// ty := reflect.TypeOf(i)
-	// if fullTypeName(ty) == "reflect.Type" {
-	// 	fmt.Println("Warning - GetKind() called with reflect.Type(). Did you mean GetTypeKind()?")
-	// }
+	ctx.logger.signature("getKind", reflect.TypeOf(i))
+	ctx.inc()
+	defer ctx.dec()
+
+	ty := reflect.TypeOf(i)
+	if fullTypeName(ty) == "reflect.Type" {
+		ctx.logger.Warn("Warning - GetKind() called with reflect.Type(). Did you mean GetTypeKind()?")
+	}
+
 	return getTypeKind(ctx, reflect.TypeOf(i))
 }
 
@@ -492,14 +531,24 @@ func sliceKind(ctx *ecoContext, ty reflect.Type) kind {
 	}
 
 	tyElem := ty.Elem()
-	ctx.logger.Infof("Checking element type (%s) ... ", fullTypeName(tyElem))
-	if isTypeScalar(tyElem) {
-		ctx.logger.info("element type is scalar; returning SimpleSlice")
+	kind := getTypeKind(ctx, tyElem)
+	ctx.logger.commentf("Checking element type (%s) ... ", fullTypeName(tyElem))
+	ctx.logger.Appendf("IsScalar(%s) ...", fullTypeName(tyElem))
+	if kind.IsScalar() {
+		ctx.logger.Flush(slog.LevelDebug, "true; returning SimpleSlice")
 		return SimpleSlice
+	} else {
+		ctx.logger.Appendf("IsSimple(%s) ...", fullTypeName(tyElem))
+		if kind.IsSimple() {
+			ctx.logger.Flush(slog.LevelDebug, "true; returning SimpleSlice")
+			return SimpleSlice
+		} else {
+			ctx.logger.Flush(slog.LevelDebug, "false")
+		}
 	}
 
-	ctx.logger.info("conditions were not met; returning Invalid")
-	return Invalid
+	ctx.logger.info("conditions were not met; returning InvalidSlice")
+	return InvalidSlice
 }
 
 func structKind(ctx *ecoContext, ty reflect.Type) kind {
@@ -579,7 +628,7 @@ func newEcoLogger(w io.Writer, depther Depther) *ecoLogger {
 	return &ecoLogger{
 		Logger:  slog.New(handler),
 		depther: depther,
-		buf: make([]byte, 1000),
+		buf: make([]byte, 200),
 	}
 }
 
@@ -627,7 +676,7 @@ func (l *ecoLogger) InfoContextf(ctx context.Context, sfmt string, args ...any) 
 func (l *ecoLogger) Flush (level slog.Level, msg string) {
 	s := fmt.Sprintf("%s%s%s", l.indent(), string(l.buf), msg)
 	l.Logger.Log(context.Background(), level, s)
-	l.buf = make([]byte, 1000)
+	l.buf = make([]byte, 200)
 }
 
 func (l *ecoLogger) Flushf (level slog.Level, sfmt string, args ...any) {

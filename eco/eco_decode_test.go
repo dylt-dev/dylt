@@ -17,6 +17,7 @@ import (
 )
 
 func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
+	ctx.logger.signature("decode", key, reflect.TypeOf(i).Elem())
 	ctx.inc()
 	defer ctx.dec()
 
@@ -138,31 +139,56 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 }
 
 func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
+	ctx.logger.signature("decodeSlice", key, reflect.TypeOf(i).Elem())
 	ctx.inc()
 	defer ctx.dec()
+
 	ty := reflect.TypeOf(i)
 	if ty.Kind() != reflect.Pointer {
-		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))
+		return fmt.Errorf("unsupported type (%s) -  must be pointer", fullTypeName(ty))
 	}
 	kind := getTypeKind(ctx, ty.Elem())
 	if kind != SimpleSlice {
-		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem()))
+		return fmt.Errorf("unsupported kind (%s) - must be SimpleSlice", fullTypeName(ty.Elem()))
 	}
 
-	resp, err := etcdClient.Client.Get(ctx, key)
-	if err != nil {
-		return err
-	}
-	if len(resp.Kvs) != 1 {
-		return fmt.Errorf("expected one key; got %d", len(resp.Kvs))
-	}
+	kindElem := getTypeKind(ctx, ty.Elem().Elem())
+	ctx.logger.Infof("kindElem=%s", kindElem.String())
+	// Get slice keys
+	sliceKeys, err := getSliceKeys(ctx, etcdClient, key)
+	if err != nil { return err }
+	ctx.logger.Infof("sliceKeys=%v", sliceKeys)
+	// slice := reflect.MakeSlice(ty.Elem(), len(sliceKeys), len(sliceKeys))
 
-	getVal := resp.Kvs[0].Value
-	ctx.logger.Infof("getVal()=%v (%s)", getVal, getVal)
-	err = json.Unmarshal(getVal, i)
-	if err != nil {
-		return err
-	}
+	// for _, sliceKey := range sliceKeys {
+	// 	elKey := path.Join(key, elKey)
+	// 	// I have an element type.
+	// 	// How do I create a variable to hold that type, and then decode a byte string into it?	
+	// }
+
+	// Dynamically allocate array
+	// For each slice key
+	//	get index thingee
+	//	somehow do a decode to the reflect.Value, even though I don't know how to do that
+
+	// ctx.logger.Appendf("Getting key %s ...", key)
+	// resp, err := etcdClient.Client.Get(ctx, key)
+	// if err != nil {
+	// 	ctx.logger.Flush(slog.LevelError, err.Error())
+	// 	return err
+	// }
+	// if len(resp.Kvs) != 1 {
+	// 	ctx.logger.Flush(slog.LevelError, "error")
+	// 	return fmt.Errorf("expected one key; got %d", len(resp.Kvs))
+	// }
+	// ctx.logger.Flush(slog.LevelInfo, "ok")
+
+	// getVal := resp.Kvs[0].Value
+	// ctx.logger.Infof("getVal()=%v (%s)", getVal, getVal)
+	// err = json.Unmarshal(getVal, i)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -308,16 +334,14 @@ func TestInt(t *testing.T) {
 	t.Log(decodedVal)
 }
 
-func TestIntSlice(t *testing.T) {
+func TestDecode_IntSlice(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
 
-	key := "/test/intslice"
+	key := "/test/intSlice"
 	val := []int{5, 8, 13}
-	putAndTest(t, etcdClient, key, val)
 
 	type intslice []int
 	var decodedVal intslice
-	// var decodedVal []int
 	var i = &decodedVal
 	err := decode(ctx, etcdClient, key, i)
 	require.NoError(t, err)
