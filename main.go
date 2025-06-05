@@ -9,7 +9,8 @@ import (
 	"path"
 	"strings"
 
-	clicmd "github.com/dylt-dev/dylt/cli/cmd"
+	"github.com/dylt-dev/dylt/cli/cmd"
+	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/dylt/common"
 )
 
@@ -52,11 +53,18 @@ func firstTime () error {
 
 func initLogging () {
 	logToFile, ok := os.LookupEnv("DYLT_LogToFile")
+
 	if ok  && logToFile != "" {
+
 		initLoggingToFile()
+
 	} else {
-		opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
-		var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+		
+		// opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
+		// var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+		opts := color.ColorOptions{Level: slog.LevelDebug}
+		var logger *slog.Logger = slog.New(color.NewColorHandler(os.Stdout, opts))
+
 		slog.SetDefault(logger)
 		slog.Debug("logging successfully initialized")
 	}
@@ -66,21 +74,30 @@ func initLogging () {
 func initLoggingToFile () {
 	var logFile, logFolder, logPath string
 	envLogPath, ok := os.LookupEnv("DYLT_LogPath")
+
 	if ok {
+
 		logFile = path.Base(envLogPath)
 		logFolder = path.Dir(envLogPath)
 		logPath = envLogPath
+
 	} else {
+
 		logFile = LOG_File
 		logFolder = LOG_Folder
 		logPath = path.Join(logFolder, logFile)
+	
 	}
+
 	err := os.MkdirAll(logFolder, 0744)
 	if err != nil { panic(fmt.Sprintf("Couldn't create or open log folder: %s", logFolder)) }
+
 	logWriter, err := os.OpenFile(logPath, os.O_CREATE | os.O_APPEND | os.O_RDWR, 0777)
 	if err != nil { panic(fmt.Sprintf("Couldn't open logfile path: logFile=%s logFolder=%s logPath=%s", logFile, logFolder, logPath)) }
+
 	opts := slog.HandlerOptions{AddSource: true, Level: slog.LevelDebug}
 	var logger *slog.Logger = slog.New(slog.NewJSONHandler(logWriter, &opts))
+
 	slog.SetDefault(logger)
 	slog.Debug("logging successfully initialized")
 }
@@ -88,28 +105,32 @@ func initLoggingToFile () {
 
 func isFirstTime () (bool, error) {
 	configFilePath := common.GetConfigFilePath()
+	slog.Debug(fmt.Sprintf("%s=%s", "configFilePath", configFilePath))
 	_, err := os.Stat(configFilePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return true, nil
-		}
-		return false, err
+	if err != nil && !os.IsNotExist(err) { return false, err }
+
+	if err == nil {
+		slog.Debug("config file found - not first time")
+		return false, nil
 	}
+
+	// os.IsNotExist(err)
+	slog.Debug("config file does not exist - first time")
 	return false, nil
 }
 
-func createSubCommand (cmd string) (clicmd.Command, error) {
-	switch cmd {
-	case "call": return clicmd.NewCallCommand(), nil
-	case "config": return clicmd.NewConfigCommand(), nil
-	case "get": return clicmd.NewGetCommand(), nil
-	case "host": return clicmd.NewHostCommand(), nil
-	case "init": return clicmd.NewInitCommand(), nil
-	case "list": return clicmd.NewListCommand(), nil
-	case "misc": return clicmd.NewMiscCommand(), nil
-	case "vm": return clicmd.NewVmCommand(), nil
-	case "watch": return clicmd.NewWatchCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+func createSubCommand (sCmd string) (cmd.Command, error) {
+	switch sCmd {
+	case "call": return cmd.NewCallCommand(), nil
+	case "config": return cmd.NewConfigCommand(), nil
+	case "get": return cmd.NewGetCommand(), nil
+	case "host": return cmd.NewHostCommand(), nil
+	case "init": return cmd.NewInitCommand(), nil
+	case "list": return cmd.NewListCommand(), nil
+	case "misc": return cmd.NewMiscCommand(), nil
+	case "vm": return cmd.NewVmCommand(), nil
+	case "watch": return cmd.NewWatchCommand(), nil
+	default: return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
 	}
 }
 
@@ -120,7 +141,7 @@ func main () {
 
 	// Check if it's the user's first time. If so, act accordingly.
 	is, err := isFirstTime()
-	slog.Debug("main", "isFirstTime()", is)
+	slog.Debug(fmt.Sprintf("%s=%t", "isFirstTime()", is))
 	if err != nil { exit(err) }
 	if is {
 		fmt.Println("Running firstTime() ...")
@@ -128,9 +149,9 @@ func main () {
 		if err != nil { exit(err) }
 	}
 
-	var cmdline clicmd.Cmdline = os.Args[1:]
+	var cmdline cmd.Cmdline = os.Args[1:]
 	cmdName := cmdline.Command()
-	slog.Debug("main", "cmdName", cmdName)
+	slog.Debug(fmt.Sprintf("%s=%s", "cmdName", cmdName))
 	cmdArgs := cmdline.Args()
 	cmd, err := createSubCommand(cmdName)
 	if err != nil { os.Exit(1) }
