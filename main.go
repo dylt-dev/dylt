@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/dylt-dev/dylt/cli/cmd"
+	clicmd "github.com/dylt-dev/dylt/cli/cmd"
 	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/dylt/common"
 )
@@ -105,57 +106,102 @@ func initLoggingToFile () {
 
 func isFirstTime () (bool, error) {
 	configFilePath := common.GetConfigFilePath()
-	cmd.Logger.Debugf("%s=%s", "configFilePath", configFilePath)
+	clicmd.Logger.Debugf("%s=%s", "configFilePath", configFilePath)
 	_, err := os.Stat(configFilePath)
 	if err != nil && !os.IsNotExist(err) { return false, err }
 
 	if err == nil {
-		cmd.Logger.Comment("config file found - not first time")
+		clicmd.Logger.Comment("config file found - not first time")
 		return false, nil
 	}
 
 	// os.IsNotExist(err)
-	cmd.Logger.Comment("config file does not exist - first time")
+	clicmd.Logger.Comment("config file does not exist - first time")
 	return false, nil
 }
 
-func createSubCommand (sCmd string) (cmd.Command, error) {
+func createMainSubCommand (sCmd string) (clicmd.Command, error) {
 	switch sCmd {
-	case "call": return cmd.NewCallCommand(), nil
-	case "config": return cmd.NewConfigCommand(), nil
-	case "get": return cmd.NewGetCommand(), nil
-	case "host": return cmd.NewHostCommand(), nil
-	case "init": return cmd.NewInitCommand(), nil
-	case "list": return cmd.NewListCommand(), nil
-	case "misc": return cmd.NewMiscCommand(), nil
-	case "vm": return cmd.NewVmCommand(), nil
-	case "watch": return cmd.NewWatchCommand(), nil
+	case "call": return clicmd.NewCallCommand(), nil
+	case "config": return clicmd.NewConfigCommand(), nil
+	case "get": return clicmd.NewGetCommand(), nil
+	case "host": return clicmd.NewHostCommand(), nil
+	case "init": return clicmd.NewInitCommand(), nil
+	case "list": return clicmd.NewListCommand(), nil
+	case "misc": return clicmd.NewMiscCommand(), nil
+	case "vm": return clicmd.NewVmCommand(), nil
+	case "watch": return clicmd.NewWatchCommand(), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
 	}
 }
 
-func main () {
-	// lib.InitConfig()
-	initLogging()
-	var err error
+type MainCommand struct {
+	*flag.FlagSet
+	SubCommand string
+	SubArgs    []string
+}
 
-	// Check if it's the user's first time. If so, act accordingly.
-	is, err := isFirstTime()
-	cmd.Logger.Debugf("%s=%t", "isFirstTime()", is)
-	if err != nil { exit(err) }
-	if is {
-		fmt.Println("Running firstTime() ...")
-		err = firstTime()
+func NewMainCommand () *MainCommand {
+	flagSet := flag.NewFlagSet("dylt", flag.ExitOnError)
+	var cmd = MainCommand{FlagSet: flagSet}
+	
+	return &cmd
+}
+
+func (cmd *MainCommand) HandleArgs (args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count - nop; command takes all remaining args, 0 or more)
+	// init positional params - nop; there are none)
+
+	return nil
+}
+
+func (cmd *MainCommand) Run (args clicmd.Cmdline) error {
+	clicmd.Logger.Debug("CallCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunMain(args.Command(), args.Args())
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunMain (subCommand string, subCmdArgs []string) error {
+	slog.Debug("RunMain()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	
+	initLogging()
+	
+	// If there's no subcommand, do main() things
+	if subCommand == "" {
+		// Check if it's the user's first time. If so, act accordingly.
+		is, err := isFirstTime()
+		slog.Debug("main", "isFirstTime()", is)
 		if err != nil { exit(err) }
+		if is {
+			fmt.Println("Running firstTime() ...")
+			err = firstTime()
+			if err != nil { exit(err) }
+		}
+	} else {
+		// Create the subcommand and run it
+		subCmd, err := createMainSubCommand(subCommand)
+		if err != nil { return err }
+		err = subCmd.Run(subCmdArgs)
+		if err != nil { return err }
 	}
 
-	var cmdline cmd.Cmdline = os.Args[1:]
-	cmdName := cmdline.Command()
-	cmd.Logger.Debugf("%s=%s", "cmdName", cmdName)
-	cmdArgs := cmdline.Args()
-	cmd, err := createSubCommand(cmdName)
-	if err != nil { os.Exit(1) }
-	err = cmd.Run(cmdArgs)
+	return nil
+}
+
+
+func main () {
+	cmd := NewMainCommand()
+	var args clicmd.Cmdline = os.Args
+	err := cmd.Run(args.Args())
 	if err != nil {
 		slog.Error(err.Error())
 		fmt.Println(err.Error())
