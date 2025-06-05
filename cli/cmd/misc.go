@@ -48,8 +48,21 @@ func (cmd *MiscCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *MiscCommand) PrintUsage () {
+	fmt.Println(`
+	create-two-node-cluster	(help)
+	gen-etcd-run-script	(help)
+	`)
+}
+
 func (cmd *MiscCommand) Run(args []string) error {
 	Logger.Debug("MiscCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }

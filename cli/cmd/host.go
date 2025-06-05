@@ -40,8 +40,20 @@ func (cmd *HostCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *HostCommand) PrintUsage () {
+	fmt.Println(`
+	init	(help)
+	`)
+}
+
 func (cmd *HostCommand) Run(args []string) error {
 	slog.Debug("HostCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }

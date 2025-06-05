@@ -47,8 +47,26 @@ func (cmd *VmCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *VmCommand) PrintUsage () {
+	fmt.Println(`
+	add	(help)
+	all	(help)
+	del	(help)
+	get	(help)
+	list	(help)
+	set	(help)
+	`)
+}
+
+
 func (cmd *VmCommand) Run(args []string) error {
 	slog.Debug("VmCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }

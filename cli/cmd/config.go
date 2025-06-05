@@ -40,8 +40,23 @@ func (cmd *ConfigCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+
+func (cmd *ConfigCommand) PrintUsage () {
+	fmt.Println(`
+	get	(help)
+	set	(help)
+	show	(help)
+	`)
+}
+
 func (cmd *ConfigCommand) Run(args []string) error {
 	slog.Debug("ConfigCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -65,14 +80,10 @@ func RunConfig(subCommand string, subCmdArgs []string) error {
 
 func createConfigSubCommand(cmdName string) (Command, error) {
 	switch cmdName {
-	case "get":
-		return NewConfigGetCommand(), nil
-	case "set":
-		return NewConfigSetCommand(), nil
-	case "show":
-		return NewConfigShowCommand(), nil
-	default:
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	case "get": return NewConfigGetCommand(), nil
+	case "set": return NewConfigSetCommand(), nil
+	case "show": return NewConfigShowCommand(), nil
+	default: return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 }
 
