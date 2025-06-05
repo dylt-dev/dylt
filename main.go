@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -98,7 +99,7 @@ func isFirstTime () (bool, error) {
 	return false, nil
 }
 
-func createSubCommand (cmd string) (clicmd.Command, error) {
+func createMainSubCommand (cmd string) (clicmd.Command, error) {
 	switch cmd {
 	case "call": return clicmd.NewCallCommand(), nil
 	case "config": return clicmd.NewConfigCommand(), nil
@@ -113,28 +114,73 @@ func createSubCommand (cmd string) (clicmd.Command, error) {
 	}
 }
 
-func main () {
-	// lib.InitConfig()
-	initLogging()
-	var err error
+type MainCommand struct {
+	*flag.FlagSet
+	SubCommand string
+	SubArgs    []string
+}
 
-	// Check if it's the user's first time. If so, act accordingly.
-	is, err := isFirstTime()
-	slog.Debug("main", "isFirstTime()", is)
-	if err != nil { exit(err) }
-	if is {
-		fmt.Println("Running firstTime() ...")
-		err = firstTime()
+func NewMainCommand () *MainCommand {
+	flagSet := flag.NewFlagSet("dylt", flag.ExitOnError)
+	var cmd = MainCommand{FlagSet: flagSet}
+	
+	return &cmd
+}
+
+func (cmd *MainCommand) HandleArgs (args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count - nop; command takes all remaining args, 0 or more)
+	// init positional params - nop; there are none)
+
+	return nil
+}
+
+func (cmd *MainCommand) Run (args clicmd.Cmdline) error {
+	clicmd.Logger.Debug("CallCommand.Run()", "args", args)
+	// Parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// Execute command
+	err = RunMain(args.Command(), args.Args())
+	if err != nil { return err }
+
+	return nil
+}
+
+func RunMain (subCommand string, subCmdArgs []string) error {
+	slog.Debug("RunMain()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	
+	initLogging()
+	
+	// If there's no subcommand, do main() things
+	if subCommand == "" {
+		// Check if it's the user's first time. If so, act accordingly.
+		is, err := isFirstTime()
+		slog.Debug("main", "isFirstTime()", is)
 		if err != nil { exit(err) }
+		if is {
+			fmt.Println("Running firstTime() ...")
+			err = firstTime()
+			if err != nil { exit(err) }
+		}
+	} else {
+		// Create the subcommand and run it
+		subCmd, err := createMainSubCommand(subCommand)
+		if err != nil { return err }
+		err = subCmd.Run(subCmdArgs)
+		if err != nil { return err }
 	}
 
-	var cmdline clicmd.Cmdline = os.Args[1:]
-	cmdName := cmdline.Command()
-	slog.Debug("main", "cmdName", cmdName)
-	cmdArgs := cmdline.Args()
-	cmd, err := createSubCommand(cmdName)
-	if err != nil { os.Exit(1) }
-	err = cmd.Run(cmdArgs)
+	return nil
+}
+
+
+func main () {
+	cmd := NewMainCommand()
+	var args clicmd.Cmdline = os.Args
+	err := cmd.Run(args.Args())
 	if err != nil {
 		slog.Error(err.Error())
 		fmt.Println(err.Error())
