@@ -535,15 +535,15 @@ func sliceKind(ctx *ecoContext, ty reflect.Type) kind {
 	ctx.logger.commentf("Checking element type (%s) ... ", fullTypeName(tyElem))
 	ctx.logger.Appendf("IsScalar(%s) ...", fullTypeName(tyElem))
 	if kind.IsScalar() {
-		ctx.logger.Flush(slog.LevelDebug, "true; returning SimpleSlice")
+		ctx.logger.AppendAndFlush(slog.LevelDebug, "true; returning SimpleSlice")
 		return SimpleSlice
 	} else {
 		ctx.logger.Appendf("IsSimple(%s) ...", fullTypeName(tyElem))
 		if kind.IsSimple() {
-			ctx.logger.Flush(slog.LevelDebug, "true; returning SimpleSlice")
+			ctx.logger.AppendAndFlush(slog.LevelDebug, "true; returning SimpleSlice")
 			return SimpleSlice
 		} else {
-			ctx.logger.Flush(slog.LevelDebug, "false")
+			ctx.logger.AppendAndFlush(slog.LevelDebug, "false")
 		}
 	}
 
@@ -571,22 +571,22 @@ func structKind(ctx *ecoContext, ty reflect.Type) kind {
 		sfReflectKind := sfType.Kind()
 
 		if isTypeScalar(sfType) {
-			ctx.logger.Flushf(slog.LevelInfo, "%-16s %-16s; %s", sfType, "scalar", "continuing")
+			ctx.logger.AppendfAndFlush(slog.LevelInfo, "%-16s %-16s; %s", sfType, "scalar", "continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Map && mapKind(ctx, sfType) == SimpleMap {
-			ctx.logger.Flush(slog.LevelInfo, "field type is SimpleMap; continuing")
+			ctx.logger.AppendAndFlush(slog.LevelInfo, "field type is SimpleMap; continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Slice && sliceKind(ctx, sfType) == SimpleSlice {
-			ctx.logger.Flush(slog.LevelInfo, "field type is SimpleSlice; continuing")
+			ctx.logger.AppendAndFlush(slog.LevelInfo, "field type is SimpleSlice; continuing")
 			continue
 		}
 
 		if sfReflectKind == reflect.Struct && structKind(ctx, sf.Type) == SimpleStruct {
-			ctx.logger.Flush(slog.LevelInfo, "field type is SimpleStruct; continuing")
+			ctx.logger.AppendAndFlush(slog.LevelInfo, "field type is SimpleStruct; continuing")
 			continue
 		}
 
@@ -643,6 +643,19 @@ func (l *ecoLogger) Appendf (sfmt string, args ...any) *ecoLogger {
 	return l.Append(s) 
 }
 
+func (l *ecoLogger) AppendAndFlush (level slog.Level, s string) {
+	l.Append(s)
+	l.Logger.Log(context.Background(), level, string(l.buf))
+	l.Flush(level)
+}
+
+func (l *ecoLogger) AppendfAndFlush (level slog.Level, sfmt string, args ...any) {
+	msg := fmt.Sprintf(sfmt, args...)
+	l.Append(msg)
+	l.Logger.Log(context.Background(), level, string(l.buf))
+	l.Flush(level)
+}
+
 func (l *ecoLogger) Debugf(sfmt string, args ...any) {
 	s := fmt.Sprintf(sfmt, args...)
 	l.Logger.Debug(l.indent() + s)
@@ -673,15 +686,9 @@ func (l *ecoLogger) InfoContextf(ctx context.Context, sfmt string, args ...any) 
 	l.Logger.InfoContext(ctx, l.indent() + s)
 }
 
-func (l *ecoLogger) Flush (level slog.Level, msg string) {
-	s := fmt.Sprintf("%s%s%s", l.indent(), string(l.buf), msg)
-	l.Logger.Log(context.Background(), level, s)
+func (l *ecoLogger) Flush (level slog.Level) {
+	l.Logger.Log(context.Background(), level, string(l.buf))
 	l.buf = make([]byte, 200)
-}
-
-func (l *ecoLogger) Flushf (level slog.Level, sfmt string, args ...any) {
-	msg := fmt.Sprintf(sfmt, args...)
-	l.Flush(level, msg)
 }
 
 func (l *ecoLogger) Warnf(sfmt string, args ...any) {
