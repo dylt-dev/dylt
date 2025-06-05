@@ -10,7 +10,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/dylt-dev/dylt/cli/cmd"
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
 	"github.com/dylt-dev/dylt/common"
 )
@@ -138,8 +137,8 @@ func (cmd *MainCommand) HandleArgs (args []string) error {
 	return nil
 }
 
-func (cmd *MainCommand) Run (args cmd.Cmdline) error {
-	slog.Debug("CallCommand.Run()", "args", args)
+func (cmd *MainCommand) Run (args clicmd.Cmdline) error {
+	clicmd.Logger.Debug("CallCommand.Run()", "args", args)
 	// Parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
