@@ -6,7 +6,7 @@ import "fmt"
 var USG_Main = fmt.Sprintf("\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
 	USG_Call_Short,
 	USG_Config_Short,
-	"get	(help)",
+	USG_Get_Short,
 	"host	(help)",
 	"init	(help)",
 	"list	(help)",
@@ -33,3 +33,7 @@ const USG_ConfigGet  = `config get key        get key from config`
 const USG_ConfigSet  = `config set key val    set key to val in config`
 const USG_ConfigShow = `config show           show current config contents`
 
+// dylt get
+var USG_Get_Desc = "get value from etcd"
+var USG_Get_Short = fmt.Sprintf("%-16s %s", "get", USG_Get_Desc)
+var USG_Get = fmt.Sprintf("get key    %s", USG_Get_Desc)
