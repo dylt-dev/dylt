@@ -42,11 +42,11 @@ func (cmd *ConfigCommand) HandleArgs(args []string) error {
 
 
 func (cmd *ConfigCommand) PrintUsage () {
-	fmt.Println(`
-	get	(help)
-	set	(help)
-	show	(help)
-	`)
+	fmt.Printf("\t%s\n\t%s\n\t%s\n", 
+	USG_ConfigGet,
+	USG_ConfigSet,
+	USG_ConfigShow,
+	)
 }
 
 func (cmd *ConfigCommand) Run(args []string) error {
@@ -103,11 +103,17 @@ func (cmd *ConfigGetCommand) HandleArgs(args []string) error {
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 1 { return fmt.Errorf("`config get` expects 1 argument(s); received %d", len(cmdArgs)) }
+	if len(cmdArgs) != 1 {
+		cmd.PrintUsage()
+		return fmt.Errorf("`config get` expects 1 argument(s); received %d", len(cmdArgs)) }
 	// init positional params
 	cmd.Key = cmdArgs[0]
 
 	return nil
+}
+
+func (cmd *ConfigGetCommand) PrintUsage () {
+	fmt.Println(USG_ConfigGet)
 }
 
 func (cmd *ConfigGetCommand) Run(args []string) error {
@@ -149,12 +155,19 @@ func (cmd *ConfigSetCommand) HandleArgs(args []string) error {
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 2 { return fmt.Errorf("`config set` expects 1 argument(s); received %d", len(cmdArgs)) }
+	if len(cmdArgs) != 2 {
+		cmd.PrintUsage()
+		return fmt.Errorf("`config set` expects 2 argument(s); received %d", len(cmdArgs))
+	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
 	cmd.Value = cmdArgs[1]
 
 	return nil
+}
+
+func (cmd *ConfigSetCommand) PrintUsage () {
+	fmt.Println(USG_ConfigSet)
 }
 
 func (cmd *ConfigSetCommand) Run(args []string) error {
@@ -216,10 +229,17 @@ func (cmd *ConfigShowCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "config show"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no positional params)
 
 	return nil
+}
+
+func (cmd *ConfigShowCommand) PrintUsage () {
+	fmt.Println(USG_ConfigShow)
 }
 
 func (cmd *ConfigShowCommand) Run(args []string) error {

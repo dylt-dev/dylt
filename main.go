@@ -159,17 +159,7 @@ func (cmd *MainCommand) HandleArgs (args []string) error {
 }
 
 func (cmd *MainCommand) PrintUsage () {
-	fmt.Println(`
-	call	(help)
-	config	(help)
-	get	(help)
-	host	(help)
-	init	(help)
-	list	(help)
-	misc	(help)
-	vm	(help)
-	watch	(help)
-	`)
+	fmt.Println(clicmd.USG_Main)
 }
 
 func (cmd *MainCommand) Run (args clicmd.Cmdline) error {

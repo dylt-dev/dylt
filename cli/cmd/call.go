@@ -30,10 +30,22 @@ func (cmd *CallCommand) HandleArgs (args []string) error {
 	if err != nil { return err }
 	// validate arg count (nop - command takes all remaining args, 0 or more)
 	cmdArgs := cmd.Args()
+	Logger.Debugf("len(cmdArgs)=%d", len(cmdArgs))
+	// Check for 0 args; if so print usage & return
+	if len(cmdArgs) == 0 {
+		Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// init positional params
 	cmd.ScriptArgs = cmdArgs
 
 	return nil
+}
+
+func (cmd *CallCommand) PrintUsage () {
+	fmt.Println(USG_Call_Full)
 }
 
 func (cmd *CallCommand) Run (args []string) error {
