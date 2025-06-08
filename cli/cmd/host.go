@@ -32,7 +32,10 @@ func (cmd *HostCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "host"
 	nExpected := 1
-	if len(cmdArgs) < nExpected { return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) < nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
 	cmd.SubCommand = cmdArgs[0]
 	cmd.SubArgs = cmdArgs[1:]
@@ -41,9 +44,7 @@ func (cmd *HostCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *HostCommand) PrintUsage () {
-	fmt.Println(`
-	init	(help)
-	`)
+	fmt.Println(USG_Host)
 }
 
 func (cmd *HostCommand) Run(args []string) error {
