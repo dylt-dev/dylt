@@ -47,7 +47,9 @@ func (cmd *InitCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *InitCommand) PrintUsage () {
-	fmt.Println(USG_Init)
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Init)
+	fmt.Println()
 }
 
 func (cmd *InitCommand) Run (args []string) error {

@@ -41,7 +41,9 @@ func (cmd *GetCommand) HandleArgs (args []string) error {
 }
 
 func (cmd *GetCommand) PrintUsage () {
-	fmt.Println(USG_Get)
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Get)
+	fmt.Println()
 }
 
 func (cmd *GetCommand) Run (args []string) error {

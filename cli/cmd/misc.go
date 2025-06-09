@@ -49,10 +49,12 @@ func (cmd *MiscCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *MiscCommand) PrintUsage () {
-	fmt.Println(`
-	create-two-node-cluster	(help)
-	gen-etcd-run-script	(help)
-	`)
+	fmt.Println()
+	fmt.Printf("\t%s\n\t%s\n",
+	USG_Misc_TwoNode_Short,
+	USG_Misc_GenScript_Short,
+	)
+	fmt.Println()
 }
 
 func (cmd *MiscCommand) Run(args []string) error {

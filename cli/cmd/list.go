@@ -29,10 +29,19 @@ func (cmd *ListCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "list"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no params)
 
 	return nil
+}
+
+func (cmd *ListCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_List)
+	fmt.Println()
 }
 
 func (cmd *ListCommand) Run (args []string) error {
