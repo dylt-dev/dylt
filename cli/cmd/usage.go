@@ -8,7 +8,7 @@ var USG_Main = fmt.Sprintf("\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s
 	USG_Config_Short,
 	USG_Get_Short,
 	USG_Host_Short,
-	"init	(help)",
+	USG_Init_Short,
 	"list	(help)",
 	"misc	(help)",
 	"vm	(help)",
@@ -47,9 +47,15 @@ var USG_Host = fmt.Sprintf("\t%s\n",
 	USG_Host_Init_Short,
 )
 
+// dylt host init
 const USG_Host_Init_Desc = "prepare a host for daylight"
 var USG_Host_Init_Short = createUsageShort("host init", USG_Host_Init_Desc)
 var USG_Host_Init = createUsage("host init", USG_Host_Init_Desc)
+
+// dylt init
+var USG_Init_Desc = "initialize local daylight config data"
+var USG_Init_Short = createUsageShort("init", USG_Init_Desc)
+var USG_Init = createUsage("init --etcd-domain etcdDomain", USG_Init_Desc)
 
 func createUsageShort (cmd string, desc string) string {
 	return fmt.Sprintf("%-16s %s", cmd, desc)
