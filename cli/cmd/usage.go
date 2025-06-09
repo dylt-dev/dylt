@@ -11,7 +11,7 @@ var USG_Main = fmt.Sprintf("\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s
 	USG_Init_Short,
 	USG_List_Short,
 	USG_Misc_Short,
-	"vm	(help)",
+	USG_Vm_Short,
 	"watch	(help)",
 )
 
@@ -73,6 +73,40 @@ var USG_Misc_TwoNode_Short = createUsageShort("misc create-two-node-cluster", US
 // dylt misc gen-etcd-run-script
 const USG_Misc_GenScript_Desc = "Generate a script for running etcd"
 var USG_Misc_GenScript_Short = createUsageShort("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
+
+// dylt vm
+const USB_Vm_Desc = "VM-related operations"
+var USG_Vm_Short = createUsageShort("vm", USB_Vm_Desc)
+
+// dy;t vm add
+const USG_Vm_Add_Desc = "create a new VM"
+var USG_Vm_Add_Short = createUsageShort("vm add", USG_Vm_Add_Desc)
+var USG_Vm_Add = createUsage("vm add name fqdn", USG_Vm_Add_Desc)
+
+// dylt vm all
+const USG_Vm_All_Desc = "list all VMs"
+var USG_Vm_All_Short = createUsageShort("vm all", USG_Vm_All_Desc)
+var USG_Vm_All = createUsage("vm all", USG_Vm_All_Desc)
+
+// dylt vm del
+const USG_Vm_Del_Desc = "delete a VM"
+var USG_Vm_Del_Short = createUsageShort("vm del", USG_Vm_Del_Desc)
+var USG_Vm_Del = createUsage("vm del vmName", USG_Vm_Del_Desc)
+
+// dylt vm get
+const USG_Vm_Get_Desc = "get data for a VM"
+var USG_Vm_Get_Short = createUsageShort("vm get", USG_Vm_Get_Desc)
+var USG_Vm_Get = createUsage("vm get vmName", USG_Vm_Get_Desc)
+
+// dylt vm list
+const USG_Vm_List_Desc = "list all VMs"
+var USG_Vm_List_Short = createUsageShort("vm list", USG_Vm_List_Desc)
+var USG_Vm_List = createUsage("vm list", USG_List_Desc)
+
+// dylt vm set
+const USG_Vm_Set_Desc = "set values for a VM"
+var USG_Vm_Set_Short = createUsageShort("vm set", USG_Vm_Set_Desc)
+var USG_Vm_Set = createUsage("vm set vmName key val", USG_Vm_Set_Desc)
 
 func createUsageShort (cmd string, desc string) string {
 	return fmt.Sprintf("%-16s # %s", cmd, desc)
