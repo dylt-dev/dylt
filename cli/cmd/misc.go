@@ -116,6 +116,7 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs(args []string) error {
 	cmdName := "createTwoNodeCluster"
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
 			cmdName,
 			nExpected,
@@ -123,6 +124,12 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs(args []string) error {
 		}
 
 	return nil
+}
+
+func (cmd *CreateTwoNodeClusterCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Misc_TwoNode)
+	fmt.Println()
 }
 
 func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
@@ -180,6 +187,7 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs(args []string) error {
 	cmdName := "gen-etcd-run-script"
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
 			cmdName,
 			nExpected,
@@ -187,6 +195,12 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs(args []string) error {
 		}
 
 	return nil
+}
+
+func (cmd *GenEtcdRunScriptCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Misc_GenScript)
+	fmt.Println()
 }
 
 func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {

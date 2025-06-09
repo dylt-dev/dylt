@@ -71,7 +71,11 @@ var USG_Host_Init = createUsage("host init", USG_Host_Init_Desc)
 // dylt init
 const USG_Init_Desc = "initialize local daylight config data"
 var USG_Init_Short = createUsageShort("init", USG_Init_Desc)
-var USG_Init = createUsage("init --etcd-domain etcdDomain", USG_Init_Desc)
+var USG_Init = fmt.Sprintf("%s\n\t%s\n\t%s\n",
+	createUsage("init --etcd-domain etcdDomain", USG_Init_Desc),
+	"",
+	"--etcd-domain    domain for etcd cluster",
+)
 
 // dylt list
 const USG_List_Desc = "list all keys in cluster"
@@ -85,10 +89,12 @@ var USG_Misc_Short = createUsageShort("misc", USG_Misc_Desc)
 // dylt misc create-two-node-cluster
 const USG_Misc_TwoNode_Desc = "Create a simple 2 node daylight cluster"
 var USG_Misc_TwoNode_Short = createUsageShort("misc create-two-node-cluster", USG_Misc_TwoNode_Desc)
+var USG_Misc_TwoNode = createUsage("misc create-two-node-cluster", USG_Misc_TwoNode_Desc)
 
 // dylt misc gen-etcd-run-script
 const USG_Misc_GenScript_Desc = "Generate a script for running etcd"
 var USG_Misc_GenScript_Short = createUsageShort("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
+var USG_Misc_GenScript = createUsage("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
 
 // dylt vm
 const USB_Vm_Desc = "VM-related operations"

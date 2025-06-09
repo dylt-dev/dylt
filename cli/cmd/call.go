@@ -45,7 +45,9 @@ func (cmd *CallCommand) HandleArgs (args []string) error {
 }
 
 func (cmd *CallCommand) PrintUsage () {
+	fmt.Println()
 	fmt.Println(USG_Call_Full)
+	fmt.Println()
 }
 
 func (cmd *CallCommand) Run (args []string) error {
