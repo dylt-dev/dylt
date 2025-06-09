@@ -28,10 +28,26 @@ var USG_Call_Full = fmt.Sprintf("\t%s\n\n\t%s\n",
 // dylt config
 const USG_Config_Desc = "get/set/show config values"
 var USG_Config_Short = createUsageShort("config", USG_Config_Desc)
-var USG_Config = fmt.Sprintf("config subcmd [args], %s", USG_Config_Desc)
-const USG_ConfigGet  = `config get key        get key from config`
-const USG_ConfigSet  = `config set key val    set key to val in config`
-const USG_ConfigShow = `config show           show current config contents`
+var USG_Config = fmt.Sprintf("\t%s\n\t%s\n\t%s\n",
+	USG_Config_Get_Short,
+	USG_Config_Set_Short,
+	USG_Config_Show_Short,
+)
+
+// dylt config get
+const USG_Config_Get_Desc  = "get key from config"
+var USG_Config_Get_Short = createUsageShort("config get", USG_Config_Get_Desc)
+var USG_Config_Get = createUsage("config get key", USG_Config_Get_Desc)
+
+// dylt config set
+const USG_Config_Set_Desc  = "set key to val in config"
+var USG_Config_Set_Short = createUsageShort("config set", USG_Config_Set_Desc)
+var USG_Config_Set = createUsage("config set key val", USG_Config_Set_Desc)
+
+// dylt config show
+const USG_Config_Show_Desc = "show current config contents"
+var USG_Config_Show_Short = createUsageShort("config show", USG_Config_Show_Desc)
+var USG_Config_Show = createUsage("config show", USG_Config_Show_Desc)
 
 // dylt get
 const USG_Get_Desc = "get value from etcd"
@@ -107,6 +123,24 @@ var USG_Vm_List = createUsage("vm list", USG_List_Desc)
 const USG_Vm_Set_Desc = "set values for a VM"
 var USG_Vm_Set_Short = createUsageShort("vm set", USG_Vm_Set_Desc)
 var USG_Vm_Set = createUsage("vm set vmName key val", USG_Vm_Set_Desc)
+
+// dylt watch
+const USG_Watch_Desc = "watch daylight resource for changes"
+var USG_Watch_Short = createUsageShort("watch", USG_Watch_Desc)
+var USG_Watch = fmt.Sprintf("\t%s\n\t%s\n", 
+	USG_Watch_Script_Short,
+	USG_Watch_Svc_Short,
+)
+
+// dylt watch script
+const USG_Watch_Script_Desc = "watch script for changes"
+var USG_Watch_Script_Short = createUsageShort("watch script", USG_Watch_Script_Desc)
+var USG_Watch_Script = createUsage("watch script scriptKey targetPath", USG_Watch_Script_Desc)
+
+// dylt watch svc
+const USG_Watch_Svc_Desc = "watch service for changes"
+var USG_Watch_Svc_Short = createUsageShort("watch svc", USG_Watch_Svc_Desc)
+var USG_Watch_Svc = createUsage("watch svc name", USG_Watch_Svc_Desc)
 
 func createUsageShort (cmd string, desc string) string {
 	return fmt.Sprintf("%-16s # %s", cmd, desc)

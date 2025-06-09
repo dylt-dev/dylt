@@ -43,10 +43,9 @@ func (cmd *WatchCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *WatchCommand) PrintUsage () {
-	fmt.Println(`
-	script	(help)
-	svc	(help)
-	`)
+	fmt.Println()
+	fmt.Println(USG_Watch)
+	fmt.Println()
 }
 
 func (cmd *WatchCommand) Run(args []string) error {
@@ -86,6 +85,9 @@ func createWatchSubCommand(cmdName string) (Command, error) {
 	}
 }
 
+// Usage
+//
+//     watch script scriptKey targetPath
 type WatchScriptCommand struct {
 	*flag.FlagSet
 	ScriptKey string			// arg 0
@@ -110,12 +112,21 @@ func (cmd *WatchScriptCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "watch script"
 	nExpected := 2
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
 	cmd.ScriptKey = cmdArgs[0]
 	cmd.TargetPath = cmdArgs[1]
 
 	return nil
+}
+
+func (cmd *WatchScriptCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Watch_Script)
+	fmt.Println()
 }
 
 func (cmd *WatchScriptCommand) Run(args []string) error {
@@ -131,8 +142,12 @@ func (cmd *WatchScriptCommand) Run(args []string) error {
 
 }
 
+// Usage
+//
+//     watch svc name
 type WatchSvcCommand struct {
 	*flag.FlagSet
+	Name string
 }
 
 func NewWatchSvcCommand() *WatchSvcCommand {
@@ -151,11 +166,21 @@ func (cmd *WatchSvcCommand) HandleArgs(args []string) error {
 	// validate arg count
 	cmdArgs := cmd.Args()
 	cmdName := "watch svc"
-	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	nExpected := 1
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
+	cmd.Name = cmdArgs[0]
 
 	return nil
+}
+
+func (cmd *WatchSvcCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Watch_Svc)
+	fmt.Println()
 }
 
 func (cmd *WatchSvcCommand) Run(args []string) error {

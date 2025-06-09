@@ -42,11 +42,9 @@ func (cmd *ConfigCommand) HandleArgs(args []string) error {
 
 
 func (cmd *ConfigCommand) PrintUsage () {
-	fmt.Printf("\t%s\n\t%s\n\t%s\n", 
-	USG_ConfigGet,
-	USG_ConfigSet,
-	USG_ConfigShow,
-	)
+	fmt.Println()
+	fmt.Println(USG_Config)
+	fmt.Println()
 }
 
 func (cmd *ConfigCommand) Run(args []string) error {
@@ -87,6 +85,9 @@ func createConfigSubCommand(cmdName string) (Command, error) {
 	}
 }
 
+// Usage
+//
+//     dylt get key     # get key from config
 type ConfigGetCommand struct {
 	*flag.FlagSet
 	Key string
@@ -113,7 +114,9 @@ func (cmd *ConfigGetCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *ConfigGetCommand) PrintUsage () {
-	fmt.Println(USG_ConfigGet)
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Config_Get)
+	fmt.Println()
 }
 
 func (cmd *ConfigGetCommand) Run(args []string) error {
@@ -167,7 +170,9 @@ func (cmd *ConfigSetCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *ConfigSetCommand) PrintUsage () {
-	fmt.Println(USG_ConfigSet)
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Config_Set)
+	fmt.Println()
 }
 
 func (cmd *ConfigSetCommand) Run(args []string) error {
@@ -239,7 +244,9 @@ func (cmd *ConfigShowCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *ConfigShowCommand) PrintUsage () {
-	fmt.Println(USG_ConfigShow)
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Config_Show)
+	fmt.Println()
 }
 
 func (cmd *ConfigShowCommand) Run(args []string) error {
