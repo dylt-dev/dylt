@@ -44,7 +44,7 @@ func (cmd *HostCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *HostCommand) PrintUsage () {
-	fmt.Println(USG_Host)
+	PrintMultilineUsage(USG_Host)
 }
 
 func (cmd *HostCommand) Run(args []string) error {

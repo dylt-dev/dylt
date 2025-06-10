@@ -42,9 +42,7 @@ func (cmd *ConfigCommand) HandleArgs(args []string) error {
 
 
 func (cmd *ConfigCommand) PrintUsage () {
-	fmt.Println()
-	fmt.Println(USG_Config)
-	fmt.Println()
+	PrintMultilineUsage(USG_Config)
 }
 
 func (cmd *ConfigCommand) Run(args []string) error {

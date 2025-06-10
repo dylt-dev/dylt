@@ -159,7 +159,7 @@ func (cmd *MainCommand) HandleArgs (args []string) error {
 }
 
 func (cmd *MainCommand) PrintUsage () {
-	fmt.Println(clicmd.USG_Main)
+	clicmd.PrintMultilineUsage(clicmd.USG_Main)
 }
 
 func (cmd *MainCommand) Run (args clicmd.Cmdline) error {

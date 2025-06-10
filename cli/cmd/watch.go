@@ -43,9 +43,7 @@ func (cmd *WatchCommand) HandleArgs(args []string) error {
 }
 
 func (cmd *WatchCommand) PrintUsage () {
-	fmt.Println()
-	fmt.Println(USG_Watch)
-	fmt.Println()
+	PrintMultilineUsage(USG_Watch)
 }
 
 func (cmd *WatchCommand) Run(args []string) error {
