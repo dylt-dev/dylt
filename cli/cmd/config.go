@@ -81,8 +81,12 @@ func createConfigSubCommand(cmdName string) (Command, error) {
 	case "get": return NewConfigGetCommand(), nil
 	case "set": return NewConfigSetCommand(), nil
 	case "show": return NewConfigShowCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	default: {
+		var this *ConfigCommand = nil	
+		this.PrintUsage()
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
+}
 }
 
 // Usage
