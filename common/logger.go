@@ -1,11 +1,13 @@
-package cmd
+package common
 
 import (
 	"context"
 	"fmt"
 	"io"
 	"log/slog"
+	"reflect"
 	"slices"
+	"strings"
 
 	"github.com/dylt-dev/dylt/color"
 )
@@ -94,6 +96,31 @@ func (l *cliLogger) InfoContextf(ctx context.Context, sfmt string, args ...any) 
 func (l *cliLogger) Flush (level slog.Level) {
 	l.Logger.Log(context.Background(), level, string(l.buf))
 	l.buf = make([]byte, 200)
+}
+
+func (l *cliLogger) Signature(name string, args ...any) {
+	sig := CreateSignature(name, args...)
+	l.Logger.Info(sig)
+}
+
+func CreateSignature(name string, args ...any) string {
+	// highlight, concat, all that good stuff
+	sFmt := fmt.Sprintf("%%s(%s)", strings.Repeat("%v, ", len(args)-1)+"%v")
+	args2 := make([]any, len(args)+1)
+	args2[0] = Highlight(name)
+	for i, arg := range args {
+		ty, is := arg.(reflect.Type)
+		var sArg string
+		if is {
+			sArg = fmt.Sprintf("-%s-", FullTypeName(ty))
+		} else {
+			sArg = fmt.Sprintf("%v", arg)
+		}
+		args2[i+1] = Lowlight(sArg)
+	}
+	s := fmt.Sprintf(sFmt, args2...)
+
+	return s
 }
 
 func (l *cliLogger) Warnf(sfmt string, args ...any) {

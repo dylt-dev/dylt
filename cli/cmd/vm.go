@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/eco"
 )
 
@@ -63,7 +64,7 @@ func (cmd *VmCommand) Run(args []string) error {
 	slog.Debug("VmCommand.Run()", "args", args)
 	// Check for 0 args; if so print usage & return
 	if len(args) == 0 {
-		Logger.Comment("no args; printing usage")
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"text/template"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 //go:embed content/*
@@ -58,10 +60,10 @@ func (cmd *MiscCommand) PrintUsage () {
 }
 
 func (cmd *MiscCommand) Run(args []string) error {
-	Logger.Debug("MiscCommand.Run()", "args", args)
+	common.Logger.Debug("MiscCommand.Run()", "args", args)
 	// Check for 0 args; if so print usage & return
 	if len(args) == 0 {
-		Logger.Comment("no args; printing usage")
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
@@ -76,7 +78,7 @@ func (cmd *MiscCommand) Run(args []string) error {
 }
 
 func RunMisc (subCommand string, subCmdArgs []string) error {
-	Logger.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	common.Logger.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
 	// create the subcommand and run it
 	subCmd, err := createMiscSubCommand(subCommand)
 	if err != nil { return err }
@@ -133,7 +135,7 @@ func (cmd *CreateTwoNodeClusterCommand) PrintUsage () {
 }
 
 func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
-	Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", args)
+	common.Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -146,7 +148,7 @@ func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
 }
 
 func RunCreateTwoNodeCluster() error {
-	Logger.Debug("RunCreateTwoNodeCluster()")
+	common.Logger.Debug("RunCreateTwoNodeCluster()")
 	var err error
 
 	r := bufio.NewReader(os.Stdin)
@@ -204,7 +206,7 @@ func (cmd *GenEtcdRunScriptCommand) PrintUsage () {
 }
 
 func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
-	Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", args)
+	common.Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -213,14 +215,14 @@ func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
 	err = RunGenEtcdRunScript()
 	if err != nil { return err }
 
-	Logger.WithGroup("g")
-	Logger.With("bar", "thirteen")
-	Logger.Debug("testing logger", "foo", "13")
+	common.Logger.WithGroup("g")
+	common.Logger.With("bar", "thirteen")
+	common.Logger.Debug("testing logger", "foo", "13")
 	return nil
 }
 
 func RunGenEtcdRunScript() error {
-	Logger.Debug("RunGenEtcdRunScript()", )
+	common.Logger.Debug("RunGenEtcdRunScript()", )
 
 	fmt.Println("I'm gennin a script!")
 

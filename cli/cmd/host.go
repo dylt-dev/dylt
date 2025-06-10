@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type HostCommand struct {
@@ -51,7 +52,7 @@ func (cmd *HostCommand) Run(args []string) error {
 	slog.Debug("HostCommand.Run()", "args", args)
 	// Check for 0 args; if so print usage & return
 	if len(args) == 0 {
-		Logger.Comment("no args; printing usage")
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

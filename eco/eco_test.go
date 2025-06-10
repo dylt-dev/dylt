@@ -15,6 +15,7 @@ import (
 	"testing"
 	"unsafe"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	etcd "go.etcd.io/etcd/client/v3"
@@ -35,26 +36,26 @@ type map_string_int map[string]int
 type map_string_struct map[string]EcoTest
 
 type Stat struct {
-	Name string
+	Name  string
 	Value float64
 }
 
 type MiscMap map[string]string
 type StatSlice []Stat
-  
+
 type Player struct {
-	Id int
-	Name string
-	Weight float64
+	Id       int
+	Name     string
+	Weight   float64
 	IsActive bool
-	Stats StatSlice
-	Misc MiscMap
+	Stats    StatSlice
+	Misc     MiscMap
 }
 
 type PlayerMap map[string]Player
-  
+
 type Team struct {
-	Name string
+	Name    string
 	Players PlayerMap
 }
 
@@ -74,16 +75,16 @@ var VAL_AltuveStats = StatSlice{
 	{Name: "All-Stars", Value: 9},
 	{Name: "Height", Value: 5.5},
 }
-var VAL_AltuveMisc = map[string]string {
+var VAL_AltuveMisc = map[string]string{
 	"Born": "Venezuela",
 }
 var VAL_Altuve = Player{
-	Name: "Jose Altuve",
-	Id: 1,
+	Name:     "Jose Altuve",
+	Id:       1,
 	IsActive: true,
-	Weight: 1.0,
-	Stats: VAL_AltuveStats,
-	Misc: VAL_AltuveMisc,
+	Weight:   1.0,
+	Stats:    VAL_AltuveStats,
+	Misc:     VAL_AltuveMisc,
 }
 
 var VAL_JavierStats = []Stat{
@@ -94,12 +95,12 @@ var VAL_JavierMisc = map[string]string{
 	"Born": "Dominican Republic",
 }
 var VAL_Javier = Player{
-	Name: "Christian Javier",
-	Id: 2,
+	Name:     "Christian Javier",
+	Id:       2,
 	IsActive: false,
-	Weight: 0.5,
-	Stats: VAL_JavierStats,
-	Misc: VAL_JavierMisc,
+	Weight:   0.5,
+	Stats:    VAL_JavierStats,
+	Misc:     VAL_JavierMisc,
 }
 
 var VAL_PenaStats = []Stat{
@@ -109,24 +110,25 @@ var VAL_PenaMisc = map[string]string{
 	"Raised": "Rhode Island",
 }
 var VAL_Pena = Player{
-	Name: "Jeremy Pena",
-	Id: 3,
+	Name:     "Jeremy Pena",
+	Id:       3,
 	IsActive: true,
-	Weight: 0.9,
-	Stats: VAL_PenaStats,
-	Misc: VAL_PenaMisc,
+	Weight:   0.9,
+	Stats:    VAL_PenaStats,
+	Misc:     VAL_PenaMisc,
 }
 
 var VAL_Players = map[string]Player{
 	"altuve": VAL_Altuve,
 	"javier": VAL_Javier,
-	"pena": VAL_Pena,
+	"pena":   VAL_Pena,
 }
 
 var VAL_Astros = Team{
-	Name: "Astros",
+	Name:    "Astros",
 	Players: VAL_Players,
 }
+
 type EcoTest struct {
 	Name        string  `eco:"name"`
 	LuckyNumber float64 `eco:"lucky_number"`
@@ -147,12 +149,12 @@ func NewEcoTest(name string, luckyNumber float64) *EcoTest {
 }
 
 // For logging
-func TestCreateSignature0 (t *testing.T) {
+func TestCreateSignature0(t *testing.T) {
 	sig := createSignature("greatness", "foo", "bar")
 	t.Log(sig)
 }
 
-func TestGetChildKeys (t *testing.T) {
+func TestGetChildKeys(t *testing.T) {
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)
 	prefix := "/test/team/astros/Players"
@@ -174,33 +176,32 @@ func TestGetChildKeys (t *testing.T) {
 	}
 }
 
-
-var childKeys = []string {
-    "/test/team/astros/Players/altuve/Id",
-    "/test/team/astros/Players/altuve/IsActive",
-    "/test/team/astros/Players/altuve/Misc/Born",
-    "/test/team/astros/Players/altuve/Name",
-    "/test/team/astros/Players/altuve/Stats/0/Name",
-    "/test/team/astros/Players/altuve/Stats/0/Value",
-    "/test/team/astros/Players/altuve/Stats/1/Name",
-    "/test/team/astros/Players/altuve/Stats/1/Value",
-    "/test/team/astros/Players/altuve/Weight",
-    "/test/team/astros/Players/javier/Id",
-    "/test/team/astros/Players/javier/IsActive",
-    "/test/team/astros/Players/javier/Misc/Born",
-    "/test/team/astros/Players/javier/Name",
-    "/test/team/astros/Players/javier/Stats/0/Name",
-    "/test/team/astros/Players/javier/Stats/0/Value",
-    "/test/team/astros/Players/javier/Stats/1/Name",
-    "/test/team/astros/Players/javier/Stats/1/Value",
-    "/test/team/astros/Players/javier/Weight",
-    "/test/team/astros/Players/pena/Id",
-    "/test/team/astros/Players/pena/IsActive",
-    "/test/team/astros/Players/pena/Misc/Raised",
-    "/test/team/astros/Players/pena/Name",
-    "/test/team/astros/Players/pena/Stats/0/Name",
-    "/test/team/astros/Players/pena/Stats/0/Value",
-    "/test/team/astros/Players/pena/Weight",
+var childKeys = []string{
+	"/test/team/astros/Players/altuve/Id",
+	"/test/team/astros/Players/altuve/IsActive",
+	"/test/team/astros/Players/altuve/Misc/Born",
+	"/test/team/astros/Players/altuve/Name",
+	"/test/team/astros/Players/altuve/Stats/0/Name",
+	"/test/team/astros/Players/altuve/Stats/0/Value",
+	"/test/team/astros/Players/altuve/Stats/1/Name",
+	"/test/team/astros/Players/altuve/Stats/1/Value",
+	"/test/team/astros/Players/altuve/Weight",
+	"/test/team/astros/Players/javier/Id",
+	"/test/team/astros/Players/javier/IsActive",
+	"/test/team/astros/Players/javier/Misc/Born",
+	"/test/team/astros/Players/javier/Name",
+	"/test/team/astros/Players/javier/Stats/0/Name",
+	"/test/team/astros/Players/javier/Stats/0/Value",
+	"/test/team/astros/Players/javier/Stats/1/Name",
+	"/test/team/astros/Players/javier/Stats/1/Value",
+	"/test/team/astros/Players/javier/Weight",
+	"/test/team/astros/Players/pena/Id",
+	"/test/team/astros/Players/pena/IsActive",
+	"/test/team/astros/Players/pena/Misc/Raised",
+	"/test/team/astros/Players/pena/Name",
+	"/test/team/astros/Players/pena/Stats/0/Name",
+	"/test/team/astros/Players/pena/Stats/0/Value",
+	"/test/team/astros/Players/pena/Weight",
 }
 
 // func TestGetChildKeys1 (t *testing.T) {
@@ -215,7 +216,7 @@ var childKeys = []string {
 // 	t.Logf("len=%d", len)
 // }
 
-func TestMatchChildKey (t *testing.T) {
+func TestMatchChildKey(t *testing.T) {
 	prefix := "/test/team/astros/Players"
 	var srx string = fmt.Sprintf(`^%s/?\w+$`, prefix)
 	var rx *regexp.Regexp = regexp.MustCompile(srx)
@@ -225,13 +226,12 @@ func TestMatchChildKey (t *testing.T) {
 	require.False(t, rx.Match([]byte(badkey)))
 }
 
-
 func TestGetObject(t *testing.T) {
 
 }
 
-func TestFullTypeName_StatSlice (t *testing.T) {
-	s := fullTypeName(reflect.TypeOf(*new(StatSlice)))
+func TestFullTypeName_StatSlice(t *testing.T) {
+	s := common.FullTypeName(reflect.TypeOf(*new(StatSlice)))
 	t.Log(s)
 }
 
@@ -317,7 +317,7 @@ func TestKind_SliceUnsimple(t *testing.T) {
 	assert.Equal(t, Invalid, kind)
 }
 
-func TestKind_StatSlice (t *testing.T) {
+func TestKind_StatSlice(t *testing.T) {
 	val := StatSlice{}
 	kind := getKind(newEcoContext(os.Stdout), val)
 	assert.Equal(t, SimpleSlice, kind, fmt.Sprintf("Expected %s, got %s", SimpleSlice.String(), kind.String()))
@@ -517,7 +517,7 @@ func dumpOps(t *testing.T, ops []etcd.Op) {
 		} else if op.IsPut() {
 			key := string(op.KeyBytes())
 			val := string(op.ValueBytes())
-			s := fmt.Sprintf("%s %s %s", "PUT", lowlight(key), val)
+			s := fmt.Sprintf("%s %s %s", "PUT", common.Lowlight(key), val)
 			fmt.Println(s)
 		} else {
 			fmt.Printf("%#v\n", op)
@@ -536,10 +536,12 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 	}
 }
 
-func getSliceKeys (ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error) {
+func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error) {
 	ctx.logger.signature("getSliceKeys", prefix)
 	childKeys, err := cli.GetKeys(prefix)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	srx := fmt.Sprintf(`^%s/(\d)`, prefix)
 	rx := regexp.MustCompile(srx)
 	matchMap := map[int]struct{}{}
@@ -547,7 +549,9 @@ func getSliceKeys (ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, erro
 		if rx.MatchString(key) {
 			matches := rx.FindStringSubmatch(key)
 			i, err := strconv.Atoi(matches[1])
-			if err != nil { return nil, err }
+			if err != nil {
+				return nil, err
+			}
 			matchMap[i] = struct{}{}
 		}
 	}
@@ -556,7 +560,6 @@ func getSliceKeys (ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, erro
 
 	return mapKeys, nil
 }
-
 
 func testEncodeBool(t *testing.T, key string, b any) {
 	valExpected, err := json.Marshal(b)

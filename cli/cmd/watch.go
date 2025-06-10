@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/eco"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -50,7 +51,7 @@ func (cmd *WatchCommand) Run(args []string) error {
 	slog.Debug("WatchCommand.Run()", "args", args)
 	// Check for 0 args; if so print usage & return
 	if len(args) == 0 {
-		Logger.Comment("no args; printing usage")
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

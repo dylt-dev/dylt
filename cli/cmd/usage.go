@@ -4,7 +4,6 @@ import "fmt"
 
 // dylt (main)
 var USG_Main = []string {
-// fmt.Sprintf("\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
 	USG_Call_Short,
 	USG_Config_Short,
 	USG_Get_Short,

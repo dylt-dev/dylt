@@ -151,17 +151,17 @@ func TestPostViperWrite(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestTypeName0 (t *testing.T) {
+func TestTypeName0(t *testing.T) {
 	type stringAlias string
-	t.Logf("fullTypeName(stringAlias)=%s", fullTypeName(reflect.TypeOf(*new(stringAlias))))
+	t.Logf("fullTypeName(stringAlias)=%s", common.FullTypeName(reflect.TypeOf(*new(stringAlias))))
 	t.Logf("%#v", reflect.TypeOf(*new(stringAlias)))
 	t.Logf("%#v", reflect.TypeOf(stringAlias("")))
 	t.Logf("%#v", reflect.TypeOf(*new(stringAlias)).Name())
 }
 
-func TestTypeName1 (t *testing.T) {
+func TestTypeName1(t *testing.T) {
 	type stringsAlias []string
-	t.Logf("fullTypeName(stringsAlias)=%s", fullTypeName(reflect.TypeOf(*new(stringsAlias))))
+	t.Logf("fullTypeName(stringsAlias)=%s", common.FullTypeName(reflect.TypeOf(*new(stringsAlias))))
 	t.Logf("%#v", reflect.TypeOf(*new(stringsAlias)))
 	t.Logf("%#v", reflect.TypeOf(stringsAlias{}))
 	t.Logf("%#v", reflect.TypeOf(*new(stringsAlias)).Name())
@@ -169,7 +169,7 @@ func TestTypeName1 (t *testing.T) {
 	t.Logf("%#v", reflect.TypeOf(i).Name())
 }
 
-func TestReflectionIntPointer (t *testing.T) {
+func TestReflectionIntPointer(t *testing.T) {
 	var buf []byte
 	var n int = 13
 	var err error
@@ -178,7 +178,7 @@ func TestReflectionIntPointer (t *testing.T) {
 	buf, err = json.Marshal(n)
 	require.NoError(t, err)
 
-	// Create a slice 1 int long 
+	// Create a slice 1 int long
 	var valSlice reflect.Value = reflect.MakeSlice(reflect.TypeOf([]int{}), 1, 1)
 	t.Logf("Before: %d", valSlice.Index(0).Int())
 
@@ -191,12 +191,11 @@ func TestReflectionIntPointer (t *testing.T) {
 	err = json.Unmarshal(buf, ptr)
 	t.Logf("After (valPtr): %d", valSlice.Index(0).Int())
 
-
 	// Get an Interface{} to the slice element. Interfaces are useful: type plus storage
 	var el reflect.Value = valSlice.Index(0)
 	var el2 any = el.Interface()
 	t.Logf("el2 TypeOf = %s", reflect.TypeOf(el2).Name())
-	
+
 	// Decode the byte[] into our Interface
 	err = json.Unmarshal(buf, &el2)
 	t.Logf("el2 TypeOf = %s", reflect.TypeOf(el2).Name())
@@ -227,7 +226,7 @@ func TestReflectionIntPointer (t *testing.T) {
 	t.Logf("valInt Elem Int = %d", valInt.Elem().Int())
 	t.Logf("Indirect(valInt) Int = %d", reflect.Indirect(valInt).Int())
 }
-func TestReflectionSlice (t *testing.T) {
+func TestReflectionSlice(t *testing.T) {
 	var ints = make([]int, 3)
 	t.Logf("Before: %v", ints)
 	var v = reflect.ValueOf(ints)
@@ -239,14 +238,14 @@ func TestReflectionSlice (t *testing.T) {
 }
 
 type emptyInterface struct {
-	typ *abi.Type
+	typ  *abi.Type
 	word unsafe.Pointer
 }
 
-func TestReflectionMisc0 (t *testing.T) {
-	var n8  int8 = 13
+func TestReflectionMisc0(t *testing.T) {
+	var n8 int8 = 13
 	dump(n8)
-	var u8  uint8 = 13
+	var u8 uint8 = 13
 	dump(u8)
 	var n16 int16 = 13
 	dump(n16)
@@ -268,7 +267,7 @@ func TestReflectionMisc0 (t *testing.T) {
 	dump(sss)
 }
 
-func dump[T any] (arg T) {
+func dump[T any](arg T) {
 	// ptr := unsafe.Pointer(&arg)
 	// t.Logf("*ptr=%v", *((*T)(ptr)))
 
@@ -297,7 +296,7 @@ func noescape(p unsafe.Pointer) unsafe.Pointer {
 	return unsafe.Pointer(x ^ 0)
 }
 
-func TestNoEscape (t *testing.T) {
+func TestNoEscape(t *testing.T) {
 	var n int8 = 13
 	uptr := unsafe.Pointer(&n)
 	t.Log(fmt.Sprintf("%-12s: %p", "uptr", uptr))
@@ -305,12 +304,12 @@ func TestNoEscape (t *testing.T) {
 	t.Log(fmt.Sprintf("%-12s: %p", "nuptr", nuptr))
 }
 
-func TestXor (t *testing.T) {
+func TestXor(t *testing.T) {
 	n := 13
 	t.Logf("%d %d", n, n^0)
 }
 
-func TestPrints (t *testing.T) {
+func TestPrints(t *testing.T) {
 	var ns int16 = 13
 	var us uint16 = 13
 	t.Logf("%#v %#v", ns, us)
