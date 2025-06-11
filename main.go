@@ -73,7 +73,11 @@ func createMainSubCommand (sCmd string) (clicmd.Command, error) {
 	case "misc": return clicmd.NewMiscCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
 	case "watch": return clicmd.NewWatchCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
+	default: {
+		var nilPtr *MainCommand = nil
+		nilPtr.PrintUsage()
+		return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
+	}
 	}
 }
 
@@ -157,7 +161,8 @@ func main () {
 	err := cmd.Run(args.Args())
 	if err != nil {
 		slog.Error(err.Error())
-		fmt.Println(err.Error())
+		fmt.Printf("\t%s\n", common.Error(err.Error()))
+		fmt.Println()
 		os.Exit(1)
 	}
 }

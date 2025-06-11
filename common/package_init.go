@@ -38,6 +38,13 @@ func FullTypeName(ty reflect.Type) string {
 	return fmt.Sprintf("%s.%s", pkgPath, typeName)
 }
 
+func Error (s string) string {
+
+	var ss = color.Styledstring(s).Fg(color.Sys.Red)
+
+	return string(ss)
+}
+
 func Highlight(s string) string {
 
 	var ss = color.Styledstring(s).Style("\033[1;97m")

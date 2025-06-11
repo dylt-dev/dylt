@@ -108,10 +108,19 @@ func (cmd *HostInitCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "host init"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no positional params)
 
 	return nil
+}
+
+func (cmd *HostInitCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Host_Init)
+	fmt.Println()
 }
 
 func (cmd *HostInitCommand) Run(args []string) error {
