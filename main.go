@@ -7,17 +7,11 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
-	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/dylt/common"
 )
-
-const LOG_File = "dylt.log"
-const LOG_Folder = "/var/log/dylt"
-
 
 func exit (err error) {
 	if err == nil {
@@ -52,71 +46,19 @@ func firstTime () error {
 	return nil
 }
 
-func initLogging () {
-	logToFile, ok := os.LookupEnv("DYLT_LogToFile")
-
-	if ok  && logToFile != "" {
-
-		initLoggingToFile()
-
-	} else {
-		
-		// opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
-		// var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
-		opts := color.ColorOptions{Level: slog.LevelDebug}
-		var logger *slog.Logger = slog.New(color.NewColorHandler(os.Stdout, opts))
-
-		slog.SetDefault(logger)
-		slog.Debug("logging successfully initialized")
-	}
-}
-
-
-func initLoggingToFile () {
-	var logFile, logFolder, logPath string
-	envLogPath, ok := os.LookupEnv("DYLT_LogPath")
-
-	if ok {
-
-		logFile = path.Base(envLogPath)
-		logFolder = path.Dir(envLogPath)
-		logPath = envLogPath
-
-	} else {
-
-		logFile = LOG_File
-		logFolder = LOG_Folder
-		logPath = path.Join(logFolder, logFile)
-	
-	}
-
-	err := os.MkdirAll(logFolder, 0744)
-	if err != nil { panic(fmt.Sprintf("Couldn't create or open log folder: %s", logFolder)) }
-
-	logWriter, err := os.OpenFile(logPath, os.O_CREATE | os.O_APPEND | os.O_RDWR, 0777)
-	if err != nil { panic(fmt.Sprintf("Couldn't open logfile path: logFile=%s logFolder=%s logPath=%s", logFile, logFolder, logPath)) }
-
-	opts := slog.HandlerOptions{AddSource: true, Level: slog.LevelDebug}
-	var logger *slog.Logger = slog.New(slog.NewJSONHandler(logWriter, &opts))
-
-	slog.SetDefault(logger)
-	slog.Debug("logging successfully initialized")
-}
-
-
 func isFirstTime () (bool, error) {
 	configFilePath := common.GetConfigFilePath()
-	clicmd.Logger.Debugf("%s=%s", "configFilePath", configFilePath)
+	common.Logger.Debugf("%s=%s", "configFilePath", configFilePath)
 	_, err := os.Stat(configFilePath)
 	if err != nil && !os.IsNotExist(err) { return false, err }
 
 	if err == nil {
-		clicmd.Logger.Comment("config file found - not first time")
+		common.Logger.Comment("config file found - not first time")
 		return false, nil
 	}
 
 	// os.IsNotExist(err)
-	clicmd.Logger.Comment("config file does not exist - first time")
+	common.Logger.Comment("config file does not exist - first time")
 	return false, nil
 }
 
@@ -131,7 +73,11 @@ func createMainSubCommand (sCmd string) (clicmd.Command, error) {
 	case "misc": return clicmd.NewMiscCommand(), nil
 	case "vm": return clicmd.NewVmCommand(), nil
 	case "watch": return clicmd.NewWatchCommand(), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
+	default: {
+		var nilPtr *MainCommand = nil
+		nilPtr.PrintUsage()
+		return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
+	}
 	}
 }
 
@@ -158,8 +104,19 @@ func (cmd *MainCommand) HandleArgs (args []string) error {
 	return nil
 }
 
+func (cmd *MainCommand) PrintUsage () {
+	clicmd.PrintMultilineUsage(clicmd.USG_Main)
+}
+
 func (cmd *MainCommand) Run (args clicmd.Cmdline) error {
-	clicmd.Logger.Debug("CallCommand.Run()", "args", args)
+	if common.Logger == nil { panic("common.Logger == nil !!!")}
+	common.Logger.Signature("MainCommand.Run()", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -172,8 +129,6 @@ func (cmd *MainCommand) Run (args clicmd.Cmdline) error {
 
 func RunMain (subCommand string, subCmdArgs []string) error {
 	slog.Debug("RunMain()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
-	
-	initLogging()
 	
 	// If there's no subcommand, do main() things
 	if subCommand == "" {
@@ -199,12 +154,15 @@ func RunMain (subCommand string, subCmdArgs []string) error {
 
 
 func main () {
+	common.InitLogging()
+	
 	cmd := NewMainCommand()
 	var args clicmd.Cmdline = os.Args
 	err := cmd.Run(args.Args())
 	if err != nil {
 		slog.Error(err.Error())
-		fmt.Println(err.Error())
+		fmt.Printf("\t%s\n", common.Error(err.Error()))
+		fmt.Println()
 		os.Exit(1)
 	}
 }

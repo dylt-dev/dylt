@@ -40,8 +40,19 @@ func (cmd *ConfigCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+
+func (cmd *ConfigCommand) PrintUsage () {
+	PrintMultilineUsage(USG_Config)
+}
+
 func (cmd *ConfigCommand) Run(args []string) error {
 	slog.Debug("ConfigCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -65,17 +76,20 @@ func RunConfig(subCommand string, subCmdArgs []string) error {
 
 func createConfigSubCommand(cmdName string) (Command, error) {
 	switch cmdName {
-	case "get":
-		return NewConfigGetCommand(), nil
-	case "set":
-		return NewConfigSetCommand(), nil
-	case "show":
-		return NewConfigShowCommand(), nil
-	default:
+	case "get": return NewConfigGetCommand(), nil
+	case "set": return NewConfigSetCommand(), nil
+	case "show": return NewConfigShowCommand(), nil
+	default: {
+		var this *ConfigCommand = nil	
+		this.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 }
+}
 
+// Usage
+//
+//     dylt get key     # get key from config
 type ConfigGetCommand struct {
 	*flag.FlagSet
 	Key string
@@ -92,11 +106,19 @@ func (cmd *ConfigGetCommand) HandleArgs(args []string) error {
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 1 { return fmt.Errorf("`config get` expects 1 argument(s); received %d", len(cmdArgs)) }
+	if len(cmdArgs) != 1 {
+		cmd.PrintUsage()
+		return fmt.Errorf("`config get` expects 1 argument(s); received %d", len(cmdArgs)) }
 	// init positional params
 	cmd.Key = cmdArgs[0]
 
 	return nil
+}
+
+func (cmd *ConfigGetCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Config_Get)
+	fmt.Println()
 }
 
 func (cmd *ConfigGetCommand) Run(args []string) error {
@@ -138,12 +160,21 @@ func (cmd *ConfigSetCommand) HandleArgs(args []string) error {
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	if len(cmdArgs) != 2 { return fmt.Errorf("`config set` expects 1 argument(s); received %d", len(cmdArgs)) }
+	if len(cmdArgs) != 2 {
+		cmd.PrintUsage()
+		return fmt.Errorf("`config set` expects 2 argument(s); received %d", len(cmdArgs))
+	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
 	cmd.Value = cmdArgs[1]
 
 	return nil
+}
+
+func (cmd *ConfigSetCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Config_Set)
+	fmt.Println()
 }
 
 func (cmd *ConfigSetCommand) Run(args []string) error {
@@ -205,10 +236,19 @@ func (cmd *ConfigShowCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "config show"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no positional params)
 
 	return nil
+}
+
+func (cmd *ConfigShowCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Config_Show)
+	fmt.Println()
 }
 
 func (cmd *ConfigShowCommand) Run(args []string) error {

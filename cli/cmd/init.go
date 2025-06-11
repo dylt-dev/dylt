@@ -29,15 +29,25 @@ func (cmd *InitCommand) HandleArgs(args []string) error {
 	err := cmd.Parse(args)
 	if err != nil { return err }
 	var requiredFlag string = "etcd-domain"
-	if cmd.Lookup(requiredFlag).Value.String() == "" { return fmt.Errorf("required flag missing: %s", requiredFlag)}
+	if cmd.Lookup(requiredFlag).Value.String() == "" {
+		cmd.PrintUsage()
+		return fmt.Errorf("required flag missing: %s", requiredFlag)
+	}
 	// validate arg count
 	cmdArgs := cmd.Args()
 	cmdName := "init"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no params)
 
 	return nil
+}
+
+func (cmd *InitCommand) PrintUsage () {
+	PrintMultilineUsage(USG_Init)
 }
 
 func (cmd *InitCommand) Run (args []string) error {

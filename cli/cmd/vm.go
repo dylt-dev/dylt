@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/eco"
 )
 
@@ -34,8 +35,8 @@ func (cmd *VmCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm"
 	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+	if len(cmdArgs) < nExpected {
+		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
 			cmdName,
 			nExpected,
 			len(cmdArgs))
@@ -47,8 +48,26 @@ func (cmd *VmCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *VmCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_Add_Short)
+	fmt.Printf("\t%s\n", USG_Vm_All_Short)
+	fmt.Printf("\t%s\n", USG_Vm_Del_Short)
+	fmt.Printf("\t%s\n", USG_Vm_Get_Short)
+	fmt.Printf("\t%s\n", USG_Vm_List_Short)
+	fmt.Printf("\t%s\n", USG_Vm_Set_Short)
+	fmt.Println()
+}
+
+
 func (cmd *VmCommand) Run(args []string) error {
 	slog.Debug("VmCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -106,13 +125,23 @@ func (cmd *VmAddCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm add"
 	nExpected := 2
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
 	cmd.Name = cmdArgs[0]
 	cmd.Fqdn = cmdArgs[1]
 
 	return nil
 }
+
+func (cmd *VmAddCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_Add)
+	fmt.Println()
+}
+
 
 func (cmd VmAddCommand) Run (args []string) error {
 	slog.Debug("VmAddCommand.Run()", "args", args)
@@ -138,8 +167,6 @@ func RunVmAdd (name string, fqdn string) error {
 	return nil
 }
 
-
-
 type VmAllCommand struct {
 	*flag.FlagSet
 }
@@ -161,10 +188,19 @@ func (cmd *VmAllCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm all"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no params)
 
 	return nil
+}
+
+func (cmd *VmAllCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_All)
+	fmt.Println()
 }
 
 
@@ -193,6 +229,9 @@ func RunVmAll () error {
 	return nil
 }
 
+// Usage
+//
+//    vm del vmName
 type VmDelCommand struct {
 	*flag.FlagSet
 	Name string			// arg 0
@@ -216,11 +255,20 @@ func (cmd *VmDelCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm del"
 	nExpected := 1
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no params)
 	cmd.Name = cmdArgs[0]
 
 	return nil
+}
+
+func (cmd *VmDelCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_Del)
+	fmt.Println()
 }
 
 func (cmd *VmDelCommand) Run (args[] string) error {
@@ -253,6 +301,9 @@ func RunVmDel (name string) error {
 	return nil
 }
 
+// Usage
+//
+//     vm get vmName
 type VmGetCommand struct {
 	*flag.FlagSet
 	Name string			// arg 0
@@ -275,11 +326,20 @@ func (cmd *VmGetCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm get"
 	nExpected := 1
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
 	cmd.Name = cmdArgs[0]
 
 	return nil
+}
+
+func (cmd *VmGetCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_Get)
+	fmt.Println()
 }
 
 func (cmd *VmGetCommand) Run (args[] string) error {
@@ -312,6 +372,9 @@ func RunVmGet (name string) error {
 	return nil
 }
 
+// Usage
+//
+//     vm list
 type VmListCommand struct {
 	*flag.FlagSet
 }
@@ -333,10 +396,19 @@ func (cmd *VmListCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm list"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no params)
 
 	return nil
+}
+
+func (cmd *VmListCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_List)
+	fmt.Println()
 }
 
 func (cmd VmListCommand) Run (args[] string) error {
@@ -368,6 +440,9 @@ func RunVmList () error {
 	return nil
 }
 
+// Usage
+//
+//     vm set vmName key val
 type VmSetCommand struct {
 	*flag.FlagSet
 	Name string			// arg 0
@@ -392,13 +467,22 @@ func (cmd *VmSetCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "vm set"
 	nExpected := 3
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no params)
 	cmd.Name = cmdArgs[0]
 	cmd.Key = cmdArgs[1]
 	cmd.Value = cmdArgs[2]
 
 	return nil
+}
+
+func (cmd *VmSetCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Vm_Set)
+	fmt.Println()
 }
 
 func (cmd VmSetCommand) Run (args[] string) error {

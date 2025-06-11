@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	etcd "go.etcd.io/etcd/client/v3"
@@ -26,7 +27,7 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	// @note I'm not sure why this is better than just returning the object. Stack v heap?
 	ty := reflect.TypeOf(i)
 	if ty.Kind() != reflect.Pointer {
-		return fmt.Errorf("expected pointer; got %s", fullTypeName(ty))
+		return fmt.Errorf("expected pointer; got %s", common.FullTypeName(ty))
 	}
 
 	// Simple objects are easy to deal with. Just use json.Unmarhsal()
@@ -82,13 +83,13 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 	// ctx.println(subtle(fmt.Sprintf("ty=%s", fullTypeName(ty))))
 	// Only pointers are supported
 	if ty.Kind() != reflect.Pointer {
-		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))
+		return fmt.Errorf("unsupported type (%s)", common.FullTypeName(ty))
 	}
 
 	// Only simple maps are supported
 	kind := getTypeKind(ctx, ty.Elem())
 	if kind != SimpleMap {
-		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem()))
+		return fmt.Errorf("unsupported type (%s)", common.FullTypeName(ty.Elem()))
 	}
 
 	// add trailing slash. a/key => a/key/
@@ -99,7 +100,7 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 	// Get entire object tree
 	// @note this might be quite large. ideally pagination would avoid issues with huge maps
 	resp, err := etcdClient.Client.Get(ctx, key, etcd.WithPrefix())
-	ctx.logger.info(highlight("Keys"))
+	ctx.logger.info(common.Highlight("Keys"))
 	var valMap reflect.Value
 	// The caller may have specified a nil map, or an existing map
 	// If nil, create a new map. If not, use the existing map
@@ -134,7 +135,7 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 		return err
 	}
 
-	ctx.logger.info(highlight("returning nil"))
+	ctx.logger.info(common.Highlight("returning nil"))
 	return nil
 }
 
@@ -145,25 +146,27 @@ func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) err
 
 	ty := reflect.TypeOf(i)
 	if ty.Kind() != reflect.Pointer {
-		return fmt.Errorf("unsupported type (%s) -  must be pointer", fullTypeName(ty))
+		return fmt.Errorf("unsupported type (%s) -  must be pointer", common.FullTypeName(ty))
 	}
 	kind := getTypeKind(ctx, ty.Elem())
 	if kind != SimpleSlice {
-		return fmt.Errorf("unsupported kind (%s) - must be SimpleSlice", fullTypeName(ty.Elem()))
+		return fmt.Errorf("unsupported kind (%s) - must be SimpleSlice", common.FullTypeName(ty.Elem()))
 	}
 
 	kindElem := getTypeKind(ctx, ty.Elem().Elem())
 	ctx.logger.Infof("kindElem=%s", kindElem.String())
 	// Get slice keys
 	sliceKeys, err := getSliceKeys(ctx, etcdClient, key)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	ctx.logger.Infof("sliceKeys=%v", sliceKeys)
 	// slice := reflect.MakeSlice(ty.Elem(), len(sliceKeys), len(sliceKeys))
 
 	// for _, sliceKey := range sliceKeys {
 	// 	elKey := path.Join(key, elKey)
 	// 	// I have an element type.
-	// 	// How do I create a variable to hold that type, and then decode a byte string into it?	
+	// 	// How do I create a variable to hold that type, and then decode a byte string into it?
 	// }
 
 	// Dynamically allocate array
@@ -200,18 +203,18 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 
 	ty := reflect.TypeOf(i)
 	if ty.Kind() != reflect.Pointer {
-		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty))
+		return fmt.Errorf("unsupported type (%s)", common.FullTypeName(ty))
 	}
 	tyElem := ty.Elem()
 	kind := getTypeKind(ctx, tyElem)
 	if kind != SimpleStruct {
-		return fmt.Errorf("unsupported type (%s)", fullTypeName(ty.Elem()))
+		return fmt.Errorf("unsupported type (%s)", common.FullTypeName(ty.Elem()))
 	}
 	nFields := tyElem.NumField()
 	ctx.logger.Infof("%-16s %-16d", "nFields", nFields)
 	for iField := range nFields {
 		field := tyElem.Field(iField)
-		ctx.logger.info(string(lowlight(fmt.Sprintf("%-16d %-16s %-16s", iField, field.Name, field.Tag.Get("eco")))))
+		ctx.logger.info(string(common.Lowlight(fmt.Sprintf("%-16d %-16s %-16s", iField, field.Name, field.Tag.Get("eco")))))
 	}
 
 	if !strings.HasSuffix(key, string(filepath.Separator)) {
@@ -400,7 +403,7 @@ func TestNilMap(t *testing.T) {
 
 	// Get type of underlying object from pointer
 	tyElem := reflect.TypeOf(pm).Elem()
-	t.Logf("tyElem=%s", fullTypeName(tyElem))
+	t.Logf("tyElem=%s", common.FullTypeName(tyElem))
 
 	// Create map and assign a value
 	valMap := reflect.MakeMap(tyElem)
@@ -498,7 +501,7 @@ func TestStructSetField1(t *testing.T) {
 	p := reflect.ValueOf(&st)
 	val := p.Elem()
 
-	t.Logf("fullTypeName(val.Type())=%s", fullTypeName(val.Type()))
+	t.Logf("fullTypeName(val.Type())=%s", common.FullTypeName(val.Type()))
 	t.Logf("val.Type().Kind()=%s", val.Type().Kind().String())
 
 	require.True(t, val.CanSet())

@@ -30,11 +30,20 @@ func (cmd *GetCommand) HandleArgs (args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "get"
 	nExpected := 1
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
 
 	return nil
+}
+
+func (cmd *GetCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Get)
+	fmt.Println()
 }
 
 func (cmd *GetCommand) Run (args []string) error {

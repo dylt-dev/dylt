@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type HostCommand struct {
@@ -32,7 +33,10 @@ func (cmd *HostCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "host"
 	nExpected := 1
-	if len(cmdArgs) < nExpected { return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) < nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params
 	cmd.SubCommand = cmdArgs[0]
 	cmd.SubArgs = cmdArgs[1:]
@@ -40,8 +44,18 @@ func (cmd *HostCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *HostCommand) PrintUsage () {
+	PrintMultilineUsage(USG_Host)
+}
+
 func (cmd *HostCommand) Run(args []string) error {
 	slog.Debug("HostCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -94,10 +108,19 @@ func (cmd *HostInitCommand) HandleArgs(args []string) error {
 	cmdArgs := cmd.Args()
 	cmdName := "host init"
 	nExpected := 0
-	if len(cmdArgs) != nExpected { return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs)) }
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+	}
 	// init positional params (nop - no positional params)
 
 	return nil
+}
+
+func (cmd *HostInitCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Host_Init)
+	fmt.Println()
 }
 
 func (cmd *HostInitCommand) Run(args []string) error {

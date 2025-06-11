@@ -29,38 +29,46 @@ type ConfigFile struct {
 	Path string
 }
 
-func (cf *ConfigFile) Init () error {
+func (cf *ConfigFile) Init() error {
 	// Check if the file already exists, or if attempting to stat it fails
 	_, err := os.Stat(cf.Path)
-	if err == nil { return nil }
-	if !errors.Is(err, os.ErrNotExist) { return NewError(err) }
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return NewError(err)
+	}
 
 	// Create all necessary folders
 	folderPath := filepath.Dir(cf.Path)
 	err = os.MkdirAll(folderPath, 0755)
-	if err != nil { return NewError(err) }
+	if err != nil {
+		return NewError(err)
+	}
 
 	// Create file
 	f, err := os.OpenFile(cf.Path, os.O_CREATE, 0644)
-	if err != nil { return NewError(err) }
+	if err != nil {
+		return NewError(err)
+	}
 	defer f.Close()
 
 	return nil
 }
 
-func (cf *ConfigFile) Load () error {
+func (cf *ConfigFile) Load() error {
 	return nil
 }
 
-func (cf *ConfigFile) LoadFrom (path string) error {
+func (cf *ConfigFile) LoadFrom(path string) error {
 	return nil
 }
 
-func (cf *ConfigFile) Save () error {
+func (cf *ConfigFile) Save() error {
 	return nil
 }
 
-func (cf *ConfigFile) SaveTo (path string) error {
+func (cf *ConfigFile) SaveTo(path string) error {
 	return nil
 }
 
@@ -250,7 +258,7 @@ func GetConfigValue(key string) (any, error) {
 // 	}
 // }
 
-func InitLogging () {
+func LocalInitLogging() {
 	opts := slog.HandlerOptions{AddSource: false, Level: slog.LevelDebug}
 	w := os.Stdout
 	var logger *slog.Logger = slog.New(slog.NewTextHandler(w, &opts))

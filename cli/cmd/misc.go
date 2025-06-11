@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"text/template"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 //go:embed content/*
@@ -48,8 +50,23 @@ func (cmd *MiscCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *MiscCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n\t%s\n",
+	USG_Misc_TwoNode_Short,
+	USG_Misc_GenScript_Short,
+	)
+	fmt.Println()
+}
+
 func (cmd *MiscCommand) Run(args []string) error {
-	Logger.Debug("MiscCommand.Run()", "args", args)
+	common.Logger.Debug("MiscCommand.Run()", "args", args)
+	// Check for 0 args; if so print usage & return
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -61,7 +78,7 @@ func (cmd *MiscCommand) Run(args []string) error {
 }
 
 func RunMisc (subCommand string, subCmdArgs []string) error {
-	Logger.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+	common.Logger.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
 	// create the subcommand and run it
 	subCmd, err := createMiscSubCommand(subCommand)
 	if err != nil { return err }
@@ -101,6 +118,7 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs(args []string) error {
 	cmdName := "createTwoNodeCluster"
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
 			cmdName,
 			nExpected,
@@ -110,8 +128,14 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *CreateTwoNodeClusterCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Misc_TwoNode)
+	fmt.Println()
+}
+
 func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
-	Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", args)
+	common.Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -124,7 +148,7 @@ func (cmd *CreateTwoNodeClusterCommand) Run(args []string) error {
 }
 
 func RunCreateTwoNodeCluster() error {
-	Logger.Debug("RunCreateTwoNodeCluster()")
+	common.Logger.Debug("RunCreateTwoNodeCluster()")
 	var err error
 
 	r := bufio.NewReader(os.Stdin)
@@ -165,6 +189,7 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs(args []string) error {
 	cmdName := "gen-etcd-run-script"
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
 			cmdName,
 			nExpected,
@@ -174,8 +199,14 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs(args []string) error {
 	return nil
 }
 
+func (cmd *GenEtcdRunScriptCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Misc_GenScript)
+	fmt.Println()
+}
+
 func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
-	Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", args)
+	common.Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", args)
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }
@@ -184,14 +215,14 @@ func (cmd *GenEtcdRunScriptCommand) Run(args []string) error {
 	err = RunGenEtcdRunScript()
 	if err != nil { return err }
 
-	Logger.WithGroup("g")
-	Logger.With("bar", "thirteen")
-	Logger.Debug("testing logger", "foo", "13")
+	common.Logger.WithGroup("g")
+	common.Logger.With("bar", "thirteen")
+	common.Logger.Debug("testing logger", "foo", "13")
 	return nil
 }
 
 func RunGenEtcdRunScript() error {
-	Logger.Debug("RunGenEtcdRunScript()", )
+	common.Logger.Debug("RunGenEtcdRunScript()", )
 
 	fmt.Println("I'm gennin a script!")
 

@@ -4,14 +4,14 @@ import (
 	"io/fs"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/template"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/dylt-dev/dylt/common"
 )
 
 func init() {
-	common.InitLogging()
+	common.LocalInitLogging()
 }
 
 func TestAddContentFolder(t *testing.T) {
