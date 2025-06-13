@@ -286,8 +286,25 @@ on-host () {
 
 
 on-host-init () {
-	status on-host-init
-	complete-with-empty
+	# first arg: uid (no help)
+	get-token token
+	status on-host-init-1
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+	
+	# second arg: gid (no help)
+	get-token token
+	status on-host-init-2
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+
+	comment "$(printf 'on-host-init is complete; token=' "$token")"
 }
 
 
