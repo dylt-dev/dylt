@@ -171,7 +171,7 @@ on-call-scriptpath () {
 		comment "$(printf "current token is in progress: COMPREPLY can be generated")"
 		complete-with-files "$token"
 	else
-		comment "$(printf 'flagval is complete; token=' "$token")"
+		comment "$(printf 'flagval is complete; token=%s' "$token")"
 	fi
 }
 
@@ -215,7 +215,7 @@ on-config-get () {
 		return
 	fi
 	
-	comment "$(printf 'config-get is complete; token=' "$token")"
+	comment "$(printf 'config-get is complete; token=%s' "$token")"
 }
 
 
@@ -245,7 +245,7 @@ on-config-set () {
 		return
 	fi
 
-	comment "$(printf 'config-set is complete; token=' "$token")"
+	comment "$(printf 'config-set is complete; token=%s' "$token")"
 }
 
 
@@ -304,7 +304,7 @@ on-host-init () {
 		return
 	fi
 
-	comment "$(printf 'on-host-init is complete; token=' "$token")"
+	comment "$(printf 'on-host-init is complete; token=%s' "$token")"
 }
 
 
@@ -332,7 +332,7 @@ on-init () {
 		return
 	fi
 
-	comment "$(printf 'on-init is complete; last token=' "$token")"
+	comment "$(printf 'on-init is complete; last token=%s' "$token")"
 }
 
 on-list () {
@@ -428,7 +428,7 @@ on-vm-add () {
 		return
 	fi
 
-	comment "$(printf 'on-vm-add is complete; last token=' "$token")"
+	comment "$(printf 'on-vm-add is complete; last token=%s' "$token")"
 }
 
 on-vm-all () {
@@ -438,7 +438,7 @@ on-vm-all () {
 		complete-with-empty
 	fi
 	
-	comment "$(printf 'on-vm-all is complete; last token=' "$token")"
+	comment "$(printf 'on-vm-all is complete; last token=%s' "$token")"
 }
 
 on-vm-del () {
@@ -451,7 +451,7 @@ on-vm-del () {
 		return
 	fi
 	
-	comment "$(printf 'on-vm-del is complete; last token=' "$token")"
+	comment "$(printf 'on-vm-del is complete; last token=%s' "$token")"
 }
 
 on-vm-get () {
@@ -464,7 +464,7 @@ on-vm-get () {
 		return
 	fi
 	
-	comment "$(printf 'on-vm-get is complete; last token=' "$token")"
+	comment "$(printf 'on-vm-get is complete; last token=%s' "$token")"
 }
 
 on-vm-list () {
@@ -473,7 +473,7 @@ on-vm-list () {
 		complete-with-empty
 	fi
 	
-	comment "$(printf 'on-vm-list is complete; last token=' "$token")"
+	comment "$(printf 'on-vm-list is complete; last token=%s' "$token")"
 }
 
 on-vm-set () {
@@ -505,7 +505,62 @@ on-vm-set () {
 		return
 	fi
 	
-	comment "$(printf 'on-vm-set is complete; last token=' "$token")"
+	comment "$(printf 'on-vm-set is complete; last token=%s' "$token")"
+}
+
+on-watch () {
+	cmds=(script svc)
+
+	# subcommand
+	get-token token
+	status on-vm
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-words "${cmds[*]}" "$token"
+		return
+	fi
+
+	case "$token" in
+		script)	on-watch-script;	status X-on-watch-script;;
+		svc)	on-watch-svc;		status X-on-watch-svc;;
+		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
+	esac
+	
+	comment "$(printf 'on-watch is complete; last token=%s' "$token")"
+}
+
+
+on-watch-script () {
+	# arg1 - script key (complete with empty)
+	get-token token
+	status on-watch-scr-1
+	if on-last-token; then
+		complete-with-empty
+		return
+	fi
+
+	# arg2 - target path (complete with empty)
+	get-token token
+	status on-watch-scr-2
+	if on-last-token; then
+		complete-with-empty
+		return
+	fi
+
+	comment "$(printf 'on-watch-script is complete; last token=%s' "$token")"
+}
+
+on-watch-svc () {
+	# name (complete with empty)
+	get-token token
+	status on-watch-svc
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+	
+	comment "$(printf 'on-watch-svc is complete; last token=%s' "$token")"
 }
 
 # on-foo () {
