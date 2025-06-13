@@ -262,10 +262,31 @@ on-get () {
 
 
 on-host () {
-	status on-host
 	cmds=(init)
 	flags=()
+	
+	# subcmd
+	get-token token
+	status on-host
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		case $token in
+			-*) complete-with-words "${flags[*]}" "$token";;
+			*)  complete-with-words "${cmds[*]}" "$token";;
+		esac
+		return
+	fi
 
+	# there are tokens ahead, so switch on subcommand
+	case "$token" in
+		init) on-host-init; status X-on-host-init;;
+		*)    complete-with-empty;;
+	esac
+}
+
+
+on-host-init () {
+	status on-host-init
 	complete-with-empty
 }
 
