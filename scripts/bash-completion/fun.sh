@@ -308,6 +308,34 @@ on-host-init () {
 }
 
 
+on-init () {
+	cmds=()
+	flags=(--etcd-domain)
+	
+	# 1 - flag
+	get-token token
+	status on-init-1
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		case $token in
+			-*) complete-with-words "${flags[*]}" "$token";;
+			*)  complete-with-empty
+		esac
+		return
+	fi
+
+	# 2 - flag value (complete with empty)
+	get-token token
+	status on-init-2
+	if on-last-token; then
+		complete-with-empty
+		return
+	fi
+
+	comment "$(printf 'on-init is complete; last token=' "$token")"
+}
+
+
 on-list () {
 	status on-list
 	# this is a terminal state. we COMPREPLY=() and return
