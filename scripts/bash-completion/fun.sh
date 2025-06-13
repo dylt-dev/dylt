@@ -335,11 +335,177 @@ on-init () {
 	comment "$(printf 'on-init is complete; last token=' "$token")"
 }
 
-
 on-list () {
 	status on-list
 	# this is a terminal state. we COMPREPLY=() and return
 	complete-with-empty
+}
+
+on-misc () {
+	cmds=(create-two-node-cluster gen-etcd-run-script)
+	flags=()
+	
+	# subcmd
+	get-token token
+	status on-misc
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		case $token in
+			-*) complete-with-words "${flags[*]}" "$token";;
+			*)  complete-with-words "${cmds[*]}" "$token";;
+		esac
+		return
+	fi
+
+	# go to correct subcommand handler
+	case "$token" in 
+		create-two-node-cluster) on-misc-createTwoNodeCluster; status X-on-misc-createTwoNodeCluster;;
+		gen-etcd-run-script) on-misc-genEtcdRunScript; status X-on-misc-genEtcdRunScript;;
+		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
+	esac
+
+	comment "$(printf 'on-misc is complete; last token=%s' "$token")"
+}
+
+
+on-misc-createTwoNodeCluster () {
+	status on-misc-createTwoNodeCluster
+	complete-with-empty
+}
+
+on-misc-genEtcdRunScript () {
+	status on-misc-genEtcdRunScript
+	complete-with-empty
+}
+
+
+on-vm () {
+	cmds=(add all del get list set)
+	flags=()
+
+	# subcommand
+	get-token token
+	status on-vm
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		case $token in
+			-*) complete-with-words "${flags[*]}" "$token";;
+			*)  complete-with-words "${cmds[*]}" "$token";;
+		esac
+		return
+	fi
+
+	# subcommand
+	case "$token" in
+		add)	on-vm-add;	status X-on-vm-add;;
+		all)	on-vm-all;	status X-on-vm-all;;
+		del)	on-vm-del;	status X-on-vm-del;;
+		get)	on-vm-get;	status X-on-vm-get;;
+		list)	on-vm-list;	status X-on-vm-list;;
+		set)	on-vm-set;	status X-on-vm-set;;
+		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
+	esac
+	
+	comment "$(printf 'on-misc is complete; last token=%s' "$token")"
+}
+
+on-vm-add () {
+	# first arg: name (no help)
+	get-token token
+	status on-vm-add-1
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+	
+	# second arg: fqdn (no help)
+	get-token token
+	status on-vm-add-2
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+
+	comment "$(printf 'on-vm-add is complete; last token=' "$token")"
+}
+
+on-vm-all () {
+	status on-vm-all
+
+	if on-last-token; then
+		complete-with-empty
+	fi
+	
+	comment "$(printf 'on-vm-all is complete; last token=' "$token")"
+}
+
+on-vm-del () {
+	# first arg: name (no help)
+	get-token token
+	status on-vm-add-1
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+	
+	comment "$(printf 'on-vm-del is complete; last token=' "$token")"
+}
+
+on-vm-get () {
+	# first arg: name (no help)
+	get-token token
+	status on-vm-add-1
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+	
+	comment "$(printf 'on-vm-get is complete; last token=' "$token")"
+}
+
+on-vm-list () {
+	status on-vm-list
+	if on-last-token; then
+		complete-with-empty
+	fi
+	
+	comment "$(printf 'on-vm-list is complete; last token=' "$token")"
+}
+
+on-vm-set () {
+	# first arg - name (complete with empty)
+	get-token token
+	status on-vm-add-1
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+
+	# second arg - key (complete with words)
+	keys=(foo bar bum)
+	get-token token
+	status on-vm-add-2
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-words "${keys[*]}" "$token"
+		return
+	fi
+
+	# third arg - value (complete with empty
+	get-token token
+	status on-vm-add-3
+	if on-last-token; then
+		comment "$(printf "current token is in progress: no more looking")"
+		complete-with-empty
+		return
+	fi
+	
+	comment "$(printf 'on-vm-set is complete; last token=' "$token")"
 }
 
 # on-foo () {
