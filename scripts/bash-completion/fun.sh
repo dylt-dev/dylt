@@ -1,4 +1,5 @@
 # Most bash completion scripts are wrong.
+#
 # They make assumptions based on current word and last word that are ofteh faulty.
 # Eg a completion script determines the last word is `list`, and therefore assumes
 # the user has entered a `list` subcommand ... but list might instead be the valid
@@ -102,31 +103,34 @@ _f () {
 	N=1
 	DONE=0
 	status '_f'
-	on-f
+	on-main
 	printf '\n\n' >> /tmp/dylt.log
 }
 
 # Main function. 
-on-f () {
-	# If we're here, the user has entered in the command name plus whitespace so that the
-	# command has been tokenized.
-	#
-	# This means the next token is either in progress, or it isn't.
-	# If it's in progress, then COMP_CWORD=N.
-	# Else, the next token has been completed. We inspect it, and move on.
+on-main () {
+	# flags + subcommands
 	local cmds=(call config get host init list misc vm watch)
 	local flags=()
+
+	# get next token + print status
 	get-token token
-	status on-f
+	status 'on-main'
+		
+	# get next token + print status
+	get-token token
+	status 'on-main'
+
+	# If on last token, complete the cmd or flag
 	if on-last-token; then
-		printf "current token is in progress (%s); set completions" >> /tmp/dylt.log
+		comment "$(printf "current token is in progress: no more looking")"
 		case $token in
-			-*) COMPREPLY=($(compgen -W "${flags[*]}" -- "$token")) ;;
-			*)  COMPREPLY=($(compgen -W "${cmds[*]}" -- "$token"))  ;;
+			-*)	complete-with-words	"${flags[*]}"	"$token";	DONE;;
+			*)	complete-with-words	"${cmds[*]}"	"$token";	DONE;;
 		esac
 		return
 	fi
-
+	
 	# Handle subcommand
 	comment "$(printf "Ready for what's next: token=%s\n" "$token")"
 	case $token in
@@ -141,8 +145,9 @@ on-f () {
 		watch)	on-watch;	status X-on-watch ;;
 		*) COMPREPLY=(); DONE=1 ;;
 	esac
-		
-	comment "$(printf 'on-f() - done; last token=%s' "$token")"
+			
+	# Done
+	comment "$(printf 'on-main() - done; last token=%s' "$token")"
 }
 
 on-call () {
@@ -151,7 +156,7 @@ on-call () {
 	
 	# get next token + print status
 	get-token token
- 	status on-call
+	status 'on-call'
 	
 	# If on last token, complete the cmd or flag
 	if on-last-token; then
@@ -162,89 +167,82 @@ on-call () {
 		esac
 		return
 	fi
-		
+
+	# Call appropriate function for latest token
 	comment "$(printf "Ready for what's next: token=%s\n" "$token")"
 	case $token in
-		--script-path)
-			on-call-scriptPath
-			status X-on-c-sp
-			# @note I think this can be handled in on-call-scriptPath
-			if ((DONE == 0)); then
-				get-token token
-				status on-call-2
-				case $token in
-					-*) COMPREPLY=($(compgen -W "${flags[*]}" -- "$token"))
-						DONE=1
-						;;
-					*)  COMPREPLY=($(compgen -W "${cmds[*]}" -- "$token"))
-						DONE=1
-						;;
-				esac
-			fi
-			;;
-		*) COMPREPLY=()
-			DONE=1;;
+		--script-path) on-call-scriptPath; status X-on-c-sp;;
+		*) COMPREPLY=() DONE=1;;
 	esac
 }
 
 # f call --script-path /path/to/daylight.sh
-#
-# 3 possiblities here
-#   - --script-path has been entered, user is working on flagval    N=4 COMP_CWORD=3 cur=[/opt/bin/day] <f call --script-path /opt/bin/day>
-#   - flagval is complete, user is ready to return back to command  N=4 COMP_CWORD=4 cur=[] <f call --script-path /opt/bin/daylight.sh >
-#   - user has definitely moved on                                  N=4 COMP_CWORD=6 cur=[] <f call --script-path /opt/bin/daylight.sh /opt/bin/daylight.sh update-and-restart >
 on-call-scriptPath () {
+	# get next token + print status
 	get-token token
-	status on-call-scriptPath
+	status 'on-call-scriptPath'
+	
 	if on-last-token; then
-		comment "$(printf "current token is in progress: COMPREPLY can be generated")"
+		comment "$(printf 'current token is in progress (%s); set completions' "$token")" >> /tmp/dylt.log
 		complete-with-files "$token"
-	else
-		comment "$(printf 'flagval is complete; token=%s' "$token")"
-	fi
+		return
+	fi	
+	# Done
+	comment "$(printf 'on-call-scriptPath() - done; last token=%s' "$token")"
 }
 
 on-config () {
+	# flags + subcommands
 	local cmds=(get set show)
 	local flags=()
-	
+
+	# get next token + print status
 	get-token token
-	status on-config
+	status 'on-config'
+
+	# If on last token, complete the cmd or flag
 	if on-last-token; then
 		comment "$(printf "current token is in progress: no more looking")"
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-words "${cmds[*]}" "$token";;
+			-*)	complete-with-words	"${flags[*]}"	"$token";	DONE;;
+			*)	complete-with-words	"${cmds[*]}"	"$token";	DONE;;
 		esac
-	else
-		case $token in
-			get)  on-config-get;  status X-on-config-get;;
-			set)  on-config-set;  status X-on-config-set;;
-			show) on-config-show; status X-on-config-show;;
-			*)    complete-with-empty;;
-		esac
+		return
 	fi
+
+	# Handle subcommand
+	comment "$(printf 'Ready for next step (token=%s)\n' "$token")"
+	case "$token" in
+		get)  on-config-get;  status X-on-config-get;;
+		set)  on-config-set;  status X-on-config-set;;
+		show) on-config-show; status X-on-config-show;;
+		*) complete-with-empty;;
+	esac	
+
+	 # Done
+	comment "$(printf 'on-config() - done; last token=%s' "$token")"
 }
 
 
 on-config-get () {
-	local cmds=()
-	local flags=()
-	local keys=(name age luckyNumber)
+	local argvals flags
 
-	# First arg: config key
+	# config key
+	argvals=(name age luckyNumber)
+	flags=()
 	get-token token
-	status on-config-get
+	status on-config-get-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-words "${keys[*]}" "$token";;
+			-*)	complete-with-words	"${flags[*]}"t"$token";;
+			*)	complete-with-words	"${argsvals[*]}"t"$token";;
 		esac
 		return
 	fi
-	
-	comment "$(printf 'config-get is complete; token=%s' "$token")"
+
+	 # Done
+	comment "$(printf 'config-get() - done; last token=%s' "$token")"
 }
 
 
@@ -592,6 +590,18 @@ on-watch-svc () {
 	comment "$(printf 'on-watch-svc is complete; last token=%s' "$token")"
 }
 
+complete -F _f f
+
+###############################################################################
+#
+# SCRAPSSSSS
+#
+# 3 possiblities here
+#   - --script-path has been entered, user is working on flagval    N=4 COMP_CWORD=3 cur=[/opt/bin/day] <f call --script-path /opt/bin/day>
+#   - flagval is complete, user is ready to return back to command  N=4 COMP_CWORD=4 cur=[] <f call --script-path /opt/bin/daylight.sh >
+#   - user has definitely moved on                                  N=4 COMP_CWORD=6 cur=[] <f call --script-path /opt/bin/daylight.sh /opt/bin/daylight.sh update-and-restart >
+
+
 # on-foo () {
 	# # We got here as a result of 3 possiblities
 	# # - Ready for subcommand
@@ -623,4 +633,9 @@ on-watch-svc () {
 		
 # }
 
-complete -F _f f
+	# If we're here, the user has entered in the command name plus whitespace so that the
+	# command has been tokenized.
+	#
+	# This means the next token is either in progress, or it isn't.
+	# If it's in progress, then COMP_CWORD=N.
+	# Else, the next token has been completed. We inspect it, and move on.
