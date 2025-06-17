@@ -262,49 +262,57 @@ on-config-set () {
 		esac
 		return
 	fi
-	
+
 	# second arg: config value
 	get-token token
 	status on-config-set-2
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		complete-with-empty
 		return
 	fi
 
-	comment "$(printf 'config-set is complete; token=%s' "$token")"
+	 # Done
+	comment "$(printf 'on-config-set() - done; last token=%s' "$token")"
 }
 
 
+# on config show
+#
+# No completion help here
 on-config-show () {
 	status on-config-show
-	# this is a terminal state. we COMPREPLY=() and return
 	complete-with-empty
 }
 
+# on get key
+#
+# No completion help here; key can be any value
+# @note contraining `key` on valid cluster keys might be good
 on-get () {
 	status on-get
 	complete-with-empty
 }
 
-
+# on host subcmd
 on-host () {
-	cmds=(init)
-	flags=()
+	local argvals flags
 	
-	# subcmd
+	# autocomplete current arg or flag
+	argvals=(init)
+	flags=()
 	get-token token
 	status on-host
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-words "${cmds[*]}" "$token";;
+			-*)	complete-with-words	"${flags[*]}"		"$token";;
+			*)	complete-with-words	"${argsvals[*]}"	"$token";;
 		esac
 		return
 	fi
 
-	# there are tokens ahead, so switch on subcommand
+	# next token should be subcommand. go to handler function, or complete with empty.
 	case "$token" in
 		init) on-host-init; status X-on-host-init;;
 		*)    complete-with-empty;;
@@ -313,116 +321,128 @@ on-host () {
 
 
 on-host-init () {
-	# first arg: uid (no help)
+	# first arg: uid (complete with empty)
 	get-token token
 	status on-host-init-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		complete-with-empty
 		return
 	fi
-	
-	# second arg: gid (no help)
+
+	# second arg: gid (complete with empty)
 	get-token token
 	status on-host-init-2
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		complete-with-empty
 		return
 	fi
 
-	comment "$(printf 'on-host-init is complete; token=%s' "$token")"
+	 # Done
+	comment "$(printf 'on-host-init() - done; last token=%s' "$token")"
 }
 
-
+# on init --etcd-domain etcd.cluster.domain
+#
+# this is a simple command, with no args and one flag, so it's handled here
+# instead of delegation to a helper function
 on-init () {
-	cmds=()
+	# Next arg (if any) should be a flag; complete with flags only
 	flags=(--etcd-domain)
-	
-	# 1 - flag
 	get-token token
 	status on-init-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-empty
+			-*) complete-with-words "{$flags[*]}";;
+			*)  complete-with-empty;;
 		esac
 		return
 	fi
-
-	# 2 - flag value (complete with empty)
+	
+	# Next arg (if any) should be a flag value; complete with empty
 	get-token token
 	status on-init-2
 	if on-last-token; then
+		comment "$(printf "latest token is free-form; no constraints, no completions")"
 		complete-with-empty
 		return
 	fi
-
-	comment "$(printf 'on-init is complete; last token=%s' "$token")"
+	
+	 # Done
+	comment "$(printf 'on-init() - done; last token=%s' "$token")"
 }
 
+# on list
+#
+# No completion help; complete with empty
 on-list () {
 	status on-list
-	# this is a terminal state. we COMPREPLY=() and return
 	complete-with-empty
 }
 
+# on misc subcommand
 on-misc () {
 	cmds=(create-two-node-cluster gen-etcd-run-script)
 	flags=()
-	
+
 	# subcmd
+	argvals=(create-two-node cluster gen-etcd-run-script)
+	flags=()
 	get-token token
 	status on-misc
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-words "${cmds[*]}" "$token";;
+			-*)	complete-with-words	"${flags[*]}"	"$token";;
+			*)	complete-with-words	"${argvals[*]}"	"$token";;
 		esac
 		return
 	fi
 
-	# go to correct subcommand handler
+	# next token should be subcommand. go to handler function, or complete with empty.
 	case "$token" in 
-		create-two-node-cluster) on-misc-createTwoNodeCluster; status X-on-misc-createTwoNodeCluster;;
-		gen-etcd-run-script) on-misc-genEtcdRunScript; status X-on-misc-genEtcdRunScript;;
-		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
+		create-two-node-cluster)	on-misc-createTwoNodeCluster;	status X-on-misc-createTwoNodeCluster;;
+		gen-etcd-run-script)		on-misc-genEtcdRunScript;		status X-on-genEtcdRunScript ;;
+		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")"; complete-with-empty 
 	esac
 
 	comment "$(printf 'on-misc is complete; last token=%s' "$token")"
 }
 
 
+# dylt misc createTwoNodeCluster
+#
+# No args, no flags - complete with empty
 on-misc-createTwoNodeCluster () {
 	status on-misc-createTwoNodeCluster
 	complete-with-empty
 }
 
+# dylt misc genEtcdRunScript
+#
+# No args, no flags - complete with empty
 on-misc-genEtcdRunScript () {
 	status on-misc-genEtcdRunScript
 	complete-with-empty
 }
 
-
 on-vm () {
-	cmds=(add all del get list set)
-	flags=()
-
-	# subcommand
+	# First arg - subcommand, no flags
+	argvals=(add all del get list set)
 	get-token token
 	status on-vm
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-words "${cmds[*]}" "$token";;
+			*)	complete-with-words	"${argvals[*]}"	"$token";;
 		esac
 		return
 	fi
 
-	# subcommand
+	# Handle subcommand
+	comment "$(printf 'Delegating to subcommand handler (token=%s)\n' "$token")"
 	case "$token" in
 		add)	on-vm-add;	status X-on-vm-add;;
 		all)	on-vm-all;	status X-on-vm-all;;
@@ -430,6 +450,11 @@ on-vm () {
 		get)	on-vm-get;	status X-on-vm-get;;
 		list)	on-vm-list;	status X-on-vm-list;;
 		set)	on-vm-set;	status X-on-vm-set;;
+		*) complete-with-empty;;
+	esac
+
+	# subcommand
+	case "$token" in
 		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
 	esac
 	
