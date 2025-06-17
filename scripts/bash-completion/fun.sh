@@ -219,52 +219,49 @@ on-config () {
 	comment "$(printf 'on-config() - done; last token=%s' "$token")"
 }
 
+
 # dylt config get key
 on-config-get () {
-	local argvals flags
+	local argvals
 
-	# config key
+	# key - complete with argvals
 	argvals=(name age luckyNumber)
-	flags=()
 	get-token token
 	status on-config-get-1
 	if on-last-token; then
-		comment "$(printf "we have arrived at the latest token; time to generate completions")"
+		comment 'generate completions - argument values only'
 		case $token in
-			-*)	complete-with-words	"${flags[*]}"t"$token";;
-			*)	complete-with-words	"${argsvals[*]}"t"$token";;
+			*) complete-with-words "{$argvals[*]}";;
 		esac
 		return
 	fi
-
-	 # Done
+	
+	# Done
 	comment "$(printf 'config-get() - done; last token=%s' "$token")"
 }
 
 
-# dylt config set
+# dylt config set key val
 on-config-set () {
-	local cmds=()
-	local flags=()
-	local keys=(name age luckyNumber)
+	local argvals
 
-	# first arg: config key
+	# key - complete with argvals
+	argvals=(name age luckyNumber)
 	get-token token
 	status on-config-set-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'generate completions - argument values only'
 		case $token in
-			-*) complete-with-words "${flags[*]}" "$token";;
-			*)  complete-with-words "${keys[*]}" "$token";;
+			*) complete-with-words "{$argvals[*]}";;
 		esac
 		return
 	fi
-
-	# second arg: config value
+	
+	# val (complete with empty)
 	get-token token
 	status on-config-set-2
 	if on-last-token; then
-		comment "$(printf "we have arrived at the latest token; time to generate completions")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
@@ -282,6 +279,7 @@ on-config-show () {
 	complete-with-empty
 }
 
+
 # on get key
 #
 # No completion help here; key can be any value
@@ -290,6 +288,7 @@ on-get () {
 	status on-get
 	complete-with-empty
 }
+
 
 # on host subcmd
 on-host () {
@@ -317,6 +316,7 @@ on-host () {
 }
 
 
+# on host init uid gid
 on-host-init () {
 	# first arg: uid (complete with empty)
 	get-token token
@@ -339,6 +339,7 @@ on-host-init () {
 	 # Done
 	comment "$(printf 'on-host-init() - done; last token=%s' "$token")"
 }
+
 
 # on init --etcd-domain etcd.cluster.domain
 #
@@ -371,6 +372,7 @@ on-init () {
 	comment "$(printf 'on-init() - done; last token=%s' "$token")"
 }
 
+
 # on list
 #
 # No completion help; complete with empty
@@ -378,6 +380,7 @@ on-list () {
 	status on-list
 	complete-with-empty
 }
+
 
 # on misc subcommand
 on-misc () {
@@ -417,6 +420,7 @@ on-misc-createTwoNodeCluster () {
 	complete-with-empty
 }
 
+
 # dylt misc genEtcdRunScript
 #
 # No args, no flags - complete with empty
@@ -424,6 +428,7 @@ on-misc-genEtcdRunScript () {
 	status on-misc-genEtcdRunScript
 	complete-with-empty
 }
+
 
 # dylt vm subcommand
 #
@@ -509,6 +514,7 @@ on-vm-del () {
 	comment "$(printf 'on-vm-del() - done; last token=%s' "$token")"	
 }
 
+
 # dylt vm get name
 #
 # @note - name could be autocompleted w existing vm names
@@ -572,6 +578,7 @@ on-vm-set () {
 	comment "$(printf 'on-vm-set() - done; last token=%s' "$token")"	
 }
 
+
 # dylt watch subcommand
 on-watch () {
 	#  - complete with subcommands only
@@ -621,6 +628,7 @@ on-watch-script () {
 	comment "$(printf 'on-watch-script() - done; last token=%s' "$token")"
 }
 
+
 # dylt watch svc name
 #
 # @note - name could be autocompleted w existing vm names
@@ -638,8 +646,11 @@ on-watch-svc () {
 	comment "$(printf 'on-watch-svc() - done; last token=%s' "$token")"
 }
 
+
 # Register completion handler with function
 complete -F _f f
+
+
 
 ###############################################################################
 #
