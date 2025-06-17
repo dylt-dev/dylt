@@ -35,6 +35,11 @@
 colorComment=$'\033[96m'
 reset=$'\033[0m' 
 
+# Style text + print ANSI reset when done
+comment () {
+	printf '%s%s%s\n' "$colorComment" "$1" "$reset" >> /tmp/dylt.log
+}
+
 # Set COMPREPLY to (), and set DONE
 complete-with-empty () {
 	COMPREPLY=()
@@ -85,11 +90,6 @@ peek-token () {
 	local -n _ref=$1	
 	_ref=${COMP_WORDS[N]}
 	printf 'peek-token(): token=%s\n' "$_ref" >> /tmp/dylt.log
-}
-
-# Style text + print ANSI reset when done
-comment () {
-	printf '%s%s%s\n' "$colorComment" "$1" "$reset" >> /tmp/dylt.log
 }
 
 # Various bash completion values, global variables, etc. Useful for development/debugging.
@@ -150,62 +150,58 @@ on-main () {
 	comment "$(printf 'on-main() - done; last token=%s' "$token")"
 }
 
+# on call [--flag flagval]
+#
+# @note valid functions + args for daylight.sh could be used for autocompletion
 on-call () {
-	local cmds=(foo bar bum)     # fake subcommands for testing
-	local flags=(--script-path)
+	local flags
 	
-	# get next token + print status
+	#  - complete with flags only
+	flags=(--scriptPath)
 	get-token token
-	status 'on-call'
-	
-	# If on last token, complete the cmd or flag
+	status on-call
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*)	complete-with-words	"${flags[*]}"	"$token";	DONE;;
-			*)	complete-with-words	"${cmds[*]}"	"$token";	DONE;;
+			-*) complete-with-words "{$flags[*]}";;
+			*)  complete-with-empty;;
 		esac
 		return
 	fi
-
+	
 	# Call appropriate function for latest token
 	comment "$(printf "Ready for what's next: token=%s\n" "$token")"
 	case $token in
 		--script-path) on-call-scriptPath; status X-on-c-sp;;
-		*) COMPREPLY=() DONE=1;;
+		*) complete-with-empty
 	esac
 }
 
 # f call --script-path /path/to/daylight.sh
 on-call-scriptPath () {
-	# get next token + print status
+	# --script-path value - complete with files
 	get-token token
-	status 'on-call-scriptPath'
-	
+	status on-call-scriptPath-1
 	if on-last-token; then
-		comment "$(printf 'current token is in progress (%s); set completions' "$token")" >> /tmp/dylt.log
-		complete-with-files "$token"
+		comment "$(printf "latest token; generate completions from files")"
+		complete-with-files
 		return
-	fi	
+	fi
+	
 	# Done
 	comment "$(printf 'on-call-scriptPath() - done; last token=%s' "$token")"
 }
 
+# dylt config subcommand
 on-config () {
-	# flags + subcommands
-	local cmds=(get set show)
-	local flags=()
-
-	# get next token + print status
+	# complete subcommand
+	argvals=(get set show)
 	get-token token
-	status 'on-config'
-
-	# If on last token, complete the cmd or flag
+	status on-config
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'generate completions for subcommand'
 		case $token in
-			-*)	complete-with-words	"${flags[*]}"	"$token";	DONE;;
-			*)	complete-with-words	"${cmds[*]}"	"$token";	DONE;;
+			*) complete-with-words "{$argvals[*]}";;
 		esac
 		return
 	fi
@@ -222,7 +218,6 @@ on-config () {
 	 # Done
 	comment "$(printf 'on-config() - done; last token=%s' "$token")"
 }
-
 
 # dylt config get key
 on-config-get () {
@@ -487,92 +482,107 @@ on-vm-add () {
 	comment "$(printf 'on-vm-add() - done; last token=%s' "$token")"
 }
 
+
+# dylt on vm all
+#
+# No args, no flags - complete with empty
 on-vm-all () {
 	status on-vm-all
-
-	if on-last-token; then
-		complete-with-empty
-	fi
-	
-	comment "$(printf 'on-vm-all is complete; last token=%s' "$token")"
+	complete-with-empty
 }
 
+
+# dylt vm del name
+#
+# @note - name could be autocompleted w existing vm names
 on-vm-del () {
-	# first arg: name (no help)
+	# name (complete with empty)
 	get-token token
-	status on-vm-add-1
+	status on-vm-del-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
-	
-	comment "$(printf 'on-vm-del is complete; last token=%s' "$token")"
+
+	 # Done
+	comment "$(printf 'on-vm-del() - done; last token=%s' "$token")"	
 }
 
+# dylt vm get name
+#
+# @note - name could be autocompleted w existing vm names
 on-vm-get () {
-	# first arg: name (no help)
+	# name (complete with empty)
 	get-token token
-	status on-vm-add-1
+	status on-vm-get-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
-	
-	comment "$(printf 'on-vm-get is complete; last token=%s' "$token")"
+
+	 # Done
+	comment "$(printf 'on-vm-get() - done; last token=%s' "$token")"	
 }
 
+
+# dylt vm list
+#
+# No args, no flags - complete with empty
 on-vm-list () {
 	status on-vm-list
-	if on-last-token; then
-		complete-with-empty
-	fi
-	
-	comment "$(printf 'on-vm-list is complete; last token=%s' "$token")"
+	complete-with-empty
 }
 
+
+# dylt set name key val
+#
+# @note - name could be autocompleted w existing vm names
+# @note - name could be autocompleted w fixed set of key names
 on-vm-set () {
-	# first arg - name (complete with empty)
+	# name (complete with empty)
 	get-token token
-	status on-vm-add-1
+	status on-vm-set-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
 
-	# second arg - key (complete with words)
-	keys=(foo bar bum)
+	# key (complete with empty)
 	get-token token
-	status on-vm-add-2
+	status on-vm-set-2
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
-		complete-with-words "${keys[*]}" "$token"
-		return
-	fi
-
-	# third arg - value (complete with empty
-	get-token token
-	status on-vm-add-3
-	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
-	
-	comment "$(printf 'on-vm-set is complete; last token=%s' "$token")"
+
+	# val (complete with empty)
+	get-token token
+	status on-vm-set-3
+	if on-last-token; then
+		comment 'handle latest token; complete with empty'
+		complete-with-empty
+		return
+	fi
+
+	 # Done
+	comment "$(printf 'on-vm-set() - done; last token=%s' "$token")"	
 }
 
+# dylt watch subcommand
 on-watch () {
-	cmds=(script svc)
-
-	# subcommand
+	#  - complete with subcommands only
+	argvals=(script svc)
 	get-token token
-	status on-vm
+	status on-watch-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
-		complete-with-words "${cmds[*]}" "$token"
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
+		case $token in
+			*) complete-with-words "{$argvals[*]}";;
+		esac
 		return
 	fi
 
@@ -582,43 +592,53 @@ on-watch () {
 		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
 	esac
 	
-	comment "$(printf 'on-watch is complete; last token=%s' "$token")"
+	 # Done
+	comment "$(printf 'on-watch() - done; last token=%s' "$token")"
 }
 
 
+# dylt watch script key targetPath
 on-watch-script () {
-	# arg1 - script key (complete with empty)
+	# key (complete with empty)
 	get-token token
-	status on-watch-scr-1
+	status on-watch-script-1
 	if on-last-token; then
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
 
-	# arg2 - target path (complete with empty)
+	# targetPath (complete with empty)
 	get-token token
-	status on-watch-scr-2
+	status on-watch-script-2
 	if on-last-token; then
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
 
-	comment "$(printf 'on-watch-script is complete; last token=%s' "$token")"
+	 # Done
+	comment "$(printf 'on-watch-script() - done; last token=%s' "$token")"
 }
 
+# dylt watch svc name
+#
+# @note - name could be autocompleted w existing vm names
 on-watch-svc () {
 	# name (complete with empty)
 	get-token token
-	status on-watch-svc
+	status on-watch-svc-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
-	
-	comment "$(printf 'on-watch-svc is complete; last token=%s' "$token")"
+
+	 # Done
+	comment "$(printf 'on-watch-svc() - done; last token=%s' "$token")"
 }
 
+# Register completion handler with function
 complete -F _f f
 
 ###############################################################################
