@@ -224,6 +224,7 @@ on-config () {
 }
 
 
+# dylt config get key
 on-config-get () {
 	local argvals flags
 
@@ -246,6 +247,7 @@ on-config-get () {
 }
 
 
+# dylt config set
 on-config-set () {
 	local cmds=()
 	local flags=()
@@ -272,7 +274,7 @@ on-config-set () {
 		return
 	fi
 
-	 # Done
+	# Done
 	comment "$(printf 'on-config-set() - done; last token=%s' "$token")"
 }
 
@@ -428,6 +430,8 @@ on-misc-genEtcdRunScript () {
 	complete-with-empty
 }
 
+# dylt vm subcommand
+#
 on-vm () {
 	# First arg - subcommand, no flags
 	argvals=(add all del get list set)
@@ -441,6 +445,7 @@ on-vm () {
 		return
 	fi
 
+
 	# Handle subcommand
 	comment "$(printf 'Delegating to subcommand handler (token=%s)\n' "$token")"
 	case "$token" in
@@ -450,37 +455,36 @@ on-vm () {
 		get)	on-vm-get;	status X-on-vm-get;;
 		list)	on-vm-list;	status X-on-vm-list;;
 		set)	on-vm-set;	status X-on-vm-set;;
-		*) complete-with-empty;;
+		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")"; complete-with-empty ;;
 	esac
 
-	# subcommand
-	case "$token" in
-		*) comment "$(printf 'unrecognized subcommand: %s\n' "$token")";;
-	esac
-	
-	comment "$(printf 'on-misc is complete; last token=%s' "$token")"
+	 # Done
+	comment "$(printf 'on-vm() - done; last token=%s' "$token")"	
 }
 
+
+# dylt vm add name fqdn
 on-vm-add () {
-	# first arg: name (no help)
+	# name (complete with empty)
 	get-token token
 	status on-vm-add-1
 	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
-		complete-with-empty
-		return
-	fi
-	
-	# second arg: fqdn (no help)
-	get-token token
-	status on-vm-add-2
-	if on-last-token; then
-		comment "$(printf "current token is in progress: no more looking")"
+		comment 'handle latest token; complete with empty'
 		complete-with-empty
 		return
 	fi
 
-	comment "$(printf 'on-vm-add is complete; last token=%s' "$token")"
+	# fqdn (complete with empty)
+	get-token token
+	status on-vm-add-2
+	if on-last-token; then
+		comment 'handle latest token; complete with empty'
+		complete-with-empty
+		return
+	fi
+
+	 # Done
+	comment "$(printf 'on-vm-add() - done; last token=%s' "$token")"
 }
 
 on-vm-all () {
