@@ -113,15 +113,8 @@ on-main () {
 	local cmds=(call config get host init list misc vm watch)
 	local flags=()
 
-	# get next token + print status
 	get-token token
 	status 'on-main'
-		
-	# get next token + print status
-	get-token token
-	status 'on-main'
-
-	# If on last token, complete the cmd or flag
 	if on-last-token; then
 		comment "$(printf "current token is in progress: no more looking")"
 		case $token in
