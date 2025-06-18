@@ -118,8 +118,8 @@ on-main () {
 	if on-last-token; then
 		comment "$(printf "current token is in progress: no more looking")"
 		case $token in
-			-*)	complete-with-words	"${flags[*]}"	"$token";	DONE;;
-			*)	complete-with-words	"${cmds[*]}"	"$token";	DONE;;
+			-*)	complete-with-words	"${flags[*]}"	"$token";;
+			*)	complete-with-words	"${cmds[*]}"	"$token";;
 		esac
 		return
 	fi
@@ -136,7 +136,7 @@ on-main () {
 		misc)	on-misc;	status X-on-misc ;;
 		vm)		on-vm;		status X-on-vm ;;
 		watch)	on-watch;	status X-on-watch ;;
-		*) COMPREPLY=(); DONE=1 ;;
+		*) complete-with-empty
 	esac
 			
 	# Done
@@ -286,21 +286,17 @@ on-get () {
 # on host subcmd
 on-host () {
 	local argvals flags
-	
-	# autocomplete current arg or flag
+
+	# complete subcommand
 	argvals=(init)
-	flags=()
 	get-token token
-	status on-host
+	status 
 	if on-last-token; then
-		comment "$(printf "we have arrived at the latest token; time to generate completions")"
-		case $token in
-			-*)	complete-with-words	"${flags[*]}"		"$token";;
-			*)	complete-with-words	"${argsvals[*]}"	"$token";;
-		esac
+		comment 'generate completions for subcommand'
+		complete-with-words "${argvals[*]}" "$token"
 		return
 	fi
-
+	
 	# next token should be subcommand. go to handler function, or complete with empty.
 	case "$token" in
 		init) on-host-init; status X-on-host-init;;

@@ -95,7 +95,7 @@ on-main () {
 		misc)	on-misc;	status X-on-misc ;;
 		vm)		on-vm;		status X-on-vm ;;
 		watch)	on-watch;	status X-on-watch ;;
-		*) COMPREPLY=(); DONE=1 ;;
+		*) complete-with-empty;;
 	esac
 			
 	# Done
@@ -232,6 +232,64 @@ on-config-show () {
 	status on-config-show
 	complete-with-empty
 }
+
+
+# on get key
+#
+# freeform arg - complete with empty
+# @note contraining `key` on valid cluster keys might be good
+on-get () {
+	status on-get
+	complete-with-empty
+}
+
+
+# on host subcmd
+on-host () {
+	local argvals flags
+
+	# complete subcommand
+	argvals=(init)
+	get-token token
+	status 
+	if on-last-token; then
+		comment 'generate completions for subcommand'
+		complete-with-words "${argvals[*]}" "$token"
+		return
+	fi
+	
+	# next token should be subcommand. go to handler function, or complete with empty.
+	case "$token" in
+		init) on-host-init; status X-on-host-init;;
+		*)    complete-with-empty;;
+	esac
+}
+
+
+# on host init uid gid
+on-host-init () {
+	# first arg: uid (complete with empty)
+	get-token token
+	status on-host-init-1
+	if on-last-token; then
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
+		complete-with-empty
+		return
+	fi
+
+	# second arg: gid (complete with empty)
+	get-token token
+	status on-host-init-2
+	if on-last-token; then
+		comment "$(printf "we have arrived at the latest token; time to generate completions")"
+		complete-with-empty
+		return
+	fi
+
+	 # Done
+	comment "$(printf 'on-host-init() - done; last token=%s' "$token")"
+}
+
 
 
 
