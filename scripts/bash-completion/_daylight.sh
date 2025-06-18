@@ -556,3 +556,79 @@ on-vm-set () {
     # Done
     comment "$(printf 'on-vm-set() - done; last token=%s' "$token")"
 }
+
+
+# dylt watch subcommand
+#
+# complete with subcommand
+on-watch () {
+    argvals=(script svc)
+    get-token token
+    status on-watch
+    if on-last-token; then
+        comment 'generate completions for subcommand'
+        case "$token" in
+            *) complete-with-words "${argvals[*]}" "$token";;
+        esac
+        return
+    fi
+
+    # Handle subcommand
+    comment "$(printf 'Calling subcommand handler (token=%s)\n' "$token")"
+    case "$token" in
+		script)	on-watch-script;	status X-on-watch-script;;
+		svc)	on-watch-svc;		status X-on-watch-svc;;
+        *) comment "$(printf 'unrecognized subcommand: %s\n' "$token")"; complete-with-empty ;;
+    esac
+
+    # Done
+    comment "$(printf 'on-watch() - done; last token=%s' "$token")"
+}
+
+
+# dylt watch script name targetPath
+#
+# name: freeform; complete with empty
+# targetPath: freeform complete with empty
+# @note name could be dynamically populated with a list of available scripts
+on-watch-script () {
+    # name - freeform; complete with empty
+    get-token token
+    status on-watch-script-1
+    if on-last-token; then
+        comment 'name - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+
+    # targetPath - freeform; complete with empty
+    get-token token
+    status on-watch-script-2
+    if on-last-token; then
+        comment 'targetPath - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+
+    # Done
+    comment "$(printf 'on-watch-script() - done; last token=%s' "$token")"
+}
+
+
+# dylt watch svc name
+#
+# name: freeform; complete with empty
+# @note name could be dynamically populated with a list of available services
+on-watch-svc () {
+    # name - freeform; complete with empty
+    get-token token
+    status on-watch-svc-1
+    if on-last-token; then
+        comment 'name - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+
+    # Done
+    comment "$(printf 'on-watch-svc() - done; last token=%s' "$token")"
+}

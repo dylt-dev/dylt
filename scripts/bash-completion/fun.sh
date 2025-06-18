@@ -582,7 +582,7 @@ on-watch () {
 	if on-last-token; then
 		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			*) complete-with-words "${argvals[*]}";;
+			*) complete-with-words "${argvals[*]}" "$token";;
 		esac
 		return
 	fi
