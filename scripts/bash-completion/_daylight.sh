@@ -375,7 +375,7 @@ on-misc () {
 # dylt misc create-two-node-cluster
 #
 # No args, no flags - complete with empty
-on-createTwoNodeCluster () {
+on-misc-createTwoNodeCluster () {
     status on-createTwoNodeCluster
     complete-with-empty
 
@@ -387,7 +387,7 @@ on-createTwoNodeCluster () {
 # dylt misc gen-etcd-run-script
 #
 # No args, no flags - complete with empty
-on-createTwoNodeCluster () {
+on-misc-createTwoNodeCluster () {
     status on-createTwoNodeCluster
     complete-with-empty
 
