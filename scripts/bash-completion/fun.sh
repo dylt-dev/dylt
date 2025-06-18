@@ -381,11 +381,8 @@ on-list () {
 
 # on misc subcommand
 on-misc () {
-	cmds=(create-two-node-cluster gen-etcd-run-script)
-	flags=()
-
 	# subcmd
-	argvals=(create-two-node cluster gen-etcd-run-script)
+	argvals=(create-two-node-cluster gen-etcd-run-script)
 	flags=()
 	get-token token
 	status on-misc

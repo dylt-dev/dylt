@@ -144,32 +144,32 @@ on-call-scriptPath () {
 	comment "$(printf 'on-call-scriptPath() - done; last token=%s' "$token")"
 }
 
-
 # dylt config subcommand
+#
+# complete with subcommand
 on-config () {
-	# complete subcommand
-	argvals=(get set show)
-	get-token token
-	status on-config
-	if on-last-token; then
-		comment 'generate completions for subcommand'
-		case "$token" in
-			*) complete-with-words "${argvals[*]}" "$token";;
-		esac
-		return
-	fi
+    argvals=(get set show)
+    get-token token
+    status on-config
+    if on-last-token; then
+        comment 'generate completions for subcommand'
+        case "$token" in
+            *) complete-with-words "${argvals[*]}" "$token";;
+        esac
+        return
+    fi
 
-	# Handle subcommand
-	comment "$(printf 'Ready for next step (token=%s)\n' "$token")"
-	case "$token" in
-		get)  on-config-get;  status X-on-config-get;;
+    # Handle subcommand
+    comment "$(printf 'Calling subcommand handler (token=%s)\n' "$token")"
+    case "$token" in
+        get)  on-config-get;  status X-on-config-get;;
 		set)  on-config-set;  status X-on-config-set;;
 		show) on-config-show; status X-on-config-show;;
-		*) complete-with-empty;;
-	esac	
+        *) complete-with-empty;;
+    esac
 
-	 # Done
-	comment "$(printf 'on-config() - done; last token=%s' "$token")"
+    # Done
+    comment "$(printf 'on-config() - done; last token=%s' "$token")"
 }
 
 
@@ -332,15 +332,67 @@ on-init-etcdDomain () {
 }
 
 
+# dylt list
+#
+# No args, no flags - complete with empty
+on-list () {
+    status on-list
+    complete-with-empty
+
+    # Done
+    comment "on-list() - done"
+}
 
 
+# dylt misc subcommand
+#
+# complete with subcommand
+on-misc () {
+    argvals=(create-two-node-cluster gen-etcd-run-script)
+    get-token token
+    status on-misc
+    if on-last-token; then
+        comment 'generate completions for subcommand'
+        case "$token" in
+            *) complete-with-words "${argvals[*]}" "$token";;
+        esac
+        return
+    fi
+
+    # Handle subcommand
+    comment "$(printf 'Calling subcommand handler (token=%s)\n' "$token")"
+    case "$token" in
+        create-two-node-cluster)    on-misc-createTwoNodeCluster;   status X-on-misc-createTwoNodeCluster;;
+        gen-etcd-run-script)        on-misc-genEtcdRunScript;       status X-on-misc-genEtcdRunScript;;
+        *) complete-with-empty;;
+    esac
+
+    # Done
+    comment "$(printf 'on-misc() - done; last token=%s' "$token")"
+}
 
 
+# dylt misc create-two-node-cluster
+#
+# No args, no flags - complete with empty
+on-createTwoNodeCluster () {
+    status on-createTwoNodeCluster
+    complete-with-empty
+
+    # Done
+    comment "on-createTwoNodeCluster() - done"
+}
 
 
+# dylt misc gen-etcd-run-script
+#
+# No args, no flags - complete with empty
+on-createTwoNodeCluster () {
+    status on-createTwoNodeCluster
+    complete-with-empty
 
-
-# Register completion handler with function
-complete -F _dylt dylt
+    # Done
+    comment "on-createTwoNodeCluster() - done"
+}
 
 
