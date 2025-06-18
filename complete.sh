@@ -9,15 +9,19 @@
 # that are not useful, and only exist so that compgen and complete's options match. You could
 # say that they exist for - ahem - completeness.
 #
-# We definitely want to be able to use bash functions or caommands as completion word sources.
+# We definitely want to be able to use bash functions or commands as completion word sources.
 # If we can't use compgen -F, or anything that already exists, we'll need to build the support
 # ourselves. We'll build around compgen -W. compgen -W is great at taking an array of words, and
 # the current partial word, and returning all matches.
 #
 # That gets us most of the way there. Unfortunately compgen -W returns a list of words one per line,
-# and complete & COMPREPLY prefer an array. So we need to convert compgen's response into an array using
-# mapfile. This is a bit confusing, since the initial source of words for compgen is typically a one-per-line
-# list of words that also needs to be converted to mapfile. So the basic flow looks like this:
+# and `complete` & COMPREPLY prefer an array. So we need to convert compgen's response into an array using
+# `mapfile`. This is a bit confusing, since the initial source of words for compgen is typically a one-per-line
+# list of words that also needs to be converted to mapfile. So mapfile is needed on the input side of compgen,
+# and again on the output side so the list for words output by compgen can be def into `complete` or COMPREPLY
+# as an array,
+#
+# The basic flow looks like this:
 #   - Call function or command to produce list of words
 #   - Convert wordlist to an array with mapfile
 #   - Call compgen to filter word array on COMP_CWORD
