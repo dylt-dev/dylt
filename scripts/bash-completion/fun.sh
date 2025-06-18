@@ -150,13 +150,13 @@ on-call () {
 	local flags
 	
 	#  - complete with flags only
-	flags=(--scriptPath)
+	flags=(--script-path)
 	get-token token
 	status on-call
 	if on-last-token; then
 		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "{$flags[*]}";;
+			-*) complete-with-words "${flags[*]}";;
 			*)  complete-with-empty;;
 		esac
 		return
@@ -194,7 +194,7 @@ on-config () {
 	if on-last-token; then
 		comment 'generate completions for subcommand'
 		case $token in
-			*) complete-with-words "{$argvals[*]}";;
+			*) complete-with-words "${argvals[*]}" "$token";;
 		esac
 		return
 	fi
@@ -224,7 +224,7 @@ on-config-get () {
 	if on-last-token; then
 		comment 'generate completions - argument values only'
 		case $token in
-			*) complete-with-words "{$argvals[*]}";;
+			*) complete-with-words "${argvals[*]}";;
 		esac
 		return
 	fi
@@ -244,8 +244,8 @@ on-config-set () {
 	status on-config-set-1
 	if on-last-token; then
 		comment 'generate completions - argument values only'
-		case $token in
-			*) complete-with-words "{$argvals[*]}";;
+		case "$token" in
+			*) complete-with-words "${argvals[*]}" "$token";;
 		esac
 		return
 	fi
@@ -346,7 +346,7 @@ on-init () {
 	if on-last-token; then
 		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "{$flags[*]}";;
+			-*) complete-with-words "${flags[*]}";;
 			*)  complete-with-empty;;
 		esac
 		return
@@ -581,7 +581,7 @@ on-watch () {
 	if on-last-token; then
 		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			*) complete-with-words "{$argvals[*]}";;
+			*) complete-with-words "${argvals[*]}";;
 		esac
 		return
 	fi
