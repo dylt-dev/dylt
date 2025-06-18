@@ -396,3 +396,163 @@ on-misc-createTwoNodeCluster () {
 }
 
 
+# dylt vm subcommand
+#
+# complete with subcommand
+on-vm () {
+    argvals=(add all del get list set)
+    get-token token
+    status on-vm
+    if on-last-token; then
+        comment 'generate completions for subcommand'
+        case "$token" in
+            *) complete-with-words "${argvals[*]}" "$token";;
+        esac
+        return
+    fi
+
+    # Handle subcommand
+    comment "$(printf 'Calling subcommand handler (token=%s)\n' "$token")"
+    case "$token" in
+		add)	on-vm-add;	status X-on-vm-add;;
+		all)	on-vm-all;	status X-on-vm-all;;
+		del)	on-vm-del;	status X-on-vm-del;;
+		get)	on-vm-get;	status X-on-vm-get;;
+		list)	on-vm-list;	status X-on-vm-list;;
+		set)	on-vm-set;	status X-on-vm-set;;
+        *) comment "$(printf 'unrecognized subcommand: %s\n' "$token")"; complete-with-empty ;;
+    esac
+
+    # Done
+    comment "$(printf 'on-vm() - done; last token=%s' "$token")"
+}   
+
+
+# dylt vm add name fqdn
+#
+# name = complete with empty
+# fqdn = complete with empty
+on-vm-add () {
+    # name - freeform; complete with empty
+    get-token token
+    status on-vm-add-1
+    if on-last-token; then
+        comment 'name: freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+    
+    # fqdn - freeform; complete with empty
+    get-token token
+    status on-vm-add-2
+    if on-last-token; then
+        comment 'fqdn: freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+
+    # Done
+    comment "$(printf 'on-vm-add() - done; last token=%s' "$token")"
+}
+
+
+# dylt vm all
+#
+# No args, no flags - complete with empty
+on-vm-all () {
+    status on-vm-all
+    complete-with-empty
+
+    # Done
+    comment "on-vm-all() - done"
+}
+
+
+# dylt vm del name
+#
+# name: freeform; complete with empty
+# @note name could be populated w list of vms
+on-vm-del () {
+    # name - freeform; complete with empty
+    get-token token
+    status on-vm-del-1
+    if on-last-token; then
+        comment 'name: freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+    
+    # Done
+    comment "$(printf 'on-vm-del() - done; last token=%s' "$token")"
+}
+
+
+# dylt vm get name
+#
+# name: freeform, complete with empty
+# @note name could be populated w a list of vms
+on-vm-get () {
+    # name - freeform; complete with empty
+    get-token token
+    status on-vm-get-1
+    if on-last-token; then
+        comment 'name - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+
+    # Done
+    comment "$(printf 'on-vm-get() - done; last token=%s' "$token")"
+}
+
+
+# dylt vm list
+#
+# No args, no flags - complete with empty
+on-vm-list () {
+    status on-vm-list
+    complete-with-empty
+
+    # Done
+    comment "on-vm-list() - done"
+}
+
+
+# dylt vm set name key val
+#
+# name: freeform; complete with empty
+# key:  freeform; complete with empty
+# val:  freeform; complete with empty
+# @note name could be populated w a dynamic list of vms
+# @note val could be populated w a static list of valid keys
+on-vm-set () {
+    # name - freeform; complete with empty
+    get-token token
+    status on-vm-set-1
+    if on-last-token; then
+        comment 'name - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+    
+    # key - freeform; complete with empty
+    get-token token
+    status on-vm-set-2
+    if on-last-token; then
+        comment 'key - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+    
+    # val - freeform; complete with empty
+    get-token token
+    status on-vm-set-3
+    if on-last-token; then
+        comment 'val - freeform; complete with empty'
+        complete-with-empty
+        return
+    fi
+    
+    # Done
+    comment "$(printf 'on-vm-set() - done; last token=%s' "$token")"
+}
