@@ -121,26 +121,25 @@ on-call () {
 		return
 	fi
 	
-	# Call appropriate function for latest token
-	comment "$(printf "Ready for what's next: token=%s\n" "$token")"
-	case $token in
-		--script-path) on-call-scriptPath; status X-on-c-sp;;
-		*) complete-with-empty
+	# next token should be a flag. go to handler function, or complete with empty.
+	case "$token" in
+		--script-path)	on-call-scriptPath;	status X-on-c-sp;;
+		*)	complete-with-empty;;
 	esac
 }
 
 
-# dylt call --script-path /path/to/daylight.sh
+# dylt call --script-path /path/to/dylight.sh
+#
+# complete with files
 on-call-scriptPath () {
-	# --script-path value - complete with files
 	get-token token
-	status on-call-scriptPath-1
+	status on-call-scriptPath
 	if on-last-token; then
-		comment "$(printf "latest token; generate completions from files")"
+		comment "$(printf "on latest token; complete with files")"
 		complete-with-files "$token"
-		return
 	fi
-	
+
 	# Done
 	comment "$(printf 'on-call-scriptPath() - done; last token=%s' "$token")"
 }
@@ -266,7 +265,7 @@ on-host () {
 }
 
 
-# on host init uid gid
+# dylt host init uid gid
 on-host-init () {
 	# first arg: uid (complete with empty)
 	get-token token
@@ -291,7 +290,46 @@ on-host-init () {
 }
 
 
+# dylt init --flag
+on-init () {
+    #  - complete with flags only
+    flags=(--etcd-domain)
+    get-token token
+    status on-init-1
+    if on-last-token; then
+        comment "$(printf "we have arrived at the latest token; time to generate completions")"
+        case $token in
+            -*) complete-with-words "${flags[*]}" "$token";;
+            *)  complete-with-empty;;
+        esac
+        return
+    fi
+    
+    # next token should be a flag. go to handler function, or complete with empty.
+    case "$token" in
+        --etcd-domain)	on-init-etcdDomain;	status X-on-init-etcdDomain;;
+        *)	complete-with-empty;;
+    esac
 
+     # Done
+    comment "$(printf 'on-init() - done; last token=%s' "$token")"
+}
+
+
+# dylt init --etcd-domain etcd.cluster.domain
+#
+# Freeform - complete with empty
+on-init-etcdDomain () {
+    get-token token
+    status on-init-etcdDomain
+    if on-last-token; then
+        comment "$(printf "on latest token; complete with empty")"
+        complete-with-empty
+    fi
+
+    # Done
+    comment "$(printf 'on-init-etcdDomain() - done; last token=%s' "$token")"
+}
 
 
 

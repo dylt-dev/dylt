@@ -156,34 +156,35 @@ on-call () {
 	if on-last-token; then
 		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}";;
+			-*) complete-with-words "${flags[*]}" "$token";;
 			*)  complete-with-empty;;
 		esac
 		return
 	fi
-	
-	# Call appropriate function for latest token
-	comment "$(printf "Ready for what's next: token=%s\n" "$token")"
-	case $token in
-		--script-path) on-call-scriptPath; status X-on-c-sp;;
-		*) complete-with-empty
+
+	# next token should be a flag. go to handler function, or complete with empty.
+	case "$token" in
+		--script-path)	on-call-scriptPath;	status X-on-c-sp;;
+		*)	complete-with-empty;;
 	esac
 }
 
-# f call --script-path /path/to/daylight.sh
+
+# dylt call --script-path /path/to/dylight.sh
+#
+# complete with files
 on-call-scriptPath () {
-	# --script-path value - complete with files
 	get-token token
-	status on-call-scriptPath-1
+	status on-call-scriptPath
 	if on-last-token; then
-		comment "$(printf "latest token; generate completions from files")"
-		complete-with-files
-		return
+		comment "$(printf "on latest token; complete with files")"
+		complete-with-files "$token"
 	fi
-	
+
 	# Done
 	comment "$(printf 'on-call-scriptPath() - done; last token=%s' "$token")"
 }
+
 
 # dylt config subcommand
 on-config () {
@@ -331,9 +332,6 @@ on-host-init () {
 
 
 # on init --etcd-domain etcd.cluster.domain
-#
-# this is a simple command, with no args and one flag, so it's handled here
-# instead of delegation to a helper function
 on-init () {
 	# Next arg (if any) should be a flag; complete with flags only
 	flags=(--etcd-domain)
@@ -342,27 +340,37 @@ on-init () {
 	if on-last-token; then
 		comment "$(printf "we have arrived at the latest token; time to generate completions")"
 		case $token in
-			-*) complete-with-words "${flags[*]}";;
+			-*) complete-with-words "${flags[*]}" "$token";;
 			*)  complete-with-empty;;
 		esac
 		return
 	fi
-	
-	# Next arg (if any) should be a flag value; complete with empty
-	get-token token
-	status on-init-2
-	if on-last-token; then
-		comment "$(printf "latest token is free-form; no constraints, no completions")"
-		complete-with-empty
-		return
-	fi
+
+	# last token should have been a flag. go to handler function, or complete with empty.
+	case "$token" in
+		--etcd-domain)	on-init-etcdDomain;	status X-on-init-etcdDomain;;
+		*)	complete-with-empty;;
+	esac	
 	
 	 # Done
 	comment "$(printf 'on-init() - done; last token=%s' "$token")"
 }
 
 
-# on list
+# dylt init --etcd-domain etcd.cluster.domain
+#
+# Freeform - complete with empty
+on-init-etcdDomain () {
+	get-token token
+	status on-init-etcdDomain
+	if on-last-token; then
+		comment "$(printf "on latest token; complete with empty")"
+		complete-with-empty
+	fi
+}
+
+
+# dylt list
 #
 # No completion help; complete with empty
 on-list () {
