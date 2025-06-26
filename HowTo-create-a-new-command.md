@@ -4,6 +4,7 @@ The command will end up in `./cli/cmd`. So create a new source file there for th
 
 ```
 $ touch cli/cmd/call.go
+$ touch lib/call.go # optional but recommended ... I think
 ```
 
 Use snippets to flesh out the source for the new command.
