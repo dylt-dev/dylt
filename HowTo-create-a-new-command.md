@@ -1,7 +1,10 @@
+## HowTo - Create a New `dylt` CLI Command
+
 The command will end up in `./cli/cmd`. So create a new source file there for the new command. One possible naming convention is to use the same name as the file in `./lib` that implements the feature.
 
 ```
 $ touch cli/cmd/call.go
+$ touch lib/call.go # optional but recommended ... I think
 ```
 
 Use snippets to flesh out the source for the new command.
