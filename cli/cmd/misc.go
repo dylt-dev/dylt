@@ -38,6 +38,7 @@ func (cmd *MiscCommand) HandleArgs(args []string) error {
 	cmdName := "misc"
 	nExpected := 1
 	if len(cmdArgs) < nExpected {
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
 			cmdName,
 			nExpected,
@@ -61,12 +62,6 @@ func (cmd *MiscCommand) PrintUsage () {
 
 func (cmd *MiscCommand) Run(args []string) error {
 	common.Logger.Debug("MiscCommand.Run()", "args", args)
-	// Check for 0 args; if so print usage & return
-	if len(args) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
 	// parse flags & get positional args
 	err := cmd.HandleArgs(args)
 	if err != nil { return err }

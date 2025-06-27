@@ -30,6 +30,7 @@ func (cmd *StatusCommand) HandleArgs(args []string) error {
 	cmdName := "status"
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
 			cmdName,
 			nExpected,
@@ -37,6 +38,12 @@ func (cmd *StatusCommand) HandleArgs(args []string) error {
 		}
 
 	return nil
+}
+
+func (cmd *StatusCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Status_Short)
+	fmt.Println()
 }
 
 func (cmd *StatusCommand) Run(args []string) error {

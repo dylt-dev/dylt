@@ -179,6 +179,66 @@ Creating the command doesn't magically enable the command to be invoked from the
 	}
 ```
 
+### Add to `PrintUsage()`
+
+#### Create string constants
+
+Simplest case - a description of the command, and a short usage combining command name w description
+```
+// dylt misc
+const USG_Misc_Desc = "Miscellaneous collection of commands"
+var USG_Misc_Short = createUsageShort("misc", USG_Misc_Desc)
+```
+
+More complicated - description, short usage, and full usage @note might be better to just always make these
+```
+// dylt host init
+const USG_Host_Init_Desc = "prepare a host for daylight"
+var USG_Host_Init_Short = createUsageShort("host init", USG_Host_Init_Desc)
+var USG_Host_Init = createUsage("host init", USG_Host_Init_Desc)
+```
+
+Even more complicated - full usage is multiline for subcommands
+```
+// dylt watch
+const USG_Watch_Desc = "watch daylight resource for changes"
+var USG_Watch_Short = createUsageShort("watch", USG_Watch_Desc)
+var USG_Watch = []string {
+	USG_Watch_Script_Short,
+	USG_Watch_Svc_Short,
+}
+```
+
+#### Add short usage to main CLI usage
+```
+// dylt (main)
+var USG_Main = []string {
+	// *** add an entry here for the new command ***
+	USG_Call_Short,
+	USG_Config_Short,
+	USG_Get_Short,
+	USG_Host_Short,
+	USG_Init_Short,
+	USG_List_Short,
+	USG_Misc_Short,
+	USG_Vm_Short,
+	USG_Watch_Short,
+}
+```
+
+#### Add usage to command
+
+@note there's a snippet for this
+
+```
+func (cmd *StatusCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Status_Desc)
+	fmt.Println()
+}
+```
+
+
 ### Adding to bash autocompletion
 
 Add the new command to the `cmdsDylt` array
