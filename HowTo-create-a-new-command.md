@@ -151,3 +151,70 @@ func RunWatch(subCommand string, subCmdArgs []string) error {
 }
 
 ```
+
+### Adding to main
+
+Creating the command doesn't magically enable the command to be invoked from the CLI. That needs to be added to `main.go#createMainSubCommand()"
+
+```
+	switch sCmd {
+	// *** Add a line here that follows this idiom for the new command ***
+	case "call": return clicmd.NewCallCommand(), nil
+	case "config": return clicmd.NewConfigCommand(), nil
+	case "get": return clicmd.NewGetCommand(), nil
+	case "host": return clicmd.NewHostCommand(), nil
+	case "init": return clicmd.NewInitCommand(), nil
+	case "list": return clicmd.NewListCommand(), nil
+	case "misc": return clicmd.NewMiscCommand(), nil
+	case "vm": return clicmd.NewVmCommand(), nil
+	case "watch": return clicmd.NewWatchCommand(), nil
+	default: {
+		var nilPtr *MainCommand = nil
+		nilPtr.PrintUsage()
+		return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
+	}
+	}
+```
+
+### Adding to bash autocompletion
+
+Add the new command to the `cmdsDylt` array
+
+```
+cmdsDylt=(
+	# Add the command here
+    call
+    config
+    get
+    host
+    init
+    list
+    misc
+    vm
+    watch
+)            
+```
+
+Add a `case` clause for the new command to `do-dylt()`
+```
+# dylt
+do-dylt () {
+	# ...
+        case $1 in 
+		    # Add an invocation for the new command here
+            call) do-dylt-call; return;;
+			config) do-dylt-config; return;;
+			get) do-dylt-get; return;;
+			host) do-dylt-host; return;;
+			init) do-dylt-init; return;;
+			list) do-dylt-list; return;;
+			misc) do-dylt-misc; return;;
+			vm) do-dylt-vm; return;;
+			watch) do-dylt-watch; return;;
+            *) echo MEAT
+        esac
+    fi
+}
+
+
+```
