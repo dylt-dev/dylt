@@ -5,8 +5,8 @@ default: install
 build: *.go
 	go build
 
-completion: ./scripts/bash-completion/comp.sh 
-	. ./scripts/bash-completion/comp.sh
+completion: ./scripts/bash-completion/_daylight.sh 
+	. ./scripts/bash-completion/_daylight.sh
 
 install: build completion
 	go install
