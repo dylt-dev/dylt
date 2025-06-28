@@ -2,6 +2,7 @@ package lib
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -35,8 +36,36 @@ func TestGetColimaPath (t *testing.T) {
 	t.Logf("colimaPath=%s", colimaPath)
 }
 
+func TestColimaStatus (t *testing.T) {
+	common.InitLogging()
+	
+	cmd := exec.Command("colima", "status")
+	bufferStdout, bufferStderr, err := runWithStdoutAndStderr(cmd)
+	
+	t.Log(bufferStdout.String())
+	t.Log(bufferStderr.String())
+	
+	require.NoError(t, err)
+	require.NotEmpty(t, bufferStdout)
+	require.NotEmpty(t, bufferStderr)
+}
+
+
 func TestIsExistConfigFile (t *testing.T) {
 	isExist, err := isExistConfigFile()
 	require.NoError(t, err)
 	require.True(t, isExist)
+}
+
+func TestStartIncus (t *testing.T) {
+	cmdName := "colima"
+	args := []string{"start", "--runtime", "incus"}
+	cmd := exec.Command(cmdName, args...)
+	stdout, stderr, err := runWithStdoutAndStderr(cmd)
+	require.NoError(t, err)
+	t.Log("stdout")
+	t.Log(stdout.String())
+	t.Log("stderr")
+	t.Log(stderr.String())
+
 }
