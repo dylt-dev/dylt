@@ -21,10 +21,16 @@ type statusInfo struct {
 	isVm bool
 }
 
-func checkColima () bool {
+func checkColima () (bool, error) {
 	var exists = isCommandExist("colima")
 
-	return exists
+	return exists, nil
+}
+
+func checkIncus () (bool, error) {
+	var exists = isCommandExist("incus")
+
+	return exists, nil
 }
 
 func createShellCmd (sCmd string) *exec.Cmd {

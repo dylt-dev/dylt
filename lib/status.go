@@ -11,10 +11,17 @@ import (
 func RunStatus () error {
 	var err error
 	status := new(statusInfo)
-	status.isColima = checkColima()
+
+	status.isColima, err = checkColima()
+	if err != nil { return err }
+
 	status.isConfigFile, err = isExistConfigFile()
 	if err != nil { return err }
+
+	status.isIncus = checkIncus()
+
 	fmt.Printf("%#v\n", status)
+
 	isShellAvailable := isShellAvailable()
 	common.Logger.Debugf("isShellAvilable: %t", isShellAvailable)
 

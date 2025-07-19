@@ -67,5 +67,12 @@ func TestStartIncus (t *testing.T) {
 	t.Log(stdout.String())
 	t.Log("stderr")
 	t.Log(stderr.String())
+}
 
+func TestIsIncusAvailable (t *testing.T) {
+	homePath := os.Getenv("HOME")
+	t.Logf("homePath=%v", homePath)
+	incusSocketPath := filepath.Join(homePath, filepath	.FromSlash(".colima/default/incus.sock"))
+	t.Logf("incusSocketPath=%v", incusSocketPath)
+	require.FileExists(t, incusSocketPath)
 }
