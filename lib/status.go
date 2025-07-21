@@ -18,7 +18,8 @@ func RunStatus () error {
 	status.isConfigFile, err = isExistConfigFile()
 	if err != nil { return err }
 
-	status.isIncus = checkIncus()
+	status.isIncus, err = checkIncus()
+	if err != nil { return err }
 
 	fmt.Printf("%#v\n", status)
 

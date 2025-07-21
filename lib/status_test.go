@@ -1,12 +1,16 @@
 package lib
 
 import (
+	"context"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 
 	"github.com/dylt-dev/dylt/common"
+	incus "github.com/lxc/incus/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,6 +55,14 @@ func TestColimaStatus (t *testing.T) {
 }
 
 
+func TestGetUnixSocketAddreess (t *testing.T) {
+	socketPath := getUnixSocketPath()
+	raddr, err := net.ResolveUnixAddr("unix", socketPath)
+	require.NoError(t, err)
+	t.Logf("raddr=%#v", raddr)
+}
+
+
 func TestIsExistConfigFile (t *testing.T) {
 	isExist, err := isExistConfigFile()
 	require.NoError(t, err)
@@ -75,4 +87,42 @@ func TestIsIncusAvailable (t *testing.T) {
 	incusSocketPath := filepath.Join(homePath, filepath	.FromSlash(".colima/default/incus.sock"))
 	t.Logf("incusSocketPath=%v", incusSocketPath)
 	require.FileExists(t, incusSocketPath)
+
+	inc, err := incus.ConnectIncusUnix(incusSocketPath, nil)
+	require.NoError(t, err)
+	metrics, err := inc.GetMetrics()
+	t.Logf("metrics=%v", metrics)
+	
+	// url := "/instances"
+	// // client := createUnixSocketClient()
+	// buf := bytes.Buffer{}
+	// r := bytes.NewReader(buf.Bytes())
+	// req, err := http.NewRequest("GET", url, r)
+	// readCloser, err := req.GetBody()
+	// require.NoError(t, err)
+	// t.Logf("#%v", readCloser)
+}
+
+
+func createUnixSocketClient () *http.Client{
+	homePath := os.Getenv("HOME")
+	incusSocketPath := filepath.Join(homePath, filepath	.FromSlash(".colima/default/incus.sock"))
+	raddr, _ := net.ResolveUnixAddr(incusSocketPath, "unix")
+
+	// dialer := net.Dialer{}
+	return &http.Client{
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, url string) (net.Conn, error) {
+				return net.DialUnix("unix", nil, raddr)
+			},
+		},
+	}
+}
+
+func getUnixSocketPath () string {
+	homePath := os.Getenv("HOME")
+	socketPath := filepath.Join(homePath, filepath	.FromSlash(".colima/default/incus.sock"))
+
+	return socketPath
+
 }
