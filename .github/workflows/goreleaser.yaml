@@ -27,6 +27,9 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --clean
+          builds:
+            goos:
+              - darwin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOPRIVATE: github.com/dylt-dev
