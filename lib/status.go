@@ -107,9 +107,3 @@ func isShellAvailable () bool {
 	// No shell path was found
 	return false
 }
-
-const socket = manager.socket("/my-namespace", {
-  auth: {
-    token: "123"
-  }
-});
