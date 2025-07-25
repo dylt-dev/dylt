@@ -137,9 +137,9 @@ git-do-nightly-release ()
 	fi
 	local tag
 	git-tag-nightly tag "$version" || return
-	day ssh h0 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
-	day ssh h1 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
-	day ssh h2 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
+# 	day ssh h0 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
+#	day ssh h1 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
+#	day ssh h2 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
 }
 
 
