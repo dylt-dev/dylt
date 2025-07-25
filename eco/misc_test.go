@@ -11,7 +11,6 @@ import (
 	"unsafe"
 
 	"github.com/dylt-dev/dylt/common"
-	"github.com/dylt-dev/dylt/internal/abi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -237,58 +236,58 @@ func TestReflectionSlice(t *testing.T) {
 
 }
 
-type emptyInterface struct {
-	typ  *abi.Type
-	word unsafe.Pointer
-}
+// type emptyInterface struct {
+// 	typ  *abi.Type
+// 	word unsafe.Pointer
+// }
 
-func TestReflectionMisc0(t *testing.T) {
-	var n8 int8 = 13
-	dump(n8)
-	var u8 uint8 = 13
-	dump(u8)
-	var n16 int16 = 13
-	dump(n16)
-	var u16 uint16 = 13
-	dump(u16)
-	var n32 int32 = 13
-	dump(n32)
-	var u32 uint32 = 13
-	dump(u32)
-	var n64 int64 = 13
-	dump(n64)
-	var u64 uint64 = 13
-	dump(u64)
-	var b bool = false
-	dump(b)
-	var s string = "ASS"
-	dump(s)
-	var sss string = "THAT ASSSSSSSS"
-	dump(sss)
-}
+// func TestReflectionMisc0(t *testing.T) {
+// 	var n8 int8 = 13
+// 	dump(n8)
+// 	var u8 uint8 = 13
+// 	dump(u8)
+// 	var n16 int16 = 13
+// 	dump(n16)
+// 	var u16 uint16 = 13
+// 	dump(u16)
+// 	var n32 int32 = 13
+// 	dump(n32)
+// 	var u32 uint32 = 13
+// 	dump(u32)
+// 	var n64 int64 = 13
+// 	dump(n64)
+// 	var u64 uint64 = 13
+// 	dump(u64)
+// 	var b bool = false
+// 	dump(b)
+// 	var s string = "ASS"
+// 	dump(s)
+// 	var sss string = "THAT ASSSSSSSS"
+// 	dump(sss)
+// }
 
-func dump[T any](arg T) {
-	// ptr := unsafe.Pointer(&arg)
-	// t.Logf("*ptr=%v", *((*T)(ptr)))
+// func dump[T any](arg T) {
+// 	// ptr := unsafe.Pointer(&arg)
+// 	// t.Logf("*ptr=%v", *((*T)(ptr)))
 
-	var emp emptyInterface
-	var i any = arg
-	var iptr = unsafe.Pointer(&i)
-	emp = *(*emptyInterface)(iptr)
-	// t.Logf("emp.type: %#v", emp.typ)
+// 	var emp emptyInterface
+// 	var i any = arg
+// 	var iptr = unsafe.Pointer(&i)
+// 	emp = *(*emptyInterface)(iptr)
+// 	// t.Logf("emp.type: %#v", emp.typ)
 
-	var wptr unsafe.Pointer = emp.word
-	var valptr *T = (*T)(wptr)
-	// t.Logf("emp.word: %v", *valptr)
+// 	var wptr unsafe.Pointer = emp.word
+// 	var valptr *T = (*T)(wptr)
+// 	// t.Logf("emp.word: %v", *valptr)
 
-	var typ abi.Type = *emp.typ
-	var nkind uint8 = typ.Kind_
-	var skind string = abi.KindNames[nkind]
-	var size uintptr = typ.Size_
-	// t.Logf("%d %s %d", nkind, skind, size)
+// 	var typ abi.Type = *emp.typ
+// 	var nkind uint8 = typ.Kind_
+// 	var skind string = abi.KindNames[nkind]
+// 	var size uintptr = typ.Size_
+// 	// t.Logf("%d %s %d", nkind, skind, size)
 
-	fmt.Printf("I have news ... your variable is of type %s, it is %d bytes long, and its value is %v\n", skind, size, *valptr)
-}
+// 	fmt.Printf("I have news ... your variable is of type %s, it is %d bytes long, and its value is %v\n", skind, size, *valptr)
+// }
 
 //go:nosplit
 func noescape(p unsafe.Pointer) unsafe.Pointer {
@@ -299,9 +298,9 @@ func noescape(p unsafe.Pointer) unsafe.Pointer {
 func TestNoEscape(t *testing.T) {
 	var n int8 = 13
 	uptr := unsafe.Pointer(&n)
-	t.Log(fmt.Sprintf("%-12s: %p", "uptr", uptr))
+	t.Logf("%-12s: %p", "uptr", uptr)
 	nuptr := noescape(uptr)
-	t.Log(fmt.Sprintf("%-12s: %p", "nuptr", nuptr))
+	t.Logf("%-12s: %p", "nuptr", nuptr)
 }
 
 func TestXor(t *testing.T) {

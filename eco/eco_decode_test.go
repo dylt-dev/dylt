@@ -55,16 +55,12 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	// Note - we want the type of the underlying element, not the type of the pointer
 	kindElem := getTypeKind(ctx, ty.Elem())
 
-	if kindElem == SimpleMap {
-		return decodeMap(ctx, etcdClient, key, i)
+	switch kindElem {
+	case SimpleMap: return decodeMap(ctx, etcdClient, key, i)
+	case SimpleSlice: return decodeSlice(ctx, etcdClient, key, i)
+	case SimpleStruct: return decodeStruct(ctx, etcdClient, key, i)
 
-	} else if kindElem == SimpleSlice {
-		return decodeSlice(ctx, etcdClient, key, i)
-
-	} else if kindElem == SimpleStruct {
-		return decodeStruct(ctx, etcdClient, key, i)
-
-	} else {
+	default:
 		return errors.New("unsupported type")
 	}
 }
