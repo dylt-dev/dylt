@@ -13,26 +13,6 @@ import (
 	"github.com/dylt-dev/dylt/common"
 )
 
-type statusInfo struct {
-	etcdDomain string
-	isColima bool
-	isConfigFile bool
-	isIncus bool
-	isVm bool
-}
-
-func checkColima () (bool, error) {
-	var exists = isCommandExist("colima")
-
-	return exists, nil
-}
-
-func checkIncus () (bool, error) {
-	var exists = isCommandExist("incus")
-
-	return exists, nil
-}
-
 func createShellCmd (sCmd string) *exec.Cmd {
 	shellPath := getShellPath()
 	shellArgs := []string{"-c", sCmd}
@@ -135,18 +115,17 @@ func isCommandExist (cmd string) bool {
 	return exists
 }
 
+func getIncusSocketPath () string {
+	homePath := os.Getenv("HOME")
+	socketPath := filepath.Join(homePath, filepath	.FromSlash(".colima/default/incus.sock"))
 
-func isShellAvailable () bool {
+	return socketPath
+}
+
+func getShellPaths () []string {
 	var shellPaths = []string {
 		filepath.FromSlash("/bin/sh"),
 	}
 
-	for _, shellPath := range shellPaths {
-		common.Logger.Debugf("shellPath=%s\n", shellPath)
-		_, err := os.Stat(shellPath)
-		if err == nil { return true }
-	}
-
-	// No shell path was found
-	return false
+	return shellPaths
 }
