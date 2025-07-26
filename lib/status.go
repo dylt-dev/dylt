@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -8,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/dylt-dev/dylt/common"
 )
@@ -79,6 +82,14 @@ func checkColima () (bool, error) {
 	return exists, nil
 }
 
+func createShellCmd (sCmd string) *exec.Cmd {
+	shellPath := getShellPath()
+	shellArgs := []string{"-c", sCmd}
+	cmd := exec.Command(shellPath, shellArgs...)
+
+	return cmd
+}
+
 func isIncusAvailable () (bool, error) {
 	url := "http://incus"
 	req, err := http.NewRequest("GET", url, nil)
@@ -106,4 +117,53 @@ func isShellAvailable () bool {
 
 	// No shell path was found
 	return false
+}
+
+func runWithOutput (cmd *exec.Cmd) (*bytes.Buffer, error) {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil { return nil, err }
+	r := bufio.NewReader(stdout)
+	err = cmd.Start()
+	if err != nil { return nil, err }
+	var buf []byte
+	buf, err = io.ReadAll(r)
+	if err != nil { return nil, err }
+	var buffer *bytes.Buffer
+	buffer = bytes.NewBuffer(buf)
+	err = cmd.Wait()
+	if err != nil { return buffer, err }
+	
+	return buffer, nil
+}
+
+func runWithStdoutAndStderr (cmd *exec.Cmd) (*bytes.Buffer, *bytes.Buffer, error) {
+	var stdout, stderr io.ReadCloser
+	var err error
+
+	stdout, err = cmd.StdoutPipe()
+	if err != nil { return nil, nil, err }
+	rStdout := bufio.NewReader(stdout)
+	
+	stderr, err = cmd.StderrPipe()
+	if err != nil { return nil, nil, err }
+	rStderr := bufio.NewReader(stderr)
+
+	err = cmd.Start()
+	if err != nil { return nil, nil, err }
+
+	var bufStdout, bufStderr []byte
+	var bufferStdout, bufferStderr *bytes.Buffer
+
+	bufStdout, err = io.ReadAll(rStdout)
+	if err != nil { return nil, nil, err }
+	bufferStdout = bytes.NewBuffer(bufStdout)
+
+	bufStderr, err = io.ReadAll(rStderr)
+	if err != nil { return nil, nil, err }
+	bufferStderr = bytes.NewBuffer(bufStderr)
+
+	err = cmd.Wait()
+	if err != nil { return bufferStdout, bufferStderr, err }
+	
+	return bufferStdout, bufferStderr, nil
 }

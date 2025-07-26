@@ -51,6 +51,12 @@ func getShellPaths () []string {
 	return shellPaths
 }
 
+func getIncusSocketPath () string {
+	socketPath := "/var/lib/incus/unix.socket"
+
+	return socketPath
+}
+
 func isCommandExist (cmd string) bool {
 	shellPath := getShellPath()
 	sCmd := fmt.Sprintf("command -v %s", cmd)
@@ -59,11 +65,4 @@ func isCommandExist (cmd string) bool {
 	var exists bool = (err == nil)
 
 	return exists
-}
-
-func getIncusSocketPath () string {
-	homePath := os.Getenv("HOME")
-	socketPath := filepath.Join(homePath, filepath	.FromSlash(".colima/default/incus.sock"))
-
-	return socketPath
 }
