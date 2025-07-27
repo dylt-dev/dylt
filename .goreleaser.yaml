@@ -18,6 +18,9 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+    goarm:
+      - 6
+      - 7
     goos:
       - darwin
       - linux
