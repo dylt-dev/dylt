@@ -3,7 +3,6 @@ package lib
 import (
 	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStat0 (t *testing.T) {
+func TestStat0(t *testing.T) {
 	var fi os.FileInfo
 	var err error
 
@@ -25,9 +24,9 @@ func TestStat0 (t *testing.T) {
 
 }
 
-func TestGetColimaPath (t *testing.T) {
+func TestGetColimaPath(t *testing.T) {
 	common.InitLogging()
-	
+
 	colimaPath, err := getCommandPath("colima")
 	require.NoError(t, err)
 	fi, err := os.Stat(filepath.FromSlash(colimaPath))
@@ -37,49 +36,35 @@ func TestGetColimaPath (t *testing.T) {
 	t.Logf("colimaPath=%s", colimaPath)
 }
 
-func TestColimaStatus (t *testing.T) {
-	common.InitLogging()
-	
-	cmd := exec.Command("colima", "status")
-	bufferStdout, bufferStderr, err := runWithStdoutAndStderr(cmd)
-	
-	t.Log(bufferStdout.String())
-	t.Log(bufferStderr.String())
-	
-	require.NoError(t, err)
-	require.NotEmpty(t, bufferStdout)
-	require.NotEmpty(t, bufferStderr)
-}
-
-
-func TestGetUnixSocketAddreess (t *testing.T) {
+func TestGetUnixSocketAddreess(t *testing.T) {
 	socketPath := getIncusSocketPath()
 	raddr, err := net.ResolveUnixAddr("unix", socketPath)
 	require.NoError(t, err)
 	t.Logf("raddr=%#v", raddr)
 }
 
-
-func TestIsExistConfigFile (t *testing.T) {
+func TestIsExistConfigFile(t *testing.T) {
 	isExist, err := isExistConfigFile()
 	require.NoError(t, err)
 	require.True(t, isExist)
 }
-
-func TestStartIncus (t *testing.T) {
-	cmdName := "colima"
-	args := []string{"start", "--runtime", "incus"}
-	cmd := exec.Command(cmdName, args...)
-	stdout, stderr, err := runWithStdoutAndStderr(cmd)
-	require.NoError(t, err)
-	t.Log("stdout")
-	t.Log(stdout.String())
-	t.Log("stderr")
-	t.Log(stderr.String())
-}
-
-func TestIsIncusAvailable (t *testing.T) {
+func TestIncusIsAvailable(t *testing.T) {
 	is, err := isIncusAvailable()
 	require.NoError(t, err)
 	require.True(t, is)
+}
+
+func TestIncusIsDyltContainerExist (t *testing.T) {
+	flag, err := isIncusDyltContainerExist()
+	require.NoError(t, err)
+	require.True(t, flag)
+}
+
+func TestIncusListContainerNames(t *testing.T) {
+	names, err := getIncusContainerNames()
+	require.NoError(t, err)
+	require.NotEmpty(t, names)
+	for _, name := range names {
+		t.Log(name)
+	}
 }

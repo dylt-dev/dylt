@@ -10,6 +10,12 @@ import (
 	"github.com/dylt-dev/dylt/common"
 )
 
+func RunStatus () error {
+	return nil
+}
+
+
+
 // Run /bin/sh -c 'command -v $cmd' to get the path of a command
 // Return an error if cmd is not installed
 func getCommandPath (cmdName string) (string, error) {
