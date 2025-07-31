@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -18,7 +19,8 @@ type cliLogger struct {
 }
 
 func NewLogger(w io.Writer) *cliLogger {
-	options := color.ColorOptions{Level: slog.LevelDebug}
+	logLevel := getLogLevel()
+	options := color.ColorOptions{Level: logLevel}
 	handler := color.NewColorHandler(w, options)
 	return &cliLogger{
 		Logger:  slog.New(handler),
@@ -133,3 +135,11 @@ func (l *cliLogger) WarnContextf(ctx context.Context, sfmt string, args ...any) 
 	l.Logger.WarnContext(ctx, s)
 }
 
+func getLogLevel () slog.Leveler {
+	envvar := os.Getenv("DEBUG")
+	if envvar == "1" {
+		return slog.LevelDebug
+	}
+
+	return slog.LevelInfo
+}
