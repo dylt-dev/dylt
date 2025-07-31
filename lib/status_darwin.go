@@ -18,27 +18,32 @@ func RunStatus() error {
 
 	status.isColimaExist, err = checkColima()
 	if err != nil {
-		return err
+		common.Logger.Debug(err.Error())
+		status.isColimaExist = false
 	}
 
 	status.isColimaActive, err = isColimaActive()
 	if err != nil {
-		return err
+		common.Logger.Debug(err.Error())
+		status.isColimaActive = false
 	}
 
 	status.isConfigFile, err = isExistConfigFile()
 	if err != nil {
-		return err
+		common.Logger.Debug(err.Error())
+		status.isConfigFile = false
 	}
 
 	status.isIncusActive, err = isIncusActive()
 	if err != nil {
-		return err
+		common.Logger.Debug(err.Error())
+		status.isIncusActive = false
 	}
 
 	status.isVm, err = isIncusDyltContainerExist()
 	if err != nil {
-		return err
+		common.Logger.Debug(err.Error())
+		status.isVm = false
 	}
 
 	isShellAvailable := isShellAvailable()
