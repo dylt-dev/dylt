@@ -3,14 +3,40 @@ package lib
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/dylt/common"
 )
 
 func RunStatus () error {
+	fmt.Println("hi")
+	var err error
+	status := new(statusInfo)
+
+	status.isConfigFile, err = isExistConfigFile()
+	if err != nil {
+		common.Logger.Debug(err.Error())
+		status.isConfigFile = false
+	}
+
+	status.isIncusActive, err = isIncusActive()
+	if err != nil {
+		common.Logger.Debug(err.Error())
+		status.isIncusActive = false
+	}
+
+	status.isVm, err = isIncusDyltContainerExist()
+	if err != nil {
+		common.Logger.Debug(err.Error())
+		status.isVm = false
+	}
+
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is config file exist")), color.StyleBool(status.isConfigFile))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is incus active")), color.StyleBool(status.isIncusActive))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is incus dylt container exists")), color.StyleBool(status.isVm))
+	
 	return nil
 }
 
@@ -63,12 +89,12 @@ func getIncusSocketPath () string {
 	return socketPath
 }
 
-func isCommandExist (cmd string) bool {
-	shellPath := getShellPath()
-	sCmd := fmt.Sprintf("command -v %s", cmd)
-	shellCmd := exec.Command(shellPath, "-c", sCmd)
-	err := shellCmd.Run()
-	var exists bool = (err == nil)
+// func isCommandExist (cmd string) bool {
+// 	shellPath := getShellPath()
+// 	sCmd := fmt.Sprintf("command -v %s", cmd)
+// 	shellCmd := exec.Command(shellPath, "-c", sCmd)
+// 	err := shellCmd.Run()
+// 	var exists bool = (err == nil)
 
-	return exists
-}
+// 	return exists
+// }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/dylt-dev/dylt/color"
@@ -46,13 +45,19 @@ func RunStatus() error {
 	common.Logger.Debugf("isShellAvilable: %t", isShellAvailable)
 
 	fmt.Println()
-	fmt.Printf("%-42s %s\n", string(common.Highlight("is colima exist")), styleBool(status.isColimaExist))
-	fmt.Printf("%-42s %s\n", string(common.Highlight("is colima available")), styleBool(status.isColimaActive))
-	fmt.Printf("%-42s %s\n", string(common.Highlight("is config file exist")), styleBool(status.isConfigFile))
-	fmt.Printf("%-42s %s\n", string(common.Highlight("is incus active")), styleBool(status.isIncusActive))
-	fmt.Printf("%-42s %s\n", string(common.Highlight("is incus dylt container exists")), styleBool(status.isVm))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is colima exist")), color.StyleBool(status.isColimaExist))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is colima available")), color.StyleBool(status.isColimaActive))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is config file exist")), color.StyleBool(status.isConfigFile))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is incus active")), color.StyleBool(status.isIncusActive))
+	fmt.Printf("%-42s %s\n", string(common.Highlight("is incus dylt container exists")), color.StyleBool(status.isVm))
 
 	return nil
+}
+
+func checkColima() (bool, error) {
+	var exists = isCommandExist("colima")
+
+	return exists, nil
 }
 
 func getColimaSocketPath() string {
@@ -139,15 +144,4 @@ func isCommandExist(cmd string) bool {
 	var exists bool = (err == nil)
 
 	return exists
-}
-
-func styleBool (flag bool) color.Styledstring {
-	s := color.Styledstring(strconv.FormatBool(flag))
-	if flag {
-		s = s.Fg(color.X11.Green)
-	} else {
-		s = s.Fg(color.X11.Red)
-	}
-
-	return s
 }

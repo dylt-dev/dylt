@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -31,7 +32,11 @@ func isExistConfigFile() (bool, error) {
 	cfgFilePath := common.GetConfigFilePath()
 	fi, err := os.Stat(cfgFilePath)
 	if err != nil {
-		return false, err
+		if errors.Is(err, fs.ErrNotExist) {
+			return false, nil
+		} else {
+			return false, err
+		}
 	}
 	if fi.IsDir() {
 		return false, fmt.Errorf("config file path exists, but is a directory (%s)", cfgFilePath)
@@ -55,12 +60,6 @@ func createUnixSocketClient(socketPath string) *http.Client {
 	}
 
 	return cli
-}
-
-func checkColima() (bool, error) {
-	var exists = isCommandExist("colima")
-
-	return exists, nil
 }
 
 func createShellCmd(sCmd string) *exec.Cmd {
@@ -104,6 +103,10 @@ func getIncusContainerNames() ([]string, error) {
 	return names, nil
 }
 
+func isIncusActive() (bool, error) {
+	return isIncusAvailable()
+}
+
 func isIncusAvailable() (bool, error) {
 	url := "http://incus"
 	req, err := http.NewRequest("GET", url, nil)
@@ -124,10 +127,6 @@ func isIncusAvailable() (bool, error) {
 	}
 
 	return true, nil
-}
-
-func isIncusActive() (bool, error) {
-	return isIncusAvailable()
 }
 
 func isIncusDyltContainerExist () (bool, error) {
