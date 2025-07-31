@@ -102,7 +102,7 @@ func (l *cliLogger) Flush (level slog.Level) {
 
 func (l *cliLogger) Signature(name string, args ...any) {
 	sig := CreateSignature(name, args...)
-	l.Logger.Info(sig)
+	l.Logger.Debug(sig)
 }
 
 func CreateSignature(name string, args ...any) string {

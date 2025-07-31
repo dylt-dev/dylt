@@ -118,11 +118,10 @@ func isIncusAvailable() (bool, error) {
 		return false, err
 	}
 
-	buf2, err := io.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return false, err
 	}
-	fmt.Printf("buf2=%s\n", buf2)
 
 	return true, nil
 }

@@ -18,36 +18,29 @@ func RunStatus() error {
 	status := new(statusInfo)
 
 	status.isColimaExist, err = checkColima()
-	fmt.Printf("%-20s %-5t %v\n", "isColimaExist", status.isColimaExist, err)
 	if err != nil {
 		return err
 	}
 
 	status.isColimaActive, err = isColimaActive()
-	fmt.Printf("%-20s %-5t %v\n", "isColimaActive", status.isColimaActive, err)
 	if err != nil {
 		return err
 	}
 
 	status.isConfigFile, err = isExistConfigFile()
-	fmt.Printf("%-20s %-5t %v\n", "isConfigFile", status.isConfigFile, err)
 	if err != nil {
 		return err
 	}
 
 	status.isIncusActive, err = isIncusActive()
-	fmt.Printf("%-20s %-5t %v\n", "isIncusActive", status.isIncusActive, err)
 	if err != nil {
 		return err
 	}
 
 	status.isVm, err = isIncusDyltContainerExist()
-	fmt.Printf("%-20s %-5t %v\n", "IsIncusDyltContainerExist", status.isVm, err)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("%#v\n", status)
 
 	isShellAvailable := isShellAvailable()
 	common.Logger.Debugf("isShellAvilable: %t", isShellAvailable)
