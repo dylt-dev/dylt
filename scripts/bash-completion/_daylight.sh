@@ -49,6 +49,13 @@ get-token () {
 	printf '%-16s: token=%s N=%d\n' "get-token()" "$_ref" "$N" >> /tmp/dylt.log
 }
 
+# Check if the last token retrieved incremented N greater than the current word.
+# If N is greated than COMP_CWORD, there are more no tokens left
+# Typically this means `compgen` can be called on the in-progress token to generate completions
+on-last-token () { 
+	(( N > COMP_CWORD ))
+}
+
 # Various bash completion values, global variables, etc. Useful for development/debugging.
 status () {
 	printf '%-16s: DONE=%d N=%d COMP_CWORD=%d COMP_TYPE=%d cur=[%s] <%s>\n' "$1()" "$DONE" "$N" "$COMP_CWORD" "$COMP_TYPE" "${COMP_WORDS[COMP_CWORD]}" "${COMP_WORDS[*]}" >> /tmp/dylt.log
@@ -70,7 +77,7 @@ _dylt () {
 # dylt
 on-main () {
     # anything goes
-    argvals=(call config get host init list misc vm watch)
+    argvals=(call config get host init list misc status vm watch)
     flags=()
     get-token token
     status on-main 
@@ -93,6 +100,7 @@ on-main () {
 		init)	on-init;	status X-on-init ;;
 		list)   on-list;	status X-on-list ;;
 		misc)	on-misc;	status X-on-misc ;;
+        status) on-status;  status X-on-status ;;
 		vm)		on-vm;		status X-on-vm ;;
 		watch)	on-watch;	status X-on-watch ;;
 		*) complete-with-empty;;
@@ -395,6 +403,17 @@ on-misc-createTwoNodeCluster () {
     comment "on-createTwoNodeCluster() - done"
 }
 
+
+# dylt status
+#
+# No args, no flags - complete with empty
+on-status () {
+    status on-status
+    complete-with-empty
+
+    # Done
+    comment "on-status() - done"
+}
 
 # dylt vm subcommand
 #

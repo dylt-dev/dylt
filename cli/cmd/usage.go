@@ -11,6 +11,7 @@ var USG_Main = []string {
 	USG_Init_Short,
 	USG_List_Short,
 	USG_Misc_Short,
+	USG_Status_Short,
 	USG_Vm_Short,
 	USG_Watch_Short,
 }
@@ -96,6 +97,10 @@ var USG_Misc_TwoNode = createUsage("misc create-two-node-cluster", USG_Misc_TwoN
 const USG_Misc_GenScript_Desc = "Generate a script for running etcd"
 var USG_Misc_GenScript_Short = createUsageShort("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
 var USG_Misc_GenScript = createUsage("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
+
+// dylt status
+const USG_Status_Desc = "current dylt status"
+var USG_Status_Short = createUsageShort("dylt status", USG_Status_Desc)
 
 // dylt vm
 const USB_Vm_Desc = "VM-related operations"

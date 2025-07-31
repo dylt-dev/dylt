@@ -63,7 +63,6 @@ func isFirstTime () (bool, error) {
 }
 
 func createMainSubCommand (sCmd string) (clicmd.Command, error) {
-	fmt.Printf("sCmd=%s\n", sCmd)
 	switch sCmd {
 	case "call": return clicmd.NewCallCommand(), nil
 	case "config": return clicmd.NewConfigCommand(), nil

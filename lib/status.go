@@ -1,35 +1,223 @@
 package lib
 
 import (
+	"bufio"
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"io/fs"
+	"net"
+	"net/http"
 	"os"
+	"os/exec"
+	"slices"
+	"strings"
 
 	"github.com/dylt-dev/dylt/common"
 )
 
-func RunStatus () error {
-	var err error
-	status := new(statusInfo)
-	status.isColima = checkColima()
-	status.isConfigFile, err = isExistConfigFile()
-	if err != nil { return err }
-	fmt.Printf("%#v\n", status)
-	isShellAvailable := isShellAvailable()
-	common.Logger.Debugf("isShellAvilable: %t", isShellAvailable)
-
-	return nil
+type statusInfo struct {
+	etcdDomain     string
+	isColimaExist  bool
+	isColimaActive bool
+	isConfigFile   bool
+	isIncusActive  bool
+	isVm           bool
 }
 
-func isExistConfigFile () (bool, error) {
+func isExistConfigFile() (bool, error) {
 	cfgFilePath := common.GetConfigFilePath()
 	fi, err := os.Stat(cfgFilePath)
-	if err != nil { return false, err }
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
 	if fi.IsDir() {
 		return false, fmt.Errorf("config file path exists, but is a directory (%s)", cfgFilePath)
 	}
-	if fi.Mode() & fs.ModeType > 0 {
+	if fi.Mode()&fs.ModeType > 0 {
 		return false, fmt.Errorf("config file exists, but its mode is invalid (%d)", fi.Mode())
 	}
 	return true, nil
+}
+
+func createUnixSocketClient(socketPath string) *http.Client {
+	raddr, _ := net.ResolveUnixAddr("unix", socketPath)
+
+	// dialer := net.Dialer{}
+	cli := &http.Client{
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				return net.DialUnix("unix", nil, raddr)
+			},
+		},
+	}
+
+	return cli
+}
+
+func createShellCmd(sCmd string) *exec.Cmd {
+	shellPath := getShellPath()
+	shellArgs := []string{"-c", sCmd}
+	cmd := exec.Command(shellPath, shellArgs...)
+
+	return cmd
+}
+
+func getIncusContainerNames() ([]string, error) {
+	path := "1.0/instances"
+	url := fmt.Sprintf("http://incus/%s", path)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	socketPath := getIncusSocketPath()
+	cli := createUnixSocketClient(socketPath)
+	resp, err := cli.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	buf2, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var obj map[string]any
+	err = json.Unmarshal(buf2, &obj)
+
+	var names = []string{}
+	instancePrefix := fmt.Sprintf("/%s/", path)
+	objNames := obj["metadata"].([]any)
+	for _, objName := range objNames {
+		var name string = objName.(string)
+		names = append(names, strings.TrimPrefix(name, instancePrefix))
+	}
+
+	return names, nil
+}
+
+func isIncusActive() (bool, error) {
+	return isIncusAvailable()
+}
+
+func isIncusAvailable() (bool, error) {
+	url := "http://incus"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	socketPath := getIncusSocketPath()
+	cli := createUnixSocketClient(socketPath)
+	resp, err := cli.Do(req)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func isIncusDyltContainerExist () (bool, error) {
+	name := "dylt"
+	containerNames, err := getIncusContainerNames()
+	if err != nil { return false, err }
+	var isExist bool = slices.Contains(containerNames, name)
+
+	return isExist, nil
+}
+
+
+func isShellAvailable() bool {
+	shellPaths := getShellPaths()
+	for _, shellPath := range shellPaths {
+		common.Logger.Debugf("shellPath=%s\n", shellPath)
+		_, err := os.Stat(shellPath)
+		if err == nil {
+			return true
+		}
+	}
+
+	// No shell path was found
+	return false
+}
+
+func runWithOutput(cmd *exec.Cmd) (*bytes.Buffer, error) {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	r := bufio.NewReader(stdout)
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+	var buf []byte
+	buf, err = io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	var buffer *bytes.Buffer
+	buffer = bytes.NewBuffer(buf)
+	err = cmd.Wait()
+	if err != nil {
+		return buffer, err
+	}
+
+	return buffer, nil
+}
+
+func runWithStdoutAndStderr(cmd *exec.Cmd) (*bytes.Buffer, *bytes.Buffer, error) {
+	var stdout, stderr io.ReadCloser
+	var err error
+
+	stdout, err = cmd.StdoutPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+	rStdout := bufio.NewReader(stdout)
+
+	stderr, err = cmd.StderrPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+	rStderr := bufio.NewReader(stderr)
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var bufStdout, bufStderr []byte
+	var bufferStdout, bufferStderr *bytes.Buffer
+
+	bufStdout, err = io.ReadAll(rStdout)
+	if err != nil {
+		return nil, nil, err
+	}
+	bufferStdout = bytes.NewBuffer(bufStdout)
+
+	bufStderr, err = io.ReadAll(rStderr)
+	if err != nil {
+		return nil, nil, err
+	}
+	bufferStderr = bytes.NewBuffer(bufStderr)
+
+	err = cmd.Wait()
+	if err != nil {
+		return bufferStdout, bufferStderr, err
+	}
+
+	return bufferStdout, bufferStderr, nil
 }

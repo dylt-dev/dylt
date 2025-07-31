@@ -2,6 +2,7 @@ package color
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -137,6 +138,17 @@ func (s Styledstring) Style(style string) Styledstring {
 		sb.WriteString(Ansi.Reset)
 	}
 	s = Styledstring(sb.String())
+
+	return s
+}
+
+func StyleBool (flag bool) Styledstring {
+	s := Styledstring(strconv.FormatBool(flag))
+	if flag {
+		s = s.Fg(X11.Green)
+	} else {
+		s = s.Fg(X11.Red)
+	}
 
 	return s
 }
