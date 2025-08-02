@@ -28,6 +28,7 @@ Most commands follow the same pattern
 * func () Run*Name* () // Package-level 'real' run() function that executes the command
 ```
 type <Name>Command struct {
+	*flag.FlagSet
 	// fields
 }
 ```

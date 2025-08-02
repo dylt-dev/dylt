@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/dylt-dev/dylt/common"
+	"github.com/dylt-dev/dylt/lib"
 )
 
 //go:embed content/*
@@ -53,9 +54,10 @@ func (cmd *MiscCommand) HandleArgs(args []string) error {
 
 func (cmd *MiscCommand) PrintUsage () {
 	fmt.Println()
-	fmt.Printf("\t%s\n\t%s\n",
+	fmt.Printf("\t%s\n\t%s\n\t%s\n",
 	USG_Misc_TwoNode_Short,
 	USG_Misc_GenScript_Short,
+	USG_Misc_Lookup_Short,
 	)
 	fmt.Println()
 }
@@ -87,6 +89,7 @@ func createMiscSubCommand (cmd string) (Command, error) {
 	switch cmd {
 	case "create-two-node-cluster": return NewCreateTwoNodeClusterCommand(), nil
 	case "gen-etcd-run-script": return NewGenEtcdRunScriptCommand(), nil
+	case "lookup": return NewLookupCommand(), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
 	}
 }
@@ -226,5 +229,57 @@ func RunGenEtcdRunScript() error {
 	tmpl := template.New("hello")
 	tmpl, err = tmpl.Parse(string(buf))
 	tmpl.Execute(os.Stdout, nil)
+	return nil
+}
+
+type LookupCommand struct {
+	*flag.FlagSet
+	hostname string
+}
+
+func NewLookupCommand () *LookupCommand {
+	flagSet := flag.NewFlagSet("misc lookup", flag.PanicOnError)
+	cmd := LookupCommand { FlagSet: flagSet }
+
+	return &cmd
+}
+
+func (cmd *LookupCommand) HandleArgs (args []string) error {
+	// parse flags
+	err := cmd.Parse(args)
+	if err != nil { return err }
+	// validate arg count
+	cmdArgs := cmd.Args()
+	cmdName := "lookup"
+	nExpected := 1
+	if len(cmdArgs) != nExpected {
+		cmd.PrintUsage()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdName,
+			nExpected,
+			len(cmdArgs))
+		}
+	// init positional params
+	cmd.hostname = cmdArgs[0]
+
+	return nil
+}
+
+func (cmd *LookupCommand) PrintUsage () {
+	fmt.Println()
+	fmt.Printf("\t%s\n", USG_Misc_Lookup)
+	fmt.Println()
+}
+
+func (cmd *LookupCommand) Run(args []string) error {
+	common.Logger.Debug("LookupCommand.Run()", "args", args)
+	// parse flags & get positional args
+	err := cmd.HandleArgs(args)
+	if err != nil { return err }
+	// execute command
+	// @getit
+	err = lib.RunLookupCommand(cmd.hostname)
+	if err != nil { return err }
+
 	return nil
 }

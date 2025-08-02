@@ -2,6 +2,8 @@ package dns
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type testRec struct {
@@ -13,6 +15,16 @@ type testRec struct {
 var testData = []testRec {
 	{ domain: "hello.dylt.dev", includeIps: false, nResults: 5 },
 	{ domain: "google.com", includeIps: false, nResults: 0},
+}
+
+
+func TestGetA (t *testing.T) {
+	host := "www.eff.org"
+	var addrs []string = GetA(host)
+	require.NotEmpty(t, addrs)
+	for _, addr := range addrs {
+		t.Log(addr)
+	}
 }
 
 func TestGetSrvs (t *testing.T) {
