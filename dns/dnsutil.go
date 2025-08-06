@@ -16,14 +16,10 @@ type Srv struct {
 }
 
 
-func GetA (host string) []string {
+func GetA (host string) ([]string, error) {
 	a, err := net.LookupHost(host)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return []string{}
-	}
 
-	return a
+	return a, err
 }
 
 func GetCname (host string) string {

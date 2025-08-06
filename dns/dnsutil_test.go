@@ -19,8 +19,11 @@ var testData = []testRec {
 
 
 func TestGetA (t *testing.T) {
-	host := "www.eff.org"
-	var addrs []string = GetA(host)
+	const host = "www.eff.org"
+	var addrs []string
+	var err error
+	addrs, err = GetA(host)
+	require.NoError(t, err)
 	require.NotEmpty(t, addrs)
 	for _, addr := range addrs {
 		t.Log(addr)

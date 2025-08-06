@@ -161,9 +161,10 @@ func main () {
 	var args clicmd.Cmdline = os.Args
 	err := cmd.Run(args.Args())
 	if err != nil {
-		slog.Error(err.Error())
-		fmt.Printf("\t%s\n", common.Error(err.Error()))
-		fmt.Println()
+		common.PrintBlankIfTerminal(os.Stderr)
+		// yikes - need a cleaner idiom for logging errors
+		common.Logger.Error(common.Error(err.Error()))
+		common.PrintBlankIfTerminal(os.Stderr)
 		os.Exit(1)
 	}
 }
