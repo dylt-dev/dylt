@@ -98,6 +98,11 @@ const USG_Misc_GenScript_Desc = "Generate a script for running etcd"
 var USG_Misc_GenScript_Short = createUsageShort("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
 var USG_Misc_GenScript = createUsage("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
 
+// dylt misc lookup
+const USG_Misc_Lookup_Desc = "Do a DNS lookup of a hostname"
+var USG_Misc_Lookup_Short = createUsageShort("misc lookup", USG_Misc_GenScript_Desc)
+var USG_Misc_Lookup = createUsage("misc lookup", USG_Misc_GenScript_Desc)
+
 // dylt status
 const USG_Status_Desc = "current dylt status"
 var USG_Status_Short = createUsageShort("dylt status", USG_Status_Desc)

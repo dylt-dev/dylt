@@ -1,10 +1,13 @@
 package common
 
 import (
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/term"
 )
 
 func ChownR(folderPath string, uid int, gid int) error {
@@ -30,3 +33,32 @@ func ChownR(folderPath string, uid int, gid int) error {
 	return nil
 }
 
+func IsStderrTerminal () bool {
+	var fd = int(os.Stderr.Fd())
+	var isTerm = term.IsTerminal(fd)
+
+	return isTerm
+}
+
+func IsStdinTerminal () bool {
+	var fd = int(os.Stdin.Fd())
+	var isTerm = term.IsTerminal(fd)
+
+	return isTerm
+}
+
+func IsStdoutTerminal () bool {
+	var fd = int(os.Stdout.Fd())
+	var isTerm = term.IsTerminal(fd)
+
+	return isTerm
+}
+
+func PrintBlankIfTerminal (f *os.File) {
+	var fd = int(f.Fd())
+	var isTerm bool = term.IsTerminal(fd)
+	switch f {
+	case os.Stdout: if isTerm { fmt.Fprintln(os.Stdout) }
+	case os.Stderr: if isTerm { fmt.Fprintln(os.Stderr) }
+	}
+}

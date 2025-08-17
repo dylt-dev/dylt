@@ -36,6 +36,17 @@ func TestGenEtcdRunScript (t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestGetStdinStdoutStderrFdNums (t *testing.T) {
+	var nStdin, nStdout, nStderr uintptr
+	nStdin = os.Stdin.Fd()
+	nStdout = os.Stdout.Fd()
+	nStderr = os.Stderr.Fd()
+	t.Logf("nStdin=%v", nStdin)
+	t.Logf("nStdout=%v", nStdout)
+	t.Logf("nStderr=%v", nStderr)
+}
+
+
 func TestNewlineKiller (t *testing.T) {
 	s :=`
 	line1

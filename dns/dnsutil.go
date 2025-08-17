@@ -16,6 +16,12 @@ type Srv struct {
 }
 
 
+func GetA (host string) ([]string, error) {
+	a, err := net.LookupHost(host)
+
+	return a, err
+}
+
 func GetCname (host string) string {
 	cname, err := net.LookupCNAME(host)
 	if err != nil {
@@ -58,6 +64,10 @@ func GetSrvs (domain string, service string, proto string, includeIps bool) ([]S
 	}
 
 	return srvs, err
+}
+
+func GetSrvsEtcdClient (domain string, includeIps bool) ([]Srv, error) {
+	return GetSrvs(domain, "etcd-client", "tcp", includeIps)
 }
 
 func GetSrvsEtcdServer (domain string, includeIps bool) ([]Srv, error) {
