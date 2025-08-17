@@ -66,6 +66,10 @@ func GetSrvs (domain string, service string, proto string, includeIps bool) ([]S
 	return srvs, err
 }
 
+func GetSrvsEtcdClient (domain string, includeIps bool) ([]Srv, error) {
+	return GetSrvs(domain, "etcd-client", "tcp", includeIps)
+}
+
 func GetSrvsEtcdServer (domain string, includeIps bool) ([]Srv, error) {
 	return GetSrvs(domain, "etcd-server", "tcp", includeIps)
 }
