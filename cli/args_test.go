@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	clicmd "github.com/dylt-dev/dylt/cli/cmd"
 )
 
 type InitCommand struct {
@@ -31,6 +33,15 @@ func (o *arglist) Command () string {
 
 func (o *arglist) Args () []string {
 	return (*o)[1:]
+}
+
+func TestBoolFlag(t *testing.T) {
+	var cmdline clicmd.Cmdline = []string{"dylt", "--help"}
+	var fs flag.FlagSet
+	var helpy *bool = fs.Bool("help", false, "yeah yeah yeah")
+	t.Log(cmdline.Args())
+	fs.Parse(cmdline.Args())
+	require.True(t, *helpy)
 }
 
 func TestInitCommand(t *testing.T) {
@@ -69,14 +80,19 @@ func TestLongLine (t *testing.T) {
 	assert.Equal(t, "yellowrose", argsGhr[1])
 }
 
+// cmdline: dylt --foo 1 --bar x y
+// Expected: 
 func TestWeirdArgs (t *testing.T) {
 	args := strings.Split("dylt --foo 1 --bar x y", " ")
-	dylt := flag.NewFlagSet("dylt", flag.PanicOnError)
-	dylt.String("foo", "", "foo")
-	dylt.String("bar", "", "bar")
-	dylt.Parse(args[1:])
-	argz := dylt.Args()
-	t.Log(strings.Join(argz, " "))
+	flagset := flag.NewFlagSet("dylt", flag.PanicOnError)
+	var fooptr *string = flagset.String("foo", "", "foo")
+	var barptr *string = flagset.String("bar", "", "bar")
+	flagset.Parse(args[1:])
+	require.Equal(t, "1", *fooptr)
+	require.Equal(t, "x", *barptr)
+	argz := flagset.Args()
+	require.Equal(t, 1, len(argz))
+	require.Equal(t, "y", argz[0])
 }
 
 func TestRead(t *testing.T) {

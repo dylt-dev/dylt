@@ -10,19 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenEtcdRunScript (t *testing.T) {
+func TestGenEtcdRunScript(t *testing.T) {
 	type EtcdRunScriptData struct {
-		Name string
-		DataDir string
+		Name                string
+		DataDir             string
 		AdvertiseClientUrls []string
-		ListenClientUrls []string
-		ClientCertAuth bool
+		ListenClientUrls    []string
+		ClientCertAuth      bool
 	}
-	data := EtcdRunScriptData {
-		Name: "arleytown",
+	data := EtcdRunScriptData{
+		Name:                "arleytown",
 		AdvertiseClientUrls: []string{"https:/127.0.0.1:2239", "ip2:2239"},
-		ListenClientUrls: []string{"https:/127.0.0.1:2239"},
-		ClientCertAuth: false,
+		ListenClientUrls:    []string{"https:/127.0.0.1:2239"},
+		ClientCertAuth:      false,
 	}
 	buf, err := content.ReadFile("content/run-etcd.sh.tmpl")
 	require.NoError(t, err)
@@ -36,7 +36,7 @@ func TestGenEtcdRunScript (t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestGetStdinStdoutStderrFdNums (t *testing.T) {
+func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 	var nStdin, nStdout, nStderr uintptr
 	nStdin = os.Stdin.Fd()
 	nStdout = os.Stdout.Fd()
@@ -46,9 +46,8 @@ func TestGetStdinStdoutStderrFdNums (t *testing.T) {
 	t.Logf("nStderr=%v", nStderr)
 }
 
-
-func TestNewlineKiller (t *testing.T) {
-	s :=`
+func TestNewlineKiller(t *testing.T) {
+	s := `
 	line1
 	{{- if .Line2 }}
 	{{ .Line2 -}}
@@ -56,7 +55,7 @@ func TestNewlineKiller (t *testing.T) {
 	line3
 	`
 
-	type nkdata struct { Line2 string}
+	type nkdata struct{ Line2 string }
 	tmpl := template.New("test")
 	tmpl, err := tmpl.Parse(s)
 	require.NoError(t, err)
@@ -64,6 +63,14 @@ func TestNewlineKiller (t *testing.T) {
 	require.NoError(t, err)
 	err = tmpl.Execute(os.Stdout, nkdata{Line2: "MEAT"})
 	require.NoError(t, err)
-
 }
 
+func TestPrintMultiLineUsage_String(t *testing.T) {
+	data := "MEAT!!!"
+	PrintUsage(data)
+}
+
+func TestPrintMultiLineUsage_StringSlice(t *testing.T) {
+	data := []string{"meat", "Meat", "MEAT"}
+	PrintUsage(data)
+}

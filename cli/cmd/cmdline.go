@@ -21,5 +21,5 @@ func (o *Cmdline) HasCommand () bool {
 }
 
 type Command interface {
-	Run (args []string) error
+	Run () error
 }
