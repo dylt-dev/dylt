@@ -9,31 +9,32 @@ import (
 )
 
 type ListCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 }
 
-func NewListCommand () *ListCommand {
+func NewListCommand (cmdline Cmdline) *ListCommand {
 	// create command
 	flagSet := flag.NewFlagSet("list", flag.PanicOnError)
-	cmd := ListCommand { FlagSet: flagSet }
+	cmd := ListCommand { BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet} }
 	// init flag vars - (nop - no flags)
 
 	return &cmd
 }
 
-func (cmd *ListCommand) HandleArgs(args []string) error {
+func (cmd *ListCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "list"
 	nExpected := 0
-	if len(cmdArgs) != nExpected {
+	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.SubCommand(),
+						  nExpected,
+						  len(cmd.SubArgs()))
 	}
-	// init positional params (nop - no params)
+	// init positional params + subargs
 
 	return nil
 }
@@ -44,10 +45,10 @@ func (cmd *ListCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd *ListCommand) Run (args []string) error {
-	slog.Debug("ListCommand.Run()", "args", args)
+func (cmd *ListCommand) Run () error {
+	slog.Debug("ListCommand.Run()", "args", cmd.SubArgs())
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunList()

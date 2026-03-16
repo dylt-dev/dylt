@@ -92,6 +92,9 @@ func getCommandPath(cmdName string) (string, error) {
 	return cmdPath, nil
 }
 
+// Get the path of the incus socket
+// Currently harcoded to $HOME/.colima/default/incus.sock because that's
+// what colima uses
 func getIncusSocketPath() string {
 	homePath := os.Getenv("HOME")
 	socketPath := filepath.Join(homePath, filepath.FromSlash(".colima/default/incus.sock"))

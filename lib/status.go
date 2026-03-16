@@ -28,6 +28,7 @@ type statusInfo struct {
 	isVm           bool
 }
 
+// Does the dylt config file exist?
 func isExistConfigFile() (bool, error) {
 	cfgFilePath := common.GetConfigFilePath()
 	fi, err := os.Stat(cfgFilePath)

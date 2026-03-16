@@ -13,23 +13,21 @@ import (
 )
 
 type VmCommand struct {
-	*flag.FlagSet
-	SubCommand string			// arg 0
-	SubArgs    []string			// args 1..n-1
+	*BaseCommand
 }
 
-func NewVmCommand() *VmCommand {
+func NewVmCommand(cmdline Cmdline) *VmCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm", flag.ExitOnError)
-	cmd := VmCommand{FlagSet: flagSet}
+	cmd := VmCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
 }
 
-func (cmd *VmCommand) HandleArgs(args []string) error {
+func (cmd *VmCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
@@ -41,9 +39,6 @@ func (cmd *VmCommand) HandleArgs(args []string) error {
 			nExpected,
 			len(cmdArgs))
 		}
-	// init positional params
-	cmd.SubCommand = cmdArgs[0]
-	cmd.SubArgs = cmdArgs[1:]
 
 	return nil
 }
@@ -59,20 +54,19 @@ func (cmd *VmCommand) PrintUsage () {
 	fmt.Println()
 }
 
-
-func (cmd *VmCommand) Run(args []string) error {
-	slog.Debug("VmCommand.Run()", "args", args)
+func (cmd *VmCommand) Run() error {
+	slog.Debug("VmCommand.Run()", "args", cmd.Cmdline)
 	// Check for 0 args; if so print usage & return
-	if len(args) == 0 {
+	if len(cmd.Cmdline) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
-	err = RunVm(cmd.SubCommand, cmd.SubArgs)
+	err = RunVm(cmd.SubCommand(), cmd.SubArgs())
 	if err != nil { return err }
 
 	return nil
@@ -81,57 +75,59 @@ func (cmd *VmCommand) Run(args []string) error {
 func RunVm(subCommand string, subCmdArgs []string) error {
 	slog.Debug("RunVm()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
 	// create the subcommand and run it
-	subCmd, err := createVmSubCommand(subCommand)
+	subCmd, err := createVmSubCommand(subCommand, subCmdArgs)
 	if err != nil { return err }
-	err = subCmd.Run(subCmdArgs)
+	err = subCmd.Run()
 	if err != nil { return err }
 
 	return nil
 }
 
-func createVmSubCommand (cmd string) (Command, error) {
+func createVmSubCommand (cmd string, args Cmdline) (Command, error) {
 	switch cmd {
-	case "add": return NewVmAddCommand(), nil
-	case "all": return NewVmAllCommand(), nil
-	case "del": return NewVmDelCommand(), nil
-	case "get": return NewVmGetCommand(), nil
-	case "list": return NewVmListCommand(), nil
-	case "set": return NewVmSetCommand(), nil
+	case "add": return NewVmAddCommand(args), nil
+	case "all": return NewVmAllCommand(args), nil
+	case "del": return NewVmDelCommand(args), nil
+	case "get": return NewVmGetCommand(args), nil
+	case "list": return NewVmListCommand(args), nil
+	case "set": return NewVmSetCommand(args), nil
 	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
 	}
 }
 
 type VmAddCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 	Name string			// arg 0
 	Fqdn string			// arg 1
 }
 
-func NewVmAddCommand () *VmAddCommand {
+func NewVmAddCommand (cmdline Cmdline) *VmAddCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.add", flag.PanicOnError)
-	cmd := VmAddCommand{FlagSet: flagSet}
+	cmd := VmAddCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
 
 }
 
-func (cmd *VmAddCommand) HandleArgs(args []string) error {
+func (cmd *VmAddCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "vm add"
 	nExpected := 2
-	if len(cmdArgs) != nExpected {
+	if len(cmd.SubArgs()) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
+						  "vm",
+		                  cmd.SubCommand(),
+						  nExpected,
+						  len(cmd.SubArgs()))
 	}
 	// init positional params
-	cmd.Name = cmdArgs[0]
-	cmd.Fqdn = cmdArgs[1]
+	cmd.Name = cmd.SubArgs()[0]
+	cmd.Fqdn = cmd.SubArgs()[1]
 
 	return nil
 }
@@ -143,10 +139,10 @@ func (cmd *VmAddCommand) PrintUsage () {
 }
 
 
-func (cmd VmAddCommand) Run (args []string) error {
-	slog.Debug("VmAddCommand.Run()", "args", args)
+func (cmd VmAddCommand) Run () error {
+	slog.Debug("VmAddCommand.Run()", "args", cmd.SubArgs())
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunVmAdd(cmd.Name, cmd.Fqdn)
@@ -168,29 +164,33 @@ func RunVmAdd (name string, fqdn string) error {
 }
 
 type VmAllCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 }
 
-func NewVmAllCommand () *VmAllCommand {
+func NewVmAllCommand (cmdline Cmdline) *VmAllCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.all", flag.PanicOnError)
-	cmd := VmAllCommand{FlagSet: flagSet}
+	cmd := VmAllCommand{&BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+
 	// init flag vars - (nop - no flags)
 
 	return &cmd
 }
 
-func (cmd *VmAllCommand) HandleArgs(args []string) error {
+func (cmd *VmAllCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	cmdName := "vm all"
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
+		                  "vm",
+		                  cmd.SubCommand(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 
@@ -204,10 +204,10 @@ func (cmd *VmAllCommand) PrintUsage () {
 }
 
 
-func (cmd VmAllCommand) Run (args[] string) error {
-	slog.Debug("VmAllCommand.Run()", "args", args)
+func (cmd VmAllCommand) Run () error {
+	slog.Debug("VmAllCommand.Run()", "args", cmd.Cmdline)
 	// Parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// Execute command
 	err = RunVmAll()
@@ -233,23 +233,23 @@ func RunVmAll () error {
 //
 //    vm del vmName
 type VmDelCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 	Name string			// arg 0
 }
 
-func NewVmDelCommand () *VmDelCommand {
+func NewVmDelCommand (cmdline Cmdline) *VmDelCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.del", flag.PanicOnError)
-	cmd := VmDelCommand{FlagSet: flagSet}
+	cmd := VmDelCommand{BaseCommand: &BaseCommand{FlagSet: flagSet}}
 	// init flag vars
 	flagSet.StringVar(&cmd.Name, "key", "", "key")
 
 	return &cmd
 }
 
-func (cmd *VmDelCommand) HandleArgs(args []string) error {
+func (cmd *VmDelCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
@@ -271,10 +271,10 @@ func (cmd *VmDelCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd *VmDelCommand) Run (args[] string) error {
-	slog.Debug("VmDelCommand.Run()", "args", args)
+func (cmd *VmDelCommand) Run () error {
+	slog.Debug("VmDelCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunVmDel(cmd.Name)
@@ -305,30 +305,33 @@ func RunVmDel (name string) error {
 //
 //     vm get vmName
 type VmGetCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 	Name string			// arg 0
 }
 
-func NewVmGetCommand () *VmGetCommand {
+func NewVmGetCommand (cmdline Cmdline) *VmGetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.get", flag.PanicOnError)
-	cmd := VmGetCommand{FlagSet: flagSet}
+	cmd := VmGetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
 }
 
-func (cmd *VmGetCommand) HandleArgs(args []string) error {
+func (cmd *VmGetCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
-	cmdName := "vm get"
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
+		                  "vm",
+		                  cmd.SubCommand(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params
 	cmd.Name = cmdArgs[0]
@@ -342,10 +345,10 @@ func (cmd *VmGetCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd *VmGetCommand) Run (args[] string) error {
-	slog.Debug("VmGetCommand.Run()", "args", args)
+func (cmd *VmGetCommand) Run () error {
+	slog.Debug("VmGetCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunVmGet(cmd.Name)
@@ -376,21 +379,21 @@ func RunVmGet (name string) error {
 //
 //     vm list
 type VmListCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 }
 
-func NewVmListCommand () *VmListCommand {
+func NewVmListCommand (cmdline Cmdline) *VmListCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.list", flag.PanicOnError)
-	cmd := VmListCommand{FlagSet: flagSet}
+	cmd := VmListCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
 }
 
-func (cmd *VmListCommand) HandleArgs(args []string) error {
+func (cmd *VmListCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
@@ -411,10 +414,10 @@ func (cmd *VmListCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd VmListCommand) Run (args[] string) error {
-	slog.Debug("VmListCommand.Run()", "args", args)
+func (cmd VmListCommand) Run () error {
+	slog.Debug("VmListCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunVmList()
@@ -444,24 +447,24 @@ func RunVmList () error {
 //
 //     vm set vmName key val
 type VmSetCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 	Name string			// arg 0
 	Key string			// arg 1
 	Value string		// arg 2	
 }
 
-func NewVmSetCommand () *VmSetCommand {
+func NewVmSetCommand (cmdline Cmdline) *VmSetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.set", flag.PanicOnError)
-	cmd := VmSetCommand{FlagSet: flagSet}
+	cmd := VmSetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
 }
 
-func (cmd *VmSetCommand) HandleArgs(args []string) error {
+func (cmd *VmSetCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
@@ -485,10 +488,10 @@ func (cmd *VmSetCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd VmSetCommand) Run (args[] string) error {
-	slog.Debug("VmSetCommand.Run()", "args", args)
+func (cmd VmSetCommand) Run () error {
+	slog.Debug("VmSetCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunVmSet(cmd.Name, cmd.Key, cmd.Value)

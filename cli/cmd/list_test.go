@@ -5,12 +5,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRunList (t *testing.T) {
 	err := RunList()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 }
 
 func TestListCmd0 (t *testing.T) {
@@ -18,9 +18,18 @@ func TestListCmd0 (t *testing.T) {
 		t.Skip()
 	}
 	dyltPath, ok := os.LookupEnv("DYLT_EXE_PATH")
-	assert.True(t, ok)
-	assert.NotEmpty(t, dyltPath)
+	require.True(t, ok)
+	require.NotEmpty(t, dyltPath)
 	cmd := fmt.Sprintf("%s list", dyltPath)
 	err := CheckRunCommandSuccess(cmd, t)
-	assert.Nil(t, err)
+	require.Nil(t, err)
+}
+
+func TestListHandleArgs_None (t *testing.T) {
+	args := []string{}
+	cmd := NewListCommand(args)
+	err := cmd.HandleArgs()
+	require.NoError(t, err)
+	require.Empty(t, cmd.SubArgs)
+	require.Empty(t, cmd.SubCommand)
 }

@@ -9,22 +9,22 @@ import (
 )
 
 type GetCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 	Key string				// arg 0
 }
 
-func NewGetCommand () *GetCommand {
+func NewGetCommand (cmdline Cmdline) *GetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
-	cmd := GetCommand { FlagSet: flagSet }
+	cmd := GetCommand {BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars (nop - command has no flags)
 	
 	return &cmd
 }
 
-func (cmd *GetCommand) HandleArgs (args []string) error {
+func (cmd *GetCommand) HandleArgs () error {
 	// parse flags
-	err := cmd.Parse(args)
+	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
 	cmdArgs := cmd.Args()
@@ -46,10 +46,10 @@ func (cmd *GetCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd *GetCommand) Run (args []string) error {
-	slog.Debug("GetCommand.Run()", "args", args)
+func (cmd *GetCommand) Run () error {
+	slog.Debug("GetCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
+	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
 	err = RunGet(cmd.Key)

@@ -10,24 +10,27 @@ import (
 )
 
 type InitCommand struct {
-	*flag.FlagSet
+	*BaseCommand
 	EtcdDomain string
 }
 
-func NewInitCommand () *InitCommand {
+func NewInitCommand(cmdline Cmdline) *InitCommand {
 	// create command
 	flagSet := flag.NewFlagSet("init", flag.ExitOnError)
-	cmd := InitCommand { FlagSet: flagSet }
+	cmd := InitCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
 	// init flag vars
 	flagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
-	
+
 	return &cmd
 }
 
-func (cmd *InitCommand) HandleArgs(args []string) error {
+func (cmd *InitCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse(args)
-	if err != nil { return err }
+	err := cmd.Parse()
+	if err != nil {
+		return err
+	}
+	// validate required flags
 	var requiredFlag string = "etcd-domain"
 	if cmd.Lookup(requiredFlag).Value.String() == "" {
 		cmd.PrintUsage()
@@ -46,33 +49,40 @@ func (cmd *InitCommand) HandleArgs(args []string) error {
 	return nil
 }
 
-func (cmd *InitCommand) PrintUsage () {
-	PrintMultilineUsage(USG_Init)
+func (cmd *InitCommand) PrintUsage() {
+	PrintUsage(USG_Init)
 }
 
-func (cmd *InitCommand) Run (args []string) error {
-	slog.Debug("InitCommand.Run()", "args", args)
+func (cmd *InitCommand) Run() error {
+	slog.Debug("InitCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-	err := cmd.HandleArgs(args)
-	if err != nil { return err }
+	err := cmd.HandleArgs()
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunInit(cmd.EtcdDomain)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func RunInit (etcdDomain string) error {
+func RunInit(etcdDomain string) error {
 	slog.Debug("RunInit()", "etcDomain", etcdDomain)
 	// create a new config file using the etcdDomain
-	if etcdDomain == "" { return errors.New("etcd-domain must be set") }
-	cfg := common.ConfigStruct{ EtcdDomain: etcdDomain}
+	if etcdDomain == "" {
+		return errors.New("etcd-domain must be set")
+	}
+	cfg := common.ConfigStruct{EtcdDomain: etcdDomain}
 	err := common.SaveConfig(cfg)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
-
 
 // func CreateInitCommand() *cobra.Command {
 // 	command := cobra.Command{
