@@ -55,7 +55,9 @@ func (cmd *MainCommand) Run() error {
 		return nil
 	}
 	// Execute command
-	err = RunMain(cmd.SubCommand(), cmd.SubArgs())
+	subCmd, _ := cmd.SubCommand()
+	subArgs, _ := cmd.SubArgs()
+	err = RunMain(subCmd, subArgs)
 	if err != nil {
 		return err
 	}

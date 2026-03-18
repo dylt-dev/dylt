@@ -40,12 +40,12 @@ func (cmd *StatusCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmd.Cmdline[0],
+			cmd.GetCommandString(),
 			nExpected,
 			len(cmdArgs))
 		}

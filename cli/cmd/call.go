@@ -51,7 +51,7 @@ func (cmd *CallCommand) PrintUsage() {
 }
 
 func (cmd *CallCommand) Run() error {
-	slog.Debug("CallCommand.Run()", "args", cmd.SubArgs())
+	cmd.Log()
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {

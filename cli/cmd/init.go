@@ -37,12 +37,14 @@ func (cmd *InitCommand) HandleArgs() error {
 		return fmt.Errorf("required flag missing: %s", requiredFlag)
 	}
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "init"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 

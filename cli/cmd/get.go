@@ -27,12 +27,14 @@ func (cmd *GetCommand) HandleArgs () error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "get"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params
 	cmd.Key = cmdArgs[0]

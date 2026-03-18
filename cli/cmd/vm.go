@@ -30,7 +30,7 @@ func (cmd *VmCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	cmdName := "vm"
 	nExpected := 1
 	if len(cmdArgs) < nExpected {
@@ -66,7 +66,9 @@ func (cmd *VmCommand) Run() error {
 	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
-	err = RunVm(cmd.SubCommand(), cmd.SubArgs())
+	subCommand, _ := cmd.SubCommand()
+	subArgs, _ := cmd.SubArgs()
+	err = RunVm(subCommand, subArgs)
 	if err != nil { return err }
 
 	return nil
@@ -116,18 +118,18 @@ func (cmd *VmAddCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
+	cmdArgs, _ := cmd.Args()
 	nExpected := 2
-	if len(cmd.SubArgs()) != nExpected {
+	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-						  "vm",
-		                  cmd.SubCommand(),
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
 						  nExpected,
-						  len(cmd.SubArgs()))
+						  len(cmdArgs))
 	}
 	// init positional params
-	cmd.Name = cmd.SubArgs()[0]
-	cmd.Fqdn = cmd.SubArgs()[1]
+	cmd.Name = cmdArgs[0]
+	cmd.Fqdn = cmdArgs[1]
 
 	return nil
 }
@@ -140,7 +142,7 @@ func (cmd *VmAddCommand) PrintUsage () {
 
 
 func (cmd VmAddCommand) Run () error {
-	slog.Debug("VmAddCommand.Run()", "args", cmd.SubArgs())
+	slog.Debug("VmAddCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil { return err }
@@ -182,13 +184,12 @@ func (cmd *VmAllCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-		                  "vm",
-		                  cmd.SubCommand(),
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -252,12 +253,14 @@ func (cmd *VmDelCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "vm del"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 	cmd.Name = cmdArgs[0]
@@ -323,13 +326,12 @@ func (cmd *VmGetCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-		                  "vm",
-		                  cmd.SubCommand(),
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -396,12 +398,14 @@ func (cmd *VmListCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "vm list"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 
@@ -467,12 +471,14 @@ func (cmd *VmSetCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "vm set"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 3
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 	cmd.Name = cmdArgs[0]

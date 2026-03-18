@@ -62,7 +62,9 @@ func (cmd *MiscCommand) Run() error {
 	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
-	err = RunMisc(cmd.SubCommand(), cmd.SubArgs())
+	subCommand, _ := cmd.SubCommand()
+	subArgs, _ := cmd.SubArgs()
+	err = RunMisc(subCommand, subArgs)
 	if err != nil { return err }
 
 	return nil
@@ -106,14 +108,14 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-			cmd.Cmdline[0],
-			cmd.SubCommand(),
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmd.GetCommandString(),
 			nExpected,
-			len(cmd.Cmdline))
+			len(cmdArgs))
 		}
 
 	return nil
@@ -176,13 +178,12 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	var cmdArgs Cmdline = cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-			cmd.Cmdline.Command(),
-			cmdArgs.Command(),
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		    cmd.GetCommandString(),
 			nExpected,
 			len(cmdArgs))
 		}
@@ -242,13 +243,12 @@ func (cmd *LookupCommand) HandleArgs () error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-			cmd.Cmdline[0],
-			cmdArgs[0],
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmd.GetCommandString(),
 			nExpected,
 			len(cmdArgs))
 		}

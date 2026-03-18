@@ -31,15 +31,14 @@ func (cmd *ConfigCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "config"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) < nExpected {
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
-	// init positional params
-	cmd.SubCommand = cmdArgs[0]
-	cmd.SubArgs = cmdArgs[1:]
 
 	return nil
 }
@@ -122,10 +121,12 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	if len(cmdArgs) != 1 {
 		cmd.PrintUsage()
-		return fmt.Errorf("`config get` expects 1 argument(s); received %d", len(cmdArgs))
+		return fmt.Errorf("`%s` expects 1 argument(s); received %d",
+		                   cmd.GetCommandString(),
+		                   len(cmdArgs))
 	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
@@ -185,10 +186,12 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	if len(cmdArgs) != 2 {
 		cmd.PrintUsage()
-		return fmt.Errorf("`config set` expects 2 argument(s); received %d", len(cmdArgs))
+		return fmt.Errorf("`%s` expects 2 argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  len(cmdArgs))
 	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
@@ -277,12 +280,14 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	cmdArgs := cmd.Args()
-	cmdName := "config show"
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d", cmdName, nExpected, len(cmdArgs))
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+		                  cmd.GetCommandString(),
+						  nExpected,
+						  len(cmdArgs))
 	}
 	// init positional params (nop - no positional params)
 

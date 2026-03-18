@@ -26,13 +26,14 @@ func (cmd *ListCommand) HandleArgs() error {
 	err := cmd.Parse()
 	if err != nil { return err }
 	// validate arg count
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.SubCommand(),
+		                  cmd.GetCommandString(),
 						  nExpected,
-						  len(cmd.SubArgs()))
+						  len(cmdArgs))
 	}
 	// init positional params + subargs
 
@@ -46,7 +47,7 @@ func (cmd *ListCommand) PrintUsage () {
 }
 
 func (cmd *ListCommand) Run () error {
-	slog.Debug("ListCommand.Run()", "args", cmd.SubArgs())
+	slog.Debug("ListCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil { return err }

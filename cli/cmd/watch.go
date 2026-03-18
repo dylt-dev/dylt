@@ -32,11 +32,11 @@ func (cmd *WatchCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	var cmdArgs Cmdline = cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) < nExpected {
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-		                  cmd.Cmdline.Command(),
+		                  cmd.GetCommandString(),
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -63,7 +63,9 @@ func (cmd *WatchCommand) Run() error {
 		return err
 	}
 	// Execute command
-	err = RunWatch(cmd.SubCommand(), cmd.SubArgs())
+	subCommand, _ := cmd.SubCommand()
+	subArgs, _ := cmd.SubArgs()
+	err = RunWatch(subCommand, subArgs)
 	if err != nil {
 		return err
 	}
@@ -186,17 +188,17 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	cmdName := cmd.Cmdline[0]
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdName,
+		                  cmd.GetCommandString(),
 						  nExpected,
-						  len(cmd.Cmdline))
+						  len(cmdArgs))
 	}
 	// init positional params
-	cmd.Name = cmd.Args()[0]
+	cmd.Name = cmdArgs[0]
 
 	return nil
 }
