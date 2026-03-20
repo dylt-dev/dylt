@@ -22,5 +22,18 @@ func (o Cmdline) HasCommand () bool {
 }
 
 type Command interface {
+	Args () (Cmdline, bool)
+	CommandName () string
+	GetCommandArgs () ([]string, bool)
+	GetCommandString () (string, bool)
+	HandleArgs () error
+	Parse () error
 	Run () error
+	SubArgs() (Cmdline, bool)
+	SubCommand() (string, bool)
+}
+
+type SuperCommand interface {
+	Command
+	CreateSubCommand () (Command, error)
 }

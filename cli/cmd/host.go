@@ -11,14 +11,12 @@ import (
 
 type HostCommand struct {
 	*BaseCommand
-	SubCommand string
-	SubArgs    []string
 }
 
-func NewHostCommand(cmdline Cmdline) *HostCommand {
+func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	// create command
 	flagSet := flag.NewFlagSet("host", flag.ExitOnError)
-	cmd := HostCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := HostCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -35,14 +33,13 @@ func (cmd *HostCommand) HandleArgs() error {
 	nExpected := 1
 	if len(cmdArgs) < nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
-	// init positional params
-	cmd.SubCommand = cmdArgs[0]
-	cmd.SubArgs = cmdArgs[1:]
+	// init positional params (nop - no positional params)
 
 	return nil
 }
@@ -65,7 +62,9 @@ func (cmd *HostCommand) Run() error {
 		return err
 	}
 	// Execute command
-	err = RunHost(cmd.SubCommand, cmd.SubArgs)
+	subArgs, _ := cmd.SubArgs()
+	subCommand, _ := cmd.SubCommand()
+	err = RunHost(subCommand, subArgs)
 	if err != nil {
 		return err
 	}
@@ -123,8 +122,9 @@ func (cmd *HostInitCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}

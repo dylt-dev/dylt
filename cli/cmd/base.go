@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"strings"
 )
 
 type BaseCommand struct {
@@ -20,8 +21,40 @@ func (cmd *BaseCommand) Args () (Cmdline, bool) {
 	return cmd.FlagSet.Args(), true
 }
 
-func (cmd *BaseCommand) GetCommandString () string {
-	return ""
+func (cmd *BaseCommand) CommandName () string {
+	return cmd.Cmdline.Command()
+}
+
+func (cmd *BaseCommand) GetCommandArgs () ([]string, bool) {
+	if !cmd.FlagSet.Parsed() {
+		return nil, false
+	}
+	var cmdArgs []string
+	var flag bool
+	if cmd.ParentCommand == nil {
+		cmdArgs = []string{}
+	} else {
+		cmdArgs, flag = cmd.ParentCommand.GetCommandArgs()
+		if !flag {
+			return nil, flag
+		}
+	}
+	cmdArgs = append(cmdArgs, cmd.Cmdline.Command())
+	return cmdArgs, true
+}
+
+func (cmd *BaseCommand) GetCommandString () (string, bool) {
+	if !cmd.FlagSet.Parsed() {
+		return "", false
+	}
+  	cmdArgs, flag := cmd.GetCommandArgs()
+	if !flag {
+		return "", false
+	}
+	if cmdArgs == nil {
+		return "", flag
+	}
+	return strings.Join(cmdArgs, " "), true
 }
 
 func (cmd *BaseCommand) Log() {
@@ -31,7 +64,7 @@ func (cmd *BaseCommand) Log() {
 }
 
 func (cmd *BaseCommand) Parse() error {
-	err := cmd.FlagSet.Parse(cmd.Cmdline)
+	err := cmd.FlagSet.Parse(cmd.Cmdline.Args())
 	if err != nil {
 		return err
 	}
@@ -43,7 +76,7 @@ func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
 		return nil, false
 	}
 	var subCmdline Cmdline = cmd.FlagSet.Args()
-	return subCmdline.Args().Args(), true
+	return subCmdline.Args(), true
 }
 
 func (cmd *BaseCommand) SubCommand() (string, bool) {
@@ -51,5 +84,5 @@ func (cmd *BaseCommand) SubCommand() (string, bool) {
 		return "", false
 	}
 	var subCmdline Cmdline = cmd.FlagSet.Args()
-	return subCmdline.Args().Command(), true
+	return subCmdline.Command(), true
 }

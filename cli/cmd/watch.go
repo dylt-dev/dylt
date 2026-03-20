@@ -16,10 +16,10 @@ type WatchCommand struct {
 	*BaseCommand
 }
 
-func NewWatchCommand(cmdline Cmdline) *WatchCommand {
+func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	// create command
 	flagSet := flag.NewFlagSet("watch", flag.ExitOnError)
-	cmd := WatchCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := WatchCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -35,8 +35,9 @@ func (cmd *WatchCommand) HandleArgs() error {
 	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) < nExpected {
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -192,8 +193,9 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 	nExpected := 1
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}

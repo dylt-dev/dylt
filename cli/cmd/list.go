@@ -12,10 +12,10 @@ type ListCommand struct {
 	*BaseCommand
 }
 
-func NewListCommand (cmdline Cmdline) *ListCommand {
+func NewListCommand (cmdline Cmdline, parent Command) *ListCommand {
 	// create command
 	flagSet := flag.NewFlagSet("list", flag.PanicOnError)
-	cmd := ListCommand { BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet} }
+	cmd := ListCommand { BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent} }
 	// init flag vars - (nop - no flags)
 
 	return &cmd
@@ -30,8 +30,9 @@ func (cmd *ListCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}

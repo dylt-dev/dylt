@@ -26,10 +26,10 @@ type StatusCommand struct {
 	Help bool
 }
 
-func NewStatusCommand (cmdline Cmdline) *StatusCommand {
+func NewStatusCommand (cmdline Cmdline, parent Command) *StatusCommand {
 	// create command
 	flagSet := flag.NewFlagSet("status", flag.ExitOnError)
-	cmd := StatusCommand{BaseCommand: &BaseCommand{ Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := StatusCommand{BaseCommand: &BaseCommand{ Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (no flags; nop)
 	flagSet.BoolVar(&cmd.Help, "help", false, "blah blah blah")
 	return &cmd
@@ -44,8 +44,9 @@ func (cmd *StatusCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmd.GetCommandString(),
+			cmdString,
 			nExpected,
 			len(cmdArgs))
 		}

@@ -14,10 +14,10 @@ type InitCommand struct {
 	EtcdDomain string
 }
 
-func NewInitCommand(cmdline Cmdline) *InitCommand {
+func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
 	// create command
 	flagSet := flag.NewFlagSet("init", flag.ExitOnError)
-	cmd := InitCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := InitCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars
 	flagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
 
@@ -41,8 +41,9 @@ func (cmd *InitCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}

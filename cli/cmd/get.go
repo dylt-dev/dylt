@@ -13,10 +13,10 @@ type GetCommand struct {
 	Key string				// arg 0
 }
 
-func NewGetCommand (cmdline Cmdline) *GetCommand {
+func NewGetCommand (cmdline Cmdline, parent Command) *GetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
-	cmd := GetCommand {BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := GetCommand {BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop - command has no flags)
 	
 	return &cmd
@@ -31,8 +31,9 @@ func (cmd *GetCommand) HandleArgs () error {
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}

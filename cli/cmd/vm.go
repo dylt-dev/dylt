@@ -16,10 +16,10 @@ type VmCommand struct {
 	*BaseCommand
 }
 
-func NewVmCommand(cmdline Cmdline) *VmCommand {
+func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm", flag.ExitOnError)
-	cmd := VmCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := VmCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -66,18 +66,20 @@ func (cmd *VmCommand) Run() error {
 	err := cmd.HandleArgs()
 	if err != nil { return err }
 	// execute command
-	subCommand, _ := cmd.SubCommand()
-	subArgs, _ := cmd.SubArgs()
-	err = RunVm(subCommand, subArgs)
+	args, flag := cmd.Args()
+	if !flag {
+		return nil
+	}
+	err = RunVm(args, cmd)
 	if err != nil { return err }
 
 	return nil
 }
 
-func RunVm(subCommand string, subCmdArgs []string) error {
-	slog.Debug("RunVm()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+func RunVm(cmdline Cmdline, parent *VmCommand) error {
+	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
 	// create the subcommand and run it
-	subCmd, err := createVmSubCommand(subCommand, subCmdArgs)
+	subCmd, err := createVmSubCommand(cmdline, parent)
 	if err != nil { return err }
 	err = subCmd.Run()
 	if err != nil { return err }
@@ -85,15 +87,16 @@ func RunVm(subCommand string, subCmdArgs []string) error {
 	return nil
 }
 
-func createVmSubCommand (cmd string, args Cmdline) (Command, error) {
-	switch cmd {
-	case "add": return NewVmAddCommand(args), nil
-	case "all": return NewVmAllCommand(args), nil
-	case "del": return NewVmDelCommand(args), nil
-	case "get": return NewVmGetCommand(args), nil
-	case "list": return NewVmListCommand(args), nil
-	case "set": return NewVmSetCommand(args), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+func createVmSubCommand (cmdline Cmdline, parent Command) (Command, error) {
+	subCmd := cmdline.Command()
+	switch subCmd {
+	case "add": return NewVmAddCommand(cmdline, parent), nil
+	case "all": return NewVmAllCommand(cmdline, parent), nil
+	case "del": return NewVmDelCommand(cmdline, parent), nil
+	case "get": return NewVmGetCommand(cmdline, parent), nil
+	case "list": return NewVmListCommand(cmdline, parent), nil
+	case "set": return NewVmSetCommand(cmdline, parent), nil
+	default: return nil, fmt.Errorf("unrecognized subcommand: %s", subCmd)
 	}
 }
 
@@ -103,10 +106,10 @@ type VmAddCommand struct {
 	Fqdn string			// arg 1
 }
 
-func NewVmAddCommand (cmdline Cmdline) *VmAddCommand {
+func NewVmAddCommand (cmdline Cmdline, parent Command) *VmAddCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.add", flag.PanicOnError)
-	cmd := VmAddCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := VmAddCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
@@ -122,8 +125,9 @@ func (cmd *VmAddCommand) HandleArgs() error {
 	nExpected := 2
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -169,10 +173,10 @@ type VmAllCommand struct {
 	*BaseCommand
 }
 
-func NewVmAllCommand (cmdline Cmdline) *VmAllCommand {
+func NewVmAllCommand (cmdline Cmdline, parent Command) *VmAllCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.all", flag.PanicOnError)
-	cmd := VmAllCommand{&BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := VmAllCommand{&BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 
 	// init flag vars - (nop - no flags)
 
@@ -188,8 +192,9 @@ func (cmd *VmAllCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -238,10 +243,10 @@ type VmDelCommand struct {
 	Name string			// arg 0
 }
 
-func NewVmDelCommand (cmdline Cmdline) *VmDelCommand {
+func NewVmDelCommand (cmdline Cmdline, parent Command) *VmDelCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.del", flag.PanicOnError)
-	cmd := VmDelCommand{BaseCommand: &BaseCommand{FlagSet: flagSet}}
+	cmd := VmDelCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars
 	flagSet.StringVar(&cmd.Name, "key", "", "key")
 
@@ -257,8 +262,9 @@ func (cmd *VmDelCommand) HandleArgs() error {
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -312,10 +318,10 @@ type VmGetCommand struct {
 	Name string			// arg 0
 }
 
-func NewVmGetCommand (cmdline Cmdline) *VmGetCommand {
+func NewVmGetCommand (cmdline Cmdline, parent Command) *VmGetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.get", flag.PanicOnError)
-	cmd := VmGetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := VmGetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
@@ -330,8 +336,9 @@ func (cmd *VmGetCommand) HandleArgs() error {
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -384,10 +391,10 @@ type VmListCommand struct {
 	*BaseCommand
 }
 
-func NewVmListCommand (cmdline Cmdline) *VmListCommand {
+func NewVmListCommand (cmdline Cmdline, parent Command) *VmListCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.list", flag.PanicOnError)
-	cmd := VmListCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := VmListCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
@@ -402,8 +409,9 @@ func (cmd *VmListCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}
@@ -457,10 +465,10 @@ type VmSetCommand struct {
 	Value string		// arg 2	
 }
 
-func NewVmSetCommand (cmdline Cmdline) *VmSetCommand {
+func NewVmSetCommand (cmdline Cmdline, parent Command) *VmSetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.set", flag.PanicOnError)
-	cmd := VmSetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := VmSetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
@@ -475,8 +483,9 @@ func (cmd *VmSetCommand) HandleArgs() error {
 	nExpected := 3
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmd.GetCommandString(),
+		                  cmdString,
 						  nExpected,
 						  len(cmdArgs))
 	}

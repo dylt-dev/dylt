@@ -15,10 +15,10 @@ type CallCommand struct {
 	ScriptPath string   // flag
 }
 
-func NewCallCommand(cmdline Cmdline) *CallCommand {
+func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 	// create command
 	flagSet := flag.NewFlagSet("call", flag.ExitOnError)
-	cmd := CallCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := CallCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars
 	flagSet.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 
@@ -41,7 +41,7 @@ func (cmd *CallCommand) HandleArgs() error {
 	}
 
 	// init positional params
-	cmd.ScriptArgs = cmd.Cmdline
+	cmd.ScriptArgs = cmd.Cmdline.Args()
 
 	return nil
 }

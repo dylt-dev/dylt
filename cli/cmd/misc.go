@@ -19,10 +19,10 @@ type MiscCommand struct {
 	*BaseCommand
 }
 
-func NewMiscCommand (cmdline Cmdline) *MiscCommand {
+func NewMiscCommand (cmdline Cmdline, parent Command) *MiscCommand {
 	// create command
 	flagSet := flag.NewFlagSet("misc", flag.ExitOnError)
-	cmd := MiscCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := MiscCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - no flags; nop
 
 	return &cmd
@@ -112,8 +112,9 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmd.GetCommandString(),
+			cmdString,
 			nExpected,
 			len(cmdArgs))
 		}
@@ -182,8 +183,9 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		    cmd.GetCommandString(),
+		    cmdString,
 			nExpected,
 			len(cmdArgs))
 		}
@@ -247,8 +249,9 @@ func (cmd *LookupCommand) HandleArgs () error {
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.GetCommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmd.GetCommandString(),
+			cmdString,
 			nExpected,
 			len(cmdArgs))
 		}

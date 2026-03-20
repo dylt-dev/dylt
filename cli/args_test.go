@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"io"
+	"os"
 	"strings"
 	"testing"
 
@@ -35,12 +36,19 @@ func (o *arglist) Args() []string {
 	return (*o)[1:]
 }
 
+func TestArgs(t *testing.T) {
+	cmdline := clicmd.Cmdline{"foo", "bar", "bum"}
+	flagSet := flag.FlagSet{}
+	flagSet.Parse(cmdline)
+	t.Logf("flagSet.Args(): %#+v\n", flagSet.Args())
+}
+
 func TestBoolFlag(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"dylt", "--help"}
 	var fs flag.FlagSet
 	var helpy *bool = fs.Bool("help", false, "yeah yeah yeah")
-	t.Log(cmdline.Args())
-	fs.Parse(cmdline.Args())
+	fs.Parse(cmdline)
+	t.Log(fs.Args())
 	require.True(t, *helpy)
 }
 
@@ -79,6 +87,34 @@ func TestLongLine(t *testing.T) {
 	assert.Equal(t, "yellowrose", argsGhr[1])
 }
 
+func TestMissingBool(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt"}
+	flagSet := flag.FlagSet{}
+	var help bool
+	flagSet.BoolVar(&help, "help", true, "help")
+	flagSet.Parse(cmdline.Args())
+	t.Logf("flagSet.Args()=%v", flagSet.Args())
+	require.True(t, help)
+}
+
+func TestParseBool(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt",  "--help"}
+	flagSet := flag.FlagSet{}
+	var help bool
+	flagSet.BoolVar(&help, "help", false, "help")
+	flagSet.Parse(cmdline.Args())
+	t.Logf("flagSet.Args()=%v", flagSet.Args())
+	require.True(t, help)
+}
+
+func TestStringFlag(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt", "--foo", "bar"}
+	var fs flag.FlagSet
+	var helpy *string = fs.String("foo", "", "yeah yeah yeah")
+	fs.Parse(cmdline.Args())
+	require.Equal(t, "bar", *helpy)
+}
+
 // cmdline: dylt --foo 1 --bar x y
 // Expected:
 func TestWeirdArgs(t *testing.T) {
@@ -95,6 +131,9 @@ func TestWeirdArgs(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
+	if os.Getenv("INTERACTIVE") != "Y" {
+		t.Skip("Test run is non-interactive; skipping test")
+	}
 	stdin, _ := io.Pipe()
 	scanner := bufio.NewScanner(stdin)
 	scanner.Scan()
@@ -115,18 +154,21 @@ type PappyCommand struct { *clicmd.BaseCommand }
 type DaddyCommand struct{ *clicmd.BaseCommand }
 type MeCommand struct{ *clicmd.BaseCommand }
 
+func (cmd *PappyCommand) HandleArgs () error { return nil}
 func (cmd *PappyCommand) Run () error { return nil}
 
 func NewPappyCommand (cmdline clicmd.Cmdline) *PappyCommand {
 	return &PappyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
 }
 
+func (cmd *DaddyCommand) HandleArgs () error { return nil}
 func (cmd *DaddyCommand) Run () error { return nil }
 
 func NewDaddyCommand (cmdline clicmd.Cmdline, parent *PappyCommand) *DaddyCommand {
 	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
 }
 
+func (cmd *MeCommand) HandleArgs () error { return nil}
 func (cmd *MeCommand) Run () error { return nil }
 
 func NewMeCommand (cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
@@ -135,60 +177,61 @@ func NewMeCommand (cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
 
 
 func TestPappyDaddyMe(t *testing.T) {
-	var subCommand string
-	var subArgs clicmd.Cmdline
-	var flag bool
 	var cmdline clicmd.Cmdline = []string{"pappy", "daddy", "me", "foo"}
+
+	// Create `pappy` subcommand
 	pappy := NewPappyCommand(cmdline)
-	// Test pappy values pre-parse are as expected
-	subCommand, flag = pappy.SubCommand()
-	require.Empty(t, subCommand)
-	require.False(t, flag)
-	subArgs, flag = pappy.SubArgs()
-	require.Nil(t, subArgs)
-	require.False(t, flag)
+	_TestPreParseValues(t, pappy)
 	// Parse and check again
 	pappy.Parse()
-	subCommand, flag = pappy.SubCommand()
-	require.Equal(t, "daddy", subCommand)
-	require.True(t, flag)
-	subArgs, flag = pappy.SubArgs()
-	require.Equal(t, clicmd.Cmdline{"me", "foo"}, subArgs)	
-	require.True(t, flag)
+	_TestSubCommandAndArgs(t, pappy, "daddy", []string{"me", "foo"})
+	_TestCommandString(t, pappy, "pappy", )
+
 	// Create `daddy` subcommand
 	daddy := NewDaddyCommand(pappy.Cmdline.Args(), pappy)
-	// Test daddy values pre-parse are as expected
-	subCommand, flag = daddy.SubCommand()
-	require.Empty(t, subCommand)
-	require.False(t, flag)
-	subArgs, flag = daddy.SubArgs()
-	require.Nil(t, subArgs)
-	require.False(t, flag)
+	_TestPreParseValues(t, daddy)
 	// Parse and check again
 	daddy.Parse()
-	subCommand, flag = daddy.SubCommand()
-	require.Equal(t, "me", subCommand)
-	require.True(t, flag)
-	subArgs, flag = daddy.SubArgs()
-	require.Equal(t, clicmd.Cmdline{"foo"}, subArgs)	
-	require.True(t, flag)
+	_TestSubCommandAndArgs(t, daddy, "me", []string{"foo"})
+	_TestCommandString(t, daddy, "pappy daddy")
+
 	// Create `me` subcommand
 	me := NewMeCommand(daddy.Cmdline.Args(), daddy)
-	// Test daddy values pre-parse are as expected
-	subCommand, flag = me.SubCommand()
-	require.Empty(t, subCommand)
-	require.False(t, flag)
-	subArgs, flag = me.SubArgs()
-	require.Nil(t, subArgs)
-	require.False(t, flag)
+	_TestPreParseValues(t, me)
 	// Parse and check again
 	me.Parse()
-	args, flag := me.Args()
-	require.Equal(t, 1, len(args.Args()))
-	require.Equal(t, "foo", args.Args()[0])
+	_TestSubCommandAndArgs(t, me, "foo", []string{})
+	_TestCommandString(t, me, "pappy daddy me")
+}
+
+func _TestArgs (t *testing.T, cmd clicmd.Command, targetArgsLen int, targetArgs clicmd.Cmdline) {
+	args, flag := cmd.Args()
+	require.Equal(t, targetArgsLen, len(args.Args()))
+	require.Equal(t, targetArgs, args.Args())
 	require.True(t, flag)
-	subArgs, flag = me.SubArgs()
-	require.Empty(t, subArgs)
+}
+
+func _TestCommandString (t *testing.T, cmd clicmd.Command, targetCmdString string) {
+	cmdString, flag := cmd.GetCommandString()
 	require.True(t, flag)
-	
+	require.Equal(t, targetCmdString, cmdString)
+}
+
+func _TestPreParseValues (t *testing.T, cmd clicmd.Command) {
+	// Test pre-parse values are as expected
+	subCommand, flag := cmd.SubCommand()
+	require.Empty(t, subCommand)
+	require.False(t, flag)
+	subArgs, flag := cmd.SubArgs()
+	require.Nil(t, subArgs)
+	require.False(t, flag)
+}
+
+func _TestSubCommandAndArgs (t *testing.T, cmd clicmd.Command, targetSubCommand string, targetSubArgs clicmd.Cmdline) {
+	subCommand, flag := cmd.SubCommand()
+	require.Equal(t, targetSubCommand, subCommand)
+	require.True(t, flag)
+	subArgs, flag := cmd.SubArgs()
+	require.Equal(t, targetSubArgs, subArgs)	
+	require.True(t, flag)
 }
