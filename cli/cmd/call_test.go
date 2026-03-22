@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCall (t *testing.T) {
+
+}
+
+
 func TestRunCall0 (t *testing.T) {
 	scriptPath := "/tmp/daylight.sh"
 	scriptArgs := []string{"hello"}

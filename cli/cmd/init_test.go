@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestInit (t *testing.T) {
+	
+}
+
+
 func TestRunInit (t *testing.T) {
 	etcDomain := "hello.dylt.dev"
 	err := RunInit(etcDomain)

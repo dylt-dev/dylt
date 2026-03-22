@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGet (t *testing.T) {
+
+}
+
+
 func TestRunGet (t *testing.T) {
 	key := "hello"
 	err := RunGet(key)

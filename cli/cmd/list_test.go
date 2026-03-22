@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestList (t *testing.T) {
+
+}
+
 func TestRunList (t *testing.T) {
 	err := RunList()
 	require.Nil(t, err)
