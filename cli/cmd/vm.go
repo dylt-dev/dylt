@@ -78,13 +78,13 @@ func (cmd *VmCommand) Run() error {
 		return err
 	}
 	// If no args, print usage
-	if len(cmd.Cmdline) == 0 {
+	args, _ := cmd.Args()
+	if len(args) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
 	// execute command
-	args, _ := cmd.Args()
 	err = RunVm(args, cmd)
 	return err
 }

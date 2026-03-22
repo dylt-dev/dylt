@@ -71,8 +71,14 @@ func (cmd *WatchCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	// Execute command
+	// If no args, print usage
 	args, _ := cmd.Args()
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+	// Execute command
 	err = RunWatch(args, cmd)
 	return err
 }

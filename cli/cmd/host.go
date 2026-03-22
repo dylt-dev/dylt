@@ -70,13 +70,13 @@ func (cmd *HostCommand) Run() error {
 		return err
 	}
 	// If no args, print usage
-	if len(cmd.Cmdline) == 0 {
+	args, _ := cmd.Args()
+	if len(args) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
 	// Execute command
-	args, _ := cmd.Args()
 	err = RunHost(args, cmd)
 	return err
 }
@@ -155,6 +155,13 @@ func (cmd *HostInitCommand) Run() error {
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
+	}
+	// If no args, print usage
+	args, _ := cmd.Args()
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
 	}
 	// Execute command
 	err = RunHostInit(cmd.Uid, cmd.Gid)

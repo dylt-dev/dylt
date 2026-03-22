@@ -68,13 +68,13 @@ func (cmd *ConfigCommand) Run() error {
 		return err
 	}
 	// If no args, print usage
-	if len(cmd.Cmdline) == 0 {
+	args, _ := cmd.Args()
+	if len(args) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
 	// Execute command
-	args, _ := cmd.Args()
 	err = RunConfig(args, cmd)
 	return err
 }

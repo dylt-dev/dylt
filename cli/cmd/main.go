@@ -54,17 +54,20 @@ func (cmd *MainCommand) Run() error {
 	if err != nil {
 		return err
 	}
+	// If help flag set, print usage
 	if cmd.Help {
-		PrintUsage(USG_Main)
+		cmd.PrintUsage()
 		return nil
 	}
-	if len(cmd.Cmdline) == 0 {
+	// If no args, print usage
+	args, _ := cmd.Args()
+	if len(args) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
 	// Execute command
-	err = RunMain(cmd.Cmdline.Args(), cmd)
+	err = RunMain(args, cmd)
 	if err != nil {
 		return err
 	}

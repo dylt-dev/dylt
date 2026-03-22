@@ -73,8 +73,14 @@ func (cmd *MiscCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	// execute command
+	// If no args, print usage
 	args, _ := cmd.Args()
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+	// execute command
 	err = RunMisc(args, cmd)
 	return err
 }
