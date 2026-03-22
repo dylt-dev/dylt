@@ -95,7 +95,8 @@ func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 		}
 	} else {
 		// Create the subcommand and run it
-		subCmd, err := createMainSubCommand(cmdline, cmd)
+		args, _ := cmd.Args()
+		subCmd, err := createMainSubCommand(args, cmd)
 		if err != nil {
 			return err
 		}
@@ -109,8 +110,8 @@ func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 }
 
 func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error) {
-	subCommand := cmdline.Command()
-	switch subCommand {
+	cmdName := cmdline.Command()
+	switch cmdName {
 	case "call":
 		return NewCallCommand(cmdline, parent), nil
 	case "config":
@@ -135,7 +136,7 @@ func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error)
 		{
 			var nilPtr *MainCommand = nil
 			nilPtr.PrintUsage()
-			return nil, fmt.Errorf("unrecognized subcommand: '%s'", subCommand)
+			return nil, fmt.Errorf("unrecognized subcommand: '%s'", cmdName)
 		}
 	}
 }
