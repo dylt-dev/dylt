@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"flag"
 	"io"
+	"os"
 	"strings"
 	"testing"
 
+	clicmd "github.com/dylt-dev/dylt/cli/cmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	clicmd "github.com/dylt-dev/dylt/cli/cmd"
 )
 
 type InitCommand struct {
@@ -17,8 +18,8 @@ type InitCommand struct {
 	EtcdDomain string
 }
 
-func NewInitCommand () *InitCommand {
-	cmd := InitCommand {
+func NewInitCommand() *InitCommand {
+	cmd := InitCommand{
 		FlagSet: flag.NewFlagSet("init", flag.PanicOnError),
 	}
 	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
@@ -27,20 +28,27 @@ func NewInitCommand () *InitCommand {
 
 type arglist []string
 
-func (o *arglist) Command () string {
+func (o *arglist) Command() string {
 	return (*o)[0]
 }
 
-func (o *arglist) Args () []string {
+func (o *arglist) Args() []string {
 	return (*o)[1:]
+}
+
+func TestArgs(t *testing.T) {
+	cmdline := clicmd.Cmdline{"foo", "bar", "bum"}
+	flagSet := flag.FlagSet{}
+	flagSet.Parse(cmdline)
+	t.Logf("flagSet.Args(): %#+v\n", flagSet.Args())
 }
 
 func TestBoolFlag(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"dylt", "--help"}
 	var fs flag.FlagSet
 	var helpy *bool = fs.Bool("help", false, "yeah yeah yeah")
-	t.Log(cmdline.Args())
-	fs.Parse(cmdline.Args())
+	fs.Parse(cmdline)
+	t.Log(fs.Args())
 	require.True(t, *helpy)
 }
 
@@ -58,8 +66,7 @@ func TestInitCommand(t *testing.T) {
 	t.Log(strings.Join(args, " "))
 }
 
-
-func TestLongLine (t *testing.T) {
+func TestLongLine(t *testing.T) {
 	args := strings.Split("dylt call --script /opt/bin/daylight.sh github-release-list --token ghuBlahDiBlah dylt-dev yellowrose", " ")
 	assert.Equal(t, "dylt", args[0])
 	assert.Equal(t, "call", args[1])
@@ -80,9 +87,37 @@ func TestLongLine (t *testing.T) {
 	assert.Equal(t, "yellowrose", argsGhr[1])
 }
 
+func TestMissingBool(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt"}
+	flagSet := flag.FlagSet{}
+	var help bool
+	flagSet.BoolVar(&help, "help", true, "help")
+	flagSet.Parse(cmdline.Args())
+	t.Logf("flagSet.Args()=%v", flagSet.Args())
+	require.True(t, help)
+}
+
+func TestParseBool(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt", "--help"}
+	flagSet := flag.FlagSet{}
+	var help bool
+	flagSet.BoolVar(&help, "help", false, "help")
+	flagSet.Parse(cmdline.Args())
+	t.Logf("flagSet.Args()=%v", flagSet.Args())
+	require.True(t, help)
+}
+
+func TestStringFlag(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt", "--foo", "bar"}
+	var fs flag.FlagSet
+	var helpy *string = fs.String("foo", "", "yeah yeah yeah")
+	fs.Parse(cmdline.Args())
+	require.Equal(t, "bar", *helpy)
+}
+
 // cmdline: dylt --foo 1 --bar x y
-// Expected: 
-func TestWeirdArgs (t *testing.T) {
+// Expected:
+func TestWeirdArgs(t *testing.T) {
 	args := strings.Split("dylt --foo 1 --bar x y", " ")
 	flagset := flag.NewFlagSet("dylt", flag.PanicOnError)
 	var fooptr *string = flagset.String("foo", "", "foo")
@@ -96,6 +131,9 @@ func TestWeirdArgs (t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
+	if os.Getenv("INTERACTIVE") != "Y" {
+		t.Skip("Test run is non-interactive; skipping test")
+	}
 	stdin, _ := io.Pipe()
 	scanner := bufio.NewScanner(stdin)
 	scanner.Scan()
@@ -103,4 +141,96 @@ func TestRead(t *testing.T) {
 	err := scanner.Err()
 	assert.NoError(t, err)
 	assert.NotEmpty(t, s)
+}
+
+func TestSubcommand(t *testing.T) {
+	cmdline := []string{"foo", "bar", "bum"}
+	flagSet := flag.FlagSet{}
+	flagSet.Parse(cmdline)
+	t.Logf("flagSet.Args()=%v", flagSet.Args())
+}
+
+type PappyCommand struct{ *clicmd.BaseCommand }
+type DaddyCommand struct{ *clicmd.BaseCommand }
+type MeCommand struct{ *clicmd.BaseCommand }
+
+func (cmd *PappyCommand) HandleArgs() error { return nil }
+func (cmd *PappyCommand) Run() error        { return nil }
+
+func NewPappyCommand(cmdline clicmd.Cmdline) *PappyCommand {
+	return &PappyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
+}
+
+func (cmd *DaddyCommand) HandleArgs() error { return nil }
+func (cmd *DaddyCommand) Run() error        { return nil }
+
+func NewDaddyCommand(cmdline clicmd.Cmdline, parent *PappyCommand) *DaddyCommand {
+	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
+}
+
+func (cmd *MeCommand) HandleArgs() error { return nil }
+func (cmd *MeCommand) Run() error        { return nil }
+
+func NewMeCommand(cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
+	return &MeCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
+}
+
+func TestPappyDaddyMe(t *testing.T) {
+	var cmdline clicmd.Cmdline = []string{"pappy", "daddy", "me", "foo"}
+
+	// Create `pappy` subcommand
+	pappy := NewPappyCommand(cmdline)
+	_TestPreParseValues(t, pappy)
+	// Parse and check again
+	pappy.Parse()
+	_TestSubCommandAndArgs(t, pappy, "daddy", []string{"me", "foo"})
+	_TestCommandString(t, pappy, "pappy")
+
+	// Create `daddy` subcommand
+	daddy := NewDaddyCommand(pappy.Cmdline.Args(), pappy)
+	_TestPreParseValues(t, daddy)
+	// Parse and check again
+	daddy.Parse()
+	_TestSubCommandAndArgs(t, daddy, "me", []string{"foo"})
+	_TestCommandString(t, daddy, "pappy daddy")
+
+	// Create `me` subcommand
+	me := NewMeCommand(daddy.Cmdline.Args(), daddy)
+	_TestPreParseValues(t, me)
+	// Parse and check again
+	me.Parse()
+	_TestSubCommandAndArgs(t, me, "foo", []string{})
+	_TestCommandString(t, me, "pappy daddy me")
+}
+
+func _TestArgs(t *testing.T, cmd clicmd.Command, targetArgsLen int, targetArgs clicmd.Cmdline) {
+	args, flag := cmd.Args()
+	require.Equal(t, targetArgsLen, len(args.Args()))
+	require.Equal(t, targetArgs, args.Args())
+	require.True(t, flag)
+}
+
+func _TestCommandString(t *testing.T, cmd clicmd.Command, targetCmdString string) {
+	cmdString, flag := cmd.CommandString()
+	require.True(t, flag)
+	require.Equal(t, targetCmdString, cmdString)
+}
+
+func _TestPreParseValues(t *testing.T, cmd clicmd.Command) {
+	// Test pre-parse values are as expected
+	subCommand, flag := cmd.SubCommand()
+	require.Empty(t, subCommand)
+	require.False(t, flag)
+	subArgs, flag := cmd.SubArgs()
+	require.Nil(t, subArgs)
+	require.False(t, flag)
+}
+
+func _TestSubCommandAndArgs(t *testing.T, cmd clicmd.Command, targetSubCommand string, targetSubArgs clicmd.Cmdline) {
+	subCommand, flag := cmd.SubCommand()
+	require.Equal(t, targetSubCommand, subCommand)
+	require.True(t, flag)
+	subArgs, flag := cmd.SubArgs()
+	require.Equal(t, targetSubArgs, subArgs)
+	require.True(t, flag)
 }

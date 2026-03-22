@@ -16,13 +16,22 @@ type MainCommand struct {
 	Help bool // flag
 }
 
-func NewMainCommand(cmdline Cmdline) *MainCommand {
+func NewMainCommand(cmdline Cmdline, parent SuperCommand) *MainCommand {
 	flagSet := flag.NewFlagSet("dylt", flag.ExitOnError)
-	var cmd = MainCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	var cmd = MainCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	flagSet.BoolVar(&cmd.Help, "help", false, "give it to me")
 
 	return &cmd
 }
+
+func (cmd *MainCommand) CreateSubCommand() (Command, error) {
+	args, flag := cmd.Args()
+	if !flag {
+		return nil, nil
+	}
+	return createMainSubCommand(args, cmd)
+}
+
 
 func (cmd *MainCommand) HandleArgs() error {
 	// parse flags
@@ -45,17 +54,20 @@ func (cmd *MainCommand) Run() error {
 	if err != nil {
 		return err
 	}
+	// If help flag set, print usage
 	if cmd.Help {
-		PrintUsage(USG_Main)
+		cmd.PrintUsage()
 		return nil
 	}
-	if len(cmd.Cmdline) == 0 {
+	// If no args, print usage
+	args, _ := cmd.Args()
+	if len(args) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
 	// Execute command
-	err = RunMain(cmd.SubCommand(), cmd.SubArgs())
+	err = RunMain(args, cmd)
 	if err != nil {
 		return err
 	}
@@ -63,11 +75,11 @@ func (cmd *MainCommand) Run() error {
 	return nil
 }
 
-func RunMain(subCommand string, subCmdArgs []string) error {
-	slog.Debug("RunMain()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+func RunMain(cmdline Cmdline, cmd *MainCommand) error {
+	slog.Debug("RunMain()", "cmdline", cmdline)
 
 	// If there's no subcommand, do main() things
-	if subCommand == "" {
+	if cmdline.Command() == "" {
 		// Check if it's the user's first time. If so, act accordingly.
 		is, err := isFirstTime()
 		slog.Debug("main", "isFirstTime()", is)
@@ -83,7 +95,8 @@ func RunMain(subCommand string, subCmdArgs []string) error {
 		}
 	} else {
 		// Create the subcommand and run it
-		subCmd, err := createMainSubCommand(subCommand, subCmdArgs)
+		args, _ := cmd.Args()
+		subCmd, err := createMainSubCommand(args, cmd)
 		if err != nil {
 			return err
 		}
@@ -96,33 +109,34 @@ func RunMain(subCommand string, subCmdArgs []string) error {
 	return nil
 }
 
-func createMainSubCommand(sCmd string, subCmdArgs []string) (Command, error) {
-	switch sCmd {
+func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error) {
+	cmdName := cmdline.Command()
+	switch cmdName {
 	case "call":
-		return NewCallCommand(subCmdArgs), nil
+		return NewCallCommand(cmdline, parent), nil
 	case "config":
-		return NewConfigCommand(subCmdArgs), nil
+		return NewConfigCommand(cmdline, parent), nil
 	case "get":
-		return NewGetCommand(subCmdArgs), nil
+		return NewGetCommand(cmdline, parent), nil
 	case "host":
-		return NewHostCommand(subCmdArgs), nil
+		return NewHostCommand(cmdline, parent), nil
 	case "init":
-		return NewInitCommand(subCmdArgs), nil
+		return NewInitCommand(cmdline, parent), nil
 	case "list":
-		return NewListCommand(subCmdArgs), nil
+		return NewListCommand(cmdline, parent), nil
 	case "misc":
-		return NewMiscCommand(subCmdArgs), nil
+		return NewMiscCommand(cmdline, parent), nil
 	case "status":
-		return NewStatusCommand(subCmdArgs), nil
+		return NewStatusCommand(cmdline, parent), nil
 	case "vm":
-		return NewVmCommand(subCmdArgs), nil
+		return NewVmCommand(cmdline, parent), nil
 	case "watch":
-		return NewWatchCommand(subCmdArgs), nil
+		return NewWatchCommand(cmdline, parent), nil
 	default:
 		{
 			var nilPtr *MainCommand = nil
 			nilPtr.PrintUsage()
-			return nil, fmt.Errorf("unrecognized subcommand: %s", sCmd)
+			return nil, fmt.Errorf("unrecognized subcommand: '%s'", cmdName)
 		}
 	}
 }

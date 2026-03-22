@@ -13,7 +13,7 @@ import (
 // Expected: --help=False SubCommand="vm" SubArgs="list")
 func TestVmMainList(t *testing.T) {
 	cmdline := []string{"vm", "list"}
-	cmd := clicmd.NewMainCommand(cmdline)
+	cmd := clicmd.NewMainCommand(cmdline, nil)
 	cmd.HandleArgs()
 	require.False(t, cmd.Help)
 	require.Equal(t, "vm", cmd.SubCommand)
@@ -36,14 +36,14 @@ func TestRun_Status(t *testing.T) {
 func TestRun_StatusHelp(t *testing.T) {
 	common.InitLogging()
 	var cmdline clicmd.Cmdline = []string{"status", "--help"}
-	cmd := clicmd.NewMainCommand(cmdline)
+	cmd := clicmd.NewMainCommand(cmdline, nil)
 	cmd.Run()
 }
 
 func testCommandLine(t *testing.T, s string) {
 	common.InitLogging()
 	var cmdline clicmd.Cmdline = strings.Fields(s)
-	cmd := clicmd.NewMainCommand(cmdline)
+	cmd := clicmd.NewMainCommand(cmdline, nil)
 	err := cmd.Run()
 	require.NoError(t, err)
 }

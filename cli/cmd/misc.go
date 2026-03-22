@@ -19,39 +19,49 @@ type MiscCommand struct {
 	*BaseCommand
 }
 
-func NewMiscCommand (cmdline Cmdline) *MiscCommand {
+func NewMiscCommand(cmdline Cmdline, parent SuperCommand) *MiscCommand {
 	// create command
 	flagSet := flag.NewFlagSet("misc", flag.ExitOnError)
-	cmd := MiscCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := MiscCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - no flags; nop
 
 	return &cmd
 }
 
+func (cmd *MiscCommand) CreateSubCommand () (Command, error) {
+	args, is := cmd.Args()
+	if !is {
+		return nil, nil
+	}
+	return createMiscSubCommand(args, cmd)
+}
+
 func (cmd *MiscCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
-	nExpected := 1
+	nExpected := 0
 	if len(cmd.Cmdline) < nExpected {
 		cmd.PrintUsage()
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
 			cmd.Cmdline[0],
 			nExpected,
 			len(cmd.Cmdline))
-		}
+	}
 	// init positional params
 
 	return nil
 }
 
-func (cmd *MiscCommand) PrintUsage () {
+func (cmd *MiscCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n\t%s\n\t%s\n",
-	USG_Misc_TwoNode_Short,
-	USG_Misc_GenScript_Short,
-	USG_Misc_Lookup_Short,
+		USG_Misc_TwoNode_Short,
+		USG_Misc_GenScript_Short,
+		USG_Misc_Lookup_Short,
 	)
 	fmt.Println()
 }
@@ -60,31 +70,47 @@ func (cmd *MiscCommand) Run() error {
 	common.Logger.Debug("MiscCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	// If no args, print usage
+	args, _ := cmd.Args()
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// execute command
-	err = RunMisc(cmd.SubCommand(), cmd.SubArgs())
-	if err != nil { return err }
-
-	return nil
+	err = RunMisc(args, cmd)
+	return err
 }
 
-func RunMisc (subCommand string, subCmdArgs Cmdline) error {
-	common.Logger.Debug("RunMisc()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+func RunMisc(cmdline Cmdline, parent SuperCommand) error {
+	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
 	// create the subcommand and run it
-	subCmd, err := createMiscSubCommand(subCommand, subCmdArgs)
-	if err != nil { return err }
+	subCmd, err := createMiscSubCommand(cmdline, parent)
+	if err != nil {
+		return err
+	}
 	err = subCmd.Run()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func createMiscSubCommand (cmd string, subCmdArgs Cmdline) (Command, error) {
-	switch cmd {
-	case "create-two-node-cluster": return NewCreateTwoNodeClusterCommand(subCmdArgs), nil
-	case "gen-etcd-run-script": return NewGenEtcdRunScriptCommand(subCmdArgs), nil
-	case "lookup": return NewLookupCommand(subCmdArgs), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", cmd)
+func createMiscSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+	cmdName := cmdline.Command()
+	switch cmdName {
+	case "create-two-node-cluster":
+		return NewCreateTwoNodeClusterCommand(cmdline, parent), nil
+	case "gen-etcd-run-script":
+		return NewGenEtcdRunScriptCommand(cmdline, parent), nil
+	case "lookup":
+		return NewLookupCommand(cmdline, parent), nil
+	default:
+		return nil, fmt.Errorf("unrecognized subcommand: %s", cmdName)
 	}
 }
 
@@ -92,10 +118,10 @@ type CreateTwoNodeClusterCommand struct {
 	*BaseCommand
 }
 
-func NewCreateTwoNodeClusterCommand (cmdline Cmdline) *CreateTwoNodeClusterCommand {
+func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent SuperCommand) *CreateTwoNodeClusterCommand {
 	// create command
 	flagSet := flag.NewFlagSet("createTwoNodeCluster", flag.ExitOnError)
-	cmd := CreateTwoNodeClusterCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := CreateTwoNodeClusterCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars
 
 	return &cmd
@@ -104,22 +130,25 @@ func NewCreateTwoNodeClusterCommand (cmdline Cmdline) *CreateTwoNodeClusterComma
 func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmd.Cmdline) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-			cmd.Cmdline[0],
-			cmd.SubCommand(),
+		cmdString, _ := cmd.CommandString()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdString,
 			nExpected,
-			len(cmd.Cmdline))
-		}
+			len(cmdArgs))
+	}
 
 	return nil
 }
 
-func (cmd *CreateTwoNodeClusterCommand) PrintUsage () {
+func (cmd *CreateTwoNodeClusterCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Misc_TwoNode)
 	fmt.Println()
@@ -129,13 +158,13 @@ func (cmd *CreateTwoNodeClusterCommand) Run() error {
 	common.Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	// @getit
 	err = RunCreateTwoNodeCluster()
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
 func RunCreateTwoNodeCluster() error {
@@ -143,7 +172,7 @@ func RunCreateTwoNodeCluster() error {
 	var err error
 
 	r := bufio.NewReader(os.Stdin)
-	
+
 	fmt.Println("Two node cluster time!")
 	fmt.Println()
 
@@ -153,19 +182,17 @@ func RunCreateTwoNodeCluster() error {
 
 	fmt.Print("Done! (hit <Enter>) ")
 	_, err = r.ReadBytes('\n')
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
 type GenEtcdRunScriptCommand struct {
 	*BaseCommand
 }
 
-func NewGenEtcdRunScriptCommand (cmdline Cmdline) *GenEtcdRunScriptCommand {
+func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent SuperCommand) *GenEtcdRunScriptCommand {
 	// create command
 	flagSet := flag.NewFlagSet("gen-etcd-run-script", flag.ExitOnError)
-	cmd := GenEtcdRunScriptCommand{BaseCommand: &BaseCommand {Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := GenEtcdRunScriptCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars - no flags; nop
 
 	return &cmd
@@ -174,23 +201,25 @@ func NewGenEtcdRunScriptCommand (cmdline Cmdline) *GenEtcdRunScriptCommand {
 func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
-	var cmdArgs Cmdline = cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-			cmd.Cmdline.Command(),
-			cmdArgs.Command(),
+		cmdString, _ := cmd.CommandString()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdString,
 			nExpected,
 			len(cmdArgs))
-		}
+	}
 
 	return nil
 }
 
-func (cmd *GenEtcdRunScriptCommand) PrintUsage () {
+func (cmd *GenEtcdRunScriptCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Misc_GenScript)
 	fmt.Println()
@@ -200,11 +229,15 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 	common.Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	// @getit
 	err = RunGenEtcdRunScript()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	common.Logger.WithGroup("g")
 	common.Logger.With("bar", "thirteen")
@@ -213,12 +246,14 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 }
 
 func RunGenEtcdRunScript() error {
-	common.Logger.Debug("RunGenEtcdRunScript()", )
+	common.Logger.Debug("RunGenEtcdRunScript()")
 
 	fmt.Println("I'm gennin a script!")
 
 	buf, err := content.ReadFile("content/hello.tmpl")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	tmpl := template.New("hello")
 	tmpl, err = tmpl.Parse(string(buf))
 	tmpl.Execute(os.Stdout, nil)
@@ -230,35 +265,37 @@ type LookupCommand struct {
 	Hostname string
 }
 
-func NewLookupCommand (cmdline Cmdline) *LookupCommand {
+func NewLookupCommand(cmdline Cmdline, parent SuperCommand) *LookupCommand {
 	flagSet := flag.NewFlagSet("misc lookup", flag.PanicOnError)
-	cmd := LookupCommand { BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet }}
+	cmd := LookupCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 
 	return &cmd
 }
 
-func (cmd *LookupCommand) HandleArgs () error {
+func (cmd *LookupCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-			cmd.Cmdline[0],
-			cmdArgs[0],
+		cmdString, _ := cmd.CommandString()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdString,
 			nExpected,
 			len(cmdArgs))
-		}
+	}
 	// init positional params
 	cmd.Hostname = cmdArgs[0]
 
 	return nil
 }
 
-func (cmd *LookupCommand) PrintUsage () {
+func (cmd *LookupCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Misc_Lookup)
 	fmt.Println()
@@ -268,11 +305,17 @@ func (cmd *LookupCommand) Run() error {
 	common.Logger.Debug("LookupCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	// If no args, print usage
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// execute command
 	// @getit
 	err = lib.RunLookupCommand(cmd.Hostname)
-	if err != nil { return err }
-
-	return nil
+	return err
 }

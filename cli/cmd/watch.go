@@ -16,13 +16,21 @@ type WatchCommand struct {
 	*BaseCommand
 }
 
-func NewWatchCommand(cmdline Cmdline) *WatchCommand {
+func NewWatchCommand(cmdline Cmdline, parent SuperCommand) *WatchCommand {
 	// create command
 	flagSet := flag.NewFlagSet("watch", flag.ExitOnError)
-	cmd := WatchCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := WatchCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
+}
+
+func (cmd *WatchCommand) CreateSubCommand() (Command, error) {
+	args, flag := cmd.Args()
+	if !flag {
+		return nil, nil
+	}
+	return createWatchSubCommand(args, cmd)
 }
 
 func (cmd *WatchCommand) HandleArgs() error {
@@ -32,13 +40,14 @@ func (cmd *WatchCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	var cmdArgs Cmdline = cmd.Args()
-	nExpected := 1
+	cmdArgs, _ := cmd.Args()
+	nExpected := 0
 	if len(cmdArgs) < nExpected {
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-		                  cmd.Cmdline.Command(),
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 
@@ -62,19 +71,22 @@ func (cmd *WatchCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	// Execute command
-	err = RunWatch(cmd.SubCommand(), cmd.SubArgs())
-	if err != nil {
-		return err
+	// If no args, print usage
+	args, _ := cmd.Args()
+	if len(args) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
 	}
-
-	return nil
+	// Execute command
+	err = RunWatch(args, cmd)
+	return err
 }
 
-func RunWatch(subCommand string, subCmdArgs []string) error {
-	slog.Debug("RunWatch()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+func RunWatch(cmdline Cmdline, parent SuperCommand) error {
+	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
-	subCmd, err := createWatchSubCommand(subCommand, subCmdArgs)
+	subCmd, err := createWatchSubCommand(cmdline, parent)
 	if err != nil {
 		return err
 	}
@@ -86,12 +98,13 @@ func RunWatch(subCommand string, subCmdArgs []string) error {
 	return nil
 }
 
-func createWatchSubCommand(cmdName string, subCmdArgs Cmdline) (Command, error) {
+func createWatchSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+	cmdName := cmdline.Command()
 	switch cmdName {
 	case "script":
-		return NewWatchScriptCommand(subCmdArgs), nil
+		return NewWatchScriptCommand(cmdline, parent), nil
 	case "svc":
-		return NewWatchSvcCommand(subCmdArgs), nil
+		return NewWatchSvcCommand(cmdline, parent), nil
 	default:
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
@@ -106,10 +119,10 @@ type WatchScriptCommand struct {
 	TargetPath string // arg 1
 }
 
-func NewWatchScriptCommand(cmdline Cmdline) *WatchScriptCommand {
+func NewWatchScriptCommand(cmdline Cmdline, parent SuperCommand) *WatchScriptCommand {
 	// create command
 	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
-	cmd := WatchScriptCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := WatchScriptCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -122,20 +135,19 @@ func (cmd *WatchScriptCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	parentName := "watch"
-	cmdName := cmd.Cmdline.Command()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 2
-	if len(cmd.Cmdline) != nExpected {
+	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		return fmt.Errorf("`%s %s` expects %d argument(s); received %d",
-		                  parentName,
-		                  cmdName,
-						  nExpected,
-						  len(cmd.Cmdline))
+		cmdString, _ := cmd.CommandString()
+		return fmt.Errorf("`%s` expects %d argument(s); received %d",
+			cmdString,
+			nExpected,
+			len(cmd.Cmdline))
 	}
 	// init positional params
-	cmd.ScriptKey = cmd.Cmdline[0]
-	cmd.TargetPath = cmd.Cmdline[1]
+	cmd.ScriptKey = cmdArgs[0]
+	cmd.TargetPath = cmdArgs[1]
 
 	return nil
 }
@@ -155,11 +167,7 @@ func (cmd *WatchScriptCommand) Run() error {
 	}
 	// Execute command
 	err = RunWatchScript(cmd.ScriptKey, cmd.TargetPath)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Usage
@@ -170,10 +178,10 @@ type WatchSvcCommand struct {
 	Name string
 }
 
-func NewWatchSvcCommand(cmdline Cmdline) *WatchSvcCommand {
+func NewWatchSvcCommand(cmdline Cmdline, parent SuperCommand) *WatchSvcCommand {
 	// create command
 	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
-	cmd := WatchSvcCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := WatchSvcCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -186,17 +194,18 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 		return err
 	}
 	// validate arg count
-	cmdName := cmd.Cmdline[0]
+	cmdArgs, _ := cmd.Args()
 	nExpected := 1
-	if len(cmd.Cmdline) != nExpected {
+	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdName,
-						  nExpected,
-						  len(cmd.Cmdline))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params
-	cmd.Name = cmd.Args()[0]
+	cmd.Name = cmdArgs[0]
 
 	return nil
 }
@@ -214,13 +223,15 @@ func (cmd *WatchSvcCommand) Run() error {
 	if err != nil {
 		return err
 	}
+	// If no args, print usage
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Execute command
 	err = RunWatchSvc()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 
 }
 

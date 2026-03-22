@@ -27,9 +27,11 @@ func TestListCmd0 (t *testing.T) {
 
 func TestListHandleArgs_None (t *testing.T) {
 	args := []string{}
-	cmd := NewListCommand(args)
+	cmd := NewListCommand(args, nil)
 	err := cmd.HandleArgs()
 	require.NoError(t, err)
-	require.Empty(t, cmd.SubArgs)
-	require.Empty(t, cmd.SubCommand)
+	subArgs, _ := cmd.SubArgs()
+	require.Empty(t, subArgs)
+	subCommand, _ := cmd.SubCommand()
+	require.Empty(t, subCommand)
 }

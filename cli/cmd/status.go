@@ -4,7 +4,7 @@
 // as published by Sam Hocevar and modified by the author.
 // See the COPYING file for more details.
 
-// The `status` command provides the status of the local dylt installation. If 
+// The `status` command provides the status of the local dylt installation. If
 // you are wondering how well `dylt` is supported on your local workstation, or
 // if it is supported at all, `dylt status` will tell you. Local `dylt`
 // installations vary from platform to platform -- `dylt` on Windows works
@@ -26,10 +26,10 @@ type StatusCommand struct {
 	Help bool
 }
 
-func NewStatusCommand (cmdline Cmdline) *StatusCommand {
+func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
 	// create command
 	flagSet := flag.NewFlagSet("status", flag.ExitOnError)
-	cmd := StatusCommand{BaseCommand: &BaseCommand{ Cmdline: cmdline, FlagSet: flagSet}}
+	cmd := StatusCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (no flags; nop)
 	flagSet.BoolVar(&cmd.Help, "help", false, "blah blah blah")
 	return &cmd
@@ -38,34 +38,41 @@ func NewStatusCommand (cmdline Cmdline) *StatusCommand {
 func (cmd *StatusCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
-	cmdArgs := cmd.Args()
+	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmd.Cmdline[0],
+			cmdString,
 			nExpected,
 			len(cmdArgs))
-		}
+	}
 
 	return nil
 }
 
-func (cmd *StatusCommand) PrintUsage () {
+func (cmd *StatusCommand) PrintUsage() {
 	PrintUsage(USG_Status_Short)
 }
 
 func (cmd *StatusCommand) Run() error {
 	slog.Debug("StatusCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
-err := cmd.HandleArgs()
-	if err != nil { return err }
+	err := cmd.HandleArgs()
+	if err != nil {
+		return err
+	}
 	// execute command
 	// @getit
 	err = RunStatus()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
