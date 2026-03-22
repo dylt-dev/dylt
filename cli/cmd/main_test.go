@@ -7,49 +7,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func CreateCommandParams (cmdName string, subCmdName string, subCmdArgs Cmdline) (cmdline Cmdline, cmdArgs Cmdline, subCmdString string) {
-	cmdArgs = append(Cmdline{subCmdName}, subCmdArgs...)
-	cmdline = append(Cmdline{cmdName}, cmdArgs...)
-	subCmdString = strings.Join(cmdline[0:2], " ")
+// Returns
+//     cmdline	    The command line for the command+subcommand invocation
+//     cmdArgs      The arguments for the command
+//     subCmdString The command string for the full command: cmd, subCmd, subCmdArgs
+func CreateCommandParams(cmdName string,
+	                     subCmdName string,
+						 subCmdFlags []string,
+						 subCmdArgs []string) (cmdline Cmdline, cmdArgs Cmdline, cmdString string) {
+	subCmdline := NewCmdline(subCmdName, subCmdFlags, subCmdArgs)
+	cmdline = NewCmdline(cmdName, []string{}, subCmdline)
+	cmdArgs = cmdline.Args()
+	cmdString = strings.Join(cmdline[0:2], " ")
 	return
 }
 
-func TestMain (t *testing.T) {
-	var err error
-	cmdline := Cmdline{"dylt"}
-
-	cmd := NewMainCommand(cmdline)
-	err = cmd.Parse()
-	require.NoError(t, err)
-	_TestCommandString(t, cmd, "dylt")
+func TestMain(t *testing.T) {
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewMainCommand, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.False(t, cmd.Help)
 }
 
-
-func TestMainHelp (t *testing.T) {
-	var err error
-	cmdline := Cmdline{"dylt", "--help"}
-
-	cmd := NewMainCommand(cmdline)
-	err = cmd.HandleArgs()
-	require.NoError(t, err)
+func TestMainHelp(t *testing.T) {
+	cmdName := "dylt"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewMainCommand, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.True(t, cmd.Help)
-	cmdString, _ := cmd.GetCommandString()
-	require.Equal(t, "dylt", cmdString)
 }
-
 
 // Test that `dylt call foo` produces a `call` subcommand
 // where name == "call" and args == ["foo"]
-func TestMainSubCall (t *testing.T) {
+func TestMainSubCall(t *testing.T) {
 	// Create + parse main command with "dylt call foo"
 	cmdline := Cmdline{"dylt", "call", "foo"}
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	require.NoError(t, err)
 	_TestSubcommandCreation[*CallCommand](t,
 		cmd,
 		"call",
+		[]string{},
 		Cmdline{"foo"},
 		"dylt call",
 	)
@@ -75,10 +77,10 @@ func TestMainSubCall (t *testing.T) {
 	// require.Equal(t, "foo", args[0])
 }
 
-func TestMainSubConfig (t *testing.T) {
+func TestMainSubConfig(t *testing.T) {
 	// Create + parse main command with "dylt config get foo"
 	cmdline := Cmdline{"dylt", "config", "get", "foo"}
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand == "config", subArgs == {"get", "foo"}
 	_TestSubCommandAndArgs(t, cmd, "config", []string{"get", "foo"})
@@ -86,15 +88,16 @@ func TestMainSubConfig (t *testing.T) {
 	_TestSubcommandCreation[*ConfigCommand](t,
 		cmd,
 		"config",
+		[]string{},
 		Cmdline{"get", "foo"},
 		"dylt config",
 	)
 }
 
-func TestMainSubGet (t *testing.T) {
+func TestMainSubGet(t *testing.T) {
 	// Create + parse main command with "dylt get foo"
 	cmdline := Cmdline{"dylt", "get", "foo"}
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand == "get", subArgs == {"foo"}
 	_TestSubCommandAndArgs(t, cmd, "get", []string{"foo"})
@@ -102,33 +105,36 @@ func TestMainSubGet (t *testing.T) {
 	_TestSubcommandCreation[*GetCommand](t,
 		cmd,
 		"get",
+		[]string{},
 		Cmdline{"foo"},
 		"dylt get",
 	)
 }
 
-func TestMainSubHost (t *testing.T) {
+func TestMainSubHost(t *testing.T) {
 	// Create + parse main command with "dylt get foo"
-	cmdline := Cmdline{"dylt", "host", "init", "2000", "2000"}
-	cmd := NewMainCommand(cmdline)
+	cmdline := Cmdline{"dylt", "host", "init", "--gid", "1000", "--uid", "2000"}
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand == "host", subArgs == {"foo"}
-	_TestSubCommandAndArgs(t, cmd, "host", []string{"init", "2000", "2000"})
+	_TestSubCommandAndArgs(t, cmd, "host", []string{"init", "--gid", "1000", "--uid", "2000"})
 	require.NoError(t, err)
 	_TestSubcommandCreation[*HostCommand](t,
 		cmd,
 		"host",
-		Cmdline{"init", "2000", "2000"},
+		[]string{},
+		Cmdline{"init", "--gid", "1000", "--uid", "2000"},
 		"dylt host",
 	)
 }
 
-func TestMainSubInit (t *testing.T) {
+func TestMainSubInit(t *testing.T) {
 	// Create + parse main command with "dylt get foo"
 	subCmdName := "init"
+	subCmdFlags := []string{}
 	subCmdArgs := []string{"etcdDomain"}
 	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand == "host", subArgs == {"foo"}
 	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
@@ -136,18 +142,20 @@ func TestMainSubInit (t *testing.T) {
 	_TestSubcommandCreation[*InitCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		"dylt init",
 	)
 }
 
-func TestMainSubList (t *testing.T) {
+func TestMainSubList(t *testing.T) {
 	// Create + parse main command with "dylt list etcdDomain"
 	subCmdName := "list"
+	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
 	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand == "host", subArgs == {"foo"}
 	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
@@ -155,18 +163,20 @@ func TestMainSubList (t *testing.T) {
 	_TestSubcommandCreation[*ListCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		cmdString,
 	)
 }
 
-func TestMainSubStatus (t *testing.T) {
+func TestMainSubStatus(t *testing.T) {
 	// Create + parse main command with "dylt misc lookup hostname"
 	subCmdName := "status"
+	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
 	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand & subArgs
 	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
@@ -174,18 +184,20 @@ func TestMainSubStatus (t *testing.T) {
 	_TestSubcommandCreation[*StatusCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		cmdString,
 	)
 }
 
-func TestMainSubMisc (t *testing.T) {
+func TestMainSubMisc(t *testing.T) {
 	// Create + parse main command with "dylt misc lookup hostname"
 	subCmdName := "misc"
+	subCmdFlags := []string{}
 	subCmdArgs := []string{"lookup", "hostname"}
 	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
 	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand & subArgs
 	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
@@ -193,18 +205,20 @@ func TestMainSubMisc (t *testing.T) {
 	_TestSubcommandCreation[*MiscCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		cmdString,
 	)
 }
 
-func TestMainSubVm (t *testing.T) {
+func TestMainSubVm(t *testing.T) {
 	// Create + parse main command with "dylt vm get name"
 	subCmdName := "vm"
+	subCmdFlags := []string{}
 	subCmdArgs := []string{"get", "name"}
 	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
 	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	// subcommand & subArgs
 	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
@@ -212,19 +226,21 @@ func TestMainSubVm (t *testing.T) {
 	_TestSubcommandCreation[*VmCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		cmdString,
 	)
 }
 
-func TestMainSubWatch (t *testing.T) {
+func TestMainSubWatch(t *testing.T) {
 	// dylt watch script scriptPath
 	cmdName := "dylt"
 	subCmdName := "watch"
+	subCmdFlags := []string{}
 	subCmdArgs := Cmdline{"script", "scriptPath"}
 	cmdline := append([]string{cmdName, subCmdName}, subCmdArgs...)
 	subCmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline)
+	cmd := NewMainCommand(cmdline, nil)
 	err := cmd.Parse()
 	require.NoError(t, err)
 	// subcommand & subArgs
@@ -233,25 +249,8 @@ func TestMainSubWatch (t *testing.T) {
 	_TestSubcommandCreation[*WatchCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-}
-
-func _TestCommandString (t *testing.T, cmd Command, targetCmdString string) {
-	cmdString, flag := cmd.GetCommandString()
-	require.True(t, flag)
-	require.Equal(t, targetCmdString, cmdString)
-}
-
-func _TestParentCommand (t *testing.T,
-	                     cmd SuperCommand,
-						 cmdName string,
-						 cmdArgs Cmdline) {
-	err := cmd.Parse()
-	require.NoError(t, err)
-	_TestCommandString(t, cmd, cmdName)
-	args, is := cmd.Args()
-	require.True(t, is)
-	require.Equal(t, cmdArgs, args)
 }

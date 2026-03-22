@@ -9,25 +9,21 @@ import (
 )
 
 func TestConfig (t *testing.T) {
-	var err error
-	cmdline := Cmdline{"config"}
-
-	cmd := NewConfigCommand(cmdline, nil)
-	err = cmd.Parse()
-	require.NoError(t, err)
-	_TestCommandString(t, cmd, "config")
-	require.Equal(t, "config", cmd.CommandName())
-	args, is := cmd.Args()
-	require.True(t, is)
-	require.Equal(t, Cmdline{}, args)	
+	cmdName := "config"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewConfigCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &ConfigCommand{}, cmd)
 }
 
 func TestConfigGet (t *testing.T) {
 	// config get foo
 	cmdName := "config"
 	subCmdName := "get"
-	subCmdArgs := Cmdline{"foo"}
-	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdArgs)
+	subCmdFlags := []string{}
+	subCmdArgs := []string{"foo"}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
 	cmd := NewConfigCommand(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
@@ -35,10 +31,10 @@ func TestConfigGet (t *testing.T) {
 	subCmd := _TestSubcommandCreation[*ConfigGetCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	
 	require.Equal(t, "foo", subCmd.(*ConfigGetCommand).Key)
 }
 
@@ -47,8 +43,9 @@ func TestConfigSet (t *testing.T) {
 	// config set foo bar
 	cmdName := "config"
 	subCmdName := "set"
+	subCmdFlags := []string{}
 	subCmdArgs := Cmdline{"foo", "bar"}
-	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdArgs)
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
 	cmd := NewConfigCommand(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
@@ -56,6 +53,7 @@ func TestConfigSet (t *testing.T) {
 	subCmd := _TestSubcommandCreation[*ConfigSetCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
@@ -68,20 +66,22 @@ func TestConfigShow (t *testing.T) {
 	// config set foo bar
 	cmdName := "config"
 	subCmdName := "show"
+	subCmdFlags := []string{}
 	subCmdArgs := Cmdline{}
-	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdArgs)
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
 	cmd := NewConfigCommand(cmdline, nil)
+	cmd.HandleArgs()
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
 	_TestSubcommandCreation[*ConfigShowCommand](t,
 		cmd,
 		subCmdName,
+		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
 }
-
 
 func TestRunConfigGet (t *testing.T) {
 	key := "etcd-domain"

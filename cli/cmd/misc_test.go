@@ -10,6 +10,79 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestMisc (t *testing.T) {
+	cmdName := "misc"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &MiscCommand{}, cmd)
+}
+
+
+
+func TestCreateTwoNodeClusterCommand (t *testing.T) {
+	// config get foo
+	cmdName := "misc"
+	subCmdName := "create-two-node-cluster"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewVmCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test subcommand
+	_TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+}
+
+func TestGenEtcdRunScriptCommand  (t *testing.T) {
+	// config get foo
+	cmdName := "misc"
+	subCmdName := "gen-etcd-run-script"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewVmCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test subcommand
+	_TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+}
+
+func TestLookupCommand (t *testing.T) {
+	// config get foo
+	cmdName := "misc"
+	subCmdName := "lookup"
+	hostname := "hostname"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{hostname}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewVmCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test subcommand
+	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.Equal(t, hostname, subCmd.(*LookupCommand).Hostname)
+}
+
 func TestGenEtcdRunScript(t *testing.T) {
 	type EtcdRunScriptData struct {
 		Name                string
@@ -44,6 +117,42 @@ func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 	t.Logf("nStdin=%v", nStdin)
 	t.Logf("nStdout=%v", nStdout)
 	t.Logf("nStderr=%v", nStderr)
+}
+
+func TestNewCmdline (t *testing.T) {
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	targetCmdline := Cmdline{"dylt"}
+	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
+	require.Equal(t, targetCmdline, cmdline)
+}
+
+func TestNewCmdlineArgs (t *testing.T) {
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	cmdArgs := []string{"config", "get", "foo"}
+	targetCmdline := Cmdline{"dylt", "config", "get", "foo"}
+	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
+	require.Equal(t, targetCmdline, cmdline)
+}
+
+func TestNewCmdlineArgsFlags (t *testing.T) {
+	cmdName := "dylt"
+	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
+	cmdArgs := []string{"get", "foo"}
+	targetCmdline := Cmdline{"dylt", "--etcdDomain", "etcd.example.org", "get", "foo"}
+	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
+	require.Equal(t, targetCmdline, cmdline)
+}
+
+func TestNewCmdlineFlags (t *testing.T) {
+	cmdName := "dylt"
+	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
+	cmdArgs := []string{}
+	targetCmdline := Cmdline{"dylt", "--etcdDomain etcd.example.org"}
+	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
+	require.Equal(t, targetCmdline, cmdline)
 }
 
 func TestNewlineKiller(t *testing.T) {

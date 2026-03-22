@@ -10,32 +10,34 @@ import (
 
 type GetCommand struct {
 	*BaseCommand
-	Key string				// arg 0
+	Key string // arg 0
 }
 
-func NewGetCommand (cmdline Cmdline, parent Command) *GetCommand {
+func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
-	cmd := GetCommand {BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+	cmd := GetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop - command has no flags)
-	
+
 	return &cmd
 }
 
-func (cmd *GetCommand) HandleArgs () error {
+func (cmd *GetCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
@@ -43,31 +45,39 @@ func (cmd *GetCommand) HandleArgs () error {
 	return nil
 }
 
-func (cmd *GetCommand) PrintUsage () {
+func (cmd *GetCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Get)
 	fmt.Println()
 }
 
-func (cmd *GetCommand) Run () error {
+func (cmd *GetCommand) Run() error {
 	slog.Debug("GetCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunGet(cmd.Key)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func RunGet (key string) error {
+func RunGet(key string) error {
 	slog.Debug("RunGet()", "key", key)
 	// create etcd client, get value for key, + output value
 	cli, err := eco.CreateEtcdClientFromConfig()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	val, err := cli.Get(key)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("\n%s\n", val)
 	return nil
@@ -82,7 +92,7 @@ func RunGet (key string) error {
 // 		Args: cobra.ExactArgs(1),
 // 	}
 // 	command.Flags().Bool("keys", false, "--keys")
-	
+
 // 	return &command
 // }
 
@@ -104,7 +114,6 @@ func RunGet (key string) error {
 // 	}
 // 	return nil
 // }
-
 
 // func getKeys (cli *dylt.EtcdClient, prefix string) error {
 // 	kvs, err := cli.GetKeys(prefix)

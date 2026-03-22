@@ -16,9 +16,9 @@ type MainCommand struct {
 	Help bool // flag
 }
 
-func NewMainCommand(cmdline Cmdline) *MainCommand {
+func NewMainCommand(cmdline Cmdline, parent SuperCommand) *MainCommand {
 	flagSet := flag.NewFlagSet("dylt", flag.ExitOnError)
-	var cmd = MainCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet}}
+	var cmd = MainCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	flagSet.BoolVar(&cmd.Help, "help", false, "give it to me")
 
 	return &cmd

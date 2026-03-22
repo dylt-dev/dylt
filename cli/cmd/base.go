@@ -11,21 +11,25 @@ import (
 type BaseCommand struct {
 	*flag.FlagSet
 	ParentCommand Command
-	Cmdline Cmdline
+	Cmdline       Cmdline
 }
 
-func (cmd *BaseCommand) Args () (Cmdline, bool) {
+func (cmd BaseCommand) Args() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
 	}
 	return cmd.FlagSet.Args(), true
 }
 
-func (cmd *BaseCommand) CommandName () string {
+func (cmd BaseCommand) CommandLine () Cmdline {
+	return cmd.Cmdline
+}
+
+func (cmd BaseCommand) CommandName() string {
 	return cmd.Cmdline.Command()
 }
 
-func (cmd *BaseCommand) GetCommandArgs () ([]string, bool) {
+func (cmd BaseCommand) CommandArgs() ([]string, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
 	}
@@ -34,7 +38,7 @@ func (cmd *BaseCommand) GetCommandArgs () ([]string, bool) {
 	if cmd.ParentCommand == nil {
 		cmdArgs = []string{}
 	} else {
-		cmdArgs, flag = cmd.ParentCommand.GetCommandArgs()
+		cmdArgs, flag = cmd.ParentCommand.CommandArgs()
 		if !flag {
 			return nil, flag
 		}
@@ -43,11 +47,11 @@ func (cmd *BaseCommand) GetCommandArgs () ([]string, bool) {
 	return cmdArgs, true
 }
 
-func (cmd *BaseCommand) GetCommandString () (string, bool) {
+func (cmd BaseCommand) CommandString() (string, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return "", false
 	}
-  	cmdArgs, flag := cmd.GetCommandArgs()
+	cmdArgs, flag := cmd.CommandArgs()
 	if !flag {
 		return "", false
 	}
@@ -57,13 +61,13 @@ func (cmd *BaseCommand) GetCommandString () (string, bool) {
 	return strings.Join(cmdArgs, " "), true
 }
 
-func (cmd *BaseCommand) Log() {
+func (cmd BaseCommand) Log() {
 	stype := reflect.TypeOf(cmd).Name()
 	subArgs, _ := cmd.SubArgs()
 	slog.Debug(fmt.Sprintf("%s.Run()", stype), "args", subArgs)
 }
 
-func (cmd *BaseCommand) Parse() error {
+func (cmd BaseCommand) Parse() error {
 	err := cmd.FlagSet.Parse(cmd.Cmdline.Args())
 	if err != nil {
 		return err
@@ -71,7 +75,7 @@ func (cmd *BaseCommand) Parse() error {
 	return nil
 }
 
-func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
+func (cmd BaseCommand) SubArgs() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
 	}
@@ -79,7 +83,7 @@ func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
 	return subCmdline.Args(), true
 }
 
-func (cmd *BaseCommand) SubCommand() (string, bool) {
+func (cmd BaseCommand) SubCommand() (string, bool) {
 	if !cmd.Parsed() {
 		return "", false
 	}

@@ -13,13 +13,21 @@ type HostCommand struct {
 	*BaseCommand
 }
 
-func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
+func NewHostCommand(cmdline Cmdline, parent SuperCommand) *HostCommand {
 	// create command
 	flagSet := flag.NewFlagSet("host", flag.ExitOnError)
 	cmd := HostCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
+}
+
+func (cmd *HostCommand) CreateSubCommand() (Command, error) {
+	args, is := cmd.Args()
+	if !is {
+		return nil, nil
+	}
+	return createHostSubCommand(args, cmd)
 }
 
 func (cmd *HostCommand) HandleArgs() error {
@@ -30,14 +38,14 @@ func (cmd *HostCommand) HandleArgs() error {
 	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
-	nExpected := 1
+	nExpected := 0
 	if len(cmdArgs) < nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no positional params)
 
@@ -61,21 +69,22 @@ func (cmd *HostCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	// Execute command
-	subArgs, _ := cmd.SubArgs()
-	subCommand, _ := cmd.SubCommand()
-	err = RunHost(subCommand, subArgs)
-	if err != nil {
-		return err
+	// If no args, print usage
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
 	}
-
-	return nil
+	// Execute command
+	args, _ := cmd.Args()
+	err = RunHost(args, cmd)
+	return err
 }
 
-func RunHost(subCommand string, subCmdArgs []string) error {
-	slog.Debug("RunHost()", "subCommand", subCommand, "subCmdArgs", subCmdArgs)
+func RunHost(cmdline Cmdline, parent SuperCommand) error {
+	slog.Debug("RunHost()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
-	subCmd, err := createHostSubCommand(subCommand, subCmdArgs)
+	subCmd, err := createHostSubCommand(cmdline, parent)
 	if err != nil {
 		return err
 	}
@@ -87,10 +96,11 @@ func RunHost(subCommand string, subCmdArgs []string) error {
 	return nil
 }
 
-func createHostSubCommand(cmdName string, subCmdArgs Cmdline) (Command, error) {
+func createHostSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+	cmdName := cmdline.Command()
 	switch cmdName {
 	case "init":
-		return NewHostInitCommand(subCmdArgs), nil
+		return NewHostInitCommand(cmdline, parent), nil
 	default:
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
@@ -102,9 +112,9 @@ type HostInitCommand struct {
 	Uid int
 }
 
-func NewHostInitCommand(cmdline Cmdline) *HostInitCommand {
+func NewHostInitCommand(cmdline Cmdline, parent SuperCommand) *HostInitCommand {
 	flagSet := flag.NewFlagSet("host.init", flag.ExitOnError)
-	cmd := HostInitCommand{BaseCommand: &BaseCommand{FlagSet: flagSet}}
+	cmd := HostInitCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
 	flagSet.IntVar(&cmd.Gid, "gid", 2000, "gid")
 	flagSet.IntVar(&cmd.Uid, "uid", 2000, "uid")
 
@@ -122,11 +132,11 @@ func (cmd *HostInitCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no positional params)
 
@@ -148,11 +158,7 @@ func (cmd *HostInitCommand) Run() error {
 	}
 	// Execute command
 	err = RunHostInit(cmd.Uid, cmd.Gid)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func RunHostInit(uid int, gid int) error {

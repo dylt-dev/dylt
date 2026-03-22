@@ -13,7 +13,7 @@ type ConfigCommand struct {
 	*BaseCommand
 }
 
-func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
+func NewConfigCommand(cmdline Cmdline, parent SuperCommand) *ConfigCommand {
 	// create command
 	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
 	cmd := ConfigCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -38,13 +38,13 @@ func (cmd *ConfigCommand) HandleArgs() error {
 	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
-	nExpected := 1
+	nExpected := 0
 	if len(cmdArgs) < nExpected {
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 
 	return nil
@@ -67,14 +67,16 @@ func (cmd *ConfigCommand) Run() error {
 	if err != nil {
 		return err
 	}
+	// If no args, print usage
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Execute command
 	args, _ := cmd.Args()
 	err = RunConfig(args, cmd)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func RunConfig(cmdline Cmdline, parent Command) error {
@@ -133,10 +135,10 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 	cmdArgs, _ := cmd.Args()
 	if len(cmdArgs) != 1 {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects 1 argument(s); received %d",
-		                   cmdString,
-		                   len(cmdArgs))
+			cmdString,
+			len(cmdArgs))
 	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
@@ -159,12 +161,7 @@ func (cmd *ConfigGetCommand) Run() error {
 	}
 	// Execute command
 	err = RunConfigGet(cmd.Key)
-	if err != nil {
-		return err
-	}
-
-	return nil
-
+	return err
 }
 
 func RunConfigGet(key string) error {
@@ -199,10 +196,10 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 	cmdArgs, _ := cmd.Args()
 	if len(cmdArgs) != 2 {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects 2 argument(s); received %d",
-		                  cmdString,
-						  len(cmdArgs))
+			cmdString,
+			len(cmdArgs))
 	}
 	// init positional params
 	cmd.Key = cmdArgs[0]
@@ -226,11 +223,7 @@ func (cmd *ConfigSetCommand) Run() error {
 	}
 	// Execute command
 	err = RunConfigSet(cmd.Key, cmd.Value)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func RunConfigSet(key string, val string) error {
@@ -295,11 +288,11 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no positional params)
 
@@ -321,11 +314,7 @@ func (cmd *ConfigShowCommand) Run() error {
 	}
 	// Execute command
 	err = RunConfigShow()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func RunConfigShow() error {

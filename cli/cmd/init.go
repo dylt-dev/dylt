@@ -41,11 +41,11 @@ func (cmd *InitCommand) HandleArgs() error {
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 

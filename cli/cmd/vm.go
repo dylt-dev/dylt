@@ -16,7 +16,7 @@ type VmCommand struct {
 	*BaseCommand
 }
 
-func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
+func NewVmCommand(cmdline Cmdline, parent SuperCommand) *VmCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm", flag.ExitOnError)
 	cmd := VmCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -25,25 +25,35 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	return &cmd
 }
 
+func (cmd *VmCommand) CreateSubCommand() (Command, error) {
+	args, flag := cmd.Args()
+	if !flag {
+		return nil, nil
+	}
+	return createVmSubCommand(args, cmd)
+}
+
 func (cmd *VmCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	cmdName := "vm"
-	nExpected := 1
+	nExpected := 0
 	if len(cmdArgs) < nExpected {
 		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
 			cmdName,
 			nExpected,
 			len(cmdArgs))
-		}
+	}
 
 	return nil
 }
 
-func (cmd *VmCommand) PrintUsage () {
+func (cmd *VmCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_Add_Short)
 	fmt.Printf("\t%s\n", USG_Vm_All_Short)
@@ -64,49 +74,63 @@ func (cmd *VmCommand) Run() error {
 	}
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
-	// execute command
-	args, flag := cmd.Args()
-	if !flag {
+	if err != nil {
+		return err
+	}
+	// If no args, print usage
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
 		return nil
 	}
+	// execute command
+	args, _ := cmd.Args()
 	err = RunVm(args, cmd)
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
 func RunVm(cmdline Cmdline, parent *VmCommand) error {
 	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
 	// create the subcommand and run it
 	subCmd, err := createVmSubCommand(cmdline, parent)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = subCmd.Run()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func createVmSubCommand (cmdline Cmdline, parent Command) (Command, error) {
+func createVmSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
 	subCmd := cmdline.Command()
 	switch subCmd {
-	case "add": return NewVmAddCommand(cmdline, parent), nil
-	case "all": return NewVmAllCommand(cmdline, parent), nil
-	case "del": return NewVmDelCommand(cmdline, parent), nil
-	case "get": return NewVmGetCommand(cmdline, parent), nil
-	case "list": return NewVmListCommand(cmdline, parent), nil
-	case "set": return NewVmSetCommand(cmdline, parent), nil
-	default: return nil, fmt.Errorf("unrecognized subcommand: %s", subCmd)
+	case "add":
+		return NewVmAddCommand(cmdline, parent), nil
+	case "all":
+		return NewVmAllCommand(cmdline, parent), nil
+	case "del":
+		return NewVmDelCommand(cmdline, parent), nil
+	case "get":
+		return NewVmGetCommand(cmdline, parent), nil
+	case "list":
+		return NewVmListCommand(cmdline, parent), nil
+	case "set":
+		return NewVmSetCommand(cmdline, parent), nil
+	default:
+		return nil, fmt.Errorf("unrecognized subcommand: %s", subCmd)
 	}
 }
 
 type VmAddCommand struct {
 	*BaseCommand
-	Name string			// arg 0
-	Fqdn string			// arg 1
+	Name string // arg 0
+	Fqdn string // arg 1
 }
 
-func NewVmAddCommand (cmdline Cmdline, parent Command) *VmAddCommand {
+func NewVmAddCommand(cmdline Cmdline, parent SuperCommand) *VmAddCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.add", flag.PanicOnError)
 	cmd := VmAddCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -119,17 +143,19 @@ func NewVmAddCommand (cmdline Cmdline, parent Command) *VmAddCommand {
 func (cmd *VmAddCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 2
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params
 	cmd.Name = cmdArgs[0]
@@ -138,32 +164,35 @@ func (cmd *VmAddCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmAddCommand) PrintUsage () {
+func (cmd *VmAddCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_Add)
 	fmt.Println()
 }
 
-
-func (cmd VmAddCommand) Run () error {
+func (cmd VmAddCommand) Run() error {
 	slog.Debug("VmAddCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunVmAdd(cmd.Name, cmd.Fqdn)
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
-func RunVmAdd (name string, fqdn string) error {	
+func RunVmAdd(name string, fqdn string) error {
 	// get vm-specific etcd client
 	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	vm, err := cli.Add(name, fqdn)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	fmt.Println(vm)
 
 	return nil
@@ -173,7 +202,7 @@ type VmAllCommand struct {
 	*BaseCommand
 }
 
-func NewVmAllCommand (cmdline Cmdline, parent Command) *VmAllCommand {
+func NewVmAllCommand(cmdline Cmdline, parent SuperCommand) *VmAllCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.all", flag.PanicOnError)
 	cmd := VmAllCommand{&BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -186,50 +215,57 @@ func NewVmAllCommand (cmdline Cmdline, parent Command) *VmAllCommand {
 func (cmd *VmAllCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 
 	return nil
 }
 
-func (cmd *VmAllCommand) PrintUsage () {
+func (cmd *VmAllCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_All)
 	fmt.Println()
 }
 
-
-func (cmd VmAllCommand) Run () error {
+func (cmd VmAllCommand) Run() error {
 	slog.Debug("VmAllCommand.Run()", "args", cmd.Cmdline)
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// Execute command
 	err = RunVmAll()
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
-func RunVmAll () error {
+func RunVmAll() error {
 	// get vm-specific etcd client, get all vm data, + show it
 	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil { return err }
- 	vmInfoMap, err := cli.All()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	vmInfoMap, err := cli.All()
+	if err != nil {
+		return err
+	}
 	jsonData, err := json.Marshal(vmInfoMap)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	fmt.Println(string(jsonData))
 
 	return nil
@@ -237,13 +273,13 @@ func RunVmAll () error {
 
 // Usage
 //
-//    vm del vmName
+//	vm del vmName
 type VmDelCommand struct {
 	*BaseCommand
-	Name string			// arg 0
+	Name string // arg 0
 }
 
-func NewVmDelCommand (cmdline Cmdline, parent Command) *VmDelCommand {
+func NewVmDelCommand(cmdline Cmdline, parent SuperCommand) *VmDelCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.del", flag.PanicOnError)
 	cmd := VmDelCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -256,17 +292,19 @@ func NewVmDelCommand (cmdline Cmdline, parent Command) *VmDelCommand {
 func (cmd *VmDelCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 	cmd.Name = cmdArgs[0]
@@ -274,32 +312,36 @@ func (cmd *VmDelCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmDelCommand) PrintUsage () {
+func (cmd *VmDelCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_Del)
 	fmt.Println()
 }
 
-func (cmd *VmDelCommand) Run () error {
+func (cmd *VmDelCommand) Run() error {
 	slog.Debug("VmDelCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunVmDel(cmd.Name)
-	if err != nil { return err }
-
-	return nil
+	return err
 }
-	
-func RunVmDel (name string) error {
+
+func RunVmDel(name string) error {
 	slog.Debug("RunVmDel()", "name", name)
 	// get vm-specific etcd client
 	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// delete vm data from cluster
 	prevVal, err := cli.Del(name)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// log deleted vm, if it existede
 	if prevVal == nil {
 		fmt.Printf("vm '%s' not found\n", name)
@@ -312,13 +354,13 @@ func RunVmDel (name string) error {
 
 // Usage
 //
-//     vm get vmName
+//	vm get vmName
 type VmGetCommand struct {
 	*BaseCommand
-	Name string			// arg 0
+	Name string // arg 0
 }
 
-func NewVmGetCommand (cmdline Cmdline, parent Command) *VmGetCommand {
+func NewVmGetCommand(cmdline Cmdline, parent SuperCommand) *VmGetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.get", flag.PanicOnError)
 	cmd := VmGetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -330,17 +372,19 @@ func NewVmGetCommand (cmdline Cmdline, parent Command) *VmGetCommand {
 func (cmd *VmGetCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 1
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params
 	cmd.Name = cmdArgs[0]
@@ -348,50 +392,54 @@ func (cmd *VmGetCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmGetCommand) PrintUsage () {
+func (cmd *VmGetCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_Get)
 	fmt.Println()
 }
 
-func (cmd *VmGetCommand) Run () error {
+func (cmd *VmGetCommand) Run() error {
 	slog.Debug("VmGetCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunVmGet(cmd.Name)
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
-func RunVmGet (name string) error {
+func RunVmGet(name string) error {
 	slog.Debug("RunVmGet()", "name", name)
 	// get vm-specific etcd client
 	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// get vm data from cluster
 	vm, err := cli.Get(name)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// pritn vm data if vm was found
 	if vm == nil {
 		fmt.Printf("\nvm '%s' not found.\n\n", name)
 	} else {
 		fmt.Println(vm)
 	}
-	
+
 	return nil
 }
 
 // Usage
 //
-//     vm list
+//	vm list
 type VmListCommand struct {
 	*BaseCommand
 }
 
-func NewVmListCommand (cmdline Cmdline, parent Command) *VmListCommand {
+func NewVmListCommand(cmdline Cmdline, parent SuperCommand) *VmListCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.list", flag.PanicOnError)
 	cmd := VmListCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -403,51 +451,57 @@ func NewVmListCommand (cmdline Cmdline, parent Command) *VmListCommand {
 func (cmd *VmListCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 
 	return nil
 }
 
-func (cmd *VmListCommand) PrintUsage () {
+func (cmd *VmListCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_List)
 	fmt.Println()
 }
 
-func (cmd VmListCommand) Run () error {
+func (cmd VmListCommand) Run() error {
 	slog.Debug("VmListCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunVmList()
-	if err != nil { return err }
-
-	return nil
+	return err
 }
 
-func RunVmList () error {
+func RunVmList() error {
 	slog.Debug("RunVmList()")
 	// get vm-specific etcd client
 	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// List all vm names, one per line
 	names, err := cli.Names()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	fmt.Println()
-	for _, name := range(names) {
+	for _, name := range names {
 		fmt.Println(name)
 	}
 	fmt.Println()
@@ -457,15 +511,15 @@ func RunVmList () error {
 
 // Usage
 //
-//     vm set vmName key val
+//	vm set vmName key val
 type VmSetCommand struct {
 	*BaseCommand
-	Name string			// arg 0
-	Key string			// arg 1
-	Value string		// arg 2	
+	Name  string // arg 0
+	Key   string // arg 1
+	Value string // arg 2
 }
 
-func NewVmSetCommand (cmdline Cmdline, parent Command) *VmSetCommand {
+func NewVmSetCommand(cmdline Cmdline, parent SuperCommand) *VmSetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("vm.set", flag.PanicOnError)
 	cmd := VmSetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -477,17 +531,19 @@ func NewVmSetCommand (cmdline Cmdline, parent Command) *VmSetCommand {
 func (cmd *VmSetCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 3
 	if len(cmdArgs) != nExpected {
 		cmd.PrintUsage()
-		cmdString, _ := cmd.GetCommandString()
+		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-		                  cmdString,
-						  nExpected,
-						  len(cmdArgs))
+			cmdString,
+			nExpected,
+			len(cmdArgs))
 	}
 	// init positional params (nop - no params)
 	cmd.Name = cmdArgs[0]
@@ -497,36 +553,44 @@ func (cmd *VmSetCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmSetCommand) PrintUsage () {
+func (cmd *VmSetCommand) PrintUsage() {
 	fmt.Println()
 	fmt.Printf("\t%s\n", USG_Vm_Set)
 	fmt.Println()
 }
 
-func (cmd VmSetCommand) Run () error {
+func (cmd VmSetCommand) Run() error {
 	slog.Debug("VmSetCommand.Run()", "args", cmd.Cmdline)
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// execute command
 	err = RunVmSet(cmd.Name, cmd.Key, cmd.Value)
-	if err != nil { return err }
-
-	return nil
+	return err
 }
-	
-func RunVmSet (name string, key string, val string) error {
+
+func RunVmSet(name string, key string, val string) error {
 	slog.Debug("RunVmSet()", "name", name, "key", key, "val", val)
 	// get vm-specific etcd client
 	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// get the vm data from the cluster, set the field (if it exists), and save updated object
 	vm, err := cli.Get(name)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = vm.Set(key, val)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	vm, err = cli.Put(name, vm)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	// print the updated vm if it exists
 	if vm == nil {
 		fmt.Printf("vm '%s' not found", name)
@@ -556,8 +620,6 @@ func RunVmSet (name string, key string, val string) error {
 // 	if err != nil { return err }
 // 	return nil
 // }
-
-
 
 // func CreateVmCommand () *cobra.Command {
 // 	command := cobra.Command {
@@ -680,7 +742,7 @@ func RunVmSet (name string, key string, val string) error {
 // 	hasAttr := false
 // 	if attr != "" {
 // 		hasAttr = true
-// 	} 
+// 	}
 // 	cli, err := dylt.CreateVmClientFromConfig()
 // 	if err != nil { return err }
 // 	vm, err := cli.Get(key)

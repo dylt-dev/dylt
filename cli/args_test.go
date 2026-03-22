@@ -98,7 +98,7 @@ func TestMissingBool(t *testing.T) {
 }
 
 func TestParseBool(t *testing.T) {
-	cmdline := clicmd.Cmdline{"dylt",  "--help"}
+	cmdline := clicmd.Cmdline{"dylt", "--help"}
 	flagSet := flag.FlagSet{}
 	var help bool
 	flagSet.BoolVar(&help, "help", false, "help")
@@ -150,31 +150,30 @@ func TestSubcommand(t *testing.T) {
 	t.Logf("flagSet.Args()=%v", flagSet.Args())
 }
 
-type PappyCommand struct { *clicmd.BaseCommand }
+type PappyCommand struct{ *clicmd.BaseCommand }
 type DaddyCommand struct{ *clicmd.BaseCommand }
 type MeCommand struct{ *clicmd.BaseCommand }
 
-func (cmd *PappyCommand) HandleArgs () error { return nil}
-func (cmd *PappyCommand) Run () error { return nil}
+func (cmd *PappyCommand) HandleArgs() error { return nil }
+func (cmd *PappyCommand) Run() error        { return nil }
 
-func NewPappyCommand (cmdline clicmd.Cmdline) *PappyCommand {
+func NewPappyCommand(cmdline clicmd.Cmdline) *PappyCommand {
 	return &PappyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
 }
 
-func (cmd *DaddyCommand) HandleArgs () error { return nil}
-func (cmd *DaddyCommand) Run () error { return nil }
+func (cmd *DaddyCommand) HandleArgs() error { return nil }
+func (cmd *DaddyCommand) Run() error        { return nil }
 
-func NewDaddyCommand (cmdline clicmd.Cmdline, parent *PappyCommand) *DaddyCommand {
+func NewDaddyCommand(cmdline clicmd.Cmdline, parent *PappyCommand) *DaddyCommand {
 	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
 }
 
-func (cmd *MeCommand) HandleArgs () error { return nil}
-func (cmd *MeCommand) Run () error { return nil }
+func (cmd *MeCommand) HandleArgs() error { return nil }
+func (cmd *MeCommand) Run() error        { return nil }
 
-func NewMeCommand (cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
+func NewMeCommand(cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
 	return &MeCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
 }
-
 
 func TestPappyDaddyMe(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"pappy", "daddy", "me", "foo"}
@@ -185,7 +184,7 @@ func TestPappyDaddyMe(t *testing.T) {
 	// Parse and check again
 	pappy.Parse()
 	_TestSubCommandAndArgs(t, pappy, "daddy", []string{"me", "foo"})
-	_TestCommandString(t, pappy, "pappy", )
+	_TestCommandString(t, pappy, "pappy")
 
 	// Create `daddy` subcommand
 	daddy := NewDaddyCommand(pappy.Cmdline.Args(), pappy)
@@ -204,20 +203,20 @@ func TestPappyDaddyMe(t *testing.T) {
 	_TestCommandString(t, me, "pappy daddy me")
 }
 
-func _TestArgs (t *testing.T, cmd clicmd.Command, targetArgsLen int, targetArgs clicmd.Cmdline) {
+func _TestArgs(t *testing.T, cmd clicmd.Command, targetArgsLen int, targetArgs clicmd.Cmdline) {
 	args, flag := cmd.Args()
 	require.Equal(t, targetArgsLen, len(args.Args()))
 	require.Equal(t, targetArgs, args.Args())
 	require.True(t, flag)
 }
 
-func _TestCommandString (t *testing.T, cmd clicmd.Command, targetCmdString string) {
-	cmdString, flag := cmd.GetCommandString()
+func _TestCommandString(t *testing.T, cmd clicmd.Command, targetCmdString string) {
+	cmdString, flag := cmd.CommandString()
 	require.True(t, flag)
 	require.Equal(t, targetCmdString, cmdString)
 }
 
-func _TestPreParseValues (t *testing.T, cmd clicmd.Command) {
+func _TestPreParseValues(t *testing.T, cmd clicmd.Command) {
 	// Test pre-parse values are as expected
 	subCommand, flag := cmd.SubCommand()
 	require.Empty(t, subCommand)
@@ -227,11 +226,11 @@ func _TestPreParseValues (t *testing.T, cmd clicmd.Command) {
 	require.False(t, flag)
 }
 
-func _TestSubCommandAndArgs (t *testing.T, cmd clicmd.Command, targetSubCommand string, targetSubArgs clicmd.Cmdline) {
+func _TestSubCommandAndArgs(t *testing.T, cmd clicmd.Command, targetSubCommand string, targetSubArgs clicmd.Cmdline) {
 	subCommand, flag := cmd.SubCommand()
 	require.Equal(t, targetSubCommand, subCommand)
 	require.True(t, flag)
 	subArgs, flag := cmd.SubArgs()
-	require.Equal(t, targetSubArgs, subArgs)	
+	require.Equal(t, targetSubArgs, subArgs)
 	require.True(t, flag)
 }

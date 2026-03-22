@@ -14,13 +14,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestHost (t *testing.T) {
+	cmdName := "host"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewHostCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &HostCommand{}, cmd)
+}
+
+func TestHostInit (t *testing.T) {
+	// config get foo
+	cmdName := "host"
+	subCmdName := "init"
+	gid := 1000
+	uid := 2000	
+	subCmdFlags:= []string{"--gid", fmt.Sprint(gid), "--uid", fmt.Sprint(uid)}
+	subCmdArgs := []string{}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewHostCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test subcommand
+	subCmd := _TestSubcommandCreation[*HostInitCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.Equal(t, gid, subCmd.(*HostInitCommand).Gid)
+	require.Equal(t, uid, subCmd.(*HostInitCommand).Uid)
+}
+
+
+
 func TestRunHost(t *testing.T) {
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
 	cmdName := "init"
 	cmdArgs := []string{}
-	err := RunHost(cmdName, cmdArgs)
+	cmdline := append(Cmdline{cmdName}, cmdArgs...)
+	parent := SuperCommand(nil)
+	err := RunHost(cmdline, parent)
 	assert.Nil(t, err)
 }
 
