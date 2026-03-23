@@ -329,24 +329,33 @@ func TestMainSubMisc(t *testing.T) {
 
 // dylt misc lookup hostname
 func TestMainSubMiscLookupHostname(t *testing.T) {
-	// Create + parse main command with "dylt misc lookup hostname"
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
 	subCmdName := "misc"
 	subCmdFlags := []string{}
 	subCmdArgs := []string{"lookup", "hostname"}
-	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand & subArgs
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*MiscCommand](t,
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*MiscCommand](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
-		cmdString,
+		subCmdString,
 	)
+	require.IsType(t, &MiscCommand{}, subCmd)
 }
 
 func TestMainSubStatus(t *testing.T) {

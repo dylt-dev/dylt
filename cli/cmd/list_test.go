@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,7 +31,7 @@ func TestListCmd0 (t *testing.T) {
 	require.True(t, ok)
 	require.NotEmpty(t, dyltPath)
 	cmd := fmt.Sprintf("%s list", dyltPath)
-	err := CheckRunCommandSuccess(cmd, t)
+	err := lib.CheckRunCommandSuccess(cmd, t)
 	require.Nil(t, err)
 }
 

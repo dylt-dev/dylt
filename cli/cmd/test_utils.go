@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -13,18 +12,8 @@ import (
 
 // const PATH_Dylt = "/Users/chris/src/dylt-dev/dylt/dylt"
 
-func CheckRunCommandSuccess(sCmdlineArgs string, t *testing.T) error {
-	dyltPath := GetAndValidateDyltPath(t)
-	rc, stdout, err := lib.RunCommand(dyltPath, strings.Fields(sCmdlineArgs)...)
-	require.Equal(t, 0, rc)
-	require.NotEmpty(t, stdout)
-	require.Nil(t, err)
-	t.Log(string(stdout))
-	return err
-}
-
 func CheckRunCommandSuccessNoOutput(sCmdlineArgs string, t *testing.T) error {
-	dyltPath := GetAndValidateDyltPath(t)
+	dyltPath := lib.GetAndValidateDyltPath(t)
 	sCmdline := fmt.Sprintf("%s %s", dyltPath, sCmdlineArgs)
 	var cmdline Cmdline = strings.Split(sCmdline, " ")
 	rc, stdout, err := lib.RunCommand(cmdline.Command(), cmdline.Args()...)
@@ -57,19 +46,6 @@ func CreateAndTestCommand[U Command](t *testing.T,
 
 func CreateCommandString(cmdName string, cmdArgs []string) string {
 	return strings.Join(append([]string{cmdName}, cmdArgs...), " ")
-}
-
-func GetAndValidateDyltPath(t *testing.T) string {
-	envName := "DYLT_PATH"
-	dyltPath, is := os.LookupEnv(envName)
-	if !is {
-		t.Skipf("%s not set", envName)
-	}
-	_, err := os.Stat(dyltPath)
-	if !os.IsNotExist(err) {
-		t.Skipf("dylt path not found: %s", dyltPath)
-	}
-	return dyltPath
 }
 
 func _TestCommandString(t *testing.T, targetCmdString string, cmd Command) {

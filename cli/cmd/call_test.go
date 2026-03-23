@@ -35,7 +35,7 @@ func TestRunCall0 (t *testing.T) {
 
 func TestRunCallCmd0 (t *testing.T) {
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt call --script-path /tmp/daylight.sh hello"
-	CheckRunCommandSuccess(sCmdline, t)
+	lib.CheckRunCommandSuccess(sCmdline, t)
 }
 
 func TestCallNoScript (t *testing.T) {
