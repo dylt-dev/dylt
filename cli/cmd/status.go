@@ -26,7 +26,7 @@ type StatusCommand struct {
 	Help bool
 }
 
-func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
+func NewStatusCommand(cmdline Cmdline, parent SuperCommand) *StatusCommand {
 	// create command
 	flagSet := flag.NewFlagSet("status", flag.ExitOnError)
 	cmd := StatusCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}

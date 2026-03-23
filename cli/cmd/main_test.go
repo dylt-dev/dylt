@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -40,217 +42,410 @@ func TestMainHelp(t *testing.T) {
 	require.True(t, cmd.Help)
 }
 
-// Test that `dylt call foo` produces a `call` subcommand
-// where name == "call" and args == ["foo"]
+// dylt call foo
 func TestMainSubCall(t *testing.T) {
-	// Create + parse main command with "dylt call foo"
-	cmdline := Cmdline{"dylt", "call", "foo"}
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	require.NoError(t, err)
-	_TestSubcommandCreation[*CallCommand](t,
-		cmd,
-		"call",
-		[]string{},
-		Cmdline{"foo"},
-		"dylt call",
-	)
-	// _TestSubCommandAndArgs(t, cmd, "call", []string{"foo"})
-	// // Create + parse subcommand
-	// subCmd, err := cmd.CreateSubCommand()
-	// require.NoError(t, err)
-	// err = subCmd.Parse()
-	// require.NoError(t, err)
-	// // subCommand type = CallCommand
-	// require.IsType(t, &CallCommand{}, subCmd)
-	// // cmdString == "dylt call"
-	// cmdString, flag := subCmd.GetCommandString()
-	// require.True(t, flag)
-	// require.Equal(t, "dylt call", cmdString)
-	// // name == "call"
-	// commandName := subCmd.CommandName()
-	// require.Equal(t, "call", commandName)
-	// // args == ["foo"]
-	// args, flag := subCmd.Args()
-	// require.True(t, flag)
-	// require.Equal(t, 1, len(args))
-	// require.Equal(t, "foo", args[0])
-}
-
-func TestMainSubConfig(t *testing.T) {
-	// Create + parse main command with "dylt config get foo"
-	cmdline := Cmdline{"dylt", "config", "get", "foo"}
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand == "config", subArgs == {"get", "foo"}
-	_TestSubCommandAndArgs(t, cmd, "config", []string{"get", "foo"})
-	require.NoError(t, err)
-	_TestSubcommandCreation[*ConfigCommand](t,
-		cmd,
-		"config",
-		[]string{},
-		Cmdline{"get", "foo"},
-		"dylt config",
-	)
-}
-
-func TestMainSubGet(t *testing.T) {
-	// Create + parse main command with "dylt get foo"
-	cmdline := Cmdline{"dylt", "get", "foo"}
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand == "get", subArgs == {"foo"}
-	_TestSubCommandAndArgs(t, cmd, "get", []string{"foo"})
-	require.NoError(t, err)
-	_TestSubcommandCreation[*GetCommand](t,
-		cmd,
-		"get",
-		[]string{},
-		Cmdline{"foo"},
-		"dylt get",
-	)
-}
-
-func TestMainSubHost(t *testing.T) {
-	// Create + parse main command with "dylt get foo"
-	cmdline := Cmdline{"dylt", "host", "init", "--gid", "1000", "--uid", "2000"}
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand == "host", subArgs == {"foo"}
-	_TestSubCommandAndArgs(t, cmd, "host", []string{"init", "--gid", "1000", "--uid", "2000"})
-	require.NoError(t, err)
-	_TestSubcommandCreation[*HostCommand](t,
-		cmd,
-		"host",
-		[]string{},
-		Cmdline{"init", "--gid", "1000", "--uid", "2000"},
-		"dylt host",
-	)
-}
-
-func TestMainSubInit(t *testing.T) {
-	// Create + parse main command with "dylt get foo"
-	subCmdName := "init"
-	subCmdFlags := []string{}
-	subCmdArgs := []string{"etcdDomain"}
-	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand == "host", subArgs == {"foo"}
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*InitCommand](t,
-		cmd,
-		subCmdName,
-		subCmdFlags,
-		subCmdArgs,
-		"dylt init",
-	)
-}
-
-func TestMainSubList(t *testing.T) {
-	// Create + parse main command with "dylt list etcdDomain"
-	subCmdName := "list"
-	subCmdFlags := []string{}
-	subCmdArgs := []string{}
-	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand == "host", subArgs == {"foo"}
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*ListCommand](t,
-		cmd,
-		subCmdName,
-		subCmdFlags,
-		subCmdArgs,
-		cmdString,
-	)
-}
-
-func TestMainSubStatus(t *testing.T) {
-	// Create + parse main command with "dylt misc lookup hostname"
-	subCmdName := "status"
-	subCmdFlags := []string{}
-	subCmdArgs := []string{}
-	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand & subArgs
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*StatusCommand](t,
-		cmd,
-		subCmdName,
-		subCmdFlags,
-		subCmdArgs,
-		cmdString,
-	)
-}
-
-func TestMainSubMisc(t *testing.T) {
-	// Create + parse main command with "dylt misc lookup hostname"
-	subCmdName := "misc"
-	subCmdFlags := []string{}
-	subCmdArgs := []string{"lookup", "hostname"}
-	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand & subArgs
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*MiscCommand](t,
-		cmd,
-		subCmdName,
-		subCmdFlags,
-		subCmdArgs,
-		cmdString,
-	)
-}
-
-func TestMainSubVm(t *testing.T) {
-	// Create + parse main command with "dylt vm get name"
-	subCmdName := "vm"
-	subCmdFlags := []string{}
-	subCmdArgs := []string{"get", "name"}
-	cmdline := append([]string{"dylt", subCmdName}, subCmdArgs...)
-	cmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	// subcommand & subArgs
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*VmCommand](t,
-		cmd,
-		subCmdName,
-		subCmdFlags,
-		subCmdArgs,
-		cmdString,
-	)
-}
-
-func TestMainSubWatch(t *testing.T) {
-	// dylt watch script scriptPath
+	// Independent values
 	cmdName := "dylt"
-	subCmdName := "watch"
+	cmdFlags := []string{}
+	subCmdName := "call"
 	subCmdFlags := []string{}
-	subCmdArgs := Cmdline{"script", "scriptPath"}
-	cmdline := append([]string{cmdName, subCmdName}, subCmdArgs...)
-	subCmdString := strings.Join(cmdline[0:2], " ")
-	cmd := NewMainCommand(cmdline, nil)
-	err := cmd.Parse()
-	require.NoError(t, err)
-	// subcommand & subArgs
-	_TestSubCommandAndArgs(t, cmd, subCmdName, subCmdArgs)
-	require.NoError(t, err)
-	_TestSubcommandCreation[*WatchCommand](t,
+	subCmdArgs := []string{"foo"}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*CallCommand](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
+	require.IsType(t, &CallCommand{}, subCmd)
+}
+
+func TestMainSubConfig (t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "config"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*ConfigCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &ConfigCommand{}, subCmd)
+}
+
+
+// dylt config get foo
+func TestMainSubConfigGetFoo(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "config"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{"get", "foo"}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*ConfigCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &ConfigCommand{}, subCmd)
+}
+
+// dylt get foo
+func TestMainSubGet(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "get"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{"foo"}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*GetCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &GetCommand{}, subCmd)
+}
+
+
+func TestMainSubHost(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "host"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+	// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*HostCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &HostCommand{}, subCmd)
+}
+
+
+func TestMainSubHostInit(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "host"
+	gid := 1000
+	uid := 1000
+	subCmdFlags := []string{}
+	subCmdArgs := []string{"init", "--gid", fmt.Sprint(gid), "--uid", fmt.Sprint(uid)}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+	// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*HostCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &HostCommand{}, subCmd)
+}
+
+
+// dylt init --etcd-domain foo.dylt.dev
+func TestMainSubInit(t *testing.T) {
+	// Create + parse main command with "dylt get foo"
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "init"
+	etcdDomain := "foo.dylt.dev"
+	subCmdFlags := []string{"--etcd-domain", etcdDomain}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+	// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*InitCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.Equal(t, etcdDomain, subCmd.EtcdDomain)
+}
+
+
+// dylt list 
+func TestMainSubList(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "list"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*ListCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &ListCommand{}, subCmd)
+}
+
+// dylt misc
+func TestMainSubMisc(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "misc"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*MiscCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &MiscCommand{}, subCmd)
+}
+
+// dylt misc lookup hostname
+func TestMainSubMiscLookupHostname(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "misc"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{"lookup", "hostname"}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*MiscCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &MiscCommand{}, subCmd)
+}
+
+func TestMainSubStatus(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "status"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*StatusCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &StatusCommand{}, subCmd)
+}
+
+// dylt vm
+func TestMainSubVm(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "vm"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+	// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*VmCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &VmCommand{}, subCmd)
+}
+
+// dylt watch
+func TestMainSubWatch(t *testing.T) {
+	// Independent values
+	cmdName := "dylt"
+	cmdFlags := []string{}
+	subCmdName := "watch"
+	subCmdFlags := []string{}
+	subCmdArgs := []string{}
+
+	// Create dependent values for command + test
+	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t,
+		NewMainCommand,
+		cmdName,
+		cmdFlags,
+		cmdArgs,
+		cmdString)
+
+		// Create dependent values for subcommand + test
+	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
+	subCmd := _TestSubcommandCreation[*WatchCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.IsType(t, &WatchCommand{}, subCmd)
 }

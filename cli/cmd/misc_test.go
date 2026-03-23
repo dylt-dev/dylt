@@ -28,7 +28,7 @@ func TestCreateTwoNodeClusterCommand (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := NewMiscCommand(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -48,7 +48,7 @@ func TestGenEtcdRunScriptCommand  (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := NewMiscCommand(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -69,7 +69,7 @@ func TestLookupCommand (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{hostname}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := NewMiscCommand(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -80,7 +80,7 @@ func TestLookupCommand (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, hostname, subCmd.(*LookupCommand).Hostname)
+	require.Equal(t, hostname, subCmd.Hostname)
 }
 
 func TestGenEtcdRunScript(t *testing.T) {
@@ -150,7 +150,7 @@ func TestNewCmdlineFlags (t *testing.T) {
 	cmdName := "dylt"
 	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
 	cmdArgs := []string{}
-	targetCmdline := Cmdline{"dylt", "--etcdDomain etcd.example.org"}
+	targetCmdline := Cmdline{"dylt", "--etcdDomain", "etcd.example.org"}
 	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
 	require.Equal(t, targetCmdline, cmdline)
 }

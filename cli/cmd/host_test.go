@@ -8,6 +8,7 @@ import (
 
 	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
+	"github.com/dylt-dev/dylt/lib"
 	"github.com/dylt-dev/dylt/systemd"
 	"github.com/dylt-dev/dylt/template"
 	"github.com/stretchr/testify/assert"
@@ -43,8 +44,8 @@ func TestHostInit (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, gid, subCmd.(*HostInitCommand).Gid)
-	require.Equal(t, uid, subCmd.(*HostInitCommand).Uid)
+	require.Equal(t, gid, subCmd.Gid)
+	require.Equal(t, uid, subCmd.Uid)
 }
 
 
@@ -69,7 +70,7 @@ func TestHostCmd0(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotEmpty(t, dyltPath)
 	cmd := fmt.Sprintf("%s host", dyltPath)
-	err := CheckRunCommandSuccess(cmd, t)
+	err := lib.CheckRunCommandSuccess(cmd, t)
 	assert.Nil(t, err)
 }
 
@@ -89,7 +90,7 @@ func TestHostInitCmd0(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotEmpty(t, dyltPath)
 	cmd := fmt.Sprintf("%s host init", dyltPath)
-	err := CheckRunCommandSuccess(cmd, t)
+	err := lib.CheckRunCommandSuccess(cmd, t)
 	assert.Nil(t, err)
 }
 

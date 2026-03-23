@@ -6,7 +6,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestInit (t *testing.T) {
+	cmdName := "init"
+	etcdDomain := "foo.dylt.dev"
+	cmdFlags := []string{"--etcd-domain", etcdDomain}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewInitCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &InitCommand{}, cmd)
+	require.Equal(t, etcdDomain, cmd.EtcdDomain)
+	
+}
 
 func TestRunInit (t *testing.T) {
 	etcDomain := "hello.dylt.dev"

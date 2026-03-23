@@ -1,0 +1,27 @@
+package cmd
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestStatus (t *testing.T) {
+	cmdName := "status"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewStatusCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &StatusCommand{}, cmd)
+	require.False(t, cmd.Help)
+}
+
+func TestStatusHelp (t *testing.T) {
+	cmdName := "status"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewStatusCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &StatusCommand{}, cmd)
+	require.True(t, cmd.Help)
+}

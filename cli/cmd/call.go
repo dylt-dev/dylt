@@ -15,7 +15,7 @@ type CallCommand struct {
 	ScriptPath string   // flag
 }
 
-func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
+func NewCallCommand(cmdline Cmdline, parent SuperCommand) *CallCommand {
 	// create command
 	flagSet := flag.NewFlagSet("call", flag.ExitOnError)
 	cmd := CallCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -31,8 +31,6 @@ func (cmd *CallCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
-	// validate arg count (nop - command takes all remaining args, 0 or more)
-	common.Logger.Debugf("len(cmd.Cmdline)=%d", len(cmd.Cmdline))
 	// Check for 0 args; if so print usage & return
 	if len(cmd.Cmdline) == 0 {
 		common.Logger.Comment("no args; printing usage")

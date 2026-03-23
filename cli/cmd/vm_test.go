@@ -35,8 +35,8 @@ func TestVmAdd (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, fqdn, subCmd.(*VmAddCommand).Fqdn)
-	require.Equal(t, name, subCmd.(*VmAddCommand).Name)
+	require.Equal(t, fqdn, subCmd.Fqdn)
+	require.Equal(t, name, subCmd.Name)
 }
 
 func TestVmAll (t *testing.T) {
@@ -78,7 +78,7 @@ func TestVmDel (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.(*VmDelCommand).Name)
+	require.Equal(t, name, subCmd.Name)
 }
 
 func TestVmGet (t *testing.T) {
@@ -100,7 +100,7 @@ func TestVmGet (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.(*VmGetCommand).Name)
+	require.Equal(t, name, subCmd.Name)
 }
 
 func TestVmList (t *testing.T) {
@@ -144,7 +144,7 @@ func TestVmSet (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.(*VmSetCommand).Name)
-	require.Equal(t, key, subCmd.(*VmSetCommand).Key)
-	require.Equal(t, value, subCmd.(*VmSetCommand).Value)
+	require.Equal(t, name, subCmd.Name)
+	require.Equal(t, key, subCmd.Key)
+	require.Equal(t, value, subCmd.Value)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +36,7 @@ func TestConfigGet (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, "foo", subCmd.(*ConfigGetCommand).Key)
+	require.Equal(t, "foo", subCmd.Key)
 }
 
 
@@ -57,8 +58,8 @@ func TestConfigSet (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, "foo", subCmd.(*ConfigSetCommand).Key)
-	require.Equal(t, "bar", subCmd.(*ConfigSetCommand).Value)
+	require.Equal(t, "foo", subCmd.Key)
+	require.Equal(t, "bar", subCmd.Value)
 }
 
 
@@ -90,9 +91,9 @@ func TestRunConfigGet (t *testing.T) {
 }
 
 func TestConfigGetCmd (t *testing.T) {
-	dyltPath := GetAndValidateDyltPath(t)
+	dyltPath := lib.GetAndValidateDyltPath(t)
 	sCmdline := fmt.Sprintf("%s config get etcd-domain", dyltPath)
-	CheckRunCommandSuccess(sCmdline, t)
+	lib.CheckRunCommandSuccess(sCmdline, t)
 }
 
 
@@ -121,5 +122,5 @@ func TestRunConfigShow (t *testing.T) {
 
 func TestConfigShowCmd (t *testing.T) {
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt config show"
-	CheckRunCommandSuccess(sCmdline, t)
+	lib.CheckRunCommandSuccess(sCmdline, t)
 }

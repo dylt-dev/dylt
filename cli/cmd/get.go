@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dylt-dev/dylt/eco"
+	"github.com/dylt-dev/dylt/lib"
 )
 
 type GetCommand struct {
@@ -13,7 +13,7 @@ type GetCommand struct {
 	Key string // arg 0
 }
 
-func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
+func NewGetCommand(cmdline Cmdline, parent SuperCommand) *GetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
 	cmd := GetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
@@ -59,27 +59,11 @@ func (cmd *GetCommand) Run() error {
 		return err
 	}
 	// execute command
-	err = RunGet(cmd.Key)
+	err = lib.RunGet(cmd.Key)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func RunGet(key string) error {
-	slog.Debug("RunGet()", "key", key)
-	// create etcd client, get value for key, + output value
-	cli, err := eco.CreateEtcdClientFromConfig()
-	if err != nil {
-		return err
-	}
-	val, err := cli.Get(key)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("\n%s\n", val)
 	return nil
 }
 
