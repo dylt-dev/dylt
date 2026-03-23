@@ -42,6 +42,7 @@ func CreateAndTestCommand[U Command](t *testing.T,
                                      cmdArgs []string,
                                      cmdString string) U {
 	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
+	t.Logf("cmdline=%v", cmdline)
 	cmd := fact(cmdline, nil)
 	err := cmd.HandleArgs()
 	require.NoError(t, err)
@@ -49,6 +50,7 @@ func CreateAndTestCommand[U Command](t *testing.T,
 	require.Equal(t, cmdName, cmd.CommandName())
 	args, is := cmd.Args()
 	require.True(t, is)
+	t.Logf("cmd.Args()=%v", args)
 	require.Equal(t, Cmdline(cmdArgs), args)
 	return cmd
 }
@@ -76,15 +78,24 @@ func _TestCommandString(t *testing.T, targetCmdString string, cmd Command) {
 	require.Equal(t, targetCmdString, cmdString)
 }
 
+// _TestSubCommandAndArgs
+//
+// This function does *not* test subcommand creation. It just confirms
+// expectations for the Command values that are used for subcommand creation
+//
+// Params
+//    cmd               parent command, loaded with a subCmd-producing Cmdline
+//	  targetSubCommand	the expected subcommand name
+//    targetSubArgs		the expected subcommand args
 func _TestSubCommandAndArgs(t *testing.T,
 	                        cmd Command,
 							targetSubCommand string,
-							targetSubArgs Cmdline) {
+							targetSubCmdline []string) {
 	subCommand, flag := cmd.SubCommand()
 	require.Equal(t, targetSubCommand, subCommand)
 	require.True(t, flag)
-	args, flag := cmd.Args()
-	require.Equal(t, targetSubArgs, args)
+	subCmdline, flag := cmd.Args()
+	require.Equal(t, Cmdline(targetSubCmdline), subCmdline)
 	require.True(t, flag)
 }
 
@@ -100,37 +111,43 @@ func _TestParentCommand(t *testing.T,
 	require.Equal(t, cmdArgs, args)
 }
 
+// _TestSubcommandCreation
+//
+// Params
+//
+//    cmd               parent command, loaded with a subCmd-producing Cmdline
+//    subName			name of the subcommand
+//    subCmdFlags		flags to pass to the subcommand
+//    subArgs			arguments to pass to the subcommand
+//    targetCmdString	expected command string 
 func _TestSubcommandCreation[TCmd Command](t *testing.T,
                                            cmd SuperCommand,
                                            subName string,
                                            subCmdFlags []string,
-                                           subArgs Cmdline,
-                                           targetCmdString string) Command {
+                                           targetSubArgs []string,
+                                           targetCmdString string) TCmd {
 	var err error
-	targetSubArgs := NewCmdline(subName, subCmdFlags, subArgs)
-	_TestSubCommandAndArgs(t, cmd, subName, targetSubArgs)
-	// Create + parse subcommand
-	subCmd, err := cmd.CreateSubCommand()
+	subCmdline := NewCmdline(subName, subCmdFlags, targetSubArgs)
+	_TestSubCommandAndArgs(t, cmd, subName, subCmdline)
+	// Create subcommand, HandleArg(), confirm return type
+	subCmdRaw, err := cmd.CreateSubCommand()
 	require.NoError(t, err)
-	require.NotNil(t, subCmd)
-	t.Logf("subCmd.(*BaseCommand).Cmdline=%v", subCmd.(TCmd).CommandLine())
+	require.NotNil(t, subCmdRaw)
+	subCmd, ok := subCmdRaw.(TCmd)
+	require.True(t, ok)
 	err = subCmd.HandleArgs()
 	require.NoError(t, err)
-	// subCommand type
-	// require.IsType(t, &TCmd{}, subCmd)
-	_, ok := subCmd.(TCmd)
-	require.True(t, ok)
-	// cmdString
-	cmdString, is := subCmd.CommandString()
-	require.True(t, is)
-	require.Equal(t, targetCmdString, cmdString)
 	// name
 	commandName := subCmd.CommandName()
 	require.Equal(t, subName, commandName)
 	// args
-	args, is := subCmd.Args()
+	subArgs, is := subCmd.Args()
 	require.True(t, is)
-	require.Equal(t, subArgs, args)
+	require.Equal(t, Cmdline(targetSubArgs), subArgs)
+	// cmdString
+	cmdString, is := subCmd.CommandString()
+	require.True(t, is)
+	require.Equal(t, targetCmdString, cmdString)
 
 	return subCmd
 }

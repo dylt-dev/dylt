@@ -9,7 +9,12 @@ import (
 )
 
 func TestList (t *testing.T) {
-
+	cmdName := "list"
+	cmdFlags := []string{}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewListCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &ListCommand{}, cmd)
 }
 
 func TestRunList (t *testing.T) {

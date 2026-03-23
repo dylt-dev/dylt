@@ -43,6 +43,16 @@ func TestArgs(t *testing.T) {
 	t.Logf("flagSet.Args(): %#+v\n", flagSet.Args())
 }
 
+func TestArgsFlag(t *testing.T) {
+	cmdline := clicmd.Cmdline{"dylt", "init", "--etcd-domain", "foo.dylt.dev"}
+	flagSet := flag.FlagSet{}
+	var etcdDomain string
+	flagSet.StringVar(&etcdDomain, "etcd-domain", "", "")
+	err := flagSet.Parse(cmdline[1:])
+	require.NoError(t, err)
+	t.Logf("flagSet.Args()=%v", flagSet.Args())
+}
+
 func TestBoolFlag(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"dylt", "--help"}
 	var fs flag.FlagSet

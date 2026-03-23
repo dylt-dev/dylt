@@ -35,7 +35,7 @@ func TestConfigGet (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, "foo", subCmd.(*ConfigGetCommand).Key)
+	require.Equal(t, "foo", subCmd.Key)
 }
 
 
@@ -57,8 +57,8 @@ func TestConfigSet (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, "foo", subCmd.(*ConfigSetCommand).Key)
-	require.Equal(t, "bar", subCmd.(*ConfigSetCommand).Value)
+	require.Equal(t, "foo", subCmd.Key)
+	require.Equal(t, "bar", subCmd.Value)
 }
 
 

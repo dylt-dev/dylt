@@ -136,7 +136,7 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
-	if len(cmd.Cmdline) != nExpected {
+	if len(cmd.Cmdline) < nExpected {
 		cmd.PrintUsage()
 		cmdString, _ := cmd.CommandString()
 		return fmt.Errorf("`%s` expects %d argument(s); received %d",

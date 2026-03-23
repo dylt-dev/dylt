@@ -13,7 +13,7 @@ type GetCommand struct {
 	Key string // arg 0
 }
 
-func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
+func NewGetCommand(cmdline Cmdline, parent SuperCommand) *GetCommand {
 	// create command
 	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
 	cmd := GetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}

@@ -14,7 +14,7 @@ type InitCommand struct {
 	EtcdDomain string
 }
 
-func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
+func NewInitCommand(cmdline Cmdline, parent SuperCommand) *InitCommand {
 	// create command
 	flagSet := flag.NewFlagSet("init", flag.ExitOnError)
 	cmd := InitCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}

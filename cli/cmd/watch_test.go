@@ -35,8 +35,8 @@ func TestWatchScript (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, scriptKey, subCmd.(*WatchScriptCommand).ScriptKey)
-	require.Equal(t, targetPath, subCmd.(*WatchScriptCommand).TargetPath)
+	require.Equal(t, scriptKey, subCmd.ScriptKey)
+	require.Equal(t, targetPath, subCmd.TargetPath)
 }
 func TestWatchSvc (t *testing.T) {
 	// config get foo
@@ -57,5 +57,5 @@ func TestWatchSvc (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.(*WatchSvcCommand).Name)
+	require.Equal(t, name, subCmd.Name)
 }

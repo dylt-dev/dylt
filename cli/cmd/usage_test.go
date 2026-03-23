@@ -8,12 +8,13 @@ import (
 )
 
 func setup (t *testing.T) func (t *testing.T) {
+	t.Log("setup() ...")
 	common.InitLogging()
 	return teardown
 }
 
 func teardown (t *testing.T) {
-
+	t.Log("teardown() ...")
 }
 
 func TestMainUsage (t *testing.T) {

@@ -43,8 +43,8 @@ func TestHostInit (t *testing.T) {
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, gid, subCmd.(*HostInitCommand).Gid)
-	require.Equal(t, uid, subCmd.(*HostInitCommand).Uid)
+	require.Equal(t, gid, subCmd.Gid)
+	require.Equal(t, uid, subCmd.Uid)
 }
 
 

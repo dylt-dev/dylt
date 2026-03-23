@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// `dylt status`
 func TestRun(t *testing.T) {
 	RunAndTestCommand(t, "dylt status")
 }
