@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"flag"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -14,18 +14,18 @@ type ConfigCommand struct {
 }
 
 func NewConfigCommand(cmdline Cmdline, parent SuperCommand) *ConfigCommand {
-	// create command
-	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
-	cmd := ConfigCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+	// config command
+	name := "config"
+	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
 }
 
 func (cmd *ConfigCommand) CreateSubCommand() (Command, error) {
-	args, flag := cmd.Args()
-	if !flag {
-		return nil, nil
+	args, is := cmd.Args()
+	if !is {
+		return nil, errors.New("Command not Parse()'d")
 	}
 	return createConfigSubCommand(args, cmd)
 }
@@ -36,6 +36,12 @@ func (cmd *ConfigCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+	
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
@@ -56,17 +62,26 @@ func (cmd *ConfigCommand) PrintUsage() {
 
 func (cmd *ConfigCommand) Run() error {
 	slog.Debug("ConfigCommand.Run()", "args", cmd.Cmdline)
+
 	// Check for 0 args; if so print usage & return
 	if len(cmd.Cmdline) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// If no args, print usage
 	args, _ := cmd.Args()
 	if len(args) == 0 {
@@ -74,12 +89,13 @@ func (cmd *ConfigCommand) Run() error {
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// Execute command
 	err = RunConfig(args, cmd)
 	return err
 }
 
-func RunConfig(cmdline Cmdline, parent Command) error {
+func RunConfig(cmdline Cmdline, parent SuperCommand) error {
 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
 	subCmd, err := createConfigSubCommand(cmdline, parent)
@@ -94,7 +110,7 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 	return nil
 }
 
-func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
+func createConfigSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "get":
@@ -120,9 +136,13 @@ type ConfigGetCommand struct {
 	Key string
 }
 
-func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
-	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
-	return &ConfigGetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+func NewConfigGetCommand(cmdline Cmdline, parent SuperCommand) *ConfigGetCommand {
+	// config get command
+	name := "config.get"
+	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	// init flag vars (nop -- no flags)
+
+	return cmd
 }
 
 func (cmd *ConfigGetCommand) HandleArgs() error {
@@ -131,6 +151,12 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	if len(cmdArgs) != 1 {
@@ -140,6 +166,7 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 			cmdString,
 			len(cmdArgs))
 	}
+
 	// init positional params
 	cmd.Key = cmdArgs[0]
 
@@ -154,11 +181,19 @@ func (cmd *ConfigGetCommand) PrintUsage() {
 
 func (cmd *ConfigGetCommand) Run() error {
 	slog.Debug("ConfigGetCommand.Run()", "args", cmd.Cmdline)
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// Execute command
 	err = RunConfigGet(cmd.Key)
 	return err
@@ -181,9 +216,12 @@ type ConfigSetCommand struct {
 	Value string // arg 1
 }
 
-func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
-	flagSet := flag.NewFlagSet("config.set", flag.ExitOnError)
-	return &ConfigSetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+func NewConfigSetCommand(cmdline Cmdline, parent SuperCommand) *ConfigSetCommand {
+	// config set command
+	name := "config.set"
+	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+
+	return cmd
 }
 
 func (cmd *ConfigSetCommand) HandleArgs() error {
@@ -192,6 +230,12 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	if len(cmdArgs) != 2 {
@@ -201,6 +245,7 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 			cmdString,
 			len(cmdArgs))
 	}
+
 	// init positional params
 	cmd.Key = cmdArgs[0]
 	cmd.Value = cmdArgs[1]
@@ -216,11 +261,19 @@ func (cmd *ConfigSetCommand) PrintUsage() {
 
 func (cmd *ConfigSetCommand) Run() error {
 	slog.Debug("ConfigSetCommand.Run()", "args", cmd.Cmdline)
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// Execute command
 	err = RunConfigSet(cmd.Key, cmd.Value)
 	return err
@@ -272,9 +325,14 @@ type ConfigShowCommand struct {
 	*BaseCommand
 }
 
-func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
-	flagSet := flag.NewFlagSet("config.show", flag.ExitOnError)
-	return &ConfigShowCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+func NewConfigShowCommand(cmdline Cmdline, parent SuperCommand) *ConfigShowCommand {
+	// config show command
+	name := "config.set"
+	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *ConfigShowCommand) HandleArgs() error {
@@ -283,6 +341,12 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
@@ -294,10 +358,12 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 			nExpected,
 			len(cmdArgs))
 	}
+
 	// init positional params (nop - no positional params)
 
 	return nil
 }
+
 
 func (cmd *ConfigShowCommand) PrintUsage() {
 	fmt.Println()
@@ -305,13 +371,22 @@ func (cmd *ConfigShowCommand) PrintUsage() {
 	fmt.Println()
 }
 
+
 func (cmd *ConfigShowCommand) Run() error {
 	slog.Debug("ConfigShowCommand.Run()", "args", cmd.Cmdline)
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// Execute command
 	err = RunConfigShow()
 	return err

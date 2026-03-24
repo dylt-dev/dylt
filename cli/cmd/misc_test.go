@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -20,8 +21,18 @@ func TestMisc (t *testing.T) {
 }
 
 
+func TestMiscHelp (t *testing.T) {
+	cmdName := "misc"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &MiscCommand{}, cmd)
+	require.True(t, cmd.Help)
+}
 
-func TestCreateTwoNodeClusterCommand (t *testing.T) {
+
+func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "create-two-node-cluster"
@@ -41,7 +52,29 @@ func TestCreateTwoNodeClusterCommand (t *testing.T) {
 	)
 }
 
-func TestGenEtcdRunScriptCommand  (t *testing.T) {
+
+func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
+	cmdName := "misc"
+	subCmdName := "create-two-node-cluster"
+	subCmdFlags := []string{"--help"}
+	subCmdArgs := []string{}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewMiscCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test  subcommand
+	subCmd := _TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.True(t, subCmd.Help)
+}
+
+
+func TestMiscGenEtcdRunScript  (t *testing.T) {
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "gen-etcd-run-script"
@@ -61,7 +94,27 @@ func TestGenEtcdRunScriptCommand  (t *testing.T) {
 	)
 }
 
-func TestLookupCommand (t *testing.T) {
+func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
+	cmdName := "misc"
+	subCmdName := "gen-etcd-run-script"
+	subCmdFlags := []string{"--help"}
+	subCmdArgs := []string{"foo"}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewMiscCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test  subcommand
+	subCmd := _TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.True(t, subCmd.Help)
+}
+
+func TestMiscLookup (t *testing.T) {
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "lookup"
@@ -81,6 +134,27 @@ func TestLookupCommand (t *testing.T) {
 		subCmdString,
 	)
 	require.Equal(t, hostname, subCmd.Hostname)
+}
+
+
+func TestMiscLookupHelp(t *testing.T) {
+	cmdName := "misc"
+	subCmdName := "lookup"
+	subCmdFlags := []string{"--help"}
+	subCmdArgs := []string{"hostname"}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewMiscCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test  subcommand
+	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.True(t, subCmd.Help)
 }
 
 func TestGenEtcdRunScript(t *testing.T) {

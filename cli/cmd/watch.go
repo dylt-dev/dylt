@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -17,12 +16,13 @@ type WatchCommand struct {
 }
 
 func NewWatchCommand(cmdline Cmdline, parent SuperCommand) *WatchCommand {
-	// create command
-	flagSet := flag.NewFlagSet("watch", flag.ExitOnError)
-	cmd := WatchCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	// init flag vars (nop -- no flags)
-
-	return &cmd
+	// watch command
+	name := "watch"
+	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *WatchCommand) CreateSubCommand() (Command, error) {
@@ -39,6 +39,12 @@ func (cmd *WatchCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
@@ -49,6 +55,7 @@ func (cmd *WatchCommand) HandleArgs() error {
 			nExpected,
 			len(cmdArgs))
 	}
+
 	// init positional params (nop - no params)
 
 	return nil
@@ -60,17 +67,26 @@ func (cmd *WatchCommand) PrintUsage() {
 
 func (cmd *WatchCommand) Run() error {
 	slog.Debug("WatchCommand.Run()", "args", cmd.Cmdline)
+
 	// Check for 0 args; if so print usage & return
 	if len(cmd.Cmdline) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// If no args, print usage
 	args, _ := cmd.Args()
 	if len(args) == 0 {
@@ -78,6 +94,7 @@ func (cmd *WatchCommand) Run() error {
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// Execute command
 	err = RunWatch(args, cmd)
 	return err
@@ -120,12 +137,13 @@ type WatchScriptCommand struct {
 }
 
 func NewWatchScriptCommand(cmdline Cmdline, parent SuperCommand) *WatchScriptCommand {
-	// create command
-	flagSet := flag.NewFlagSet("config.get", flag.ExitOnError)
-	cmd := WatchScriptCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	// init flag vars (nop -- no flags)
-
-	return &cmd
+	// watch script command
+	name := "watch.script"
+	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *WatchScriptCommand) HandleArgs() error {
@@ -134,6 +152,12 @@ func (cmd *WatchScriptCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 2
@@ -145,6 +169,7 @@ func (cmd *WatchScriptCommand) HandleArgs() error {
 			nExpected,
 			len(cmd.Cmdline))
 	}
+
 	// init positional params
 	cmd.ScriptKey = cmdArgs[0]
 	cmd.TargetPath = cmdArgs[1]
@@ -160,11 +185,18 @@ func (cmd *WatchScriptCommand) PrintUsage() {
 
 func (cmd *WatchScriptCommand) Run() error {
 	slog.Debug("WatchScriptCommand.Run()", "args", cmd.Cmdline)
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// Execute command
 	err = RunWatchScript(cmd.ScriptKey, cmd.TargetPath)
 	return err
@@ -179,12 +211,13 @@ type WatchSvcCommand struct {
 }
 
 func NewWatchSvcCommand(cmdline Cmdline, parent SuperCommand) *WatchSvcCommand {
-	// create command
-	flagSet := flag.NewFlagSet("config", flag.ExitOnError)
-	cmd := WatchSvcCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	// init flag vars (nop -- no flags)
-
-	return &cmd
+	// watch svc command
+	name := "watch.svc"
+	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *WatchSvcCommand) HandleArgs() error {
@@ -193,6 +226,12 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 1
@@ -204,6 +243,7 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 			nExpected,
 			len(cmdArgs))
 	}
+
 	// init positional params
 	cmd.Name = cmdArgs[0]
 
@@ -218,17 +258,26 @@ func (cmd *WatchSvcCommand) PrintUsage() {
 
 func (cmd *WatchSvcCommand) Run() error {
 	slog.Debug("WatchSvcCommand.Run()", "args", cmd.Cmdline)
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// If no args, print usage
 	if len(cmd.Cmdline) == 0 {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// Execute command
 	err = RunWatchSvc()
 	return err

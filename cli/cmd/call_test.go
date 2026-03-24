@@ -21,6 +21,15 @@ func TestCall (t *testing.T) {
 }
 
 
+func TestCallHelp(t *testing.T) {
+	cmdName := "call"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewCallCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.True(t, cmd.Help)
+}
+
 func TestRunCall0 (t *testing.T) {
 	scriptPath := "/tmp/daylight.sh"
 	_, err := os.Stat(scriptPath)
