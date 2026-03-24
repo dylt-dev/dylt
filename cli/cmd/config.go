@@ -188,8 +188,9 @@ func (cmd *ConfigGetCommand) Run() error {
 		return err
 	}
 
-	// if Help flag is set, no further processing is necessary
+	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
 		return nil
 	}
 

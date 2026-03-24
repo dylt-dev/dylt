@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"embed"
-	"flag"
 	"fmt"
 	"os"
 	"text/template"
@@ -20,12 +19,13 @@ type MiscCommand struct {
 }
 
 func NewMiscCommand(cmdline Cmdline, parent SuperCommand) *MiscCommand {
-	// create command
-	flagSet := flag.NewFlagSet("misc", flag.ExitOnError)
-	cmd := MiscCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	// init flag vars - no flags; nop
-
-	return &cmd
+	// misc command
+	name := "misc"
+	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *MiscCommand) CreateSubCommand () (Command, error) {
@@ -42,6 +42,12 @@ func (cmd *MiscCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	nExpected := 0
 	if len(cmd.Cmdline) < nExpected {
@@ -51,6 +57,7 @@ func (cmd *MiscCommand) HandleArgs() error {
 			nExpected,
 			len(cmd.Cmdline))
 	}
+
 	// init positional params
 
 	return nil
@@ -68,11 +75,19 @@ func (cmd *MiscCommand) PrintUsage() {
 
 func (cmd *MiscCommand) Run() error {
 	common.Logger.Debug("MiscCommand.Run()", "args", cmd.Cmdline)
+
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// If no args, print usage
 	args, _ := cmd.Args()
 	if len(args) == 0 {
@@ -80,6 +95,7 @@ func (cmd *MiscCommand) Run() error {
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// execute command
 	err = RunMisc(args, cmd)
 	return err

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -17,6 +18,17 @@ func TestMisc (t *testing.T) {
 	cmdString := CreateCommandString(cmdName, cmdArgs)
 	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &MiscCommand{}, cmd)
+}
+
+
+func TestMiscHelp (t *testing.T) {
+	cmdName := "misc"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &MiscCommand{}, cmd)
+	require.True(t, cmd.Help)
 }
 
 
