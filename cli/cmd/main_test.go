@@ -33,14 +33,18 @@ func TestMain(t *testing.T) {
 	require.False(t, cmd.Help)
 }
 
-func TestMainHelp(t *testing.T) {
+
+// dylt --help
+func TestHelp (t *testing.T) {
 	cmdName := "dylt"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
-	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t, NewMainCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &MainCommand{}, cmd)
 	require.True(t, cmd.Help)
 }
+
 
 // dylt call foo
 func TestMainSubCall(t *testing.T) {

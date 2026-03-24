@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 
@@ -16,11 +15,11 @@ type CallCommand struct {
 }
 
 func NewCallCommand(cmdline Cmdline, parent SuperCommand) *CallCommand {
-	// create command
-	flagSet := flag.NewFlagSet("call", flag.ExitOnError)
-	cmd := CallCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+	// call command
+	name := "call"
+	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
 	// init flag vars
-	flagSet.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
+	cmd.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 
 	return &cmd
 }
@@ -31,6 +30,12 @@ func (cmd *CallCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// Check for 0 args; if so print usage & return
 	if len(cmd.Cmdline) == 0 {
 		common.Logger.Comment("no args; printing usage")
@@ -50,11 +55,19 @@ func (cmd *CallCommand) PrintUsage() {
 
 func (cmd *CallCommand) Run() error {
 	cmd.Log()
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// Execute command
 	err = RunCall(cmd.ScriptPath, cmd.ScriptArgs)
 	if err != nil {

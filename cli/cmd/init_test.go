@@ -22,7 +22,7 @@ func TestInit (t *testing.T) {
 }
 
 func TestInitHelp(t *testing.T) {
-	cmdName := "list"
+	cmdName := "init"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)

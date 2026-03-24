@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -13,15 +12,16 @@ import (
 
 type MainCommand struct {
 	*BaseCommand
-	Help bool // flag
 }
 
 func NewMainCommand(cmdline Cmdline, parent SuperCommand) *MainCommand {
-	flagSet := flag.NewFlagSet("dylt", flag.ExitOnError)
-	var cmd = MainCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	flagSet.BoolVar(&cmd.Help, "help", false, "give it to me")
-
-	return &cmd
+	// main command
+	name := "dylt"
+	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *MainCommand) CreateSubCommand() (Command, error) {
@@ -48,17 +48,19 @@ func (cmd *MainCommand) Run() error {
 		panic("common.Logger == nil !!!")
 	}
 	common.Logger.Signature("MainCommand.Run()", cmd.Cmdline)
-	// Check for 0 args; if so print usage & return
+
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
 	// If help flag set, print usage
 	if cmd.Help {
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// If no args, print usage
 	args, _ := cmd.Args()
 	if len(args) == 0 {
@@ -66,6 +68,7 @@ func (cmd *MainCommand) Run() error {
 		cmd.PrintUsage()
 		return nil
 	}
+
 	// Execute command
 	err = RunMain(args, cmd)
 	if err != nil {

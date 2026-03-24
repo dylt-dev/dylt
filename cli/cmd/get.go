@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 
@@ -14,12 +13,13 @@ type GetCommand struct {
 }
 
 func NewGetCommand(cmdline Cmdline, parent SuperCommand) *GetCommand {
-	// create command
-	flagSet := flag.NewFlagSet("get", flag.PanicOnError)
-	cmd := GetCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	// init flag vars (nop - command has no flags)
-
-	return &cmd
+	// get command
+	name := "get"
+	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *GetCommand) HandleArgs() error {
@@ -28,6 +28,12 @@ func (cmd *GetCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 1
@@ -53,11 +59,19 @@ func (cmd *GetCommand) PrintUsage() {
 
 func (cmd *GetCommand) Run() error {
 	slog.Debug("GetCommand.Run()", "args", cmd.Cmdline)
+
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// execute command
 	err = lib.RunGet(cmd.Key)
 	if err != nil {

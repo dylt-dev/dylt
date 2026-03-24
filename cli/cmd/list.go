@@ -12,12 +12,13 @@ type ListCommand struct {
 }
 
 func NewListCommand(cmdline Cmdline, parent SuperCommand) *ListCommand {
-	// create command
+	// list command
 	name := "list"
-	cmd := ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	// init flag vars - (nop - no flags)
-
-	return &cmd
+	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+	
+	return cmd
 }
 
 func (cmd *ListCommand) HandleArgs() error {

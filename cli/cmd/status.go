@@ -14,7 +14,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 
@@ -23,16 +22,16 @@ import (
 
 type StatusCommand struct {
 	*BaseCommand
-	Help bool
 }
 
 func NewStatusCommand(cmdline Cmdline, parent SuperCommand) *StatusCommand {
-	// create command
-	flagSet := flag.NewFlagSet("status", flag.ExitOnError)
-	cmd := StatusCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
-	// init flag vars (no flags; nop)
-	flagSet.BoolVar(&cmd.Help, "help", false, "blah blah blah")
-	return &cmd
+	// status command
+	name := "status"
+	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
+
+	return cmd
 }
 
 func (cmd *StatusCommand) HandleArgs() error {
@@ -41,6 +40,12 @@ func (cmd *StatusCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	cmdArgs, _ := cmd.Args()
 	nExpected := 0
@@ -62,11 +67,19 @@ func (cmd *StatusCommand) PrintUsage() {
 
 func (cmd *StatusCommand) Run() error {
 	slog.Debug("StatusCommand.Run()", "args", cmd.Cmdline)
+
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// execute command
 	// @getit
 	err = RunStatus()

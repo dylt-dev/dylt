@@ -14,13 +14,14 @@ type InitCommand struct {
 }
 
 func NewInitCommand(cmdline Cmdline, parent SuperCommand) *InitCommand {
-	// create command
+	// init command
 	name := "init"
-	cmd := InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	// init flag vars
+	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	
+	//init flags (if any)
 	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
 
-	return &cmd
+	return cmd
 }
 
 func (cmd *InitCommand) HandleArgs() error {

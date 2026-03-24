@@ -24,6 +24,17 @@ func TestHost (t *testing.T) {
 	require.IsType(t, &HostCommand{}, cmd)
 }
 
+
+func TestHostHelp (t *testing.T) {
+	cmdName := "host"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t, NewHostCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &HostCommand{}, cmd)
+	require.True(t, cmd.Help)
+}
+
 func TestHostInit (t *testing.T) {
 	// config get foo
 	cmdName := "host"
@@ -48,6 +59,26 @@ func TestHostInit (t *testing.T) {
 	require.Equal(t, uid, subCmd.Uid)
 }
 
+
+func TestHostInitHelp(t *testing.T) {
+	cmdName := "host"
+	subCmdName := "init"
+	subCmdFlags := []string{"--help"}
+	subCmdArgs := []string{}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewHostCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test  subcommand
+	subCmd := _TestSubcommandCreation[*HostInitCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.True(t, subCmd.Help)
+}
 
 
 func TestRunHost(t *testing.T) {
