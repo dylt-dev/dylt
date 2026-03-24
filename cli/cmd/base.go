@@ -12,7 +12,20 @@ type BaseCommand struct {
 	*flag.FlagSet
 	ParentCommand Command
 	Cmdline       Cmdline
+	Help          bool
 }
+
+func NewBaseCommand (name string, cmdline Cmdline, parent SuperCommand) *BaseCommand {
+	cmd := &BaseCommand{
+		Cmdline: cmdline,
+		ParentCommand: parent,
+		FlagSet: flag.NewFlagSet(name, flag.ExitOnError),
+	}
+	cmd.FlagSet.BoolVar(&cmd.Help, "help", false, "give it to me")
+	
+	return cmd
+}
+
 
 func (cmd BaseCommand) Args() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {

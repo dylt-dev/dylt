@@ -13,6 +13,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type SimpleCommand struct {
+	*clicmd.BaseCommand
+}
+
+func (cmd SimpleCommand) HandleArgs () error{ return nil }
+func (cmd SimpleCommand) Run () error { return nil }
+
+func TestCommandArgs (t *testing.T) {
+	cmdline := clicmd.Cmdline{"foo", "bar", "bum"}
+	cmd := SimpleCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
+	err := cmd.Parse()
+	args, _ := cmd.Args()
+	t.Logf("args=%v", args)
+	require.NoError(t, err)
+	_TestArgs(t, cmd, len(cmdline.Args()), cmdline.Args())
+}
+
 type InitCommand struct {
 	*flag.FlagSet
 	EtcdDomain string
@@ -41,6 +58,9 @@ func TestArgs(t *testing.T) {
 	flagSet := flag.FlagSet{}
 	flagSet.Parse(cmdline)
 	t.Logf("flagSet.Args(): %#+v\n", flagSet.Args())
+	args := flagSet.Args()
+	require.Equal(t, len(cmdline), len(args))
+	require.Equal(t, cmdline, clicmd.Cmdline(args))
 }
 
 func TestArgsFlag(t *testing.T) {
@@ -214,10 +234,10 @@ func TestPappyDaddyMe(t *testing.T) {
 }
 
 func _TestArgs(t *testing.T, cmd clicmd.Command, targetArgsLen int, targetArgs clicmd.Cmdline) {
-	args, flag := cmd.Args()
-	require.Equal(t, targetArgsLen, len(args.Args()))
-	require.Equal(t, targetArgs, args.Args())
-	require.True(t, flag)
+	args, is := cmd.Args()
+	require.True(t, is)
+	require.Equal(t, targetArgsLen, len(args))
+	require.Equal(t, targetArgs, args)
 }
 
 func _TestCommandString(t *testing.T, cmd clicmd.Command, targetCmdString string) {

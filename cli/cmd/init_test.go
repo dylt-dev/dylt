@@ -21,6 +21,15 @@ func TestInit (t *testing.T) {
 	
 }
 
+func TestInitHelp(t *testing.T) {
+	cmdName := "list"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewInitCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.True(t, cmd.Help)
+}
+
 func TestRunInit (t *testing.T) {
 	etcDomain := "hello.dylt.dev"
 	err := RunInit(etcDomain)

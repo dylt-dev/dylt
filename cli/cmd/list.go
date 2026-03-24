@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 
@@ -14,8 +13,8 @@ type ListCommand struct {
 
 func NewListCommand(cmdline Cmdline, parent SuperCommand) *ListCommand {
 	// create command
-	flagSet := flag.NewFlagSet("list", flag.PanicOnError)
-	cmd := ListCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+	name := "list"
+	cmd := ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
 	// init flag vars - (nop - no flags)
 
 	return &cmd
@@ -27,6 +26,12 @@ func (cmd *ListCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate arg count
 	args, _ := cmd.Args()
 	nExpected := 0
@@ -38,7 +43,8 @@ func (cmd *ListCommand) HandleArgs() error {
 			nExpected,
 			len(args))
 	}
-	// init positional params + subargs
+
+	// init positional params + subargs (if any)
 
 	return nil
 }
@@ -49,13 +55,23 @@ func (cmd *ListCommand) PrintUsage() {
 	fmt.Println()
 }
 
+
 func (cmd *ListCommand) Run() error {
 	slog.Debug("ListCommand.Run()", "args", cmd.Cmdline)
+
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+	
+	// If help flag set, print usage
+	if cmd.Help {
+		fmt.Println("halp!")
+		cmd.PrintUsage()
+		return nil
+	}
+	
 	// execute command
 	err = RunList()
 	if err != nil {
@@ -64,6 +80,7 @@ func (cmd *ListCommand) Run() error {
 
 	return nil
 }
+
 
 func RunList() error {
 	// get etcd client + list all keys, one per line

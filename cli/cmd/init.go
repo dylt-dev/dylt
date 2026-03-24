@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"log/slog"
 
@@ -16,10 +15,10 @@ type InitCommand struct {
 
 func NewInitCommand(cmdline Cmdline, parent SuperCommand) *InitCommand {
 	// create command
-	flagSet := flag.NewFlagSet("init", flag.ExitOnError)
-	cmd := InitCommand{BaseCommand: &BaseCommand{Cmdline: cmdline, FlagSet: flagSet, ParentCommand: parent}}
+	name := "init"
+	cmd := InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
 	// init flag vars
-	flagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
+	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
 
 	return &cmd
 }
@@ -30,6 +29,12 @@ func (cmd *InitCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		return nil
+	}
+
 	// validate required flags
 	var requiredFlag string = "etcd-domain"
 	if cmd.Lookup(requiredFlag).Value.String() == "" {
@@ -58,11 +63,19 @@ func (cmd *InitCommand) PrintUsage() {
 
 func (cmd *InitCommand) Run() error {
 	slog.Debug("InitCommand.Run()", "args", cmd.Cmdline)
+
 	// parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
 		return err
 	}
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// execute command
 	err = RunInit(cmd.EtcdDomain)
 	if err != nil {

@@ -18,6 +18,15 @@ func TestList (t *testing.T) {
 	require.IsType(t, &ListCommand{}, cmd)
 }
 
+func TestListHelp(t *testing.T) {
+	cmdName := "list"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewListCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.True(t, cmd.Help)
+}
+
 func TestRunList (t *testing.T) {
 	err := RunList()
 	require.Nil(t, err)

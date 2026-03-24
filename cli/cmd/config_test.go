@@ -18,6 +18,15 @@ func TestConfig (t *testing.T) {
 	require.IsType(t, &ConfigCommand{}, cmd)
 }
 
+func TestConfigHelp(t *testing.T) {
+	cmdName := "list"
+	cmdFlags := []string{"--help"}
+	cmdArgs := []string{}
+	cmdString := CreateCommandString(cmdName, cmdArgs)
+	cmd := CreateAndTestCommand(t, NewConfigCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.True(t, cmd.Help)
+}
+
 func TestConfigGet (t *testing.T) {
 	// config get foo
 	cmdName := "config"
@@ -39,6 +48,37 @@ func TestConfigGet (t *testing.T) {
 	require.Equal(t, "foo", subCmd.Key)
 }
 
+
+func TestConfigGetHelp(t *testing.T) {
+	cmdName := "config"
+	subCmdName := "get"
+	subCmdFlags := []string{"--help"}
+	subCmdArgs := []string{"foo"}
+	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
+	cmd := NewConfigCommand(cmdline, nil)
+	// test parent command
+	_TestParentCommand(t, cmd, cmdName, cmdArgs)
+	// create + test subcommand
+	subCmd := _TestSubcommandCreation[*ConfigGetCommand](t,
+		cmd,
+		subCmdName,
+		subCmdFlags,
+		subCmdArgs,
+		subCmdString,
+	)
+	require.True(t, subCmd.Help)
+	// require.Equal(t, "foo", subCmd.Key)
+	// cmdName := "config"
+	// cmdFlags := []string{}
+	// cmdArgs := []string{"get", "--help"}
+	// cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
+	// cmd := NewConfigCommand(cmdline, nil)
+	// require.NotNil(t, cmd)
+	// subCmd, err := cmd.CreateSubCommand()
+	// require.NoError(t, err)
+	// require.NotNil(t, subCmd)
+	// require.True(t, subCmd.(*ConfigGetCommand).Help)
+}
 
 func TestConfigSet (t *testing.T) {
 	// config set foo bar
@@ -112,6 +152,26 @@ func TestConfigSetCmd0 (t *testing.T) {
 func TestConfigSetCmd1 (t *testing.T) {
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt config set etcd-domain hello.dylt.dev"
 	CheckRunCommandSuccessNoOutput(sCmdline, t)
+}
+
+
+// Created this test to figure out why I couldn't create Command objects with
+// simple code. Turned out I was forgetting to Parse(). I was used to my 
+// test_utils helper function doing it for me.
+func TestCreateSubcommandRaw (t *testing.T) {
+	var err error
+	cmdline:= Cmdline{"config", "get", "--help"}
+	cmd := NewConfigCommand(cmdline, nil)
+	err = cmd.Parse()
+	require.NoError(t, err)
+	t.Logf("cmd=%v", cmd)
+	t.Logf("cmd.CommandName()=%v", cmd.CommandName())
+	require.NotNil(t, cmd)
+	subCmd, err := cmd.CreateSubCommand()
+	err = subCmd.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, subCmd)
+	require.True(t, subCmd.(*ConfigGetCommand).Help)
 }
 
 
