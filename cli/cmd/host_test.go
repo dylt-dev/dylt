@@ -88,7 +88,7 @@ func TestRunHost(t *testing.T) {
 	cmdName := "init"
 	cmdArgs := []string{}
 	cmdline := append(Cmdline{cmdName}, cmdArgs...)
-	parent := SuperCommand(nil)
+	parent := Command(nil)
 	err := RunHost(cmdline, parent)
 	assert.Nil(t, err)
 }

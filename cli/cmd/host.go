@@ -12,7 +12,7 @@ type HostCommand struct {
 	*BaseCommand
 }
 
-func NewHostCommand(cmdline Cmdline, parent SuperCommand) *HostCommand {
+func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	// host command
 	name := "host"
 	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -98,7 +98,7 @@ func (cmd *HostCommand) Run() error {
 	return err
 }
 
-func RunHost(cmdline Cmdline, parent SuperCommand) error {
+func RunHost(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunHost()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
 	subCmd, err := createHostSubCommand(cmdline, parent)
@@ -113,7 +113,7 @@ func RunHost(cmdline Cmdline, parent SuperCommand) error {
 	return nil
 }
 
-func createHostSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+func createHostSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "init":
@@ -129,7 +129,7 @@ type HostInitCommand struct {
 	Uid int
 }
 
-func NewHostInitCommand(cmdline Cmdline, parent SuperCommand) *HostInitCommand {
+func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	// host init command
 	name := "host.init"
 	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

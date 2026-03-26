@@ -25,7 +25,7 @@ func CheckRunCommandSuccessNoOutput(sCmdlineArgs string, t *testing.T) error {
 }
 
 func CreateAndTestCommand[U Command](t *testing.T,
-                                     fact func(Cmdline, SuperCommand) U,
+                                     fact func(Cmdline, Command) U,
                                      cmdName string,
                                      cmdFlags []string,
                                      cmdArgs []string,
@@ -76,7 +76,7 @@ func _TestSubCommandAndArgs(t *testing.T,
 }
 
 func _TestParentCommand(t *testing.T,
-                        cmd SuperCommand,
+                        cmd Command,
                         cmdName string,
                         cmdArgs Cmdline) {
 	err := cmd.HandleArgs()
@@ -97,7 +97,7 @@ func _TestParentCommand(t *testing.T,
 //    subArgs			arguments to pass to the subcommand
 //    targetCmdString	expected command string 
 func _TestSubcommandCreation[TCmd Command](t *testing.T,
-                                           cmd SuperCommand,
+                                           cmd Command,
                                            subName string,
                                            subCmdFlags []string,
                                            targetSubArgs []string,

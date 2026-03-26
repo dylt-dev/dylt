@@ -2,30 +2,26 @@ package cmd
 
 import (
 	"flag"
-	"fmt"
-	"log/slog"
-	"reflect"
 	"strings"
 )
 
 type BaseCommand struct {
 	*flag.FlagSet
-	ParentCommand Command
-	Cmdline       Cmdline
-	Help          bool
+	Parent  Command
+	Cmdline Cmdline
+	Help    bool
 }
 
-func NewBaseCommand (name string, cmdline Cmdline, parent SuperCommand) *BaseCommand {
+func NewBaseCommand(name string, cmdline Cmdline, parent Command) *BaseCommand {
 	cmd := &BaseCommand{
 		Cmdline: cmdline,
-		ParentCommand: parent,
+		Parent:  parent,
 		FlagSet: flag.NewFlagSet(name, flag.ExitOnError),
 	}
 	cmd.FlagSet.BoolVar(&cmd.Help, "help", false, "give it to me")
-	
+
 	return cmd
 }
-
 
 func (cmd BaseCommand) Args() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
@@ -34,7 +30,7 @@ func (cmd BaseCommand) Args() (Cmdline, bool) {
 	return cmd.FlagSet.Args(), true
 }
 
-func (cmd BaseCommand) CommandLine () Cmdline {
+func (cmd BaseCommand) CommandLine() Cmdline {
 	return cmd.Cmdline
 }
 
@@ -48,10 +44,10 @@ func (cmd BaseCommand) CommandArgs() ([]string, bool) {
 	}
 	var cmdArgs []string
 	var flag bool
-	if cmd.ParentCommand == nil {
+	if cmd.Parent == nil {
 		cmdArgs = []string{}
 	} else {
-		cmdArgs, flag = cmd.ParentCommand.CommandArgs()
+		cmdArgs, flag = cmd.Parent.CommandArgs()
 		if !flag {
 			return nil, flag
 		}
@@ -74,10 +70,11 @@ func (cmd BaseCommand) CommandString() (string, bool) {
 	return strings.Join(cmdArgs, " "), true
 }
 
-func (cmd BaseCommand) Log() {
-	stype := reflect.TypeOf(cmd).Name()
-	subArgs, _ := cmd.SubArgs()
-	slog.Debug(fmt.Sprintf("%s.Run()", stype), "args", subArgs)
+type NoSubcommandsError struct {}
+func (o NoSubcommandsError) Error() string { return "No Subcommands" }
+
+func (cmd BaseCommand) CreateSubCommand () (Command, error) {
+	return nil, &NoSubcommandsError{}
 }
 
 func (cmd BaseCommand) Parse() error {

@@ -15,7 +15,7 @@ type VmCommand struct {
 	*BaseCommand
 }
 
-func NewVmCommand(cmdline Cmdline, parent SuperCommand) *VmCommand {
+func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	// vm command
 	name := "vm"
 	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -120,7 +120,7 @@ func RunVm(cmdline Cmdline, parent *VmCommand) error {
 	return nil
 }
 
-func createVmSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+func createVmSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	subCmd := cmdline.Command()
 	switch subCmd {
 	case "add":
@@ -146,7 +146,7 @@ type VmAddCommand struct {
 	Fqdn string // arg 1
 }
 
-func NewVmAddCommand(cmdline Cmdline, parent SuperCommand) *VmAddCommand {
+func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 	// vm add command
 	name := "vm.add"
 	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -233,7 +233,7 @@ type VmAllCommand struct {
 	*BaseCommand
 }
 
-func NewVmAllCommand(cmdline Cmdline, parent SuperCommand) *VmAllCommand {
+func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	// vm all command
 	name := "vm.all"
 	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -325,7 +325,7 @@ type VmDelCommand struct {
 	Name string // arg 0
 }
 
-func NewVmDelCommand(cmdline Cmdline, parent SuperCommand) *VmDelCommand {
+func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	// vm del command
 	name := "vm.del"
 	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -419,7 +419,7 @@ type VmGetCommand struct {
 	Name string // arg 0
 }
 
-func NewVmGetCommand(cmdline Cmdline, parent SuperCommand) *VmGetCommand {
+func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	// vm get command
 	name := "vm.get"
 	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -514,7 +514,7 @@ type VmListCommand struct {
 	*BaseCommand
 }
 
-func NewVmListCommand(cmdline Cmdline, parent SuperCommand) *VmListCommand {
+func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	// vm list command
 	name := "vm.list"
 	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -610,7 +610,7 @@ type VmSetCommand struct {
 	Value string // arg 2
 }
 
-func NewVmSetCommand(cmdline Cmdline, parent SuperCommand) *VmSetCommand {
+func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	// vm set command
 	name := "vm.set"
 	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

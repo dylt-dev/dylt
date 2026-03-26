@@ -11,7 +11,7 @@ type ListCommand struct {
 	*BaseCommand
 }
 
-func NewListCommand(cmdline Cmdline, parent SuperCommand) *ListCommand {
+func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
 	// list command
 	name := "list"
 	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

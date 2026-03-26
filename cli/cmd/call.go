@@ -14,7 +14,7 @@ type CallCommand struct {
 	ScriptPath string   // flag
 }
 
-func NewCallCommand(cmdline Cmdline, parent SuperCommand) *CallCommand {
+func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 	// call command
 	name := "call"
 	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -54,7 +54,7 @@ func (cmd *CallCommand) PrintUsage() {
 }
 
 func (cmd *CallCommand) Run() error {
-	cmd.Log()
+	slog.Debug("CallCommand.Run()", "args", cmd.Cmdline)
 
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
