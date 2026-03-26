@@ -13,7 +13,7 @@ type InitCommand struct {
 	EtcdDomain string
 }
 
-func NewInitCommand(cmdline Cmdline, parent SuperCommand) *InitCommand {
+func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
 	// init command
 	name := "init"
 	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

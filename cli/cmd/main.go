@@ -14,7 +14,7 @@ type MainCommand struct {
 	*BaseCommand
 }
 
-func NewMainCommand(cmdline Cmdline, parent SuperCommand) *MainCommand {
+func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 	// main command
 	name := "dylt"
 	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

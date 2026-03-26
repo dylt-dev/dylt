@@ -15,7 +15,7 @@ type WatchCommand struct {
 	*BaseCommand
 }
 
-func NewWatchCommand(cmdline Cmdline, parent SuperCommand) *WatchCommand {
+func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	// watch command
 	name := "watch"
 	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -100,7 +100,7 @@ func (cmd *WatchCommand) Run() error {
 	return err
 }
 
-func RunWatch(cmdline Cmdline, parent SuperCommand) error {
+func RunWatch(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
 	subCmd, err := createWatchSubCommand(cmdline, parent)
@@ -115,7 +115,7 @@ func RunWatch(cmdline Cmdline, parent SuperCommand) error {
 	return nil
 }
 
-func createWatchSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+func createWatchSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "script":
@@ -136,7 +136,7 @@ type WatchScriptCommand struct {
 	TargetPath string // arg 1
 }
 
-func NewWatchScriptCommand(cmdline Cmdline, parent SuperCommand) *WatchScriptCommand {
+func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand {
 	// watch script command
 	name := "watch.script"
 	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -210,7 +210,7 @@ type WatchSvcCommand struct {
 	Name string
 }
 
-func NewWatchSvcCommand(cmdline Cmdline, parent SuperCommand) *WatchSvcCommand {
+func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	// watch svc command
 	name := "watch.svc"
 	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

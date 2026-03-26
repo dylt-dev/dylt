@@ -18,7 +18,7 @@ type MiscCommand struct {
 	*BaseCommand
 }
 
-func NewMiscCommand(cmdline Cmdline, parent SuperCommand) *MiscCommand {
+func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 	// misc command
 	name := "misc"
 	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -101,7 +101,7 @@ func (cmd *MiscCommand) Run() error {
 	return err
 }
 
-func RunMisc(cmdline Cmdline, parent SuperCommand) error {
+func RunMisc(cmdline Cmdline, parent Command) error {
 	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
 	// create the subcommand and run it
 	subCmd, err := createMiscSubCommand(cmdline, parent)
@@ -116,7 +116,7 @@ func RunMisc(cmdline Cmdline, parent SuperCommand) error {
 	return nil
 }
 
-func createMiscSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+func createMiscSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "create-two-node-cluster":
@@ -134,7 +134,7 @@ type CreateTwoNodeClusterCommand struct {
 	*BaseCommand
 }
 
-func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent SuperCommand) *CreateTwoNodeClusterCommand {
+func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoNodeClusterCommand {
 	// misc create-two-node-cluster command
 	name := "misc.create-two-node-cluster"
 	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -220,7 +220,7 @@ type GenEtcdRunScriptCommand struct {
 	*BaseCommand
 }
 
-func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent SuperCommand) *GenEtcdRunScriptCommand {
+func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScriptCommand {
 	// misc gen-etcd-run-script command
 	name := "misc.gen-etcd-run-script"
 	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -311,7 +311,7 @@ type LookupCommand struct {
 	Hostname string
 }
 
-func NewLookupCommand(cmdline Cmdline, parent SuperCommand) *LookupCommand {
+func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	// misc lookup command
 	name := "misc.lookup"
 	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

@@ -17,10 +17,10 @@ type SimpleCommand struct {
 	*clicmd.BaseCommand
 }
 
-func (cmd SimpleCommand) HandleArgs () error{ return nil }
-func (cmd SimpleCommand) Run () error { return nil }
+func (cmd SimpleCommand) HandleArgs() error { return nil }
+func (cmd SimpleCommand) Run() error        { return nil }
 
-func TestCommandArgs (t *testing.T) {
+func TestCommandArgs(t *testing.T) {
 	cmdline := clicmd.Cmdline{"foo", "bar", "bum"}
 	cmd := SimpleCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
 	err := cmd.Parse()
@@ -195,14 +195,14 @@ func (cmd *DaddyCommand) HandleArgs() error { return nil }
 func (cmd *DaddyCommand) Run() error        { return nil }
 
 func NewDaddyCommand(cmdline clicmd.Cmdline, parent *PappyCommand) *DaddyCommand {
-	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
+	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
 func (cmd *MeCommand) HandleArgs() error { return nil }
 func (cmd *MeCommand) Run() error        { return nil }
 
 func NewMeCommand(cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
-	return &MeCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, ParentCommand: parent}}
+	return &MeCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
 func TestPappyDaddyMe(t *testing.T) {

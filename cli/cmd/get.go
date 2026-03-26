@@ -12,7 +12,7 @@ type GetCommand struct {
 	Key string // arg 0
 }
 
-func NewGetCommand(cmdline Cmdline, parent SuperCommand) *GetCommand {
+func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	// get command
 	name := "get"
 	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

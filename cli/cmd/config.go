@@ -13,7 +13,7 @@ type ConfigCommand struct {
 	*BaseCommand
 }
 
-func NewConfigCommand(cmdline Cmdline, parent SuperCommand) *ConfigCommand {
+func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	// config command
 	name := "config"
 	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -95,7 +95,7 @@ func (cmd *ConfigCommand) Run() error {
 	return err
 }
 
-func RunConfig(cmdline Cmdline, parent SuperCommand) error {
+func RunConfig(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
 	subCmd, err := createConfigSubCommand(cmdline, parent)
@@ -110,7 +110,7 @@ func RunConfig(cmdline Cmdline, parent SuperCommand) error {
 	return nil
 }
 
-func createConfigSubCommand(cmdline Cmdline, parent SuperCommand) (Command, error) {
+func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "get":
@@ -136,7 +136,7 @@ type ConfigGetCommand struct {
 	Key string
 }
 
-func NewConfigGetCommand(cmdline Cmdline, parent SuperCommand) *ConfigGetCommand {
+func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	// config get command
 	name := "config.get"
 	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -216,7 +216,7 @@ type ConfigSetCommand struct {
 	Value string // arg 1
 }
 
-func NewConfigSetCommand(cmdline Cmdline, parent SuperCommand) *ConfigSetCommand {
+func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	// config set command
 	name := "config.set"
 	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
@@ -325,7 +325,7 @@ type ConfigShowCommand struct {
 	*BaseCommand
 }
 
-func NewConfigShowCommand(cmdline Cmdline, parent SuperCommand) *ConfigShowCommand {
+func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	// config show command
 	name := "config.set"
 	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

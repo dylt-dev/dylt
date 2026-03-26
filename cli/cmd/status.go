@@ -24,7 +24,7 @@ type StatusCommand struct {
 	*BaseCommand
 }
 
-func NewStatusCommand(cmdline Cmdline, parent SuperCommand) *StatusCommand {
+func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
 	// status command
 	name := "status"
 	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}

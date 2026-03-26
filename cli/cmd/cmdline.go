@@ -28,21 +28,3 @@ func (o Cmdline) Command() string {
 func (o Cmdline) HasCommand() bool {
 	return len(o) > 0
 }
-
-type Command interface {
-	Args() (Cmdline, bool)
-	CommandLine() Cmdline
-	CommandName() string
-	CommandArgs() ([]string, bool)
-	CommandString() (string, bool)
-	HandleArgs() error
-	Parse() error
-	Run() error
-	SubArgs() (Cmdline, bool)
-	SubCommand() (string, bool)
-}
-
-type SuperCommand interface {
-	Command
-	CreateSubCommand() (Command, error)
-}
