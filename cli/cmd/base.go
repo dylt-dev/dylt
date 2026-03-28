@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 	"strings"
 )
 
@@ -10,13 +11,18 @@ type BaseCommand struct {
 	Parent  Command
 	Cmdline Cmdline
 	Help    bool
+	Usage string
 }
 
-func NewBaseCommand(name string, cmdline Cmdline, parent Command) *BaseCommand {
+// type BaseCommandS BaseCommand[string]
+// type BaseCommandSA BaseCommand[[]string]
+
+func NewBaseCommand[U UsageTextType](name string, cmdline Cmdline, parent Command, usageText U) *BaseCommand {
 	cmd := &BaseCommand{
 		Cmdline: cmdline,
 		Parent:  parent,
 		FlagSet: flag.NewFlagSet(name, flag.ExitOnError),
+		Usage: CreateUsageString(usageText),
 	}
 	cmd.FlagSet.BoolVar(&cmd.Help, "help", false, "give it to me")
 
@@ -83,6 +89,11 @@ func (cmd BaseCommand) Parse() error {
 		return err
 	}
 	return nil
+}
+
+func (cmd BaseCommand) PrintUsage () {
+	fmt.Print(cmd.Usage)
+	fmt.Println()
 }
 
 func (cmd BaseCommand) SubArgs() (Cmdline, bool) {

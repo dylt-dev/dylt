@@ -17,7 +17,7 @@ type MainCommand struct {
 func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 	// main command
 	name := "dylt"
-	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main)}
 	
 	//init flags (if any)
 	
@@ -37,10 +37,6 @@ func (cmd *MainCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
 	return err
-}
-
-func (cmd *MainCommand) PrintUsage() {
-	PrintUsage(USG_Main)
 }
 
 func (cmd *MainCommand) Run() error {

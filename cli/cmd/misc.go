@@ -14,7 +14,7 @@ type MiscCommand struct {
 func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 	// misc command
 	name := "misc"
-	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc)}
 	
 	//init flags (if any)
 	
@@ -54,16 +54,6 @@ func (cmd *MiscCommand) HandleArgs() error {
 	// init positional params
 
 	return nil
-}
-
-func (cmd *MiscCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n\t%s\n\t%s\n",
-		USG_Misc_TwoNode_Short,
-		USG_Misc_GenScript_Short,
-		USG_Misc_Lookup_Short,
-	)
-	fmt.Println()
 }
 
 func (cmd *MiscCommand) Run() error {
@@ -130,7 +120,7 @@ type CreateTwoNodeClusterCommand struct {
 func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoNodeClusterCommand {
 	// misc create-two-node-cluster command
 	name := "misc.create-two-node-cluster"
-	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode)}
 	
 	//init flags (if any)
 	
@@ -164,12 +154,6 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *CreateTwoNodeClusterCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Misc_TwoNode)
-	fmt.Println()
-}
-
 func (cmd *CreateTwoNodeClusterCommand) Run() error {
 	common.Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", cmd.Cmdline)
 
@@ -198,7 +182,7 @@ type GenEtcdRunScriptCommand struct {
 func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScriptCommand {
 	// misc gen-etcd-run-script command
 	name := "misc.gen-etcd-run-script"
-	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript)}
 	
 	//init flags (if any)
 	
@@ -230,12 +214,6 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
 	}
 
 	return nil
-}
-
-func (cmd *GenEtcdRunScriptCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Misc_GenScript)
-	fmt.Println()
 }
 
 func (cmd *GenEtcdRunScriptCommand) Run() error {
@@ -274,7 +252,7 @@ type LookupCommand struct {
 func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	// misc lookup command
 	name := "misc.lookup"
-	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup)}
 	
 	//init flags (if any)
 	
@@ -309,12 +287,6 @@ func (cmd *LookupCommand) HandleArgs() error {
 	cmd.Hostname = cmdArgs[0]
 
 	return nil
-}
-
-func (cmd *LookupCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Misc_Lookup)
-	fmt.Println()
 }
 
 func (cmd *LookupCommand) Run() error {

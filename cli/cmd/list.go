@@ -14,7 +14,7 @@ type ListCommand struct {
 func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
 	// list command
 	name := "list"
-	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List)}
 	
 	//init flags (if any)
 	
@@ -48,12 +48,6 @@ func (cmd *ListCommand) HandleArgs() error {
 	// init positional params + subargs (if any)
 
 	return nil
-}
-
-func (cmd *ListCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_List)
-	fmt.Println()
 }
 
 

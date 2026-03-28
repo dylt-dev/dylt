@@ -15,7 +15,7 @@ type InitCommand struct {
 func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
 	// init command
 	name := "init"
-	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Init)}
 	
 	//init flags (if any)
 	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
@@ -55,10 +55,6 @@ func (cmd *InitCommand) HandleArgs() error {
 	// init positional params (nop - no params)
 
 	return nil
-}
-
-func (cmd *InitCommand) PrintUsage() {
-	PrintUsage(USG_Init)
 }
 
 func (cmd *InitCommand) Run() error {

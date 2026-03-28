@@ -17,7 +17,7 @@ type VmCommand struct {
 func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	// vm command
 	name := "vm"
-	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm)}
 
 	//init flags (if any)
 
@@ -56,17 +56,6 @@ func (cmd *VmCommand) HandleArgs() error {
 	}
 
 	return nil
-}
-
-func (cmd *VmCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_Add_Short)
-	fmt.Printf("\t%s\n", USG_Vm_All_Short)
-	fmt.Printf("\t%s\n", USG_Vm_Del_Short)
-	fmt.Printf("\t%s\n", USG_Vm_Get_Short)
-	fmt.Printf("\t%s\n", USG_Vm_List_Short)
-	fmt.Printf("\t%s\n", USG_Vm_Set_Short)
-	fmt.Println()
 }
 
 func (cmd *VmCommand) Run() error {
@@ -148,7 +137,7 @@ type VmAddCommand struct {
 func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 	// vm add command
 	name := "vm.add"
-	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add)}
 
 	//init flags (if any)
 
@@ -186,12 +175,6 @@ func (cmd *VmAddCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmAddCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_Add)
-	fmt.Println()
-}
-
 func (cmd VmAddCommand) Run() error {
 	slog.Debug("VmAddCommand.Run()", "args", cmd.Cmdline)
 
@@ -219,7 +202,7 @@ type VmAllCommand struct {
 func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	// vm all command
 	name := "vm.all"
-	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All)}
 
 	//init flags (if any)
 
@@ -255,12 +238,6 @@ func (cmd *VmAllCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmAllCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_All)
-	fmt.Println()
-}
-
 func (cmd VmAllCommand) Run() error {
 	slog.Debug("VmAllCommand.Run()", "args", cmd.Cmdline)
 
@@ -292,7 +269,7 @@ type VmDelCommand struct {
 func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	// vm del command
 	name := "vm.del"
-	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del)}
 
 	return cmd
 }
@@ -327,12 +304,6 @@ func (cmd *VmDelCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmDelCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_Del)
-	fmt.Println()
-}
-
 func (cmd *VmDelCommand) Run() error {
 	slog.Debug("VmDelCommand.Run()", "args", cmd.Cmdline)
 
@@ -364,7 +335,7 @@ type VmGetCommand struct {
 func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	// vm get command
 	name := "vm.get"
-	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get)}
 
 	//init flags (if any)
 
@@ -401,12 +372,6 @@ func (cmd *VmGetCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmGetCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_Get)
-	fmt.Println()
-}
-
 func (cmd *VmGetCommand) Run() error {
 	slog.Debug("VmGetCommand.Run()", "args", cmd.Cmdline)
 
@@ -437,7 +402,7 @@ type VmListCommand struct {
 func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	// vm list command
 	name := "vm.list"
-	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List)}
 
 	//init flags (if any)
 
@@ -473,12 +438,6 @@ func (cmd *VmListCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *VmListCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_List)
-	fmt.Println()
-}
-
 func (cmd VmListCommand) Run() error {
 	slog.Debug("VmListCommand.Run()", "args", cmd.Cmdline)
 
@@ -512,7 +471,7 @@ type VmSetCommand struct {
 func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	// vm set command
 	name := "vm.set"
-	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set)}
 
 	//init flags (if any)
 
@@ -549,12 +508,6 @@ func (cmd *VmSetCommand) HandleArgs() error {
 	cmd.Value = cmdArgs[2]
 
 	return nil
-}
-
-func (cmd *VmSetCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Vm_Set)
-	fmt.Println()
 }
 
 func (cmd VmSetCommand) Run() error {

@@ -16,7 +16,7 @@ type ConfigCommand struct {
 func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	// config command
 	name := "config"
-	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config)}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -36,7 +36,7 @@ func (cmd *ConfigCommand) HandleArgs() error {
 	if err != nil {
 		return err
 	}
-	
+
 	// if Help flag is set, no further processing is necessary
 	if cmd.Help {
 		return nil
@@ -54,10 +54,6 @@ func (cmd *ConfigCommand) HandleArgs() error {
 	}
 
 	return nil
-}
-
-func (cmd *ConfigCommand) PrintUsage() {
-	PrintUsage(USG_Config)
 }
 
 func (cmd *ConfigCommand) Run() error {
@@ -95,7 +91,6 @@ func (cmd *ConfigCommand) Run() error {
 	return err
 }
 
-
 func RunConfig(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
@@ -111,7 +106,6 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 	return nil
 }
 
-
 func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
@@ -123,13 +117,11 @@ func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 		return NewConfigShowCommand(cmdline, parent), nil
 	default:
 		{
-			var this *ConfigCommand = nil
-			this.PrintUsage()
+			PrintUsage(USG_Config)
 			return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 		}
 	}
 }
-
 
 // Usage
 //
@@ -142,7 +134,7 @@ type ConfigGetCommand struct {
 func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	// config get command
 	name := "config.get"
-	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get)}
 	// init flag vars (nop -- no flags)
 
 	return cmd
@@ -176,12 +168,6 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *ConfigGetCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Config_Get)
-	fmt.Println()
-}
-
 func (cmd *ConfigGetCommand) Run() error {
 	slog.Debug("ConfigGetCommand.Run()", "args", cmd.Cmdline)
 
@@ -211,7 +197,7 @@ type ConfigSetCommand struct {
 func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	// config set command
 	name := "config.set"
-	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set)}
 
 	return cmd
 }
@@ -245,12 +231,6 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *ConfigSetCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Config_Set)
-	fmt.Println()
-}
-
 func (cmd *ConfigSetCommand) Run() error {
 	slog.Debug("ConfigSetCommand.Run()", "args", cmd.Cmdline)
 
@@ -278,10 +258,10 @@ type ConfigShowCommand struct {
 func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	// config show command
 	name := "config.set"
-	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show)}
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -313,14 +293,6 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 
 	return nil
 }
-
-
-func (cmd *ConfigShowCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Config_Show)
-	fmt.Println()
-}
-
 
 func (cmd *ConfigShowCommand) Run() error {
 	slog.Debug("ConfigShowCommand.Run()", "args", cmd.Cmdline)

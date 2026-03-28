@@ -15,7 +15,7 @@ type HostCommand struct {
 func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	// host command
 	name := "host"
-	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host)}
 	
 	//init flags (if any)
 	
@@ -57,10 +57,6 @@ func (cmd *HostCommand) HandleArgs() error {
 	// init positional params (nop - no positional params)
 
 	return nil
-}
-
-func (cmd *HostCommand) PrintUsage() {
-	PrintUsage(USG_Host)
 }
 
 func (cmd *HostCommand) Run() error {
@@ -132,7 +128,7 @@ type HostInitCommand struct {
 func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	// host init command
 	name := "host.init"
-	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init)}
 	
 	//init flags (if any)
 	cmd.IntVar(&cmd.Gid, "gid", 2000, "gid")
@@ -168,12 +164,6 @@ func (cmd *HostInitCommand) HandleArgs() error {
 	// init positional params (nop - no positional params)
 
 	return nil
-}
-
-func (cmd *HostInitCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Host_Init)
-	fmt.Println()
 }
 
 func (cmd *HostInitCommand) Run() error {

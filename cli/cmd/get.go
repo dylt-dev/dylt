@@ -15,7 +15,7 @@ type GetCommand struct {
 func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	// get command
 	name := "get"
-	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get)}
 	
 	//init flags (if any)
 	
@@ -49,12 +49,6 @@ func (cmd *GetCommand) HandleArgs() error {
 	cmd.Key = cmdArgs[0]
 
 	return nil
-}
-
-func (cmd *GetCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Get)
-	fmt.Println()
 }
 
 func (cmd *GetCommand) Run() error {

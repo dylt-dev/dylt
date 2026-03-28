@@ -9,6 +9,7 @@ type Command interface {
 	CreateSubCommand() (Command, error)
 	HandleArgs() error
 	Parse() error
+	PrintUsage()
 	Run() error
 	SubArgs() (Cmdline, bool)
 	SubCommand() (string, bool)

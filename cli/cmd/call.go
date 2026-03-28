@@ -16,7 +16,7 @@ type CallCommand struct {
 func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 	// call command
 	name := "call"
-	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Call)}
 	// init flag vars
 	cmd.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 
@@ -25,7 +25,7 @@ func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 
 func (cmd *CallCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.Parse()
+	err := cmd.BaseCommand.Parse()
 	if err != nil {
 		return err
 	}
@@ -46,10 +46,6 @@ func (cmd *CallCommand) HandleArgs() error {
 	cmd.ScriptArgs = cmd.Cmdline.Args()
 
 	return nil
-}
-
-func (cmd *CallCommand) PrintUsage() {
-	PrintUsage(USG_Call_Full)
 }
 
 func (cmd *CallCommand) Run() error {

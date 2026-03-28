@@ -15,7 +15,7 @@ type WatchCommand struct {
 func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	// watch command
 	name := "watch"
-	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch)}
 	
 	//init flags (if any)
 	
@@ -56,10 +56,6 @@ func (cmd *WatchCommand) HandleArgs() error {
 	// init positional params (nop - no params)
 
 	return nil
-}
-
-func (cmd *WatchCommand) PrintUsage() {
-	PrintUsage(USG_Watch)
 }
 
 func (cmd *WatchCommand) Run() error {
@@ -136,7 +132,7 @@ type WatchScriptCommand struct {
 func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand {
 	// watch script command
 	name := "watch.script"
-	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script)}
 	
 	//init flags (if any)
 	
@@ -174,12 +170,6 @@ func (cmd *WatchScriptCommand) HandleArgs() error {
 	return nil
 }
 
-func (cmd *WatchScriptCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Watch_Script)
-	fmt.Println()
-}
-
 func (cmd *WatchScriptCommand) Run() error {
 	slog.Debug("WatchScriptCommand.Run()", "args", cmd.Cmdline)
 
@@ -210,7 +200,7 @@ type WatchSvcCommand struct {
 func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	// watch svc command
 	name := "watch.svc"
-	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc)}
 	
 	//init flags (if any)
 	
@@ -245,12 +235,6 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 	cmd.Name = cmdArgs[0]
 
 	return nil
-}
-
-func (cmd *WatchSvcCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Watch_Svc)
-	fmt.Println()
 }
 
 func (cmd *WatchSvcCommand) Run() error {
