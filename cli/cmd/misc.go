@@ -1,18 +1,11 @@
 package cmd
 
 import (
-	"bufio"
-	"embed"
 	"fmt"
-	"os"
-	"text/template"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
-	"github.com/dylt-dev/dylt/lib"
 )
-
-//go:embed content/*
-var content embed.FS
 
 type MiscCommand struct {
 	*BaseCommand
@@ -194,25 +187,7 @@ func (cmd *CreateTwoNodeClusterCommand) Run() error {
 
 	// execute command
 	// @getit
-	err = RunCreateTwoNodeCluster()
-	return err
-}
-
-func RunCreateTwoNodeCluster() error {
-	common.Logger.Debug("RunCreateTwoNodeCluster()")
-	var err error
-
-	r := bufio.NewReader(os.Stdin)
-
-	fmt.Println("Two node cluster time!")
-	fmt.Println()
-
-	fmt.Printf("Get your two node's IP addresses or hostnames, and whatever ssh private keys are necessary to connect to them. ")
-	_, err = r.ReadBytes('\n')
-	fmt.Println()
-
-	fmt.Print("Done! (hit <Enter>) ")
-	_, err = r.ReadBytes('\n')
+	err = api.RunCreateTwoNodeCluster()
 	return err
 }
 
@@ -280,7 +255,7 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 
 	// execute command
 	// @getit
-	err = RunGenEtcdRunScript()
+	err = api.RunGenEtcdRunScript()
 	if err != nil {
 		return err
 	}
@@ -288,21 +263,6 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 	common.Logger.WithGroup("g")
 	common.Logger.With("bar", "thirteen")
 	common.Logger.Debug("testing logger", "foo", "13")
-	return nil
-}
-
-func RunGenEtcdRunScript() error {
-	common.Logger.Debug("RunGenEtcdRunScript()")
-
-	fmt.Println("I'm gennin a script!")
-
-	buf, err := content.ReadFile("content/hello.tmpl")
-	if err != nil {
-		return err
-	}
-	tmpl := template.New("hello")
-	tmpl, err = tmpl.Parse(string(buf))
-	tmpl.Execute(os.Stdout, nil)
 	return nil
 }
 
@@ -381,6 +341,6 @@ func (cmd *LookupCommand) Run() error {
 
 	// execute command
 	// @getit
-	err = lib.RunLookupCommand(cmd.Hostname)
+	err = api.RunLookupCommand(cmd.Hostname)
 	return err
 }

@@ -1,10 +1,12 @@
 package lib
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
 	"os/exec"
+
 )
 
 const PATH_DaylightScript = "/opt/bin/daylight.sh"
@@ -51,6 +53,18 @@ func IsPathExecutable (path string) (bool, error) {
 		return true, nil
 	}
 	return false, nil	
+}
+
+func RunCall(scriptPath string, scriptArgs []string) error {
+	slog.Debug("RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
+	// Call lib.RunScript() with script path and args, & output response
+	_, s, err := RunScript(scriptPath, scriptArgs)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s\n", s)
+
+	return nil
 }
 
 func RunCommand (cmdName string, args... string) (int, []byte, error) {

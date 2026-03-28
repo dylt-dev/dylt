@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/common"
@@ -69,22 +68,10 @@ func (cmd *CallCommand) Run() error {
 	}
 
 	// Execute command
-	err = RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+	err = lib.RunCall(cmd.ScriptPath, cmd.ScriptArgs)
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func RunCall(scriptPath string, scriptArgs []string) error {
-	slog.Debug("RunCall()", "scriptPath", scriptPath, "scriptArgs", scriptArgs)
-	// Call lib.RunScript() with script path and args, & output response
-	_, s, err := lib.RunScript(scriptPath, scriptArgs)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("%s\n", s)
 
 	return nil
 }

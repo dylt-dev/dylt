@@ -38,7 +38,7 @@ func TestRunCall0 (t *testing.T) {
 	}
 	scriptArgs := []string{"hello"}
 	assert.FileExists(t, scriptPath)
-	err = RunCall(scriptPath, scriptArgs)
+	err = lib.RunCall(scriptPath, scriptArgs)
 	assert.Nil(t, err)
 }
 

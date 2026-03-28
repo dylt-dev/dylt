@@ -105,37 +105,6 @@ func TestHostCmd0(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestRunHostInit(t *testing.T) {
-	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
-		t.Skip()
-	}
-	err := RunHostInit(501, 20)
-	assert.Nil(t, err)
-}
-
-func TestHostInitCmd0(t *testing.T) {
-	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
-		t.Skip()
-	}
-	dyltPath, ok := os.LookupEnv("DYLT_EXE_PATH")
-	assert.True(t, ok)
-	assert.NotEmpty(t, dyltPath)
-	cmd := fmt.Sprintf("%s host init", dyltPath)
-	err := lib.CheckRunCommandSuccess(cmd, t)
-	assert.Nil(t, err)
-}
-
-// not-a-test
-// Print out all the files in EMBED_SvcFiles. Useful sanity check.
-func TestWalkSvcFolder(t *testing.T) {
-	fs.WalkDir(api.EMBED_SvcFiles, ".", func(p string, d fs.DirEntry, err error) error {
-		if !d.IsDir() {
-			fmt.Printf("%s\n", p)
-		}
-		return nil
-	})
-}
-
 func TestEmitWatchDaylightRunScript(t *testing.T) {
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)

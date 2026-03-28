@@ -200,24 +200,6 @@ func (cmd *HostInitCommand) Run() error {
 	}
 
 	// Execute command
-	err = RunHostInit(cmd.Uid, cmd.Gid)
+	err = api.RunHostInit(cmd.Uid, cmd.Gid)
 	return err
-}
-
-func RunHostInit(uid int, gid int) error {
-	slog.Debug("RunHostInit()", "uid", uid, "gid", gid)
-	var err error
-	fmt.Println("init!")
-
-	err = api.CreateWatchDaylightService(uid, gid)
-	if err != nil {
-		return err
-	}
-
-	err = api.CreateWatchSvcService(uid, gid)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

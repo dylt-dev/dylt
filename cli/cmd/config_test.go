@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -146,7 +147,7 @@ func TestConfigShowHelp(t *testing.T) {
 
 func TestRunConfigGet (t *testing.T) {
 	key := "etcd-domain"
-	err := RunConfigGet(key)
+	err := api.RunConfigGet(key)
 	require.Nil(t, err)
 }
 
@@ -160,7 +161,7 @@ func TestConfigGetCmd (t *testing.T) {
 func TestRunConfigSet (t *testing.T) {
 	key := "etcd-domain"
 	val := "poo"
-	err := RunConfigSet(key, val)
+	err := api.RunConfigSet(key, val)
 	assert.Nil(t, err)
 }
 
@@ -195,7 +196,7 @@ func TestCreateSubcommandRaw (t *testing.T) {
 
 
 func TestRunConfigShow (t *testing.T) {
-	err := RunConfigShow()
+	err := api.RunConfigShow()
 	assert.Nil(t, err)
 }
 

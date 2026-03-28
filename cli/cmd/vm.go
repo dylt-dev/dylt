@@ -3,12 +3,11 @@ package cmd
 import (
 	// "encoding/json"
 
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
-	"github.com/dylt-dev/dylt/eco"
 )
 
 type VmCommand struct {
@@ -19,9 +18,9 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	// vm command
 	name := "vm"
 	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -150,9 +149,9 @@ func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 	// vm add command
 	name := "vm.add"
 	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 
 }
@@ -209,24 +208,8 @@ func (cmd VmAddCommand) Run() error {
 	}
 
 	// execute command
-	err = RunVmAdd(cmd.Name, cmd.Fqdn)
+	err = api.RunVmAdd(cmd.Name, cmd.Fqdn)
 	return err
-}
-
-func RunVmAdd(name string, fqdn string) error {
-	// get vm-specific etcd client
-	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil {
-		return err
-	}
-	// execute command
-	vm, err := cli.Add(name, fqdn)
-	if err != nil {
-		return err
-	}
-	fmt.Println(vm)
-
-	return nil
 }
 
 type VmAllCommand struct {
@@ -237,9 +220,9 @@ func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	// vm all command
 	name := "vm.all"
 	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -294,27 +277,8 @@ func (cmd VmAllCommand) Run() error {
 	}
 
 	// Execute command
-	err = RunVmAll()
+	err = api.RunVmAll()
 	return err
-}
-
-func RunVmAll() error {
-	// get vm-specific etcd client, get all vm data, + show it
-	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil {
-		return err
-	}
-	vmInfoMap, err := cli.All()
-	if err != nil {
-		return err
-	}
-	jsonData, err := json.Marshal(vmInfoMap)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(jsonData))
-
-	return nil
 }
 
 // Usage
@@ -385,30 +349,8 @@ func (cmd *VmDelCommand) Run() error {
 	}
 
 	// execute command
-	err = RunVmDel(cmd.Name)
+	err = api.RunVmDel(cmd.Name)
 	return err
-}
-
-func RunVmDel(name string) error {
-	slog.Debug("RunVmDel()", "name", name)
-	// get vm-specific etcd client
-	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil {
-		return err
-	}
-	// delete vm data from cluster
-	prevVal, err := cli.Del(name)
-	if err != nil {
-		return err
-	}
-	// log deleted vm, if it existede
-	if prevVal == nil {
-		fmt.Printf("vm '%s' not found\n", name)
-	} else {
-		fmt.Printf("%s\n", string(prevVal))
-	}
-
-	return nil
 }
 
 // Usage
@@ -423,9 +365,9 @@ func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	// vm get command
 	name := "vm.get"
 	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -481,30 +423,8 @@ func (cmd *VmGetCommand) Run() error {
 	}
 
 	// execute command
-	err = RunVmGet(cmd.Name)
+	err = api.RunVmGet(cmd.Name)
 	return err
-}
-
-func RunVmGet(name string) error {
-	slog.Debug("RunVmGet()", "name", name)
-	// get vm-specific etcd client
-	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil {
-		return err
-	}
-	// get vm data from cluster
-	vm, err := cli.Get(name)
-	if err != nil {
-		return err
-	}
-	// pritn vm data if vm was found
-	if vm == nil {
-		fmt.Printf("\nvm '%s' not found.\n\n", name)
-	} else {
-		fmt.Println(vm)
-	}
-
-	return nil
 }
 
 // Usage
@@ -518,9 +438,9 @@ func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	// vm list command
 	name := "vm.list"
 	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -575,29 +495,8 @@ func (cmd VmListCommand) Run() error {
 	}
 
 	// execute command
-	err = RunVmList()
+	err = api.RunVmList()
 	return err
-}
-
-func RunVmList() error {
-	slog.Debug("RunVmList()")
-	// get vm-specific etcd client
-	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil {
-		return err
-	}
-	// List all vm names, one per line
-	names, err := cli.Names()
-	if err != nil {
-		return err
-	}
-	fmt.Println()
-	for _, name := range names {
-		fmt.Println(name)
-	}
-	fmt.Println()
-
-	return nil
 }
 
 // Usage
@@ -614,9 +513,9 @@ func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	// vm set command
 	name := "vm.set"
 	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -674,38 +573,8 @@ func (cmd VmSetCommand) Run() error {
 	}
 
 	// execute command
-	err = RunVmSet(cmd.Name, cmd.Key, cmd.Value)
+	err = api.RunVmSet(cmd.Name, cmd.Key, cmd.Value)
 	return err
-}
-
-func RunVmSet(name string, key string, val string) error {
-	slog.Debug("RunVmSet()", "name", name, "key", key, "val", val)
-	// get vm-specific etcd client
-	cli, err := eco.CreateVmClientFromConfig()
-	if err != nil {
-		return err
-	}
-	// get the vm data from the cluster, set the field (if it exists), and save updated object
-	vm, err := cli.Get(name)
-	if err != nil {
-		return err
-	}
-	err = vm.Set(key, val)
-	if err != nil {
-		return err
-	}
-	vm, err = cli.Put(name, vm)
-	if err != nil {
-		return err
-	}
-	// print the updated vm if it exists
-	if vm == nil {
-		fmt.Printf("vm '%s' not found", name)
-	} else {
-		fmt.Println(vm)
-	}
-
-	return nil
 }
 
 // type VmShowCommand struct {

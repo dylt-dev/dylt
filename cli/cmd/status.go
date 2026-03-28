@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/api"
 )
 
 type StatusCommand struct {
@@ -82,18 +82,10 @@ func (cmd *StatusCommand) Run() error {
 
 	// execute command
 	// @getit
-	err = RunStatus()
+	err = api.RunStatus()
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func RunStatus() error {
-	slog.Debug("RunStatus()")
-
-	lib.RunStatus()
 
 	return nil
 }

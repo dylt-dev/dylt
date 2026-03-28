@@ -2,6 +2,7 @@ package api
 
 import (
 	"embed"
+	"fmt"
 	"log/slog"
 	"os/exec"
 
@@ -137,6 +138,24 @@ func RemoveService(svcName string, fs *systemd.ServiceFS) error {
 	// Remove service folder
 	slog.Info("Removing service ...")
 	err = svc.Remove(fs)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RunHostInit(uid int, gid int) error {
+	slog.Debug("RunHostInit()", "uid", uid, "gid", gid)
+	var err error
+	fmt.Println("init!")
+
+	err = CreateWatchDaylightService(uid, gid)
+	if err != nil {
+		return err
+	}
+
+	err = CreateWatchSvcService(uid, gid)
 	if err != nil {
 		return err
 	}

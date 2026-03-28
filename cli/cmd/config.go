@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
 )
 
@@ -95,6 +95,7 @@ func (cmd *ConfigCommand) Run() error {
 	return err
 }
 
+
 func RunConfig(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
@@ -109,6 +110,7 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 
 	return nil
 }
+
 
 func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
@@ -127,6 +129,7 @@ func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 		}
 	}
 }
+
 
 // Usage
 //
@@ -195,19 +198,8 @@ func (cmd *ConfigGetCommand) Run() error {
 	}
 
 	// Execute command
-	err = RunConfigGet(cmd.Key)
+	err = api.RunConfigGet(cmd.Key)
 	return err
-}
-
-func RunConfigGet(key string) error {
-	slog.Debug("RunConfigGet()", "key", key)
-	val, err := common.GetConfigValue(key)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("\n%s\n", val)
-
-	return nil
 }
 
 type ConfigSetCommand struct {
@@ -275,50 +267,8 @@ func (cmd *ConfigSetCommand) Run() error {
 	}
 
 	// Execute command
-	err = RunConfigSet(cmd.Key, cmd.Value)
+	err = api.RunConfigSet(cmd.Key, cmd.Value)
 	return err
-}
-
-func RunConfigSet(key string, val string) error {
-	slog.Debug("RunConfigSet()", "key", key, "val", val)
-
-	// Open the dylt config file for read+write. Create if necessasry.
-	cfgFilePath := common.GetConfigFilePath()
-	slog.Debug("Opening config file", "cfgFilePath", cfgFilePath)
-	f, err := os.OpenFile(cfgFilePath, os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		return common.NewError(err)
-	}
-	defer f.Close()
-
-	// Read the dylt config file as YAML
-	data, err := common.ReadYaml(f)
-	if err != nil {
-		return err
-	}
-
-	// Truncate the file to 0 and rewrite
-	err = f.Truncate(0)
-	if err != nil {
-		return err
-	}
-	_, err = f.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	// Set the config map value and write the updated config map
-	data.Set(key, val)
-	err = common.WriteConfig(data)
-	if err != nil {
-		return err
-	}
-	err = common.WriteYaml(data, f)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type ConfigShowCommand struct {
@@ -388,15 +338,6 @@ func (cmd *ConfigShowCommand) Run() error {
 	}
 
 	// Execute command
-	err = RunConfigShow()
+	err = api.RunConfigShow()
 	return err
-}
-
-func RunConfigShow() error {
-	err := common.ShowConfig(os.Stdout)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

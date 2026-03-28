@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +29,7 @@ func TestListHelp(t *testing.T) {
 }
 
 func TestRunList (t *testing.T) {
-	err := RunList()
+	err := api.RunList()
 	require.Nil(t, err)
 }
 

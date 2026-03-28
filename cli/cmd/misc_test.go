@@ -157,32 +157,6 @@ func TestMiscLookupHelp(t *testing.T) {
 	require.True(t, subCmd.Help)
 }
 
-func TestGenEtcdRunScript(t *testing.T) {
-	type EtcdRunScriptData struct {
-		Name                string
-		DataDir             string
-		AdvertiseClientUrls []string
-		ListenClientUrls    []string
-		ClientCertAuth      bool
-	}
-	data := EtcdRunScriptData{
-		Name:                "arleytown",
-		AdvertiseClientUrls: []string{"https:/127.0.0.1:2239", "ip2:2239"},
-		ListenClientUrls:    []string{"https:/127.0.0.1:2239"},
-		ClientCertAuth:      false,
-	}
-	buf, err := content.ReadFile("content/run-etcd.sh.tmpl")
-	require.NoError(t, err)
-	tmpl := template.New("hello")
-	tmpl.Funcs(template.FuncMap{
-		"join": strings.Join,
-	})
-	tmpl, err = tmpl.Parse(string(buf))
-	require.NoError(t, err)
-	err = tmpl.Execute(os.Stdout, data)
-	require.NoError(t, err)
-}
-
 func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 	var nStdin, nStdout, nStderr uintptr
 	nStdin = os.Stdin.Fd()

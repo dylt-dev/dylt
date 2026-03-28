@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,7 +33,7 @@ func TestInitHelp(t *testing.T) {
 
 func TestRunInit (t *testing.T) {
 	etcDomain := "hello.dylt.dev"
-	err := RunInit(etcDomain)
+	err := api.RunInit(etcDomain)
 	assert.Nil(t, err)
 }
 
