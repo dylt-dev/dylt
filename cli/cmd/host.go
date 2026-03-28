@@ -115,6 +115,7 @@ func createHostSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	case "init":
 		return NewHostInitCommand(cmdline, parent), nil
 	default:
+		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 }

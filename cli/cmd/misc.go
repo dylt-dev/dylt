@@ -109,6 +109,7 @@ func createMiscSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	case "lookup":
 		return NewLookupCommand(cmdline, parent), nil
 	default:
+		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized subcommand: %s", cmdName)
 	}
 }

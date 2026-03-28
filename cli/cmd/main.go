@@ -132,11 +132,8 @@ func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error)
 	case "watch":
 		return NewWatchCommand(cmdline, parent), nil
 	default:
-		{
-			var nilPtr *MainCommand = nil
-			nilPtr.PrintUsage()
-			return nil, fmt.Errorf("unrecognized subcommand: '%s'", cmdName)
-		}
+		parent.PrintUsage()
+		return nil, fmt.Errorf("unrecognized subcommand: '%s'", cmdName)
 	}
 }
 

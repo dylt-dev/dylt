@@ -116,10 +116,8 @@ func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	case "show":
 		return NewConfigShowCommand(cmdline, parent), nil
 	default:
-		{
-			PrintUsage(USG_Config)
-			return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-		}
+		parent.PrintUsage()
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 }
 

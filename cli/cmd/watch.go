@@ -116,6 +116,7 @@ func createWatchSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	case "svc":
 		return NewWatchSvcCommand(cmdline, parent), nil
 	default:
+		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 }
