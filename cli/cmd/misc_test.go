@@ -16,7 +16,7 @@ func TestMisc (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &MiscCommand{}, cmd)
 }
 
@@ -26,7 +26,7 @@ func TestMiscHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &MiscCommand{}, cmd)
 	require.True(t, cmd.Help)
 }
@@ -39,7 +39,7 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -59,7 +59,7 @@ func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
@@ -81,7 +81,7 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -100,7 +100,7 @@ func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{"foo"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
@@ -122,7 +122,7 @@ func TestMiscLookup (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{hostname}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -143,7 +143,7 @@ func TestMiscLookupHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{"hostname"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand

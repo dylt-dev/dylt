@@ -112,17 +112,17 @@ func createVmSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	subCmd := cmdline.Command()
 	switch subCmd {
 	case "add":
-		return NewVmAddCommand(cmdline, parent), nil
+		return VmAddCommandF.New(cmdline, parent), nil
 	case "all":
-		return NewVmAllCommand(cmdline, parent), nil
+		return VmAllCommandF.New(cmdline, parent), nil
 	case "del":
-		return NewVmDelCommand(cmdline, parent), nil
+		return VmDelCommandF.New(cmdline, parent), nil
 	case "get":
-		return NewVmGetCommand(cmdline, parent), nil
+		return VmGetCommandF.New(cmdline, parent), nil
 	case "list":
-		return NewVmListCommand(cmdline, parent), nil
+		return VmListCommandF.New(cmdline, parent), nil
 	case "set":
-		return NewVmSetCommand(cmdline, parent), nil
+		return VmSetCommandF.New(cmdline, parent), nil
 	default:
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized subcommand: %s", subCmd)

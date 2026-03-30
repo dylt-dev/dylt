@@ -103,11 +103,11 @@ func createMiscSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "create-two-node-cluster":
-		return NewCreateTwoNodeClusterCommand(cmdline, parent), nil
+		return CreateTwoNodeClusterCommandF.New(cmdline, parent), nil
 	case "gen-etcd-run-script":
-		return NewGenEtcdRunScriptCommand(cmdline, parent), nil
+		return GenEtcdRunScriptCommandF.New(cmdline, parent), nil
 	case "lookup":
-		return NewLookupCommand(cmdline, parent), nil
+		return LookupCommandF.New(cmdline, parent), nil
 	default:
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized subcommand: %s", cmdName)

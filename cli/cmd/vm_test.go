@@ -12,7 +12,7 @@ func TestVm (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewVmCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &VmCommand{}, cmd)
 }
 
@@ -22,7 +22,7 @@ func TestVmHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, NewVmCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &VmCommand{}, cmd)
 	require.True(t, cmd.Help)
 }
@@ -36,7 +36,7 @@ func TestVmAdd (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{name, fqdn}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -58,7 +58,7 @@ func TestVmAddHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
@@ -79,7 +79,7 @@ func TestVmAll (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -100,7 +100,7 @@ func TestVmDel (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{name}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -121,7 +121,7 @@ func TestVmDelHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
@@ -143,7 +143,7 @@ func TestVmGet (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{name}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -164,7 +164,7 @@ func TestVmList (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -184,7 +184,7 @@ func TestVmListHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
@@ -209,7 +209,7 @@ func TestVmSet (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{name, key, value}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -232,7 +232,7 @@ func TestVmSetHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewVmCommand(cmdline, nil)
+	cmd := VmCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
