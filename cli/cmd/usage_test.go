@@ -22,7 +22,7 @@ func TestMainUsage (t *testing.T) {
 	defer fnTeardown(t)
 
 	cmdline := NewCmdline("dylt", []string{}, []string{})
-	cmd := NewMainCommand(cmdline, nil)
+	cmd := MainCommandF.New(cmdline, nil)
 	require.NotNil(t, cmd)
 	err := cmd.Run()
 	require.NoError(t, err)
@@ -34,7 +34,7 @@ func TestConfigUsage (t *testing.T) {
 	
 	cmdline := Cmdline{"dylt", "config"}
 
-	cmd := NewMainCommand(cmdline, nil)
+	cmd := MainCommandF.New(cmdline, nil)
 	cmd.HandleArgs()
 	subCmd, err := cmd.CreateSubCommand()
 	require.NoError(t, err)
@@ -49,7 +49,7 @@ func TestHostUsage (t *testing.T) {
 	
 	cmdline := Cmdline{"dylt", "host"}
 
-	cmd := NewMainCommand(cmdline, nil)
+	cmd := MainCommandF.New(cmdline, nil)
 	cmd.HandleArgs()
 	subCmd, err := cmd.CreateSubCommand()
 	require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestMiscUsage (t *testing.T) {
 	
 	cmdline := Cmdline{"dylt", "misc"}
 
-	cmd := NewMainCommand(cmdline, nil)
+	cmd := MainCommandF.New(cmdline, nil)
 	cmd.HandleArgs()
 	subCmd, err := cmd.CreateSubCommand()
 	require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestVmUsage (t *testing.T) {
 	
 	cmdline := Cmdline{"dylt", "vm"}
 
-	cmd := NewMainCommand(cmdline, nil)
+	cmd := MainCommandF.New(cmdline, nil)
 	cmd.HandleArgs()
 	subCmd, err := cmd.CreateSubCommand()
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestWatchUsage (t *testing.T) {
 	
 	cmdline := Cmdline{"dylt", "watch"}
 
-	cmd := NewMainCommand(cmdline, nil)
+	cmd := MainCommandF.New(cmdline, nil)
 	cmd.HandleArgs()
 	subCmd, err := cmd.CreateSubCommand()
 	require.NoError(t, err)

@@ -29,7 +29,7 @@ func TestMain(t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewMainCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, MainCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.False(t, cmd.Help)
 }
 
@@ -40,7 +40,7 @@ func TestHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, NewMainCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, MainCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &MainCommand{}, cmd)
 	require.True(t, cmd.Help)
 }
@@ -59,7 +59,7 @@ func TestMainSubCall(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -89,7 +89,7 @@ func TestMainSubConfig (t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -121,7 +121,7 @@ func TestMainSubConfigGetFoo(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -152,7 +152,7 @@ func TestMainSubGet(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -183,7 +183,7 @@ func TestMainSubHost(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -216,7 +216,7 @@ func TestMainSubHostInit(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -250,7 +250,7 @@ func TestMainSubInit(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -282,7 +282,7 @@ func TestMainSubList(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -313,7 +313,7 @@ func TestMainSubMisc(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -344,7 +344,7 @@ func TestMainSubMiscLookupHostname(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -374,7 +374,7 @@ func TestMainSubStatus(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -405,7 +405,7 @@ func TestMainSubVm(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,
@@ -436,7 +436,7 @@ func TestMainSubWatch(t *testing.T) {
 	cmdArgs := slices.Concat([]string{subCmdName}, subCmdFlags, subCmdArgs)
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t,
-		NewMainCommand,
+		MainCommandF.New,
 		cmdName,
 		cmdFlags,
 		cmdArgs,

@@ -14,7 +14,7 @@ func main() {
 	common.InitLogging()
 
 	var args clicmd.Cmdline = os.Args
-	cmd := clicmd.NewMainCommand(args, nil)
+	cmd := clicmd.MainCommandF.New(args, nil)
 	err := cmd.Run()
 	if err != nil {
 		// common.PrintBlankIfTerminal(os.Stderr)

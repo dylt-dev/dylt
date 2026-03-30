@@ -113,23 +113,23 @@ func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error)
 	case "call":
 		return CallCommandF.New(cmdline, parent), nil
 	case "config":
-		return NewConfigCommand(cmdline, parent), nil
+		return ConfigCommandF.New(cmdline, parent), nil
 	case "get":
-		return NewGetCommand(cmdline, parent), nil
+		return GetCommandF.New(cmdline, parent), nil
 	case "host":
-		return NewHostCommand(cmdline, parent), nil
+		return HostCommandF.New(cmdline, parent), nil
 	case "init":
-		return NewInitCommand(cmdline, parent), nil
+		return InitCommandF.New(cmdline, parent), nil
 	case "list":
-		return NewListCommand(cmdline, parent), nil
+		return ListCommandF.New(cmdline, parent), nil
 	case "misc":
-		return NewMiscCommand(cmdline, parent), nil
+		return MiscCommandF.New(cmdline, parent), nil
 	case "status":
-		return NewStatusCommand(cmdline, parent), nil
+		return StatusCommandF.New(cmdline, parent), nil
 	case "vm":
-		return NewVmCommand(cmdline, parent), nil
+		return VmCommandF.New(cmdline, parent), nil
 	case "watch":
-		return NewWatchCommand(cmdline, parent), nil
+		return WatchCommandF.New(cmdline, parent), nil
 	default:
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized subcommand: '%s'", cmdName)

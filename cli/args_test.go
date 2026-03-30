@@ -43,15 +43,15 @@ func NewInitCommand() *InitCommand {
 	return &cmd
 }
 
-type arglist []string
+// type arglist []string
 
-func (o *arglist) Command() string {
-	return (*o)[0]
-}
+// func (o *arglist) Command() string {
+// 	return (*o)[0]
+// }
 
-func (o *arglist) Args() []string {
-	return (*o)[1:]
-}
+// func (o *arglist) Args() []string {
+// 	return (*o)[1:]
+// }
 
 func TestArgs(t *testing.T) {
 	cmdline := clicmd.Cmdline{"foo", "bar", "bum"}
@@ -83,14 +83,14 @@ func TestBoolFlag(t *testing.T) {
 }
 
 func TestInitCommand(t *testing.T) {
-	cmdline := arglist(strings.Split("dylt init --etcd-domain hello.dylt.dev", " "))
+	cmdline := clicmd.Cmdline(strings.Split("dylt init --etcd-domain hello.dylt.dev", " "))
 	mainCmd := flag.NewFlagSet("dylt", flag.PanicOnError)
 	mainCmd.Parse(cmdline.Args())
-	var args arglist = mainCmd.Args()
+	var args clicmd.Cmdline = mainCmd.Args()
 	cmd := args.Command()
 	assert.Equal(t, "init", cmd)
-	initCmd := NewInitCommand()
-	initCmd.Parse(args.Args())
+	initCmd := clicmd.InitCommandF.New(args, nil)
+	initCmd.Parse()
 	assert.Equal(t, "hello.dylt.dev", initCmd.EtcdDomain)
 
 	t.Log(strings.Join(args, " "))
@@ -187,29 +187,33 @@ type MeCommand struct{ *clicmd.BaseCommand }
 func (cmd *PappyCommand) HandleArgs() error { return nil }
 func (cmd *PappyCommand) Run() error        { return nil }
 
-func NewPappyCommand(cmdline clicmd.Cmdline) *PappyCommand {
+func NewPappyCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *PappyCommand {
 	return &PappyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
 }
 
 func (cmd *DaddyCommand) HandleArgs() error { return nil }
 func (cmd *DaddyCommand) Run() error        { return nil }
 
-func NewDaddyCommand(cmdline clicmd.Cmdline, parent *PappyCommand) *DaddyCommand {
+func NewDaddyCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *DaddyCommand {
 	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
 func (cmd *MeCommand) HandleArgs() error { return nil }
 func (cmd *MeCommand) Run() error        { return nil }
 
-func NewMeCommand(cmdline clicmd.Cmdline, parent *DaddyCommand) *MeCommand {
+func NewMeCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *MeCommand {
 	return &MeCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
+
+var PappyCommandF clicmd.CommandFactory[*PappyCommand] = clicmd.CommandFactory[*PappyCommand]{FnNew: NewPappyCommand}
+var DaddyCommandF clicmd.CommandFactory[*DaddyCommand] = clicmd.CommandFactory[*DaddyCommand]{FnNew: NewDaddyCommand}
+var MeCommandF clicmd.CommandFactory[*MeCommand] = clicmd.CommandFactory[*MeCommand]{FnNew: NewMeCommand}
 
 func TestPappyDaddyMe(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"pappy", "daddy", "me", "foo"}
 
 	// Create `pappy` subcommand
-	pappy := NewPappyCommand(cmdline)
+	pappy := PappyCommandF.New(cmdline, nil)
 	_TestPreParseValues(t, pappy)
 	// Parse and check again
 	pappy.Parse()
@@ -217,7 +221,7 @@ func TestPappyDaddyMe(t *testing.T) {
 	_TestCommandString(t, pappy, "pappy")
 
 	// Create `daddy` subcommand
-	daddy := NewDaddyCommand(pappy.Cmdline.Args(), pappy)
+	daddy := DaddyCommandF.New(pappy.Cmdline.Args(), pappy)
 	_TestPreParseValues(t, daddy)
 	// Parse and check again
 	daddy.Parse()
@@ -225,7 +229,7 @@ func TestPappyDaddyMe(t *testing.T) {
 	_TestCommandString(t, daddy, "pappy daddy")
 
 	// Create `me` subcommand
-	me := NewMeCommand(daddy.Cmdline.Args(), daddy)
+	me := MeCommandF.New(daddy.Cmdline.Args(), daddy)
 	_TestPreParseValues(t, me)
 	// Parse and check again
 	me.Parse()

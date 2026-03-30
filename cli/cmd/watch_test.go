@@ -12,7 +12,7 @@ func TestWatch(t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewWatchCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &WatchCommand{}, cmd)
 }
 
@@ -22,7 +22,7 @@ func TestWatchHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, NewWatchCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &WatchCommand{}, cmd)
 	require.True(t, cmd.Help)
 }
@@ -36,7 +36,7 @@ func TestWatchScript (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{scriptKey, targetPath}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewWatchCommand(cmdline, nil)
+	cmd := WatchCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -58,7 +58,7 @@ func TestWatchScriptHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewWatchCommand(cmdline, nil)
+	cmd := WatchCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
@@ -80,7 +80,7 @@ func TestWatchSvc (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{name}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewWatchCommand(cmdline, nil)
+	cmd := WatchCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -101,7 +101,7 @@ func TestWatchSvcHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewWatchCommand(cmdline, nil)
+	cmd := WatchCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
