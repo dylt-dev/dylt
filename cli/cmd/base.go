@@ -111,16 +111,3 @@ func (cmd BaseCommand) SubCommand() (string, bool) {
 	var subCmdline Cmdline = cmd.FlagSet.Args()
 	return subCmdline.Command(), true
 }
-
-type ICommandFactory[U Command] interface {
-	New (Cmdline, Command) U
-}
-
-type CommandFactory[U Command] struct {
-	FnNew func (Cmdline, Command) U
-}
-
-func (cf CommandFactory[U]) New (cmdline Cmdline, parent Command) U {
-	return cf.FnNew(cmdline, parent)
-}
-
