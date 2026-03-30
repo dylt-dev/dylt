@@ -24,6 +24,42 @@ func (cf CommandFactory[U]) New (cmdline Cmdline, parent Command) U {
 	return cf.FnNew(cmdline, parent)
 }
 
-var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{
-	FnNew: NewCallCommand,
-}
+// Factories for each type of command
+
+var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+var GetCommandF CommandFactory[*GetCommand] = CommandFactory[*GetCommand]{ FnNew: NewGetCommand }
+var InitCommandF CommandFactory[*InitCommand] = CommandFactory[*InitCommand]{ FnNew: NewInitCommand }
+var ListCommandF CommandFactory[*ListCommand] = CommandFactory[*ListCommand]{ FnNew: NewListCommand }
+var StatusCommandF CommandFactory[*StatusCommand] = CommandFactory[*StatusCommand]{ FnNew: NewStatusCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
+// var CallCommandF CommandFactory[*CallCommand] = CommandFactory[*CallCommand]{ FnNew: NewCallCommand }
