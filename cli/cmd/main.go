@@ -18,9 +18,9 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 	// main command
 	name := "dylt"
 	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main)}
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
@@ -31,7 +31,6 @@ func (cmd *MainCommand) CreateSubCommand() (Command, error) {
 	}
 	return createMainSubCommand(args, cmd)
 }
-
 
 func (cmd *MainCommand) HandleArgs() error {
 	// parse flags
@@ -112,7 +111,7 @@ func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error)
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "call":
-		return NewCallCommand(cmdline, parent), nil
+		return CallCommandF.New(cmdline, parent), nil
 	case "config":
 		return NewConfigCommand(cmdline, parent), nil
 	case "get":
