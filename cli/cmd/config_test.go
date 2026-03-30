@@ -15,7 +15,7 @@ func TestConfig (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewConfigCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.IsType(t, &ConfigCommand{}, cmd)
 }
 
@@ -24,7 +24,7 @@ func TestConfigHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewConfigCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.True(t, cmd.Help)
 }
 
@@ -35,7 +35,7 @@ func TestConfigGet (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{"foo"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewConfigCommand(cmdline, nil)
+	cmd := ConfigCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -56,7 +56,7 @@ func TestConfigGetHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{"foo"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewConfigCommand(cmdline, nil)
+	cmd := ConfigCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -77,7 +77,7 @@ func TestConfigSet (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := Cmdline{"foo", "bar"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewConfigCommand(cmdline, nil)
+	cmd := ConfigCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -98,7 +98,7 @@ func TestConfigSetHelp(t *testing.T) {
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{"foo"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewConfigCommand(cmdline, nil)
+	cmd := ConfigCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
@@ -121,7 +121,7 @@ func TestConfigShow (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := Cmdline{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewConfigCommand(cmdline, nil)
+	cmd := ConfigCommandF.New(cmdline, nil)
 	cmd.HandleArgs()
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
@@ -141,7 +141,7 @@ func TestConfigShowHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewConfigShowCommand, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, ConfigShowCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
 	require.True(t, cmd.Help)
 }
 
@@ -181,7 +181,7 @@ func TestConfigSetCmd1 (t *testing.T) {
 func TestCreateSubcommandRaw (t *testing.T) {
 	var err error
 	cmdline:= Cmdline{"config", "get", "--help"}
-	cmd := NewConfigCommand(cmdline, nil)
+	cmd := ConfigCommandF.New(cmdline, nil)
 	err = cmd.Parse()
 	require.NoError(t, err)
 	t.Logf("cmd=%v", cmd)

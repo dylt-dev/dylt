@@ -110,11 +110,11 @@ func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	switch cmdName {
 	case "get":
-		return NewConfigGetCommand(cmdline, parent), nil
+		return ConfigGetCommandF.New(cmdline, parent), nil
 	case "set":
-		return NewConfigSetCommand(cmdline, parent), nil
+		return ConfigSetCommandF.New(cmdline, parent), nil
 	case "show":
-		return NewConfigShowCommand(cmdline, parent), nil
+		return ConfigShowCommandF.New(cmdline, parent), nil
 	default:
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
