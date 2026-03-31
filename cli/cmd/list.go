@@ -14,7 +14,7 @@ type ListCommand struct {
 func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
 	// list command
 	name := "list"
-	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List)}
+	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List, nil)}
 	
 	//init flags (if any)
 	

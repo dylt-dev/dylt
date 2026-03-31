@@ -15,7 +15,7 @@ type GetCommand struct {
 func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	// get command
 	name := "get"
-	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get)}
+	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get, nil)}
 	
 	//init flags (if any)
 	

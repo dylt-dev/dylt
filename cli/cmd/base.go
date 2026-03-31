@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"strings"
@@ -12,14 +13,16 @@ type BaseCommand struct {
 	Cmdline Cmdline
 	Help    bool
 	Usage string
+	commandMap CommandMap
 }
 
 // type BaseCommandS BaseCommand[string]
 // type BaseCommandSA BaseCommand[[]string]
 
-func NewBaseCommand[U UsageTextType](name string, cmdline Cmdline, parent Command, usageText U) *BaseCommand {
+func NewBaseCommand[U UsageTextType](name string, cmdline Cmdline, parent Command, usageText U, cmdMap CommandMap) *BaseCommand {
 	cmd := &BaseCommand{
 		Cmdline: cmdline,
+		commandMap: cmdMap,
 		Parent:  parent,
 		FlagSet: flag.NewFlagSet(name, flag.ExitOnError),
 		Usage: CreateUsageString(usageText),
@@ -34,14 +37,6 @@ func (cmd BaseCommand) Args() (Cmdline, bool) {
 		return nil, false
 	}
 	return cmd.FlagSet.Args(), true
-}
-
-func (cmd BaseCommand) CommandLine() Cmdline {
-	return cmd.Cmdline
-}
-
-func (cmd BaseCommand) CommandName() string {
-	return cmd.Cmdline.Command()
 }
 
 func (cmd BaseCommand) CommandArgs() ([]string, bool) {
@@ -62,6 +57,20 @@ func (cmd BaseCommand) CommandArgs() ([]string, bool) {
 	return cmdArgs, true
 }
 
+func (cmd BaseCommand) CommandLine() Cmdline {
+	return cmd.Cmdline
+}
+
+func (cmd BaseCommand) CommandName() string {
+	return cmd.Cmdline.Command()
+}
+
+func (cmd BaseCommand) CommandMap() CommandMap {
+	fmt.Println("BaseCommand.CommandMap()")
+	return cmd.commandMap
+}
+
+
 func (cmd BaseCommand) CommandString() (string, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return "", false
@@ -80,8 +89,33 @@ type NoSubcommandsError struct {}
 func (o NoSubcommandsError) Error() string { return "No Subcommands" }
 
 func (cmd BaseCommand) CreateSubCommand () (Command, error) {
-	return nil, &NoSubcommandsError{}
+	fmt.Printf("%s %v\n", "cmd.CommandMap()", cmd.CommandMap())
+	cmdline, is := cmd.Args()
+	if !is {
+		return nil, errors.New("Command not Parse()'d")
+	}
+	if cmd.CommandMap() == nil {
+		return nil, nil
+	}
+	// return createConfigSubCommand(args, cmd)
+	cmdName := cmdline.Command()
+	cmdMap := cmd.CommandMap()
+	if cmdMap == nil {
+		return nil, nil
+	}
+
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
+		cmd.PrintUsage()
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	}
+		
+	subCmd := cmdFactoryFunc(cmdline, cmd)
+	return subCmd, nil
 }
+
+func (cmd BaseCommand) HandleArgs () error { return nil }
+
 
 func (cmd BaseCommand) Parse() error {
 	err := cmd.FlagSet.Parse(cmd.Cmdline.Args())
@@ -95,6 +129,8 @@ func (cmd BaseCommand) PrintUsage () {
 	fmt.Print(cmd.Usage)
 	fmt.Println()
 }
+
+func (cmd BaseCommand) Run() error { return nil }
 
 func (cmd BaseCommand) SubArgs() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {

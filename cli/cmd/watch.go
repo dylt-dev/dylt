@@ -15,20 +15,17 @@ type WatchCommand struct {
 func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	// watch command
 	name := "watch"
-	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch)}
+	cmdMap := CommandMap{
+		"script": WatchScriptCommandF.New,
+		"svc": WatchSvcCommandF.New,
+	}
+	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap)}
 	
 	//init flags (if any)
 	
 	return cmd
 }
 
-func (cmd *WatchCommand) CreateSubCommand() (Command, error) {
-	args, flag := cmd.Args()
-	if !flag {
-		return nil, nil
-	}
-	return createWatchSubCommand(args, cmd)
-}
 
 func (cmd *WatchCommand) HandleArgs() error {
 	// parse flags
@@ -96,7 +93,7 @@ func (cmd *WatchCommand) Run() error {
 func RunWatch(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
-	subCmd, err := createWatchSubCommand(cmdline, parent)
+	subCmd, err := parent.CreateSubCommand()
 	if err != nil {
 		return err
 	}
@@ -106,23 +103,6 @@ func RunWatch(cmdline Cmdline, parent Command) error {
 	}
 
 	return nil
-}
-
-func createWatchSubCommand(cmdline Cmdline, parent Command) (Command, error) {
-	cmdName := cmdline.Command()
-	cmdMap := CommandMap{
-		"script": WatchScriptCommandF.New,
-		"svc": WatchSvcCommandF.New,
-	}
-	
-	cmdFactoryFunc, ok := cmdMap[cmdName]
-	if !ok {
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-	}
-		
-	cmd := cmdFactoryFunc(cmdline, parent)
-	return cmd, nil
 }
 
 // Usage
@@ -137,7 +117,7 @@ type WatchScriptCommand struct {
 func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand {
 	// watch script command
 	name := "watch.script"
-	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script)}
+	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil)}
 	
 	//init flags (if any)
 	
@@ -205,7 +185,7 @@ type WatchSvcCommand struct {
 func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	// watch svc command
 	name := "watch.svc"
-	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc)}
+	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil)}
 	
 	//init flags (if any)
 	

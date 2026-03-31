@@ -6,6 +6,7 @@ type Command interface {
 	CommandName() string
 	CommandArgs() ([]string, bool)
 	CommandString() (string, bool)
+	CommandMap() CommandMap
 	CreateSubCommand() (Command, error)
 	HandleArgs() error
 	Parse() error

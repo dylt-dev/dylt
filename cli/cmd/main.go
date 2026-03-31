@@ -17,20 +17,32 @@ type MainCommand struct {
 func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 	// main command
 	name := "dylt"
-	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main)}
+	cmdMap := CommandMap{
+		"call": CallCommandF.New,
+		"config": ConfigCommandF.New,
+		"get": GetCommandF.New,
+		"host": HostCommandF.New,
+		"init": InitCommandF.New,
+		"list": ListCommandF.New,
+		"misc": MiscCommandF.New,
+		"status": StatusCommandF.New,
+		"vm": VmCommandF.New,
+		"watch": WatchCommandF.New,
+	}
+	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main, cmdMap)}
 
 	//init flags (if any)
 
 	return cmd
 }
 
-func (cmd *MainCommand) CreateSubCommand() (Command, error) {
-	args, flag := cmd.Args()
-	if !flag {
-		return nil, nil
-	}
-	return createMainSubCommand(args, cmd)
-}
+// func (cmd *MainCommand) CreateSubCommand() (Command, error) {
+// 	args, flag := cmd.Args()
+// 	if !flag {
+// 		return nil, nil
+// 	}
+// 	return createMainSubCommand(args, cmd)
+// }
 
 func (cmd *MainCommand) HandleArgs() error {
 	// parse flags
@@ -93,8 +105,7 @@ func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 		}
 	} else {
 		// Create the subcommand and run it
-		args, _ := cmd.Args()
-		subCmd, err := createMainSubCommand(args, cmd)
+		subCmd, err := cmd.CreateSubCommand()
 		if err != nil {
 			return err
 		}
@@ -107,30 +118,30 @@ func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 	return nil
 }
 
-func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error) {
-	cmdName := cmdline.Command()
-	cmdMap := CommandMap{
-		"call": CallCommandF.New,
-		"config": ConfigCommandF.New,
-		"get": GetCommandF.New,
-		"host": HostCommandF.New,
-		"init": InitCommandF.New,
-		"list": ListCommandF.New,
-		"misc": MiscCommandF.New,
-		"status": StatusCommandF.New,
-		"vm": VmCommandF.New,
-		"watch": WatchCommandF.New,
-	}
+// func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error) {
+// 	cmdName := cmdline.Command()
+// 	cmdMap := CommandMap{
+// 		"call": CallCommandF.New,
+// 		"config": ConfigCommandF.New,
+// 		"get": GetCommandF.New,
+// 		"host": HostCommandF.New,
+// 		"init": InitCommandF.New,
+// 		"list": ListCommandF.New,
+// 		"misc": MiscCommandF.New,
+// 		"status": StatusCommandF.New,
+// 		"vm": VmCommandF.New,
+// 		"watch": WatchCommandF.New,
+// 	}
 	
-	cmdFactoryFunc, ok := cmdMap[cmdName]
-	if !ok {
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-	}
+// 	cmdFactoryFunc, ok := cmdMap[cmdName]
+// 	if !ok {
+// 		parent.PrintUsage()
+// 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+// 	}
 		
-	cmd := cmdFactoryFunc(cmdline, parent)
-	return cmd, nil
-}
+// 	cmd := cmdFactoryFunc(cmdline, parent)
+// 	return cmd, nil
+// }
 
 func firstTime() error {
 	fmt.Println("Welcome!")

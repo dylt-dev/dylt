@@ -17,20 +17,21 @@ type VmCommand struct {
 func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	// vm command
 	name := "vm"
-	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm)}
+	cmdMap := CommandMap {
+		"add": VmAddCommandF.New,
+		"all": VmAllCommandF.New,
+		"del": VmDelCommandF.New,
+		"get": VmGetCommandF.New,
+		"list": VmListCommandF.New,
+		"set": VmSetCommandF.New,
+	}
+	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm, cmdMap)}
 
 	//init flags (if any)
 
 	return cmd
 }
 
-func (cmd *VmCommand) CreateSubCommand() (Command, error) {
-	args, flag := cmd.Args()
-	if !flag {
-		return nil, nil
-	}
-	return createVmSubCommand(args, cmd)
-}
 
 func (cmd *VmCommand) HandleArgs() error {
 	// parse flags
@@ -96,7 +97,7 @@ func (cmd *VmCommand) Run() error {
 func RunVm(cmdline Cmdline, parent *VmCommand) error {
 	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
 	// create the subcommand and run it
-	subCmd, err := createVmSubCommand(cmdline, parent)
+	subCmd, err := parent.CreateSubCommand()
 	if err != nil {
 		return err
 	}
@@ -108,27 +109,6 @@ func RunVm(cmdline Cmdline, parent *VmCommand) error {
 	return nil
 }
 
-func createVmSubCommand(cmdline Cmdline, parent Command) (Command, error) {
-	cmdName := cmdline.Command()
-	cmdMap := CommandMap{
-		"add": VmAddCommandF.New,
-		"all": VmAllCommandF.New,
-		"del": VmDelCommandF.New,
-		"get": VmGetCommandF.New,
-		"list": VmListCommandF.New,
-		"set": VmSetCommandF.New,
-	}
-	
-	cmdFactoryFunc, ok := cmdMap[cmdName]
-	if !ok {
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-	}
-		
-	cmd := cmdFactoryFunc(cmdline, parent)
-	return cmd, nil
-}
-
 type VmAddCommand struct {
 	*BaseCommand
 	Name string // arg 0
@@ -138,7 +118,7 @@ type VmAddCommand struct {
 func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 	// vm add command
 	name := "vm.add"
-	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add)}
+	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add, nil)}
 
 	//init flags (if any)
 
@@ -203,7 +183,7 @@ type VmAllCommand struct {
 func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	// vm all command
 	name := "vm.all"
-	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All)}
+	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All, nil)}
 
 	//init flags (if any)
 
@@ -270,7 +250,7 @@ type VmDelCommand struct {
 func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	// vm del command
 	name := "vm.del"
-	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del)}
+	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del, nil)}
 
 	return cmd
 }
@@ -336,7 +316,7 @@ type VmGetCommand struct {
 func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	// vm get command
 	name := "vm.get"
-	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get)}
+	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get, nil)}
 
 	//init flags (if any)
 
@@ -403,7 +383,7 @@ type VmListCommand struct {
 func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	// vm list command
 	name := "vm.list"
-	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List)}
+	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List, nil)}
 
 	//init flags (if any)
 
@@ -472,7 +452,7 @@ type VmSetCommand struct {
 func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	// vm set command
 	name := "vm.set"
-	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set)}
+	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set, nil)}
 
 	//init flags (if any)
 

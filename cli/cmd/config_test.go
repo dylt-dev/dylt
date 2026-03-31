@@ -36,6 +36,7 @@ func TestConfigGet (t *testing.T) {
 	subCmdArgs := []string{"foo"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
 	cmd := ConfigCommandF.New(cmdline, nil)
+	require.IsType(t, &ConfigCommand{}, cmd)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand

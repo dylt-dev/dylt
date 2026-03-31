@@ -15,20 +15,16 @@ type HostCommand struct {
 func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	// host command
 	name := "host"
-	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host)}
+	cmdMap := CommandMap{
+		"init": HostInitCommandF.New,
+	}
+	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host, cmdMap)}
 	
 	//init flags (if any)
 	
 	return cmd
 }
 
-func (cmd *HostCommand) CreateSubCommand() (Command, error) {
-	args, is := cmd.Args()
-	if !is {
-		return nil, nil
-	}
-	return createHostSubCommand(args, cmd)
-}
 
 func (cmd *HostCommand) HandleArgs() error {
 	// parse flags
@@ -97,7 +93,7 @@ func (cmd *HostCommand) Run() error {
 func RunHost(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunHost()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
-	subCmd, err := createHostSubCommand(cmdline, parent)
+	subCmd, err := parent.CreateSubCommand()
 	if err != nil {
 		return err
 	}
@@ -109,22 +105,6 @@ func RunHost(cmdline Cmdline, parent Command) error {
 	return nil
 }
 
-func createHostSubCommand(cmdline Cmdline, parent Command) (Command, error) {
-	cmdName := cmdline.Command()
-	cmdMap := CommandMap{
-		"init": HostInitCommandF.New,
-	}
-
-	cmdFactoryFunc, ok := cmdMap[cmdName]
-	if !ok {
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-	}
-		
-	cmd := cmdFactoryFunc(cmdline, parent)
-	return cmd, nil
-}
-
 type HostInitCommand struct {
 	*BaseCommand
 	Gid int
@@ -134,7 +114,7 @@ type HostInitCommand struct {
 func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	// host init command
 	name := "host.init"
-	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init)}
+	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init, nil)}
 	
 	//init flags (if any)
 	cmd.IntVar(&cmd.Gid, "gid", 2000, "gid")
