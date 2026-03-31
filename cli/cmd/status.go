@@ -27,7 +27,7 @@ type StatusCommand struct {
 func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
 	// status command
 	name := "status"
-	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short)}
+	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short, nil)}
 	
 	//init flags (if any)
 

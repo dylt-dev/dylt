@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 
@@ -16,19 +15,17 @@ type ConfigCommand struct {
 func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	// config command
 	name := "config"
-	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config)}
+	cmdMap := CommandMap{
+		"get":  ConfigGetCommandF.New,
+		"set": ConfigSetCommandF.New,
+		"show": ConfigShowCommandF.New,
+	}
+	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap)}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
 }
 
-func (cmd *ConfigCommand) CreateSubCommand() (Command, error) {
-	args, is := cmd.Args()
-	if !is {
-		return nil, errors.New("Command not Parse()'d")
-	}
-	return createConfigSubCommand(args, cmd)
-}
 
 func (cmd *ConfigCommand) HandleArgs() error {
 	// parse flags
@@ -94,7 +91,7 @@ func (cmd *ConfigCommand) Run() error {
 func RunConfig(cmdline Cmdline, parent Command) error {
 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
 	// Create the subcommand and run it
-	subCmd, err := createConfigSubCommand(cmdline, parent)
+	subCmd, err := parent.CreateSubCommand()
 	if err != nil {
 		return err
 	}
@@ -104,21 +101,6 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 	}
 
 	return nil
-}
-
-func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
-	cmdName := cmdline.Command()
-	switch cmdName {
-	case "get":
-		return ConfigGetCommandF.New(cmdline, parent), nil
-	case "set":
-		return ConfigSetCommandF.New(cmdline, parent), nil
-	case "show":
-		return ConfigShowCommandF.New(cmdline, parent), nil
-	default:
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
-	}
 }
 
 // Usage
@@ -132,7 +114,7 @@ type ConfigGetCommand struct {
 func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	// config get command
 	name := "config.get"
-	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get)}
+	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil)}
 	// init flag vars (nop -- no flags)
 
 	return cmd
@@ -195,7 +177,7 @@ type ConfigSetCommand struct {
 func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	// config set command
 	name := "config.set"
-	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set)}
+	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil)}
 
 	return cmd
 }
@@ -256,7 +238,7 @@ type ConfigShowCommand struct {
 func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	// config show command
 	name := "config.set"
-	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show)}
+	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil)}
 
 	//init flags (if any)
 

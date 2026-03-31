@@ -11,7 +11,7 @@ func TestStatus (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, StatusCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, StatusCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*StatusCommand)
 	require.IsType(t, &StatusCommand{}, cmd)
 	require.False(t, cmd.Help)
 }
@@ -21,7 +21,7 @@ func TestStatusHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, StatusCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, StatusCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*StatusCommand)
 	require.IsType(t, &StatusCommand{}, cmd)
 	require.True(t, cmd.Help)
 }

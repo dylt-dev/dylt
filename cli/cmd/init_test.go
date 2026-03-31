@@ -16,7 +16,7 @@ func TestInit (t *testing.T) {
 	cmdFlags := []string{"--etcd-domain", etcdDomain}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*InitCommand)
 	require.IsType(t, &InitCommand{}, cmd)
 	require.Equal(t, etcdDomain, cmd.EtcdDomain)
 	
@@ -27,7 +27,7 @@ func TestInitHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*InitCommand)
 	require.True(t, cmd.Help)
 }
 

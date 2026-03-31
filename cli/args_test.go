@@ -89,7 +89,7 @@ func TestInitCommand(t *testing.T) {
 	var args clicmd.Cmdline = mainCmd.Args()
 	cmd := args.Command()
 	assert.Equal(t, "init", cmd)
-	initCmd := clicmd.InitCommandF.New(args, nil)
+	initCmd := clicmd.InitCommandF.New(args, nil).(*clicmd.InitCommand)
 	initCmd.Parse()
 	assert.Equal(t, "hello.dylt.dev", initCmd.EtcdDomain)
 
@@ -205,9 +205,9 @@ func NewMeCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *MeCommand {
 	return &MeCommand{BaseCommand: &clicmd.BaseCommand{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
-var PappyCommandF clicmd.CommandFactory[*PappyCommand] = clicmd.CommandFactory[*PappyCommand]{FnNew: NewPappyCommand}
-var DaddyCommandF clicmd.CommandFactory[*DaddyCommand] = clicmd.CommandFactory[*DaddyCommand]{FnNew: NewDaddyCommand}
-var MeCommandF clicmd.CommandFactory[*MeCommand] = clicmd.CommandFactory[*MeCommand]{FnNew: NewMeCommand}
+var PappyCommandF clicmd.CommandFactory = clicmd.CommandFactory{ FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewPappyCommand(cmdline, parent) }}
+var DaddyCommandF clicmd.CommandFactory = clicmd.CommandFactory{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewDaddyCommand(cmdline, parent) }}
+var MeCommandF clicmd.CommandFactory = clicmd.CommandFactory{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewMeCommand(cmdline, parent) }}
 
 func TestPappyDaddyMe(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"pappy", "daddy", "me", "foo"}
@@ -221,7 +221,9 @@ func TestPappyDaddyMe(t *testing.T) {
 	_TestCommandString(t, pappy, "pappy")
 
 	// Create `daddy` subcommand
-	daddy := DaddyCommandF.New(pappy.Cmdline.Args(), pappy)
+	daddyArgs, is := pappy.Args()
+	require.True(t, is)
+	daddy := DaddyCommandF.New(daddyArgs, pappy)
 	_TestPreParseValues(t, daddy)
 	// Parse and check again
 	daddy.Parse()
@@ -229,7 +231,8 @@ func TestPappyDaddyMe(t *testing.T) {
 	_TestCommandString(t, daddy, "pappy daddy")
 
 	// Create `me` subcommand
-	me := MeCommandF.New(daddy.Cmdline.Args(), daddy)
+	meArgs, is := daddy.Args()
+	me := MeCommandF.New(meArgs, daddy)
 	_TestPreParseValues(t, me)
 	// Parse and check again
 	me.Parse()

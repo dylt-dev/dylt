@@ -14,20 +14,19 @@ type MiscCommand struct {
 func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 	// misc command
 	name := "misc"
-	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc)}
+	cmdMap := CommandMap{
+		"create-two-node-cluster": CreateTwoNodeClusterCommandF.New,
+		"gen-etcd-run-script": GenEtcdRunScriptCommandF.New,
+		"lookup": LookupCommandF.New,
+	}
+	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap)}
 	
 	//init flags (if any)
 	
 	return cmd
 }
 
-func (cmd *MiscCommand) CreateSubCommand () (Command, error) {
-	args, is := cmd.Args()
-	if !is {
-		return nil, nil
-	}
-	return createMiscSubCommand(args, cmd)
-}
+
 
 func (cmd *MiscCommand) HandleArgs() error {
 	// parse flags
@@ -87,7 +86,7 @@ func (cmd *MiscCommand) Run() error {
 func RunMisc(cmdline Cmdline, parent Command) error {
 	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
 	// create the subcommand and run it
-	subCmd, err := createMiscSubCommand(cmdline, parent)
+	subCmd, err := parent.CreateSubCommand()
 	if err != nil {
 		return err
 	}
@@ -99,20 +98,6 @@ func RunMisc(cmdline Cmdline, parent Command) error {
 	return nil
 }
 
-func createMiscSubCommand(cmdline Cmdline, parent Command) (Command, error) {
-	cmdName := cmdline.Command()
-	switch cmdName {
-	case "create-two-node-cluster":
-		return CreateTwoNodeClusterCommandF.New(cmdline, parent), nil
-	case "gen-etcd-run-script":
-		return GenEtcdRunScriptCommandF.New(cmdline, parent), nil
-	case "lookup":
-		return LookupCommandF.New(cmdline, parent), nil
-	default:
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized subcommand: %s", cmdName)
-	}
-}
 
 type CreateTwoNodeClusterCommand struct {
 	*BaseCommand
@@ -121,7 +106,7 @@ type CreateTwoNodeClusterCommand struct {
 func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoNodeClusterCommand {
 	// misc create-two-node-cluster command
 	name := "misc.create-two-node-cluster"
-	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode)}
+	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil)}
 	
 	//init flags (if any)
 	
@@ -183,7 +168,7 @@ type GenEtcdRunScriptCommand struct {
 func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScriptCommand {
 	// misc gen-etcd-run-script command
 	name := "misc.gen-etcd-run-script"
-	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript)}
+	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil)}
 	
 	//init flags (if any)
 	
@@ -253,7 +238,7 @@ type LookupCommand struct {
 func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	// misc lookup command
 	name := "misc.lookup"
-	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup)}
+	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil)}
 	
 	//init flags (if any)
 	

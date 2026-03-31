@@ -13,7 +13,7 @@ import (
 // Expected: --help=False SubCommand="vm" SubArgs="list")
 func TestVmMainList(t *testing.T) {
 	cmdline := []string{"vm", "list"}
-	cmd := clicmd.MainCommandF.New(cmdline, nil)
+	cmd := clicmd.MainCommandF.New(cmdline, nil).(*clicmd.MainCommand)
 	cmd.HandleArgs()
 	require.False(t, cmd.Help)
 	require.Equal(t, "vm", cmd.SubCommand)

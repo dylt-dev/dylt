@@ -25,7 +25,7 @@ func TestCallHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*CallCommand)
 	require.True(t, cmd.Help)
 }
 
