@@ -17,15 +17,15 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	name := "config"
 	cmdMap := CommandMap{
 		"get":  ConfigGetCommandF.New,
-		"set": ConfigSetCommandF.New,
+		"set":  ConfigSetCommandF.New,
 		"show": ConfigShowCommandF.New,
 	}
-	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap, validator)}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
 }
-
 
 func (cmd *ConfigCommand) HandleArgs() error {
 	// parse flags
@@ -39,16 +39,16 @@ func (cmd *ConfigCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) < nExpected {
+	var v CommandValidator = cmd.CommandValidator()
+	if !v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
+
+	// init positional params, if any
 
 	return nil
 }
@@ -114,7 +114,8 @@ type ConfigGetCommand struct {
 func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	// config get command
 	name := "config.get"
-	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil, validator)}
 	// init flag vars (nop -- no flags)
 
 	return cmd
@@ -132,17 +133,16 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	if len(cmdArgs) != 1 {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if !v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects 1 argument(s); received %d",
-			cmdString,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 	cmd.Key = cmdArgs[0]
 
 	return nil
@@ -177,7 +177,8 @@ type ConfigSetCommand struct {
 func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	// config set command
 	name := "config.set"
-	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil)}
+	validator := ArgCountValidator{nExpected: 2}
+	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil, validator)}
 
 	return cmd
 }
@@ -194,17 +195,16 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	if len(cmdArgs) != 2 {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if !v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects 2 argument(s); received %d",
-			cmdString,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 	cmd.Key = cmdArgs[0]
 	cmd.Value = cmdArgs[1]
 
@@ -238,7 +238,8 @@ type ConfigShowCommand struct {
 func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	// config show command
 	name := "config.set"
-	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil, validator)}
 
 	//init flags (if any)
 
@@ -257,19 +258,16 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no positional params)
+	// init positional params, if any
 
 	return nil
 }

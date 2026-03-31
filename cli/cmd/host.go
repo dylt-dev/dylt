@@ -18,7 +18,8 @@ func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	cmdMap := CommandMap{
 		"init": HostInitCommandF.New,
 	}
-	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host, cmdMap, validator)}
 	
 	//init flags (if any)
 	
@@ -38,19 +39,16 @@ func (cmd *HostCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) < nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no positional params)
+	// init positional params, if any
 
 	return nil
 }
@@ -114,7 +112,8 @@ type HostInitCommand struct {
 func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	// host init command
 	name := "host.init"
-	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init, nil, validator)}
 	
 	//init flags (if any)
 	cmd.IntVar(&cmd.Gid, "gid", 2000, "gid")
@@ -135,19 +134,16 @@ func (cmd HostInitCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no positional params)
+	// init positional params, if any
 
 	return nil
 }

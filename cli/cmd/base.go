@@ -14,15 +14,23 @@ type BaseCommand struct {
 	Help    bool
 	Usage string
 	commandMap CommandMap
+	commandValidator CommandValidator
 }
 
 // type BaseCommandS BaseCommand[string]
 // type BaseCommandSA BaseCommand[[]string]
 
-func NewBaseCommand[U UsageTextType](name string, cmdline Cmdline, parent Command, usageText U, cmdMap CommandMap) *BaseCommand {
+func NewBaseCommand[U UsageTextType](name string,
+                                     cmdline Cmdline,
+									 parent Command,
+									 usageText U,
+									 cmdMap CommandMap,
+									 cmdValidator CommandValidator,
+								    ) *BaseCommand {
 	cmd := &BaseCommand{
 		Cmdline: cmdline,
 		commandMap: cmdMap,
+		commandValidator: cmdValidator,
 		Parent:  parent,
 		FlagSet: flag.NewFlagSet(name, flag.ExitOnError),
 		Usage: CreateUsageString(usageText),
@@ -66,10 +74,8 @@ func (cmd BaseCommand) CommandName() string {
 }
 
 func (cmd BaseCommand) CommandMap() CommandMap {
-	fmt.Println("BaseCommand.CommandMap()")
 	return cmd.commandMap
 }
-
 
 func (cmd BaseCommand) CommandString() (string, bool) {
 	if !cmd.FlagSet.Parsed() {
@@ -83,6 +89,10 @@ func (cmd BaseCommand) CommandString() (string, bool) {
 		return "", flag
 	}
 	return strings.Join(cmdArgs, " "), true
+}
+
+func (cmd BaseCommand) CommandValidator() CommandValidator {
+	return cmd.commandValidator
 }
 
 type NoSubcommandsError struct {}

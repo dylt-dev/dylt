@@ -15,7 +15,8 @@ type InitCommand struct {
 func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
 	// init command
 	name := "init"
-	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Init, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Init, nil, validator)}
 	
 	//init flags (if any)
 	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
@@ -41,19 +42,17 @@ func (cmd *InitCommand) HandleArgs() error {
 		cmd.PrintUsage()
 		return fmt.Errorf("required flag missing: %s", requiredFlag)
 	}
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-	// init positional params (nop - no params)
 
+	// validate args
+	cmdArgs, _ := cmd.Args()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
+		cmdString, _ := cmd.CommandString()
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
+	}
+
+	// init positional params, if any
 	return nil
 }
 

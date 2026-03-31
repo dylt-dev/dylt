@@ -25,7 +25,8 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 		"list": VmListCommandF.New,
 		"set": VmSetCommandF.New,
 	}
-	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm, cmdMap, validator)}
 
 	//init flags (if any)
 
@@ -45,16 +46,16 @@ func (cmd *VmCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	cmdName := "vm"
-	nExpected := 0
-	if len(cmdArgs) < nExpected {
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmdName,
-			nExpected,
-			len(cmdArgs))
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
+		cmdString, _ := cmd.CommandString()
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
+
+	// init positional params, if any
 
 	return nil
 }
@@ -118,7 +119,8 @@ type VmAddCommand struct {
 func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 	// vm add command
 	name := "vm.add"
-	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add, nil)}
+	validator := ArgCountValidator{nExpected: 2}
+	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add, nil, validator)}
 
 	//init flags (if any)
 
@@ -138,18 +140,16 @@ func (cmd *VmAddCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 2
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
-	// init positional params
+
+	// init positional params, if any
 	cmd.Name = cmdArgs[0]
 	cmd.Fqdn = cmdArgs[1]
 
@@ -183,7 +183,8 @@ type VmAllCommand struct {
 func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	// vm all command
 	name := "vm.all"
-	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All, nil, validator)}
 
 	//init flags (if any)
 
@@ -202,19 +203,16 @@ func (cmd *VmAllCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no params)
+	// init positional params, if any
 
 	return nil
 }
@@ -250,7 +248,8 @@ type VmDelCommand struct {
 func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	// vm del command
 	name := "vm.del"
-	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del, nil, validator)}
 
 	return cmd
 }
@@ -316,7 +315,8 @@ type VmGetCommand struct {
 func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	// vm get command
 	name := "vm.get"
-	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get, nil, validator)}
 
 	//init flags (if any)
 
@@ -335,19 +335,16 @@ func (cmd *VmGetCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 	cmd.Name = cmdArgs[0]
 
 	return nil
@@ -383,7 +380,8 @@ type VmListCommand struct {
 func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	// vm list command
 	name := "vm.list"
-	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List, nil, validator)}
 
 	//init flags (if any)
 
@@ -402,19 +400,16 @@ func (cmd *VmListCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no params)
+	// init positional params, if any
 
 	return nil
 }
@@ -452,7 +447,8 @@ type VmSetCommand struct {
 func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	// vm set command
 	name := "vm.set"
-	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set, nil)}
+	validator := ArgCountValidator{nExpected: 3}
+	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set, nil, validator)}
 
 	//init flags (if any)
 
@@ -471,19 +467,16 @@ func (cmd *VmSetCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 3
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no params)
+	// init positional params, if any
 	cmd.Name = cmdArgs[0]
 	cmd.Key = cmdArgs[1]
 	cmd.Value = cmdArgs[2]

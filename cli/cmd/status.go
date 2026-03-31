@@ -27,7 +27,8 @@ type StatusCommand struct {
 func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
 	// status command
 	name := "status"
-	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short, nil, validator)}
 	
 	//init flags (if any)
 
@@ -46,17 +47,16 @@ func (cmd *StatusCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
+
+	// init positional params, if any
 
 	return nil
 }

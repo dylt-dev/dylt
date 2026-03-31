@@ -19,7 +19,8 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 		"gen-etcd-run-script": GenEtcdRunScriptCommandF.New,
 		"lookup": LookupCommandF.New,
 	}
-	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap, validator)}
 	
 	//init flags (if any)
 	
@@ -40,17 +41,16 @@ func (cmd *MiscCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
-	nExpected := 0
-	if len(cmd.Cmdline) < nExpected {
-		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmd.Cmdline[0],
-			nExpected,
-			len(cmd.Cmdline))
+	// validate args
+	cmdArgs, _ := cmd.Args()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
+		cmdString, _ := cmd.CommandString()
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 
 	return nil
 }
@@ -106,7 +106,8 @@ type CreateTwoNodeClusterCommand struct {
 func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoNodeClusterCommand {
 	// misc create-two-node-cluster command
 	name := "misc.create-two-node-cluster"
-	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil, validator)}
 	
 	//init flags (if any)
 	
@@ -125,17 +126,16 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmd.Cmdline) < nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
+
+	// init positional params, if any
 
 	return nil
 }
@@ -168,7 +168,8 @@ type GenEtcdRunScriptCommand struct {
 func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScriptCommand {
 	// misc gen-etcd-run-script command
 	name := "misc.gen-etcd-run-script"
-	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil, validator)}
 	
 	//init flags (if any)
 	
@@ -187,17 +188,16 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
+
+	// init positional params, if any
 
 	return nil
 }
@@ -238,7 +238,8 @@ type LookupCommand struct {
 func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	// misc lookup command
 	name := "misc.lookup"
-	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil, validator)}
 	
 	//init flags (if any)
 	
@@ -257,19 +258,16 @@ func (cmd *LookupCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 	cmd.Hostname = cmdArgs[0]
 
 	return nil

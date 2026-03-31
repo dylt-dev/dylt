@@ -19,7 +19,8 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 		"script": WatchScriptCommandF.New,
 		"svc": WatchSvcCommandF.New,
 	}
-	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap, validator)}
 	
 	//init flags (if any)
 	
@@ -39,18 +40,16 @@ func (cmd *WatchCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) < nExpected {
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params (nop - no params)
+	// init positional params, if any
 
 	return nil
 }
@@ -117,7 +116,8 @@ type WatchScriptCommand struct {
 func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand {
 	// watch script command
 	name := "watch.script"
-	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil)}
+	validator := ArgCountValidator{nExpected: 2}
+	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil, validator)}
 	
 	//init flags (if any)
 	
@@ -136,19 +136,16 @@ func (cmd *WatchScriptCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 2
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmd.Cmdline))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 	cmd.ScriptKey = cmdArgs[0]
 	cmd.TargetPath = cmdArgs[1]
 
@@ -185,7 +182,8 @@ type WatchSvcCommand struct {
 func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	// watch svc command
 	name := "watch.svc"
-	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil, validator)}
 	
 	//init flags (if any)
 	
@@ -204,19 +202,16 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
+	// init positional params, if any
 	cmd.Name = cmdArgs[0]
 
 	return nil

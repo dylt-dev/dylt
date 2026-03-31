@@ -16,7 +16,8 @@ type CallCommand struct {
 func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 	// call command
 	name := "call"
-	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Call, nil)}
+	validator := ArgCountGEValidator{nExpected: 1}
+	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Call, nil, validator)}
 	// init flag vars
 	cmd.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 

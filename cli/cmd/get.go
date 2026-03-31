@@ -15,7 +15,8 @@ type GetCommand struct {
 func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	// get command
 	name := "get"
-	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get, nil, validator)}
 	
 	//init flags (if any)
 	
@@ -34,18 +35,16 @@ func (cmd *GetCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate arg count
+	// validate args
 	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
-	// init positional params
+
+	// init positional params, if any
 	cmd.Key = cmdArgs[0]
 
 	return nil

@@ -29,7 +29,8 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 		"vm": VmCommandF.New,
 		"watch": WatchCommandF.New,
 	}
-	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main, cmdMap, validator)}
 
 	//init flags (if any)
 
@@ -47,7 +48,22 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 func (cmd *MainCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
-	return err
+	if err != nil {
+		return err
+	}
+
+	// validate args
+	cmdArgs, _ := cmd.Args()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
+		cmdString, _ := cmd.CommandString()
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
+	}
+
+	// init positional params, if any
+
+	return nil
 }
 
 func (cmd *MainCommand) Run() error {
