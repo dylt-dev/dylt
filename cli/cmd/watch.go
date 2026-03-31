@@ -110,15 +110,19 @@ func RunWatch(cmdline Cmdline, parent Command) error {
 
 func createWatchSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
-	switch cmdName {
-	case "script":
-		return WatchScriptCommandF.New(cmdline, parent), nil
-	case "svc":
-		return WatchSvcCommandF.New(cmdline, parent), nil
-	default:
+	cmdMap := CommandMap{
+		"script": func (Cmdline, Command) Command { return WatchScriptCommandF.New(cmdline, parent) },
+		"svc": func (Cmdline, Command) Command { return WatchSvcCommandF.New(cmdline, parent) },
+	}
+	
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
+		
+	cmd := cmdFactoryFunc(cmdline, parent)
+	return cmd, nil
 }
 
 // Usage

@@ -14,3 +14,6 @@ type Command interface {
 	SubArgs() (Cmdline, bool)
 	SubCommand() (string, bool)
 }
+
+type CommandFactoryFunc func (Cmdline, Command) Command
+type CommandMap map[string]CommandFactoryFunc

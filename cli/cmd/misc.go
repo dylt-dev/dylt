@@ -101,17 +101,33 @@ func RunMisc(cmdline Cmdline, parent Command) error {
 
 func createMiscSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
-	switch cmdName {
-	case "create-two-node-cluster":
-		return CreateTwoNodeClusterCommandF.New(cmdline, parent), nil
-	case "gen-etcd-run-script":
-		return GenEtcdRunScriptCommandF.New(cmdline, parent), nil
-	case "lookup":
-		return LookupCommandF.New(cmdline, parent), nil
-	default:
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized subcommand: %s", cmdName)
+	cmdMap := CommandMap{
+		"create-two-node-cluster": func (Cmdline, Command) Command { return CreateTwoNodeClusterCommandF.New(cmdline, parent) },
+		"gen-etcd-run-script": func (Cmdline, Command) Command { return GenEtcdRunScriptCommandF.New(cmdline, parent) },
+		"lookup": func (Cmdline, Command) Command { return LookupCommandF.New(cmdline, parent) },
 	}
+	
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
+		parent.PrintUsage()
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	}
+		
+	cmd := cmdFactoryFunc(cmdline, parent)
+	return cmd, nil
+	
+	// cmdName := cmdline.Command()
+	// switch cmdName {
+	// case "create-two-node-cluster":
+	// 	return CreateTwoNodeClusterCommandF.New(cmdline, parent), nil
+	// case "gen-etcd-run-script":
+	// 	return GenEtcdRunScriptCommandF.New(cmdline, parent), nil
+	// case "lookup":
+	// 	return LookupCommandF.New(cmdline, parent), nil
+	// default:
+	// 	parent.PrintUsage()
+	// 	return nil, fmt.Errorf("unrecognized subcommand: %s", cmdName)
+	// }
 }
 
 type CreateTwoNodeClusterCommand struct {

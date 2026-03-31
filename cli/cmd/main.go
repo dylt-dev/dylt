@@ -109,31 +109,27 @@ func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 
 func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error) {
 	cmdName := cmdline.Command()
-	switch cmdName {
-	case "call":
-		return CallCommandF.New(cmdline, parent), nil
-	case "config":
-		return ConfigCommandF.New(cmdline, parent), nil
-	case "get":
-		return GetCommandF.New(cmdline, parent), nil
-	case "host":
-		return HostCommandF.New(cmdline, parent), nil
-	case "init":
-		return InitCommandF.New(cmdline, parent), nil
-	case "list":
-		return ListCommandF.New(cmdline, parent), nil
-	case "misc":
-		return MiscCommandF.New(cmdline, parent), nil
-	case "status":
-		return StatusCommandF.New(cmdline, parent), nil
-	case "vm":
-		return VmCommandF.New(cmdline, parent), nil
-	case "watch":
-		return WatchCommandF.New(cmdline, parent), nil
-	default:
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized subcommand: '%s'", cmdName)
+	cmdMap := CommandMap{
+		"call": func (Cmdline, Command) Command { return CallCommandF.New(cmdline, parent) },
+		"config": func (Cmdline, Command) Command { return ConfigCommandF.New(cmdline, parent) },
+		"get": func (Cmdline, Command) Command { return GetCommandF.New(cmdline, parent) },
+		"host": func (Cmdline, Command) Command { return HostCommandF.New(cmdline, parent) },
+		"init": func (Cmdline, Command) Command { return InitCommandF.New(cmdline, parent) },
+		"list": func (Cmdline, Command) Command { return ListCommandF.New(cmdline, parent) },
+		"misc": func (Cmdline, Command) Command { return MiscCommandF.New(cmdline, parent) },
+		"status": func (Cmdline, Command) Command { return StatusCommandF.New(cmdline, parent) },
+		"vm": func (Cmdline, Command) Command { return VmCommandF.New(cmdline, parent) },
+		"watch": func (Cmdline, Command) Command { return WatchCommandF.New(cmdline, parent) },
 	}
+	
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
+		parent.PrintUsage()
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	}
+		
+	cmd := cmdFactoryFunc(cmdline, parent)
+	return cmd, nil
 }
 
 func firstTime() error {

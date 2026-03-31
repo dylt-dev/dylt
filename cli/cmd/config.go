@@ -108,17 +108,20 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 
 func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
-	switch cmdName {
-	case "get":
-		return ConfigGetCommandF.New(cmdline, parent), nil
-	case "set":
-		return ConfigSetCommandF.New(cmdline, parent), nil
-	case "show":
-		return ConfigShowCommandF.New(cmdline, parent), nil
-	default:
+	cmdMap := CommandMap{
+		"get": func (Cmdline, Command) Command { return ConfigGetCommandF.New(cmdline, parent) },
+		"set": func (Cmdline, Command) Command { return ConfigSetCommandF.New(cmdline, parent) },
+		"show": func (Cmdline, Command) Command { return ConfigShowCommandF.New(cmdline, parent) },
+	}
+	
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
+		
+	cmd := cmdFactoryFunc(cmdline, parent)
+	return cmd, nil
 }
 
 // Usage

@@ -109,24 +109,24 @@ func RunVm(cmdline Cmdline, parent *VmCommand) error {
 }
 
 func createVmSubCommand(cmdline Cmdline, parent Command) (Command, error) {
-	subCmd := cmdline.Command()
-	switch subCmd {
-	case "add":
-		return VmAddCommandF.New(cmdline, parent), nil
-	case "all":
-		return VmAllCommandF.New(cmdline, parent), nil
-	case "del":
-		return VmDelCommandF.New(cmdline, parent), nil
-	case "get":
-		return VmGetCommandF.New(cmdline, parent), nil
-	case "list":
-		return VmListCommandF.New(cmdline, parent), nil
-	case "set":
-		return VmSetCommandF.New(cmdline, parent), nil
-	default:
-		parent.PrintUsage()
-		return nil, fmt.Errorf("unrecognized subcommand: %s", subCmd)
+	cmdName := cmdline.Command()
+	cmdMap := CommandMap{
+		"add": func (Cmdline, Command) Command { return VmAddCommandF.New(cmdline, parent) },
+		"all": func (Cmdline, Command) Command { return VmAllCommandF.New(cmdline, parent) },
+		"del": func (Cmdline, Command) Command { return VmDelCommandF.New(cmdline, parent) },
+		"get": func (Cmdline, Command) Command { return VmGetCommandF.New(cmdline, parent) },
+		"list": func (Cmdline, Command) Command { return VmListCommandF.New(cmdline, parent) },
+		"set": func (Cmdline, Command) Command { return VmSetCommandF.New(cmdline, parent) },
 	}
+	
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
+		parent.PrintUsage()
+		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
+	}
+		
+	cmd := cmdFactoryFunc(cmdline, parent)
+	return cmd, nil
 }
 
 type VmAddCommand struct {

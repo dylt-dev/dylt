@@ -111,13 +111,18 @@ func RunHost(cmdline Cmdline, parent Command) error {
 
 func createHostSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
-	switch cmdName {
-	case "init":
-		return HostInitCommandF.New(cmdline, parent), nil
-	default:
+	cmdMap := CommandMap{
+		"init": func (Cmdline, Command) Command { return HostInitCommandF.New(cmdline, parent) },
+	}
+
+	cmdFactoryFunc, ok := cmdMap[cmdName]
+	if !ok {
 		parent.PrintUsage()
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
+		
+	cmd := cmdFactoryFunc(cmdline, parent)
+	return cmd, nil
 }
 
 type HostInitCommand struct {
@@ -138,7 +143,7 @@ func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	return cmd
 }
 
-func (cmd *HostInitCommand) HandleArgs() error {
+func (cmd HostInitCommand) HandleArgs() error {
 	// parse flags
 	err := cmd.Parse()
 	if err != nil {
