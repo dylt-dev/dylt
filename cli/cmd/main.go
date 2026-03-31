@@ -110,16 +110,16 @@ func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 func createMainSubCommand(cmdline Cmdline, parent *MainCommand) (Command, error) {
 	cmdName := cmdline.Command()
 	cmdMap := CommandMap{
-		"call": func (Cmdline, Command) Command { return CallCommandF.New(cmdline, parent) },
-		"config": func (Cmdline, Command) Command { return ConfigCommandF.New(cmdline, parent) },
-		"get": func (Cmdline, Command) Command { return GetCommandF.New(cmdline, parent) },
-		"host": func (Cmdline, Command) Command { return HostCommandF.New(cmdline, parent) },
-		"init": func (Cmdline, Command) Command { return InitCommandF.New(cmdline, parent) },
-		"list": func (Cmdline, Command) Command { return ListCommandF.New(cmdline, parent) },
-		"misc": func (Cmdline, Command) Command { return MiscCommandF.New(cmdline, parent) },
-		"status": func (Cmdline, Command) Command { return StatusCommandF.New(cmdline, parent) },
-		"vm": func (Cmdline, Command) Command { return VmCommandF.New(cmdline, parent) },
-		"watch": func (Cmdline, Command) Command { return WatchCommandF.New(cmdline, parent) },
+		"call": CallCommandF.New,
+		"config": ConfigCommandF.New,
+		"get": GetCommandF.New,
+		"host": HostCommandF.New,
+		"init": InitCommandF.New,
+		"list": ListCommandF.New,
+		"misc": MiscCommandF.New,
+		"status": StatusCommandF.New,
+		"vm": VmCommandF.New,
+		"watch": WatchCommandF.New,
 	}
 	
 	cmdFactoryFunc, ok := cmdMap[cmdName]

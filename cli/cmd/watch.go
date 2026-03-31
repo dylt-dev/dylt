@@ -111,8 +111,8 @@ func RunWatch(cmdline Cmdline, parent Command) error {
 func createWatchSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	cmdMap := CommandMap{
-		"script": func (Cmdline, Command) Command { return WatchScriptCommandF.New(cmdline, parent) },
-		"svc": func (Cmdline, Command) Command { return WatchSvcCommandF.New(cmdline, parent) },
+		"script": WatchScriptCommandF.New,
+		"svc": WatchSvcCommandF.New,
 	}
 	
 	cmdFactoryFunc, ok := cmdMap[cmdName]

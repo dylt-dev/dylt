@@ -22,7 +22,7 @@ func TestVmHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*VmCommand)
 	require.IsType(t, &VmCommand{}, cmd)
 	require.True(t, cmd.Help)
 }

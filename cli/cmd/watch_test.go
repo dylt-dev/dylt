@@ -22,7 +22,7 @@ func TestWatchHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*WatchCommand)
 	require.IsType(t, &WatchCommand{}, cmd)
 	require.True(t, cmd.Help)
 }

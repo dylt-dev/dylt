@@ -112,7 +112,7 @@ func RunHost(cmdline Cmdline, parent Command) error {
 func createHostSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	cmdMap := CommandMap{
-		"init": func (Cmdline, Command) Command { return HostInitCommandF.New(cmdline, parent) },
+		"init": HostInitCommandF.New,
 	}
 
 	cmdFactoryFunc, ok := cmdMap[cmdName]

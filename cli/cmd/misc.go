@@ -102,9 +102,9 @@ func RunMisc(cmdline Cmdline, parent Command) error {
 func createMiscSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	cmdMap := CommandMap{
-		"create-two-node-cluster": func (Cmdline, Command) Command { return CreateTwoNodeClusterCommandF.New(cmdline, parent) },
-		"gen-etcd-run-script": func (Cmdline, Command) Command { return GenEtcdRunScriptCommandF.New(cmdline, parent) },
-		"lookup": func (Cmdline, Command) Command { return LookupCommandF.New(cmdline, parent) },
+		"create-two-node-cluster": CreateTwoNodeClusterCommandF.New,
+		"gen-etcd-run-script": GenEtcdRunScriptCommandF.New,
+		"lookup": LookupCommandF.New,
 	}
 	
 	cmdFactoryFunc, ok := cmdMap[cmdName]

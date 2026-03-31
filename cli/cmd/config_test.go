@@ -24,7 +24,7 @@ func TestConfigHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*ConfigCommand)
 	require.True(t, cmd.Help)
 }
 
@@ -141,7 +141,7 @@ func TestConfigShowHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ConfigShowCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, ConfigShowCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*ConfigShowCommand)
 	require.True(t, cmd.Help)
 }
 

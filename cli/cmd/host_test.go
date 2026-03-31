@@ -20,7 +20,7 @@ func TestHost (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*HostCommand)
 	require.IsType(t, &HostCommand{}, cmd)
 }
 
@@ -30,7 +30,7 @@ func TestHostHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*HostCommand)
 	require.IsType(t, &HostCommand{}, cmd)
 	require.True(t, cmd.Help)
 }

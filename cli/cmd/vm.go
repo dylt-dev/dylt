@@ -111,12 +111,12 @@ func RunVm(cmdline Cmdline, parent *VmCommand) error {
 func createVmSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	cmdMap := CommandMap{
-		"add": func (Cmdline, Command) Command { return VmAddCommandF.New(cmdline, parent) },
-		"all": func (Cmdline, Command) Command { return VmAllCommandF.New(cmdline, parent) },
-		"del": func (Cmdline, Command) Command { return VmDelCommandF.New(cmdline, parent) },
-		"get": func (Cmdline, Command) Command { return VmGetCommandF.New(cmdline, parent) },
-		"list": func (Cmdline, Command) Command { return VmListCommandF.New(cmdline, parent) },
-		"set": func (Cmdline, Command) Command { return VmSetCommandF.New(cmdline, parent) },
+		"add": VmAddCommandF.New,
+		"all": VmAllCommandF.New,
+		"del": VmDelCommandF.New,
+		"get": VmGetCommandF.New,
+		"list": VmListCommandF.New,
+		"set": VmSetCommandF.New,
 	}
 	
 	cmdFactoryFunc, ok := cmdMap[cmdName]

@@ -109,9 +109,9 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 func createConfigSubCommand(cmdline Cmdline, parent Command) (Command, error) {
 	cmdName := cmdline.Command()
 	cmdMap := CommandMap{
-		"get": func (Cmdline, Command) Command { return ConfigGetCommandF.New(cmdline, parent) },
-		"set": func (Cmdline, Command) Command { return ConfigSetCommandF.New(cmdline, parent) },
-		"show": func (Cmdline, Command) Command { return ConfigShowCommandF.New(cmdline, parent) },
+		"get":  ConfigGetCommandF.New,
+		"set": ConfigSetCommandF.New,
+		"show": ConfigShowCommandF.New,
 	}
 	
 	cmdFactoryFunc, ok := cmdMap[cmdName]
