@@ -14,40 +14,12 @@ type ListCommand struct {
 func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
 	// list command
 	name := "list"
-	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List, nil, validator)}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *ListCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	args, _ := cmd.Args()
-	nExpected := 0
-	if len(args) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(args))
-	}
-
-	// init positional params + subargs (if any)
-
-	return nil
 }
 
 

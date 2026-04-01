@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
 )
@@ -19,7 +17,8 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 		"gen-etcd-run-script": GenEtcdRunScriptCommandF.New,
 		"lookup": LookupCommandF.New,
 	}
-	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap, validator)}
 	
 	//init flags (if any)
 	
@@ -27,33 +26,6 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 }
 
 
-
-func (cmd *MiscCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	nExpected := 0
-	if len(cmd.Cmdline) < nExpected {
-		cmd.PrintUsage()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmd.Cmdline[0],
-			nExpected,
-			len(cmd.Cmdline))
-	}
-
-	// init positional params
-
-	return nil
-}
 
 func (cmd *MiscCommand) Run() error {
 	common.Logger.Debug("MiscCommand.Run()", "args", cmd.Cmdline)
@@ -106,38 +78,12 @@ type CreateTwoNodeClusterCommand struct {
 func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoNodeClusterCommand {
 	// misc create-two-node-cluster command
 	name := "misc.create-two-node-cluster"
-	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil, validator)}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmd.Cmdline) < nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	return nil
 }
 
 func (cmd *CreateTwoNodeClusterCommand) Run() error {
@@ -168,38 +114,12 @@ type GenEtcdRunScriptCommand struct {
 func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScriptCommand {
 	// misc gen-etcd-run-script command
 	name := "misc.gen-etcd-run-script"
-	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil, validator)}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-	
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	return nil
 }
 
 func (cmd *GenEtcdRunScriptCommand) Run() error {
@@ -224,55 +144,26 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 		return err
 	}
 
-	common.Logger.WithGroup("g")
-	common.Logger.With("bar", "thirteen")
-	common.Logger.Debug("testing logger", "foo", "13")
 	return nil
 }
 
 type LookupCommand struct {
 	*BaseCommand
-	Hostname string
+	Hostname string		//arg 0
 }
 
 func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	// misc lookup command
 	name := "misc.lookup"
-	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Hostname,
+	}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *LookupCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	// init positional params
-	cmd.Hostname = cmdArgs[0]
-
-	return nil
 }
 
 func (cmd *LookupCommand) Run() error {

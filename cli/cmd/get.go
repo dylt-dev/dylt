@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/lib"
@@ -15,40 +14,15 @@ type GetCommand struct {
 func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	// get command
 	name := "get"
-	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Key,
+	}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *GetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-	// init positional params
-	cmd.Key = cmdArgs[0]
-
-	return nil
 }
 
 func (cmd *GetCommand) Run() error {

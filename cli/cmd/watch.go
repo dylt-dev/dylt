@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
@@ -19,41 +18,14 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 		"script": WatchScriptCommandF.New,
 		"svc": WatchSvcCommandF.New,
 	}
-	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap, validator)}
 	
 	//init flags (if any)
 	
 	return cmd
 }
 
-
-func (cmd *WatchCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) < nExpected {
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	// init positional params (nop - no params)
-
-	return nil
-}
 
 func (cmd *WatchCommand) Run() error {
 	slog.Debug("WatchCommand.Run()", "args", cmd.Cmdline)
@@ -117,42 +89,16 @@ type WatchScriptCommand struct {
 func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand {
 	// watch script command
 	name := "watch.script"
-	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil)}
+	validator := ArgCountValidator{nExpected: 2}
+	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.ScriptKey,
+		1: &cmd.TargetPath,
+	}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *WatchScriptCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 2
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmd.Cmdline))
-	}
-
-	// init positional params
-	cmd.ScriptKey = cmdArgs[0]
-	cmd.TargetPath = cmdArgs[1]
-
-	return nil
 }
 
 func (cmd *WatchScriptCommand) Run() error {
@@ -185,41 +131,15 @@ type WatchSvcCommand struct {
 func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	// watch svc command
 	name := "watch.svc"
-	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Name,
+	}
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *WatchSvcCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	// init positional params
-	cmd.Name = cmdArgs[0]
-
-	return nil
 }
 
 func (cmd *WatchSvcCommand) Run() error {

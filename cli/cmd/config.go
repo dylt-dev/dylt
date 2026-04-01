@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
@@ -17,40 +16,14 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	name := "config"
 	cmdMap := CommandMap{
 		"get":  ConfigGetCommandF.New,
-		"set": ConfigSetCommandF.New,
+		"set":  ConfigSetCommandF.New,
 		"show": ConfigShowCommandF.New,
 	}
-	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap)}
+	validator := ArgCountGEValidator{nExpected: 0}
+	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap, validator)}
 	// init flag vars (nop -- no flags)
 
 	return &cmd
-}
-
-
-func (cmd *ConfigCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) < nExpected {
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects >=%d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	return nil
 }
 
 func (cmd *ConfigCommand) Run() error {
@@ -108,44 +81,20 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 //	dylt get key     # get key from config
 type ConfigGetCommand struct {
 	*BaseCommand
-	Key string
+	Key string  // arg 0
 }
 
 func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	// config get command
 	name := "config.get"
-	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil)}
+	validator := ArgCountValidator{nExpected: 1}
+	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Key,
+	}
 	// init flag vars (nop -- no flags)
 
 	return cmd
-}
-
-func (cmd *ConfigGetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	if len(cmdArgs) != 1 {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects 1 argument(s); received %d",
-			cmdString,
-			len(cmdArgs))
-	}
-
-	// init positional params
-	cmd.Key = cmdArgs[0]
-
-	return nil
 }
 
 func (cmd *ConfigGetCommand) Run() error {
@@ -177,38 +126,14 @@ type ConfigSetCommand struct {
 func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	// config set command
 	name := "config.set"
-	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil)}
+	validator := ArgCountValidator{nExpected: 2}
+	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Key,
+		1: &cmd.Value,
+	}
 
 	return cmd
-}
-
-func (cmd *ConfigSetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	if len(cmdArgs) != 2 {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects 2 argument(s); received %d",
-			cmdString,
-			len(cmdArgs))
-	}
-
-	// init positional params
-	cmd.Key = cmdArgs[0]
-	cmd.Value = cmdArgs[1]
-
-	return nil
 }
 
 func (cmd *ConfigSetCommand) Run() error {
@@ -238,40 +163,12 @@ type ConfigShowCommand struct {
 func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	// config show command
 	name := "config.set"
-	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil)}
+	validator := ArgCountValidator{nExpected: 0}
+	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil, validator)}
 
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *ConfigShowCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	// init positional params (nop - no positional params)
-
-	return nil
 }
 
 func (cmd *ConfigShowCommand) Run() error {

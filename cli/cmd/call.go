@@ -9,43 +9,18 @@ import (
 
 type CallCommand struct {
 	*BaseCommand
-	ScriptArgs []string // args 0..n-1
 	ScriptPath string   // flag
 }
 
 func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 	// call command
 	name := "call"
-	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Call, nil)}
+	validator := ArgCountGEValidator{nExpected: 1}
+	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Call, nil, validator)}
 	// init flag vars
 	cmd.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 
 	return &cmd
-}
-
-func (cmd *CallCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.BaseCommand.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// init positional params
-	cmd.ScriptArgs = cmd.Cmdline.Args()
-
-	return nil
 }
 
 func (cmd *CallCommand) Run() error {
@@ -63,8 +38,16 @@ func (cmd *CallCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Execute command
-	err = lib.RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+	// init positional params
+	scriptArgs := cmd.Cmdline.Args()
+	err = lib.RunCall(cmd.ScriptPath, scriptArgs)
 	if err != nil {
 		return err
 	}
