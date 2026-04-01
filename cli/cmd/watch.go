@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/api"
-	"github.com/dylt-dev/dylt/common"
 )
 
 type WatchCommand struct {
@@ -20,62 +17,28 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap, validator)}
-	
+	cmd.isUsageOnNoArgs = true
+
 	//init flags (if any)
 	
 	return cmd
 }
 
 
-func (cmd *WatchCommand) Run() error {
-	slog.Debug("WatchCommand.Run()", "args", cmd.Cmdline)
+// func RunWatch(cmdline Cmdline, parent Command) error {
+// 	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
+// 	// Create the subcommand and run it
+// 	subCmd, err := parent.CreateSubCommand()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = subCmd.Run()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// If no args, print usage
-	args, _ := cmd.Args()
-	if len(args) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = RunWatch(args, cmd)
-	return err
-}
-
-func RunWatch(cmdline Cmdline, parent Command) error {
-	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
-	// Create the subcommand and run it
-	subCmd, err := parent.CreateSubCommand()
-	if err != nil {
-		return err
-	}
-	err = subCmd.Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+// 	return nil
+// }
 
 // Usage
 //
@@ -95,29 +58,11 @@ func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand 
 		0: &cmd.ScriptKey,
 		1: &cmd.TargetPath,
 	}
+	cmd.fnRun = func () error {	return api.RunWatchScript(cmd.ScriptKey, cmd.TargetPath) }
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *WatchScriptCommand) Run() error {
-	slog.Debug("WatchScriptCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// Execute command
-	err = api.RunWatchScript(cmd.ScriptKey, cmd.TargetPath)
-	return err
 }
 
 // Usage
@@ -136,36 +81,9 @@ func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Name,
 	}
+	cmd.fnRun = func () error {	return api.RunWatchSvc() }
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *WatchSvcCommand) Run() error {
-	slog.Debug("WatchSvcCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// If no args, print usage
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = api.RunWatchSvc()
-	return err
-
 }

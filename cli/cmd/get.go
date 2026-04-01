@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/lib"
 )
 
@@ -19,34 +17,11 @@ func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Key,
 	}
+	cmd.fnRun = func () error { return lib.RunGet(cmd.Key) }
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *GetCommand) Run() error {
-	slog.Debug("GetCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// execute command
-	err = lib.RunGet(cmd.Key)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // func GetCommand () *cobra.Command {

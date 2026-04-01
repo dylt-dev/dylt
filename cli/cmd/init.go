@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/api"
 )
 
@@ -16,37 +14,13 @@ func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
 	name := "init"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Init, nil, validator)}
+	cmd.fnRun = func () error { return api.RunInit(cmd.EtcdDomain) }
 	
 	//init flags (if any)
 	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
 
 	return cmd
 }
-
-func (cmd *InitCommand) Run() error {
-	slog.Debug("InitCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// execute command
-	err = api.RunInit(cmd.EtcdDomain)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 
 // func CreateInitCommand() *cobra.Command {
 // 	command := cobra.Command{

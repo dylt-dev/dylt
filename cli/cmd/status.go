@@ -14,8 +14,6 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/api"
 )
 
@@ -28,33 +26,9 @@ func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
 	name := "status"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short, nil, validator)}
+	cmd.fnRun = func () error { return api.RunStatus() }
 	
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *StatusCommand) Run() error {
-	slog.Debug("StatusCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// execute command
-	// @getit
-	err = api.RunStatus()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

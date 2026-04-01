@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/api"
-	"github.com/dylt-dev/dylt/common"
 )
 
 type ConfigCommand struct {
@@ -21,60 +18,27 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
+
 	// init flag vars (nop -- no flags)
 
 	return &cmd
 }
 
-func (cmd *ConfigCommand) Run() error {
-	slog.Debug("ConfigCommand.Run()", "args", cmd.Cmdline)
+// func RunConfig(cmdline Cmdline, parent Command) error {
+// 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
+// 	// Create the subcommand and run it
+// 	subCmd, err := parent.CreateSubCommand()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = subCmd.Run()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// If no args, print usage
-	args, _ := cmd.Args()
-	if len(args) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = RunConfig(args, cmd)
-	return err
-}
-
-func RunConfig(cmdline Cmdline, parent Command) error {
-	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
-	// Create the subcommand and run it
-	subCmd, err := parent.CreateSubCommand()
-	if err != nil {
-		return err
-	}
-	err = subCmd.Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+// 	return nil
+// }
 
 // Usage
 //
@@ -92,29 +56,11 @@ func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Key,
 	}
+	cmd.fnRun = func () error { return api.RunConfigGet(cmd.Key) }
+		
 	// init flag vars (nop -- no flags)
 
 	return cmd
-}
-
-func (cmd *ConfigGetCommand) Run() error {
-	slog.Debug("ConfigGetCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = api.RunConfigGet(cmd.Key)
-	return err
 }
 
 type ConfigSetCommand struct {
@@ -132,28 +78,9 @@ func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 		0: &cmd.Key,
 		1: &cmd.Value,
 	}
+	cmd.fnRun = func () error { return api.RunConfigSet(cmd.Key, cmd.Value) }
 
 	return cmd
-}
-
-func (cmd *ConfigSetCommand) Run() error {
-	slog.Debug("ConfigSetCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = api.RunConfigSet(cmd.Key, cmd.Value)
-	return err
 }
 
 type ConfigShowCommand struct {
@@ -165,28 +92,8 @@ func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	name := "config.set"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil, validator)}
-
+	cmd.fnRun = func () error { return api.RunConfigShow() }
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *ConfigShowCommand) Run() error {
-	slog.Debug("ConfigShowCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = api.RunConfigShow()
-	return err
 }

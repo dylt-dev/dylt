@@ -4,7 +4,6 @@ import (
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
-	"github.com/dylt-dev/dylt/common"
 )
 
 type HostCommand struct {
@@ -19,46 +18,11 @@ func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
 	
 	//init flags (if any)
 	
 	return cmd
-}
-
-
-func (cmd *HostCommand) Run() error {
-	slog.Debug("HostCommand.Run()", "args", cmd.Cmdline)
-
-	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// If no args, print usage
-	args, _ := cmd.Args()
-	if len(args) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = RunHost(args, cmd)
-	return err
 }
 
 func RunHost(cmdline Cmdline, parent Command) error {
@@ -87,38 +51,12 @@ func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	name := "host.init"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init, nil, validator)}
+	cmd.fnRun = func () error { return api.RunHostInit(cmd.Uid, cmd.Gid) }
 	
 	//init flags (if any)
 	cmd.IntVar(&cmd.Gid, "gid", 2000, "gid")
 	cmd.IntVar(&cmd.Uid, "uid", 2000, "uid")
+	cmd.isUsageOnNoArgs = true
 
 	return cmd
-}
-
-func (cmd *HostInitCommand) Run() error {
-	slog.Debug("HostInitCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// If no args, print usage
-	args, _ := cmd.Args()
-	if len(args) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = api.RunHostInit(cmd.Uid, cmd.Gid)
-	return err
 }

@@ -4,7 +4,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"strings"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 type BaseCommand struct {
@@ -16,6 +19,8 @@ type BaseCommand struct {
 	argmap map[int]*string
 	commandMap CommandMap
 	commandValidator CommandValidator
+	fnRun func () error
+	isUsageOnNoArgs bool
 }
 
 // type BaseCommandS BaseCommand[string]
@@ -134,7 +139,6 @@ func (cmd *BaseCommand) HandleArgs() error {
 
 	// if Help flag is set, no further processing is necessary
 	if cmd.Help {
-		fmt.Printf("breakin - cmd.Help=%v\n", cmd.Help)
 		return nil
 	}
 
@@ -142,13 +146,10 @@ func (cmd *BaseCommand) HandleArgs() error {
 	cmdArgs, _ := cmd.Args()
 	var v CommandValidator = cmd.CommandValidator()
 	if ! v.IsValid(cmdArgs) {
-		fmt.Println("args no good")
 		cmdString, _ := cmd.CommandString()
 		errmsg := v.ErrorMessage(cmdArgs)
-		fmt.Printf("dyin - cmd.Help=%v\n", cmd.Help)
 		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
-	fmt.Println("args valid somehow?")
 
 	// init positional params, if any
 	if cmd.argmap != nil {
@@ -175,8 +176,50 @@ func (cmd *BaseCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd *BaseCommand) Run() error { return nil }
+func (cmd *BaseCommand) Run() error {
+	slog.Debug("CallCommand.Run()", "args", cmd.Cmdline)
 
+	// Parse flags & get positional args
+	err := cmd.HandleArgs()
+	if err != nil {
+		return err
+	}
+	args, _ := cmd.Args()
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	common.Logger.Commentf("args: %#+v\n", args)
+	common.Logger.Commentf("len(args): %#+v\n", len(args))
+	common.Logger.Commentf("cmd.UsageOnNoArgs(): %#+v\n", cmd.UsageOnNoArgs())
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil && len(args) > 0 {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
+}
 func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
@@ -191,4 +234,8 @@ func (cmd *BaseCommand) SubCommand() (string, bool) {
 	}
 	var subCmdline Cmdline = cmd.FlagSet.Args()
 	return subCmdline.Command(), true
+}
+
+func (cmd *BaseCommand) UsageOnNoArgs () bool {
+	return cmd.isUsageOnNoArgs
 }
