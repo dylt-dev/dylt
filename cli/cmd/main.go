@@ -45,27 +45,6 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 // 	return createMainSubCommand(args, cmd)
 // }
 
-func (cmd *MainCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-
-	return nil
-}
-
 func (cmd *MainCommand) Run() error {
 	if common.Logger == nil {
 		panic("common.Logger == nil !!!")
