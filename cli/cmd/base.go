@@ -4,7 +4,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"strings"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 type BaseCommand struct {
@@ -173,8 +176,50 @@ func (cmd *BaseCommand) PrintUsage () {
 	fmt.Println()
 }
 
-func (cmd *BaseCommand) Run() error { return nil }
+func (cmd *BaseCommand) Run() error {
+	slog.Debug("CallCommand.Run()", "args", cmd.Cmdline)
 
+	// Parse flags & get positional args
+	err := cmd.HandleArgs()
+	if err != nil {
+		return err
+	}
+	args, _ := cmd.Args()
+
+	// If help flag set, print usage + return
+	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	common.Logger.Commentf("args: %#+v\n", args)
+	common.Logger.Commentf("len(args): %#+v\n", len(args))
+	common.Logger.Commentf("cmd.UsageOnNoArgs(): %#+v\n", cmd.UsageOnNoArgs())
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil && len(args) > 0 {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
+}
 func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false

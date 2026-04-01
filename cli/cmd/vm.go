@@ -3,10 +3,7 @@ package cmd
 import (
 	// "encoding/json"
 
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/api"
-	"github.com/dylt-dev/dylt/common"
 )
 
 type VmCommand struct {
@@ -33,48 +30,6 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	return cmd
 }
 
-
-func (cmd *VmCommand) Run() error {
-	slog.Debug("VmCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
 
 // func RunVm(cmdline Cmdline, parent *VmCommand) error {
 // 	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
@@ -114,48 +69,6 @@ func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 
 }
 
-func (cmd VmAddCommand) Run() error {
-	slog.Debug("VmAddCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
-
 type VmAllCommand struct {
 	*BaseCommand
 }
@@ -171,49 +84,6 @@ func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 
 	return cmd
 }
-
-func (cmd VmAllCommand) Run() error {
-	slog.Debug("VmAllCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
-
 
 
 // Usage
@@ -235,48 +105,6 @@ func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	cmd.fnRun = func () error { return api.RunVmDel(cmd.Name) }
 
 	return cmd
-}
-
-func (cmd *VmDelCommand) Run() error {
-	slog.Debug("VmDelCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
 }
 
 // Usage
@@ -302,48 +130,6 @@ func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	return cmd
 }
 
-func (cmd *VmGetCommand) Run() error {
-	slog.Debug("VmGetCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
-
 // Usage
 //
 //	vm list
@@ -361,48 +147,6 @@ func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd VmListCommand) Run() error {
-	slog.Debug("VmListCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
 }
 
 // Usage
@@ -432,48 +176,6 @@ func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	return cmd
 }
 
-func (cmd VmSetCommand) Run() error {
-	slog.Debug("VmSetCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
-
 // type VmShowCommand struct {
 // 	*flag.FlagSet
 // }
@@ -485,237 +187,4 @@ func (cmd VmSetCommand) Run() error {
 // 	// init flag vars (nop -- no flags)
 
 // 	return &cmd
-// }
-
-// func (cmd VmShowCommand) Run (args[] string) error {
-// 	slog.Debug("VmShowCommand.Run()", "args", args)
-// 	err := cmd.Parse(args)
-// 	if err != nil { return err }
-// 	return nil
-// }
-
-// func CreateVmCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "vm",
-// 		Short: "VM commands",
-// 		Long: "Operations on VM objects in storage",
-// 	}
-// 	command.AddCommand(CreateVmAddCommand())
-// 	command.AddCommand(CreateVmAllCommand())
-// 	command.AddCommand(CreateVmDelCommand())
-// 	command.AddCommand(CreateVmGetCommand())
-// 	command.AddCommand(CreateVmListCommand())
-// 	command.AddCommand(CreateVmSetCommand())
-// 	command.AddCommand(CreateVmShowCommand())
-// 	return &command
-// }
-
-// func CreateVmAddCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "add name address",
-// 		Short: "Add new VM",
-// 		Long: "Add a new VM to the collection",
-// 		RunE: runVmAddCommand,
-// 		Args: cobra.ExactArgs(2),
-// 	}
-// 	return &command
-// }
-
-// func runVmAddCommand (cmd *cobra.Command, args []string) error {
-// 	cli, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	name := args[0]
-// 	address := args[1]
-// 	vm, err := cli.Add(name, address)
-// 	if err != nil { return err }
-// 	fmt.Println(vm)
-
-// 	return nil
-// }
-
-// func CreateVmAllCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "all",
-// 		Short: "All VM info",
-// 		Long: "Return data for all VMs in the system",
-// 		RunE: runVmAllCommand,
-// 	}
-// 	command.Flags().BoolP("just-names", "n", false, "return just the host names")
-// 	return &command
-// }
-
-// func runVmAllCommand (cmd *cobra.Command, args []string) error {
-// 	cli, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	vmInfoMap, err := cli.All()
-// 	if err != nil { return err }
-// 	// hasShr := cmd.Flags().Changed("shr")
-// 	// if hasShr {
-// 	// 	shr, err := cmd.Flags().GetBool("shr")
-// 	// 	if err != nil { return err }
-// 	// 	vmInfoMap = dylt.FilterOnShr(vmInfoMap, shr)
-// 	// }
-// 	isJustNames, err := cmd.Flags().GetBool("just-names")
-// 	if err != nil { return err }
-// 	if isJustNames {
-// 		names := []string{}
-// 		for name, _ := range(vmInfoMap) {
-// 			names = append(names, name)
-// 		}
-// 		buf, err := json.Marshal(names)
-// 		if err != nil { return err }
-// 		fmt.Println(string(buf))
-// 	} else {
-// 		jsonData, err := json.Marshal(vmInfoMap)
-// 		if err != nil { return err }
-// 		fmt.Println(string(jsonData))
-// 	}
-// 	return nil
-// }
-
-// func CreateVmDelCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "del",
-// 		Short: "Delete a VM entry",
-// 		Long: "Delete a VM entry from etcd",
-// 		RunE: runVmDelCommand,
-// 	}
-// 	return &command
-// }
-
-// func runVmDelCommand (cmd *cobra.Command, args []string) error {
-// 	cli, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	arg := args[0]
-// 	key := fmt.Sprintf("/vm/%s", arg)
-// 	prevVal, err := cli.Delete(key)
-// 	if err != nil { return err }
-// 	if prevVal == nil { return nil }
-// 	fmt.Println(string(prevVal))
-// 	return nil
-// }
-
-// func CreateVmGetCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "get $vm",
-// 		Short: "Get a VM",
-// 		Long: "Get information on a VM",
-// 		RunE: runVmGetCommand,
-// 		Args: cobra.RangeArgs(1, 2),
-// 	}
-// 	return &command
-// }
-
-// func runVmGetCommand (cmd *cobra.Command, args []string) error {
-// 	key := args[0]
-// 	attr := ""
-// 	if len(args) >= 2 {
-// 		attr = args[1]
-// 	}
-// 	hasAttr := false
-// 	if attr != "" {
-// 		hasAttr = true
-// 	}
-// 	cli, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	vm, err := cli.Get(key)
-// 	if err != nil { return err }
-// 	if vm == nil { return nil }
-// 	if hasAttr {
-// 		attrValue, err := vm.Get(attr)
-// 		if err != nil { return err }
-// 		fmt.Printf("%s\n", attrValue)
-// 	} else {
-// 		fmt.Println(vm)
-// 	}
-// 	return nil
-// }
-
-// func CreateVmListCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "list",
-// 		Short: "List VMs",
-// 		Long: "List all VMs in the system",
-// 		RunE: runVmListCommand,
-// 	}
-// 	return &command
-// }
-
-// func runVmListCommand (cmd *cobra.Command, args []string) error {
-// 	cli, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	names, err := cli.Names()
-// 	if err != nil { return err }
-// 	jsonData, err := json.Marshal(names)
-// 	if err != nil { return err }
-// 	fmt.Println(string(jsonData))
-// 	return nil
-// }
-
-// func CreateVmSetCommand () *cobra.Command {
-// 	command := cobra.Command {
-//  		Use: "set vm key value",
-// 		Short: "Set a VM attribute",
-// 		Long: "Set an attribute on a VM. Create the attribute if it doesn't exist.",
-// 		RunE: runVmSetCommand,
-// 		Args: cobra.ExactArgs(3),
-// 	}
-// 	return &command
-// }
-
-// func runVmSetCommand (cmd *cobra.Command, args []string) error {
-// 	cli, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	defer cli.Close()
-// 	name := args[0]
-// 	field := args[1]
-// 	value := args[2]
-// 	key := fmt.Sprintf("/vm/%s", name)
-// 	vm, err := cli.Get(name)
-// 	if err != nil { return err }
-// 	fmt.Printf("vm=%s\n", vm)
-// 	switch field {
-// 	case "Address":
-// 		vm.Address = value
-// 	default:
-// 		errmsg := fmt.Sprintf("Unknown field: %s", field)
-// 		err := errors.New(errmsg)
-// 		return err
-// 	}
-// 	s, err := json.Marshal(vm)
-// 	fmt.Printf("string(s)=%s\n", string(s))
-// 	if err != nil { return err }
-// 	ctx := context.Background()
-// 	ctx, cancel := context.WithTimeout(ctx, 10 * time.Second)
-// 	resp, err := cli.Client.Put(ctx, key, string(s))
-// 	fmt.Printf("err=%s\n", err)
-// 	fmt.Printf("resp=%v\n", resp)
-// 	cancel()
-// 	vmNew, err := cli.Get(name)
-// 	if err != nil { return err }
-// 	bufNew, err := json.Marshal(vmNew)
-// 	if err != nil { return err }
-// 	fmt.Println(string(bufNew))
-// 	return nil
-// }
-
-// func CreateVmShowCommand () *cobra.Command {
-// 	command := cobra.Command {
-// 		Use: "show $vm",
-// 		Short: "show a VM",
-// 		Long: "show a VM",
-// 		RunE: runVmShowCommand,
-// 		Args: cobra.ExactArgs(1),
-// 	}
-// 	return &command
-// }
-
-// func runVmShowCommand (cmd *cobra.Command, args []string) error {
-// 	vmName := args[0]
-// 	vmClient, err := dylt.CreateVmClientFromConfig()
-// 	if err != nil { return err }
-// 	vm, err := vmClient.Get(vmName)
-// 	if err != nil { return err }
-// 	fmt.Println(vm)
-// 	return nil
 // }

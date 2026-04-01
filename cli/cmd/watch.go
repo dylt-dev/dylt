@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/api"
-	"github.com/dylt-dev/dylt/common"
 )
 
 type WatchCommand struct {
@@ -27,48 +24,6 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	return cmd
 }
 
-
-func (cmd *WatchCommand) Run() error {
-	slog.Debug("WatchCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
 
 // func RunWatch(cmdline Cmdline, parent Command) error {
 // 	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
@@ -110,48 +65,6 @@ func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand 
 	return cmd
 }
 
-func (cmd *WatchScriptCommand) Run() error {
-	slog.Debug("WatchScriptCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
-
 // Usage
 //
 //	watch svc name
@@ -173,46 +86,4 @@ func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *WatchSvcCommand) Run() error {
-	slog.Debug("WatchSvcCommand.Run()", "args", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
 }

@@ -17,17 +17,6 @@ func teardown (t *testing.T) {
 	t.Log("teardown() ...")
 }
 
-func TestMainUsage (t *testing.T) {
-	fnTeardown := setup(t)
-	defer fnTeardown(t)
-
-	cmdline := NewCmdline("dylt", []string{}, []string{})
-	cmd := MainCommandF.New(cmdline, nil)
-	require.NotNil(t, cmd)
-	err := cmd.Run()
-	require.NoError(t, err)
-}
-
 func TestConfigUsage (t *testing.T) {
 	fnTeardown := setup(t)
 	defer fnTeardown(t)

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -31,6 +32,13 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main, cmdMap, validator)}
+	cmd.fnRun = func () error {
+		args, flag := cmd.Args()
+		if !flag {
+			return errors.New("command is not parsed")
+		}
+		return RunMain(args, cmd)
+	}
 
 	//init flags (if any)
 
@@ -45,66 +53,19 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 // 	return createMainSubCommand(args, cmd)
 // }
 
-func (cmd *MainCommand) Run() error {
-	if common.Logger == nil {
-		panic("common.Logger == nil !!!")
-	}
-	common.Logger.Signature("MainCommand.Run()", cmd.Cmdline)
-
-	// Parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// If no args, print usage
-	args, _ := cmd.Args()
-	if len(args) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Execute command
-	err = RunMain(args, cmd)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func RunMain(cmdline Cmdline, cmd *MainCommand) error {
 	slog.Debug("RunMain()", "cmdline", cmdline)
 
-	// If there's no subcommand, do main() things
-	if cmdline.Command() == "" {
-		// Check if it's the user's first time. If so, act accordingly.
-		is, err := isFirstTime()
-		slog.Debug("main", "isFirstTime()", is)
-		if err != nil {
-			return err
-		}
-		if is {
-			fmt.Println("Running firstTime() ...")
-			err = firstTime()
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		// Create the subcommand and run it
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
+	// Check if it's the user's first time. If so, act accordingly.
+	is, err := isFirstTime()
+	slog.Debug("main", "isFirstTime()", is)
+	if err != nil {
+		return err
+	}
+	if is {
+		fmt.Println("Running firstTime() ...")
+		err = firstTime()
 		if err != nil {
 			return err
 		}

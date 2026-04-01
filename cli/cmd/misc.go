@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/dylt-dev/dylt/api"
-	"github.com/dylt-dev/dylt/common"
 )
 
 type MiscCommand struct {
@@ -26,48 +25,6 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 	return cmd
 }
 
-
-func (cmd *MiscCommand) Run() error {
-	common.Logger.Debug("MiscCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
 
 // func RunMisc(cmdline Cmdline, parent Command) error {
 // 	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
@@ -101,48 +58,6 @@ func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoN
 	return cmd
 }
 
-func (cmd *CreateTwoNodeClusterCommand) Run() error {
-	common.Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
-}
-
 type GenEtcdRunScriptCommand struct {
 	*BaseCommand
 }
@@ -157,48 +72,6 @@ func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScri
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *GenEtcdRunScriptCommand) Run() error {
-	common.Logger.Debug("GenEtcdRunScriptCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
 }
 
 type LookupCommand struct {
@@ -219,46 +92,4 @@ func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *LookupCommand) Run() error {
-	common.Logger.Debug("LookupCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// if CommandMap exists run subcommand
-	cmdMap := cmd.CommandMap()
-	if cmdMap != nil {
-		subCmd, err := cmd.CreateSubCommand()
-		if err != nil {
-			return err
-		}
-		err = subCmd.Run()
-		return err
-	}
-
-	// execute command
-	if cmd.fnRun != nil {
-		return cmd.fnRun()
-	}
-
-	return nil
 }
