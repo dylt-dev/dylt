@@ -22,37 +22,6 @@ func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
 	return cmd
 }
 
-func (cmd *ListCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 
 func (cmd *ListCommand) Run() error {
 	slog.Debug("ListCommand.Run()", "args", cmd.Cmdline)
