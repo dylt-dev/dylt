@@ -49,6 +49,11 @@ func (cmd *HostCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -105,8 +110,8 @@ func RunHost(cmdline Cmdline, parent Command) error {
 
 type HostInitCommand struct {
 	*BaseCommand
-	Gid int
-	Uid int
+	Gid int // --gid
+	Uid int // --uid
 }
 
 func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
@@ -144,6 +149,11 @@ func (cmd HostInitCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }

@@ -50,6 +50,11 @@ func (cmd *WatchCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -118,6 +123,10 @@ func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand 
 	name := "watch.script"
 	validator := ArgCountValidator{nExpected: 2}
 	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.ScriptKey,
+		1: &cmd.TargetPath,
+	}
 	
 	//init flags (if any)
 	
@@ -146,8 +155,11 @@ func (cmd *WatchScriptCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
-	cmd.ScriptKey = cmdArgs[0]
-	cmd.TargetPath = cmdArgs[1]
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -184,6 +196,9 @@ func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	name := "watch.svc"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Name,
+	}
 	
 	//init flags (if any)
 	
@@ -212,7 +227,11 @@ func (cmd *WatchSvcCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
-	cmd.Name = cmdArgs[0]
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }

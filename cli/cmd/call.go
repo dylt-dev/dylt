@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/common"
@@ -9,7 +10,6 @@ import (
 
 type CallCommand struct {
 	*BaseCommand
-	ScriptArgs []string // args 0..n-1
 	ScriptPath string   // flag
 }
 
@@ -26,7 +26,7 @@ func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 
 func (cmd *CallCommand) HandleArgs() error {
 	// parse flags
-	err := cmd.BaseCommand.Parse()
+	err := cmd.Parse()
 	if err != nil {
 		return err
 	}
@@ -36,15 +36,21 @@ func (cmd *CallCommand) HandleArgs() error {
 		return nil
 	}
 
-	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
+	// validate args
+	cmdArgs, _ := cmd.Args()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
+		cmdString, _ := cmd.CommandString()
+		errmsg := v.ErrorMessage(cmdArgs)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
-	// init positional params
-	cmd.ScriptArgs = cmd.Cmdline.Args()
+	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -64,8 +70,16 @@ func (cmd *CallCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	if len(cmd.Cmdline) == 0 {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
 	// Execute command
-	err = lib.RunCall(cmd.ScriptPath, cmd.ScriptArgs)
+	// init positional params
+	scriptArgs := cmd.Cmdline.Args()
+	err = lib.RunCall(cmd.ScriptPath, scriptArgs)
 	if err != nil {
 		return err
 	}

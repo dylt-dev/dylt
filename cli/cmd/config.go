@@ -49,6 +49,11 @@ func (cmd *ConfigCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -108,7 +113,7 @@ func RunConfig(cmdline Cmdline, parent Command) error {
 //	dylt get key     # get key from config
 type ConfigGetCommand struct {
 	*BaseCommand
-	Key string
+	Key string  // arg 0
 }
 
 func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
@@ -116,6 +121,9 @@ func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	name := "config.get"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Key,
+	}
 	// init flag vars (nop -- no flags)
 
 	return cmd
@@ -143,7 +151,11 @@ func (cmd *ConfigGetCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
-	cmd.Key = cmdArgs[0]
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -179,6 +191,10 @@ func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	name := "config.set"
 	validator := ArgCountValidator{nExpected: 2}
 	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Key,
+		1: &cmd.Value,
+	}
 
 	return cmd
 }
@@ -205,8 +221,11 @@ func (cmd *ConfigSetCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
-	cmd.Key = cmdArgs[0]
-	cmd.Value = cmdArgs[1]
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -268,6 +287,11 @@ func (cmd *ConfigShowCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }

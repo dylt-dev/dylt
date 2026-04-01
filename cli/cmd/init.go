@@ -9,7 +9,7 @@ import (
 
 type InitCommand struct {
 	*BaseCommand
-	EtcdDomain string
+	EtcdDomain string // --etcd-domain
 }
 
 func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
@@ -36,13 +36,6 @@ func (cmd *InitCommand) HandleArgs() error {
 		return nil
 	}
 
-	// validate required flags
-	var requiredFlag string = "etcd-domain"
-	if cmd.Lookup(requiredFlag).Value.String() == "" {
-		cmd.PrintUsage()
-		return fmt.Errorf("required flag missing: %s", requiredFlag)
-	}
-
 	// validate args
 	cmdArgs, _ := cmd.Args()
 	var v CommandValidator = cmd.CommandValidator()
@@ -53,6 +46,12 @@ func (cmd *InitCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
+
 	return nil
 }
 

@@ -17,6 +17,9 @@ func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	name := "get"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Get, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Key,
+	}
 	
 	//init flags (if any)
 	
@@ -45,7 +48,11 @@ func (cmd *GetCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
-	cmd.Key = cmdArgs[0]
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }

@@ -51,6 +51,11 @@ func (cmd *MiscCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -136,6 +141,11 @@ func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -198,6 +208,11 @@ func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }
@@ -224,15 +239,12 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 		return err
 	}
 
-	common.Logger.WithGroup("g")
-	common.Logger.With("bar", "thirteen")
-	common.Logger.Debug("testing logger", "foo", "13")
 	return nil
 }
 
 type LookupCommand struct {
 	*BaseCommand
-	Hostname string
+	Hostname string		//arg 0
 }
 
 func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
@@ -240,6 +252,9 @@ func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	name := "misc.lookup"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil, validator)}
+	cmd.argmap  = map[int]*string {
+		0: &cmd.Hostname,
+	}
 	
 	//init flags (if any)
 	
@@ -268,7 +283,11 @@ func (cmd *LookupCommand) HandleArgs() error {
 	}
 
 	// init positional params, if any
-	cmd.Hostname = cmdArgs[0]
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
 
 	return nil
 }

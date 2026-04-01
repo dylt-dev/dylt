@@ -13,6 +13,7 @@ type BaseCommand struct {
 	Cmdline Cmdline
 	Help    bool
 	Usage string
+	argmap map[int]*string
 	commandMap CommandMap
 	commandValidator CommandValidator
 }
