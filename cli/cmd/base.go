@@ -41,14 +41,14 @@ func NewBaseCommand[U UsageTextType](name string,
 	return cmd
 }
 
-func (cmd BaseCommand) Args() (Cmdline, bool) {
+func (cmd *BaseCommand) Args() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
 	}
 	return cmd.FlagSet.Args(), true
 }
 
-func (cmd BaseCommand) CommandArgs() ([]string, bool) {
+func (cmd *BaseCommand) CommandArgs() ([]string, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
 	}
@@ -66,19 +66,19 @@ func (cmd BaseCommand) CommandArgs() ([]string, bool) {
 	return cmdArgs, true
 }
 
-func (cmd BaseCommand) CommandLine() Cmdline {
+func (cmd *BaseCommand) CommandLine() Cmdline {
 	return cmd.Cmdline
 }
 
-func (cmd BaseCommand) CommandName() string {
+func (cmd *BaseCommand) CommandName() string {
 	return cmd.Cmdline.Command()
 }
 
-func (cmd BaseCommand) CommandMap() CommandMap {
+func (cmd *BaseCommand) CommandMap() CommandMap {
 	return cmd.commandMap
 }
 
-func (cmd BaseCommand) CommandString() (string, bool) {
+func (cmd *BaseCommand) CommandString() (string, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return "", false
 	}
@@ -92,14 +92,14 @@ func (cmd BaseCommand) CommandString() (string, bool) {
 	return strings.Join(cmdArgs, " "), true
 }
 
-func (cmd BaseCommand) CommandValidator() CommandValidator {
+func (cmd *BaseCommand) CommandValidator() CommandValidator {
 	return cmd.commandValidator
 }
 
 type NoSubcommandsError struct {}
 func (o NoSubcommandsError) Error() string { return "No Subcommands" }
 
-func (cmd BaseCommand) CreateSubCommand () (Command, error) {
+func (cmd *BaseCommand) CreateSubCommand () (Command, error) {
 	fmt.Printf("%s %v\n", "cmd.CommandMap()", cmd.CommandMap())
 	cmdline, is := cmd.Args()
 	if !is {
@@ -125,10 +125,44 @@ func (cmd BaseCommand) CreateSubCommand () (Command, error) {
 	return subCmd, nil
 }
 
-func (cmd BaseCommand) HandleArgs () error { return nil }
+func (cmd *BaseCommand) HandleArgs() error {
+	// parse flags
+	err := cmd.Parse()
+	if err != nil {
+		return err
+	}
+
+	// if Help flag is set, no further processing is necessary
+	if cmd.Help {
+		fmt.Printf("breakin - cmd.Help=%v\n", cmd.Help)
+		return nil
+	}
+
+	// validate args
+	cmdArgs, _ := cmd.Args()
+	var v CommandValidator = cmd.CommandValidator()
+	if ! v.IsValid(cmdArgs) {
+		fmt.Println("args no good")
+		cmdString, _ := cmd.CommandString()
+		errmsg := v.ErrorMessage(cmdArgs)
+		fmt.Printf("dyin - cmd.Help=%v\n", cmd.Help)
+		return fmt.Errorf("`%s` %s", cmdString, errmsg)
+	}
+	fmt.Println("args valid somehow?")
+
+	// init positional params, if any
+	if cmd.argmap != nil {
+		for i, ptr := range cmd.argmap {
+			*ptr = cmdArgs[i]
+		}
+	}
+
+	return nil
+}
 
 
-func (cmd BaseCommand) Parse() error {
+func (cmd *BaseCommand) Parse() error {
+	fmt.Printf("cmd.FlagSet=%v\n", cmd.FlagSet)
 	err := cmd.FlagSet.Parse(cmd.Cmdline.Args())
 	if err != nil {
 		return err
@@ -136,14 +170,14 @@ func (cmd BaseCommand) Parse() error {
 	return nil
 }
 
-func (cmd BaseCommand) PrintUsage () {
+func (cmd *BaseCommand) PrintUsage () {
 	fmt.Print(cmd.Usage)
 	fmt.Println()
 }
 
-func (cmd BaseCommand) Run() error { return nil }
+func (cmd *BaseCommand) Run() error { return nil }
 
-func (cmd BaseCommand) SubArgs() (Cmdline, bool) {
+func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
 	}
@@ -151,7 +185,7 @@ func (cmd BaseCommand) SubArgs() (Cmdline, bool) {
 	return subCmdline.Args(), true
 }
 
-func (cmd BaseCommand) SubCommand() (string, bool) {
+func (cmd *BaseCommand) SubCommand() (string, bool) {
 	if !cmd.Parsed() {
 		return "", false
 	}

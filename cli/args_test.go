@@ -74,7 +74,7 @@ func TestArgsFlag(t *testing.T) {
 }
 
 func TestBoolFlag(t *testing.T) {
-	var cmdline clicmd.Cmdline = []string{"dylt", "--help"}
+	var cmdline clicmd.Cmdline = []string{"--help"}
 	var fs flag.FlagSet
 	var helpy *bool = fs.Bool("help", false, "yeah yeah yeah")
 	fs.Parse(cmdline)
