@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
@@ -25,37 +24,6 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	// init flag vars (nop -- no flags)
 
 	return &cmd
-}
-
-func (cmd *ConfigCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if !v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd *ConfigCommand) Run() error {
@@ -129,37 +97,6 @@ func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	return cmd
 }
 
-func (cmd *ConfigGetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if !v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 func (cmd *ConfigGetCommand) Run() error {
 	slog.Debug("ConfigGetCommand.Run()", "args", cmd.Cmdline)
 
@@ -199,37 +136,6 @@ func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 	return cmd
 }
 
-func (cmd *ConfigSetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if !v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 func (cmd *ConfigSetCommand) Run() error {
 	slog.Debug("ConfigSetCommand.Run()", "args", cmd.Cmdline)
 
@@ -263,37 +169,6 @@ func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *ConfigShowCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd *ConfigShowCommand) Run() error {
