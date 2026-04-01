@@ -26,6 +26,7 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
 
 	//init flags (if any)
 
@@ -55,9 +56,9 @@ func (cmd *VmCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
+	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
@@ -135,6 +136,14 @@ func (cmd VmAddCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -181,6 +190,14 @@ func (cmd VmAllCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
@@ -242,6 +259,14 @@ func (cmd *VmDelCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -299,6 +324,14 @@ func (cmd *VmGetCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -348,6 +381,14 @@ func (cmd VmListCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
@@ -409,6 +450,14 @@ func (cmd VmSetCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

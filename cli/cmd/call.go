@@ -24,6 +24,7 @@ func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 		err := lib.RunCall(cmd.ScriptPath, scriptArgs)
 		return err
 	}
+	cmd.isUsageOnNoArgs = true
 	return &cmd
 }
 
@@ -43,7 +44,8 @@ func (cmd *CallCommand) Run() error {
 	}
 
 	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil

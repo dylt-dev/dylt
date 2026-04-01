@@ -19,6 +19,7 @@ func NewHostCommand(cmdline Cmdline, parent Command) *HostCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &HostCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
 	
 	//init flags (if any)
 	
@@ -48,9 +49,9 @@ func (cmd *HostCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
+	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
@@ -106,6 +107,7 @@ func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	//init flags (if any)
 	cmd.IntVar(&cmd.Gid, "gid", 2000, "gid")
 	cmd.IntVar(&cmd.Uid, "uid", 2000, "uid")
+	cmd.isUsageOnNoArgs = true
 
 	return cmd
 }
@@ -125,9 +127,9 @@ func (cmd *HostInitCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
+	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil

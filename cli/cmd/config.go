@@ -21,6 +21,8 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
+
 	// init flag vars (nop -- no flags)
 
 	return &cmd
@@ -48,9 +50,11 @@ func (cmd *ConfigCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
+	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	if len(args) == 0 {
+	common.Logger.Commentf("len(args)=%v", len(args))
+	common.Logger.Commentf("cmd.UsageOrNoArgs()=%v", cmd.UsageOnNoArgs())
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
@@ -129,6 +133,14 @@ func (cmd *ConfigGetCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -194,6 +206,14 @@ func (cmd *ConfigSetCommand) Run() error {
 		return err
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// Execute command
 	if cmd.fnRun != nil {
 		return cmd.fnRun()
@@ -228,6 +248,14 @@ func (cmd *ConfigShowCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

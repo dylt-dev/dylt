@@ -20,6 +20,7 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
 
 	//init flags (if any)
 	
@@ -49,9 +50,9 @@ func (cmd *WatchCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
+	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
@@ -131,6 +132,14 @@ func (cmd *WatchScriptCommand) Run() error {
 	}
 
 	// if CommandMap exists run subcommand
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
 		subCmd, err := cmd.CreateSubCommand()
@@ -183,6 +192,14 @@ func (cmd *WatchSvcCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

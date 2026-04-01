@@ -3,6 +3,7 @@ package cmd
 import (
 	"log/slog"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/lib"
 )
 
@@ -37,6 +38,14 @@ func (cmd *GetCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

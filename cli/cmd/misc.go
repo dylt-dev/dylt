@@ -19,6 +19,7 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap, validator)}
+	cmd.isUsageOnNoArgs = true
 	
 	//init flags (if any)
 	
@@ -41,9 +42,9 @@ func (cmd *MiscCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
+	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
@@ -115,6 +116,14 @@ func (cmd *CreateTwoNodeClusterCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -161,6 +170,14 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
@@ -215,6 +232,14 @@ func (cmd *LookupCommand) Run() error {
 
 	// If help flag set, print usage + return
 	if cmd.Help {
+		cmd.PrintUsage()
+		return nil
+	}
+
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}

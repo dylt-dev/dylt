@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 )
 
 type ListCommand struct {
@@ -40,6 +41,14 @@ func (cmd *ListCommand) Run() error {
 		return nil
 	}
 	
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// If CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -58,4 +67,3 @@ func (cmd *ListCommand) Run() error {
 
 	return nil
 }
-

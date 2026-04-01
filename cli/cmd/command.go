@@ -17,6 +17,7 @@ type Command interface {
 	Run() error
 	SubArgs() (Cmdline, bool)
 	SubCommand() (string, bool)
+	UsageOnNoArgs() bool
 }
 
 type CommandFactoryFunc func(Cmdline, Command) Command

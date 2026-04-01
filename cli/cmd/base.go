@@ -17,6 +17,7 @@ type BaseCommand struct {
 	commandMap CommandMap
 	commandValidator CommandValidator
 	fnRun func () error
+	isUsageOnNoArgs bool
 }
 
 // type BaseCommandS BaseCommand[string]
@@ -135,7 +136,6 @@ func (cmd *BaseCommand) HandleArgs() error {
 
 	// if Help flag is set, no further processing is necessary
 	if cmd.Help {
-		fmt.Printf("breakin - cmd.Help=%v\n", cmd.Help)
 		return nil
 	}
 
@@ -143,13 +143,10 @@ func (cmd *BaseCommand) HandleArgs() error {
 	cmdArgs, _ := cmd.Args()
 	var v CommandValidator = cmd.CommandValidator()
 	if ! v.IsValid(cmdArgs) {
-		fmt.Println("args no good")
 		cmdString, _ := cmd.CommandString()
 		errmsg := v.ErrorMessage(cmdArgs)
-		fmt.Printf("dyin - cmd.Help=%v\n", cmd.Help)
 		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
-	fmt.Println("args valid somehow?")
 
 	// init positional params, if any
 	if cmd.argmap != nil {
@@ -192,4 +189,8 @@ func (cmd *BaseCommand) SubCommand() (string, bool) {
 	}
 	var subCmdline Cmdline = cmd.FlagSet.Args()
 	return subCmdline.Command(), true
+}
+
+func (cmd *BaseCommand) UsageOnNoArgs () bool {
+	return cmd.isUsageOnNoArgs
 }
