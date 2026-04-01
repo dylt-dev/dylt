@@ -31,13 +31,6 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 func (cmd *ConfigCommand) Run() error {
 	slog.Debug("ConfigCommand.Run()", "args", cmd.Cmdline)
 
-	// Check for 0 args; if so print usage & return
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
 	// Parse flags & get positional args
 	err := cmd.HandleArgs()
 	if err != nil {
@@ -52,8 +45,6 @@ func (cmd *ConfigCommand) Run() error {
 
 	// Check for 0 args; if so print usage & return
 	args, _ := cmd.Args()
-	common.Logger.Commentf("len(args)=%v", len(args))
-	common.Logger.Commentf("cmd.UsageOrNoArgs()=%v", cmd.UsageOnNoArgs())
 	if len(args) == 0 && cmd.UsageOnNoArgs() {
 		common.Logger.Comment("no args; printing usage")
 		cmd.PrintUsage()
@@ -71,29 +62,28 @@ func (cmd *ConfigCommand) Run() error {
 		return err
 	}
 
+	// execute command
 	if cmd.fnRun != nil {
 		return cmd.fnRun()
 	}
 
-	// Execute command
-	// err = RunConfig(args, cmd)
-	return nil
+	return nil	
 }
 
-func RunConfig(cmdline Cmdline, parent Command) error {
-	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
-	// Create the subcommand and run it
-	subCmd, err := parent.CreateSubCommand()
-	if err != nil {
-		return err
-	}
-	err = subCmd.Run()
-	if err != nil {
-		return err
-	}
+// func RunConfig(cmdline Cmdline, parent Command) error {
+// 	slog.Debug("RunConfig()", "cmdline", cmdline, "parent", parent)
+// 	// Create the subcommand and run it
+// 	subCmd, err := parent.CreateSubCommand()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = subCmd.Run()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // Usage
 //
@@ -195,6 +185,14 @@ func (cmd *ConfigSetCommand) Run() error {
 		return nil
 	}
 
+	// Check for 0 args; if so print usage & return
+	args, _ := cmd.Args()
+	if len(args) == 0 && cmd.UsageOnNoArgs() {
+		common.Logger.Comment("no args; printing usage")
+		cmd.PrintUsage()
+		return nil
+	}
+
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
@@ -204,14 +202,6 @@ func (cmd *ConfigSetCommand) Run() error {
 		}
 		err = subCmd.Run()
 		return err
-	}
-
-	// Check for 0 args; if so print usage & return
-	args, _ := cmd.Args()
-	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
 	}
 
 	// Execute command

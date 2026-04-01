@@ -244,13 +244,6 @@ func (cmd *LookupCommand) Run() error {
 		return nil
 	}
 
-	// If no args, print usage
-	if len(cmd.Cmdline) == 0 {
-		common.Logger.Comment("no args; printing usage")
-		cmd.PrintUsage()
-		return nil
-	}
-
 	// if CommandMap exists run subcommand
 	cmdMap := cmd.CommandMap()
 	if cmdMap != nil {
