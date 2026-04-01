@@ -63,25 +63,39 @@ func (cmd *VmCommand) Run() error {
 		return nil
 	}
 
-	// execute command
-	err = RunVm(args, cmd)
-	return err
-}
-
-func RunVm(cmdline Cmdline, parent *VmCommand) error {
-	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
-	// create the subcommand and run it
-	subCmd, err := parent.CreateSubCommand()
-	if err != nil {
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
 	}
-	err = subCmd.Run()
-	if err != nil {
-		return err
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil
 }
+
+// func RunVm(cmdline Cmdline, parent *VmCommand) error {
+// 	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
+// 	// create the subcommand and run it
+// 	subCmd, err := parent.CreateSubCommand()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = subCmd.Run()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 type VmAddCommand struct {
 	*BaseCommand
@@ -98,6 +112,7 @@ func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 		0: &cmd.Name,
 		1: &cmd.Fqdn,
 	}
+	cmd.fnRun = func () error { return api.RunVmAdd(cmd.Name, cmd.Fqdn) }
 
 	//init flags (if any)
 
@@ -120,9 +135,23 @@ func (cmd VmAddCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	err = api.RunVmAdd(cmd.Name, cmd.Fqdn)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 type VmAllCommand struct {
@@ -134,8 +163,9 @@ func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	name := "vm.all"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All, nil, validator)}
+	cmd.fnRun = func () error { return api.RunVmAll() }
 
-	//init flags (if any)
+	// init flags (if any)
 
 	return cmd
 }
@@ -155,10 +185,26 @@ func (cmd VmAllCommand) Run() error {
 		return nil
 	}
 
-	// Execute command
-	err = api.RunVmAll()
-	return err
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
+
+
 
 // Usage
 //
@@ -176,6 +222,7 @@ func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Name,
 	}
+	cmd.fnRun = func () error { return api.RunVmDel(cmd.Name) }
 
 	return cmd
 }
@@ -195,9 +242,23 @@ func (cmd *VmDelCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	err = api.RunVmDel(cmd.Name)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 // Usage
@@ -216,6 +277,7 @@ func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Name,
 	}
+	cmd.fnRun = func () error { return api.RunVmGet(cmd.Name) }
 
 	//init flags (if any)
 
@@ -237,9 +299,23 @@ func (cmd *VmGetCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	err = api.RunVmGet(cmd.Name)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 // Usage
@@ -254,6 +330,7 @@ func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	name := "vm.list"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List, nil, validator)}
+	cmd.fnRun = func () error { return api.RunVmList() }
 
 	//init flags (if any)
 
@@ -275,9 +352,23 @@ func (cmd VmListCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	err = api.RunVmList()
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 // Usage
@@ -293,13 +384,14 @@ type VmSetCommand struct {
 func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	// vm set command
 	name := "vm.set"
-validator := ArgCountValidator{nExpected: 3}
+	validator := ArgCountValidator{nExpected: 3}
 	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set, nil, validator)}
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Name,
 		1: &cmd.Key,
 		2: &cmd.Value,
 	}
+	cmd.fnRun = func () error { return api.RunVmSet(cmd.Name, cmd.Key, cmd.Value) }
 
 	//init flags (if any)
 
@@ -321,9 +413,23 @@ func (cmd VmSetCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	err = api.RunVmSet(cmd.Name, cmd.Key, cmd.Value)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 // type VmShowCommand struct {

@@ -56,9 +56,23 @@ func (cmd *HostCommand) Run() error {
 		return nil
 	}
 
+	// If CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// Execute command
-	err = RunHost(args, cmd)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 func RunHost(cmdline Cmdline, parent Command) error {
@@ -87,6 +101,7 @@ func NewHostInitCommand(cmdline Cmdline, parent Command) *HostInitCommand {
 	name := "host.init"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &HostInitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Host_Init, nil, validator)}
+	cmd.fnRun = func () error { return api.RunHostInit(cmd.Uid, cmd.Gid) }
 	
 	//init flags (if any)
 	cmd.IntVar(&cmd.Gid, "gid", 2000, "gid")
@@ -118,7 +133,21 @@ func (cmd *HostInitCommand) Run() error {
 		return nil
 	}
 
+	// If CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// Execute command
-	err = api.RunHostInit(cmd.Uid, cmd.Gid)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }

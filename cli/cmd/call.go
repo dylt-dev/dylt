@@ -19,7 +19,11 @@ func NewCallCommand(cmdline Cmdline, parent Command) *CallCommand {
 	cmd := CallCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Call, nil, validator)}
 	// init flag vars
 	cmd.StringVar(&cmd.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
-
+	cmd.fnRun = func () error {
+		scriptArgs := cmd.Cmdline.Args()
+		err := lib.RunCall(cmd.ScriptPath, scriptArgs)
+		return err
+	}
 	return &cmd
 }
 
@@ -44,12 +48,21 @@ func (cmd *CallCommand) Run() error {
 		cmd.PrintUsage()
 		return nil
 	}
-	// Execute command
-	// init positional params
-	scriptArgs := cmd.Cmdline.Args()
-	err = lib.RunCall(cmd.ScriptPath, scriptArgs)
-	if err != nil {
+
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil

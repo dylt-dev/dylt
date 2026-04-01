@@ -19,6 +19,7 @@ func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Key,
 	}
+	cmd.fnRun = func () error { return lib.RunGet(cmd.Key) }
 	
 	//init flags (if any)
 	
@@ -40,10 +41,20 @@ func (cmd *GetCommand) Run() error {
 		return nil
 	}
 
-	// execute command
-	err = lib.RunGet(cmd.Key)
-	if err != nil {
+	// If CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil

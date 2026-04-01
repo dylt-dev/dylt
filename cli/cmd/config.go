@@ -56,9 +56,24 @@ func (cmd *ConfigCommand) Run() error {
 		return nil
 	}
 
+	// If CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
 	// Execute command
-	err = RunConfig(args, cmd)
-	return err
+	// err = RunConfig(args, cmd)
+	return nil
 }
 
 func RunConfig(cmdline Cmdline, parent Command) error {
@@ -92,6 +107,8 @@ func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Key,
 	}
+	cmd.fnRun = func () error { return api.RunConfigGet(cmd.Key) }
+		
 	// init flag vars (nop -- no flags)
 
 	return cmd
@@ -112,9 +129,23 @@ func (cmd *ConfigGetCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// Execute command
-	err = api.RunConfigGet(cmd.Key)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 type ConfigSetCommand struct {
@@ -132,6 +163,7 @@ func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
 		0: &cmd.Key,
 		1: &cmd.Value,
 	}
+	cmd.fnRun = func () error { return api.RunConfigSet(cmd.Key, cmd.Value) }
 
 	return cmd
 }
@@ -151,9 +183,23 @@ func (cmd *ConfigSetCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// Execute command
-	err = api.RunConfigSet(cmd.Key, cmd.Value)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 type ConfigShowCommand struct {
@@ -165,7 +211,7 @@ func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
 	name := "config.set"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil, validator)}
-
+	cmd.fnRun = func () error { return api.RunConfigShow() }
 	//init flags (if any)
 
 	return cmd
@@ -186,7 +232,21 @@ func (cmd *ConfigShowCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// Execute command
-	err = api.RunConfigShow()
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }

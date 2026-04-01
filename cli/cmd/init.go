@@ -16,6 +16,7 @@ func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
 	name := "init"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Init, nil, validator)}
+	cmd.fnRun = func () error { return api.RunInit(cmd.EtcdDomain) }
 	
 	//init flags (if any)
 	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
@@ -38,10 +39,20 @@ func (cmd *InitCommand) Run() error {
 		return nil
 	}
 
-	// execute command
-	err = api.RunInit(cmd.EtcdDomain)
-	if err != nil {
+	// If CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
+	}
+
+	// Execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil

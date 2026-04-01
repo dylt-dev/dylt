@@ -28,6 +28,7 @@ func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
 	name := "status"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short, nil, validator)}
+	cmd.fnRun = func () error { return api.RunStatus() }
 	
 	//init flags (if any)
 
@@ -49,11 +50,20 @@ func (cmd *StatusCommand) Run() error {
 		return nil
 	}
 
-	// execute command
-	// @getit
-	err = api.RunStatus()
-	if err != nil {
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil

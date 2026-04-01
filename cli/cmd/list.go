@@ -16,6 +16,7 @@ func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
 	name := "list"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List, nil, validator)}
+	cmd.fnRun = func () error { return api.RunList() }
 	
 	//init flags (if any)
 	
@@ -39,10 +40,20 @@ func (cmd *ListCommand) Run() error {
 		return nil
 	}
 	
-	// execute command
-	err = api.RunList()
-	if err != nil {
+	// If CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
+	}
+
+	// Execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil

@@ -20,7 +20,7 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap, validator)}
-	
+
 	//init flags (if any)
 	
 	return cmd
@@ -57,25 +57,39 @@ func (cmd *WatchCommand) Run() error {
 		return nil
 	}
 
-	// Execute command
-	err = RunWatch(args, cmd)
-	return err
-}
-
-func RunWatch(cmdline Cmdline, parent Command) error {
-	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
-	// Create the subcommand and run it
-	subCmd, err := parent.CreateSubCommand()
-	if err != nil {
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
 	}
-	err = subCmd.Run()
-	if err != nil {
-		return err
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil
 }
+
+// func RunWatch(cmdline Cmdline, parent Command) error {
+// 	slog.Debug("RunWatch()", "cmdline", cmdline, "parent", parent)
+// 	// Create the subcommand and run it
+// 	subCmd, err := parent.CreateSubCommand()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = subCmd.Run()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 // Usage
 //
@@ -95,6 +109,7 @@ func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand 
 		0: &cmd.ScriptKey,
 		1: &cmd.TargetPath,
 	}
+	cmd.fnRun = func () error {	return api.RunWatchScript(cmd.ScriptKey, cmd.TargetPath) }
 	
 	//init flags (if any)
 	
@@ -115,9 +130,23 @@ func (cmd *WatchScriptCommand) Run() error {
 		return nil
 	}
 
-	// Execute command
-	err = api.RunWatchScript(cmd.ScriptKey, cmd.TargetPath)
-	return err
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 // Usage
@@ -136,6 +165,7 @@ func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Name,
 	}
+	cmd.fnRun = func () error {	return api.RunWatchSvc() }
 	
 	//init flags (if any)
 	
@@ -164,8 +194,21 @@ func (cmd *WatchSvcCommand) Run() error {
 		return nil
 	}
 
-	// Execute command
-	err = api.RunWatchSvc()
-	return err
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
 
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }

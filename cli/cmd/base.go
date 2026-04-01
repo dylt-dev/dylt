@@ -16,6 +16,7 @@ type BaseCommand struct {
 	argmap map[int]*string
 	commandMap CommandMap
 	commandValidator CommandValidator
+	fnRun func () error
 }
 
 // type BaseCommandS BaseCommand[string]

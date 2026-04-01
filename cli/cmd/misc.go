@@ -26,7 +26,6 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 }
 
 
-
 func (cmd *MiscCommand) Run() error {
 	common.Logger.Debug("MiscCommand.Run()", "args", cmd.Cmdline)
 
@@ -50,25 +49,39 @@ func (cmd *MiscCommand) Run() error {
 		return nil
 	}
 
-	// execute command
-	err = RunMisc(args, cmd)
-	return err
-}
-
-func RunMisc(cmdline Cmdline, parent Command) error {
-	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
-	// create the subcommand and run it
-	subCmd, err := parent.CreateSubCommand()
-	if err != nil {
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
 	}
-	err = subCmd.Run()
-	if err != nil {
-		return err
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil
 }
+
+// func RunMisc(cmdline Cmdline, parent Command) error {
+// 	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
+// 	// create the subcommand and run it
+// 	subCmd, err := parent.CreateSubCommand()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = subCmd.Run()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 
 type CreateTwoNodeClusterCommand struct {
@@ -80,8 +93,9 @@ func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoN
 	name := "misc.create-two-node-cluster"
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil, validator)}
-	
-	//init flags (if any)
+	cmd.fnRun = func () error { return api.RunCreateTwoNodeCluster() }
+
+	// init flags (if any)
 	
 	return cmd
 }
@@ -101,10 +115,23 @@ func (cmd *CreateTwoNodeClusterCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	// @getit
-	err = api.RunCreateTwoNodeCluster()
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
 
 type GenEtcdRunScriptCommand struct {
@@ -116,6 +143,7 @@ func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScri
 	name := "misc.gen-etcd-run-script"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil, validator)}
+	cmd.fnRun = func () error { return api.RunGenEtcdRunScript() }
 	
 	//init flags (if any)
 	
@@ -137,11 +165,20 @@ func (cmd *GenEtcdRunScriptCommand) Run() error {
 		return nil
 	}
 
-	// execute command
-	// @getit
-	err = api.RunGenEtcdRunScript()
-	if err != nil {
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
 		return err
+	}
+
+	// execute command
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
 	}
 
 	return nil
@@ -160,6 +197,7 @@ func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	cmd.argmap  = map[int]*string {
 		0: &cmd.Hostname,
 	}
+	cmd.fnRun = func () error { return api.RunLookupCommand(cmd.Hostname) }
 	
 	//init flags (if any)
 	
@@ -188,8 +226,21 @@ func (cmd *LookupCommand) Run() error {
 		return nil
 	}
 
+	// if CommandMap exists run subcommand
+	cmdMap := cmd.CommandMap()
+	if cmdMap != nil {
+		subCmd, err := cmd.CreateSubCommand()
+		if err != nil {
+			return err
+		}
+		err = subCmd.Run()
+		return err
+	}
+
 	// execute command
-	// @getit
-	err = api.RunLookupCommand(cmd.Hostname)
-	return err
+	if cmd.fnRun != nil {
+		return cmd.fnRun()
+	}
+
+	return nil
 }
