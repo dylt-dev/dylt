@@ -3,7 +3,6 @@ package cmd
 import (
 	// "encoding/json"
 
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
@@ -33,37 +32,6 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	return cmd
 }
 
-
-func (cmd *VmCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
 
 func (cmd *VmCommand) Run() error {
 	slog.Debug("VmCommand.Run()", "args", cmd.Cmdline)
@@ -137,37 +105,6 @@ func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 
 }
 
-func (cmd *VmAddCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 func (cmd VmAddCommand) Run() error {
 	slog.Debug("VmAddCommand.Run()", "args", cmd.Cmdline)
 
@@ -201,37 +138,6 @@ func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *VmAllCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd VmAllCommand) Run() error {
@@ -272,37 +178,6 @@ func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	}
 
 	return cmd
-}
-
-func (cmd *VmDelCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params (nop - no params)
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd *VmDelCommand) Run() error {
@@ -347,37 +222,6 @@ func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	return cmd
 }
 
-func (cmd *VmGetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 func (cmd *VmGetCommand) Run() error {
 	slog.Debug("VmGetCommand.Run()", "args", cmd.Cmdline)
 
@@ -414,37 +258,6 @@ func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *VmListCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd VmListCommand) Run() error {
@@ -491,37 +304,6 @@ validator := ArgCountValidator{nExpected: 3}
 	//init flags (if any)
 
 	return cmd
-}
-
-func (cmd *VmSetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd VmSetCommand) Run() error {
