@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/dylt-dev/dylt/api"
 	"github.com/dylt-dev/dylt/common"
 )
@@ -28,37 +26,6 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 }
 
 
-
-func (cmd *MiscCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
 
 func (cmd *MiscCommand) Run() error {
 	common.Logger.Debug("MiscCommand.Run()", "args", cmd.Cmdline)
@@ -119,37 +86,6 @@ func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoN
 	return cmd
 }
 
-func (cmd *CreateTwoNodeClusterCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 func (cmd *CreateTwoNodeClusterCommand) Run() error {
 	common.Logger.Debug("CreateTwoNodeClusterCommand.Run()", "args", cmd.Cmdline)
 
@@ -184,37 +120,6 @@ func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScri
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *GenEtcdRunScriptCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-	
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd *GenEtcdRunScriptCommand) Run() error {
@@ -259,37 +164,6 @@ func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *LookupCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd *LookupCommand) Run() error {

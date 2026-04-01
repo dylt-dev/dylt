@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/dylt-dev/dylt/api"
@@ -27,37 +26,6 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 	return cmd
 }
 
-
-func (cmd *WatchCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
 
 func (cmd *WatchCommand) Run() error {
 	slog.Debug("WatchCommand.Run()", "args", cmd.Cmdline)
@@ -133,37 +101,6 @@ func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand 
 	return cmd
 }
 
-func (cmd *WatchScriptCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
-}
-
 func (cmd *WatchScriptCommand) Run() error {
 	slog.Debug("WatchScriptCommand.Run()", "args", cmd.Cmdline)
 
@@ -203,37 +140,6 @@ func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
 	//init flags (if any)
 	
 	return cmd
-}
-
-func (cmd *WatchSvcCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate args
-	cmdArgs, _ := cmd.Args()
-	var v CommandValidator = cmd.CommandValidator()
-	if ! v.IsValid(cmdArgs) {
-		cmdString, _ := cmd.CommandString()
-		errmsg := v.ErrorMessage(cmdArgs)
-		return fmt.Errorf("`%s` %s", cmdString, errmsg)
-	}
-
-	// init positional params, if any
-	if cmd.argmap != nil {
-		for i, ptr := range cmd.argmap {
-			*ptr = cmdArgs[i]
-		}
-	}
-
-	return nil
 }
 
 func (cmd *WatchSvcCommand) Run() error {
