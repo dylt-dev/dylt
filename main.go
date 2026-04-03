@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"os/exec"
 
@@ -29,8 +28,9 @@ func exit(err error) {
 	if err == nil {
 		// os.Exit(0)
 	}
-	slog.Error(err.Error())
+	// slog.Error(err.Error())
 	fmt.Println(err.Error())
+	fmt.Println()
 	switch err := err.(type) {
 	case *exec.ExitError:
 		os.Exit(err.ExitCode())

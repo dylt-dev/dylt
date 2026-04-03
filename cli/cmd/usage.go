@@ -102,9 +102,9 @@ var USG_Misc_Short = createUsageShort("misc", USG_Misc_Desc)
 // dylt misc create-two-node-cluster
 const USG_Misc_TwoNode_Desc = "Create a simple 2 node daylight cluster"
 var USG_Misc = []string {
+	USG_Misc_TwoNode_Short,
 	USG_Misc_GenScript_Short,
 	USG_Misc_Lookup_Short,
-	USG_Misc_TwoNode_Short,
 }
 var USG_Misc_TwoNode_Short = createUsageShort("misc create-two-node-cluster", USG_Misc_TwoNode_Desc)
 var USG_Misc_TwoNode = createUsage("misc create-two-node-cluster", USG_Misc_TwoNode_Desc)
@@ -119,7 +119,7 @@ var USG_Misc_GenScript = createUsage("misc gen-etcd-run-script", USG_Misc_GenScr
 const USG_Misc_Lookup_Desc = "Do a DNS lookup of a hostname"
 
 var USG_Misc_Lookup_Short = createUsageShort("misc lookup", USG_Misc_GenScript_Desc)
-var USG_Misc_Lookup = createUsage("misc lookup", USG_Misc_GenScript_Desc)
+var USG_Misc_Lookup = createUsage("misc lookup hostname", USG_Misc_GenScript_Desc)
 
 // dylt status
 const USG_Status_Desc = "current dylt status"

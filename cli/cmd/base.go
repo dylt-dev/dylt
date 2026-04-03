@@ -105,7 +105,7 @@ type NoSubcommandsError struct {}
 func (o NoSubcommandsError) Error() string { return "No Subcommands" }
 
 func (cmd *BaseCommand) CreateSubCommand () (Command, error) {
-	fmt.Printf("%s %v\n", "cmd.CommandMap()", cmd.CommandMap())
+	common.Logger.Debugf("%s %v\n", "cmd.CommandMap()", cmd.CommandMap())
 	cmdline, is := cmd.Args()
 	if !is {
 		return nil, errors.New("Command not Parse()'d")
@@ -148,6 +148,7 @@ func (cmd *BaseCommand) HandleArgs() error {
 	if ! v.IsValid(cmdArgs) {
 		cmdString, _ := cmd.CommandString()
 		errmsg := v.ErrorMessage(cmdArgs)
+		cmd.PrintUsage()
 		return fmt.Errorf("`%s` %s", cmdString, errmsg)
 	}
 
@@ -163,7 +164,7 @@ func (cmd *BaseCommand) HandleArgs() error {
 
 
 func (cmd *BaseCommand) Parse() error {
-	fmt.Printf("cmd.FlagSet=%v\n", cmd.FlagSet)
+	common.Logger.Debugf("cmd.FlagSet=%v\n", cmd.FlagSet)
 	err := cmd.FlagSet.Parse(cmd.Cmdline.Args())
 	if err != nil {
 		return err
@@ -173,7 +174,6 @@ func (cmd *BaseCommand) Parse() error {
 
 func (cmd *BaseCommand) PrintUsage () {
 	fmt.Print(cmd.Usage)
-	fmt.Println()
 }
 
 func (cmd *BaseCommand) Run() error {
@@ -193,11 +193,11 @@ func (cmd *BaseCommand) Run() error {
 	}
 
 	// Check for 0 args; if so print usage & return
-	common.Logger.Commentf("args: %#+v\n", args)
-	common.Logger.Commentf("len(args): %#+v\n", len(args))
-	common.Logger.Commentf("cmd.UsageOnNoArgs(): %#+v\n", cmd.UsageOnNoArgs())
+	common.Logger.Debugf("args: %#+v\n", args)
+	common.Logger.Debugf("len(args): %#+v\n", len(args))
+	common.Logger.Debugf("cmd.UsageOnNoArgs(): %#+v\n", cmd.UsageOnNoArgs())
 	if len(args) == 0 && cmd.UsageOnNoArgs() {
-		common.Logger.Comment("no args; printing usage")
+		common.Logger.Debug("no args; printing usage")
 		cmd.PrintUsage()
 		return nil
 	}
@@ -220,6 +220,7 @@ func (cmd *BaseCommand) Run() error {
 
 	return nil
 }
+
 func (cmd *BaseCommand) SubArgs() (Cmdline, bool) {
 	if !cmd.FlagSet.Parsed() {
 		return nil, false
