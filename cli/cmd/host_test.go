@@ -16,6 +16,9 @@ import (
 )
 
 func TestHost (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "host"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -26,6 +29,9 @@ func TestHost (t *testing.T) {
 
 
 func TestHostHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "host"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -36,6 +42,9 @@ func TestHostHelp (t *testing.T) {
 }
 
 func TestHostInit (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "host"
 	subCmdName := "init"
@@ -61,6 +70,9 @@ func TestHostInit (t *testing.T) {
 
 
 func TestHostInitHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "host"
 	subCmdName := "init"
 	subCmdFlags := []string{"--help"}
@@ -82,6 +94,9 @@ func TestHostInitHelp(t *testing.T) {
 
 
 func TestRunHost(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -94,6 +109,9 @@ func TestRunHost(t *testing.T) {
 }
 
 func TestHostCmd0(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -106,6 +124,9 @@ func TestHostCmd0(t *testing.T) {
 }
 
 func TestEmitWatchDaylightRunScript(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	tmplSvc, err := template.NewTemplate(fsSvcFiles, "watch-daylight")
@@ -118,6 +139,9 @@ func TestEmitWatchDaylightRunScript(t *testing.T) {
 }
 
 func TestEmitWatchDaylightUnitFile(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	tmplSvc, err := template.NewTemplate(fsSvcFiles, "watch-daylight")
@@ -130,6 +154,9 @@ func TestEmitWatchDaylightUnitFile(t *testing.T) {
 }
 
 func TestChmodR0(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	svcPath := "/opt/svc/watch-daylight"
 	// uid + gid for local user on local workstation
 	err := common.ChownR(svcPath, 501, 20)
@@ -137,6 +164,9 @@ func TestChmodR0(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteRunScript(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	svcName := "watch-daylight"
@@ -149,6 +179,9 @@ func Test_WatchDaylight_WriteRunScript(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteUnitFile(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	svcName := "watch-daylight"

@@ -11,6 +11,9 @@ import (
 )
 
 func TestList (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "list"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -20,6 +23,9 @@ func TestList (t *testing.T) {
 }
 
 func TestListHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "list"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -29,11 +35,17 @@ func TestListHelp(t *testing.T) {
 }
 
 func TestRunList (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	err := api.RunList()
 	require.Nil(t, err)
 }
 
 func TestListCmd0 (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -46,6 +58,9 @@ func TestListCmd0 (t *testing.T) {
 }
 
 func TestListHandleArgs_None (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	args := []string{}
 	cmd := ListCommandF.New(args, nil)
 	err := cmd.HandleArgs()

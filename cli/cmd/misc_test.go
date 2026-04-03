@@ -12,6 +12,9 @@ import (
 )
 
 func TestMisc (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -22,6 +25,9 @@ func TestMisc (t *testing.T) {
 
 
 func TestMiscHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -33,6 +39,9 @@ func TestMiscHelp (t *testing.T) {
 
 
 func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "create-two-node-cluster"
@@ -54,6 +63,9 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 
 
 func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	subCmdName := "create-two-node-cluster"
 	subCmdFlags := []string{"--help"}
@@ -75,6 +87,9 @@ func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
 
 
 func TestMiscGenEtcdRunScript  (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "gen-etcd-run-script"
@@ -95,6 +110,9 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 }
 
 func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	subCmdName := "gen-etcd-run-script"
 	subCmdFlags := []string{"--help"}
@@ -115,6 +133,9 @@ func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
 }
 
 func TestMiscLookup (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "lookup"
@@ -138,6 +159,9 @@ func TestMiscLookup (t *testing.T) {
 
 
 func TestMiscLookupHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	subCmdName := "lookup"
 	subCmdFlags := []string{"--help"}
@@ -158,6 +182,9 @@ func TestMiscLookupHelp(t *testing.T) {
 }
 
 func TestGetStdinStdoutStderrFdNums(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	var nStdin, nStdout, nStderr uintptr
 	nStdin = os.Stdin.Fd()
 	nStdout = os.Stdout.Fd()
@@ -168,6 +195,9 @@ func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 }
 
 func TestNewCmdline (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -177,6 +207,9 @@ func TestNewCmdline (t *testing.T) {
 }
 
 func TestNewCmdlineArgs (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := []string{}
 	cmdArgs := []string{"config", "get", "foo"}
@@ -186,6 +219,9 @@ func TestNewCmdlineArgs (t *testing.T) {
 }
 
 func TestNewCmdlineArgsFlags (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
 	cmdArgs := []string{"get", "foo"}
@@ -195,6 +231,9 @@ func TestNewCmdlineArgsFlags (t *testing.T) {
 }
 
 func TestNewCmdlineFlags (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
 	cmdArgs := []string{}
@@ -204,6 +243,9 @@ func TestNewCmdlineFlags (t *testing.T) {
 }
 
 func TestNewlineKiller(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	s := `
 	line1
 	{{- if .Line2 }}
@@ -223,11 +265,17 @@ func TestNewlineKiller(t *testing.T) {
 }
 
 func TestPrintMultiLineUsage_String(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	data := "MEAT!!!"
 	PrintUsage(data)
 }
 
 func TestPrintMultiLineUsage_StringSlice(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	data := []string{"meat", "Meat", "MEAT"}
 	PrintUsage(data)
 }

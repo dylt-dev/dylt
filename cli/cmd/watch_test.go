@@ -8,6 +8,9 @@ import (
 )
 
 func TestWatch(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "watch"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -18,6 +21,9 @@ func TestWatch(t *testing.T) {
 
 
 func TestWatchHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "watch"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -28,6 +34,9 @@ func TestWatchHelp (t *testing.T) {
 }
 
 func TestWatchScript (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "watch"
 	subCmdName := "script"
@@ -53,6 +62,9 @@ func TestWatchScript (t *testing.T) {
 
 
 func TestWatchScriptHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "watch"
 	subCmdName := "script"
 	subCmdFlags := []string{"--help"}
@@ -73,6 +85,9 @@ func TestWatchScriptHelp(t *testing.T) {
 }
 
 func TestWatchSvc (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "watch"
 	subCmdName := "svc"
@@ -96,6 +111,9 @@ func TestWatchSvc (t *testing.T) {
 
 
 func TestWatchSvcHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "watch"
 	subCmdName := "svc"
 	subCmdFlags := []string{"--help"}

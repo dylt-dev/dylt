@@ -12,24 +12,33 @@ import (
 )
 
 func TestCall(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "call"
 	cmdFlags := []string{}
 	cmdArgs := []string{"command", "foo", "bar", "bum"}
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &CallCommand{}, cmd)
+	require.IsType(t, &BaseCommand{}, cmd)
 }
 
 func TestCallHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "call"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*CallCommand)
+	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand)
 	require.True(t, cmd.Help)
 }
 
 func TestRunCall0(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	scriptPath := "/tmp/daylight.sh"
 	_, err := os.Stat(scriptPath)
 	if os.IsNotExist(err) {
@@ -42,11 +51,17 @@ func TestRunCall0(t *testing.T) {
 }
 
 func TestRunCallCmd0(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt call --script-path /tmp/daylight.sh hello"
 	lib.CheckRunCommandSuccess(sCmdline, t)
 }
 
 func TestCallNoScript(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	sCmdline := "XXX call --script-path /tmp/daylight.sh hello"
 	var cmdline Cmdline = strings.Split(sCmdline, " ")
 	t.Log("cmdline.Command()", cmdline.Command(), "cmdline.Args()", cmdline.Args())

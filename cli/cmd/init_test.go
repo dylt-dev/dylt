@@ -11,6 +11,9 @@ import (
 )
 
 func TestInit (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "init"
 	etcdDomain := "foo.dylt.dev"
 	cmdFlags := []string{"--etcd-domain", etcdDomain}
@@ -23,6 +26,9 @@ func TestInit (t *testing.T) {
 }
 
 func TestInitHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "init"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -32,12 +38,18 @@ func TestInitHelp(t *testing.T) {
 }
 
 func TestRunInit (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	etcDomain := "hello.dylt.dev"
 	err := api.RunInit(etcDomain)
 	assert.Nil(t, err)
 }
 
 func TestInitCmd0 (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -50,6 +62,9 @@ func TestInitCmd0 (t *testing.T) {
 }
 
 func TestInitCmd1 (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}

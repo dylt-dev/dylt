@@ -164,6 +164,8 @@ func (cmd *BaseCommand) HandleArgs() error {
 
 
 func (cmd *BaseCommand) Parse() error {
+	common.Logger.Debug("hiii")
+	common.Logger.Debugf("cmd=%v\n", cmd)
 	common.Logger.Debugf("cmd.FlagSet=%v\n", cmd.FlagSet)
 	err := cmd.FlagSet.Parse(cmd.Cmdline.Args())
 	if err != nil {

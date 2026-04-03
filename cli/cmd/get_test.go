@@ -8,6 +8,9 @@ import (
 )
 
 func TestGet (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "get"
 	key := "foo"
 	cmdFlags := []string{}
@@ -20,6 +23,9 @@ func TestGet (t *testing.T) {
 
 
 func TestGetHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "get"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}

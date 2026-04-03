@@ -25,6 +25,9 @@ func CreateCommandParams(cmdName string,
 }
 
 func TestMain(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -36,6 +39,9 @@ func TestMain(t *testing.T) {
 
 // dylt --help
 func TestHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -48,6 +54,9 @@ func TestHelp (t *testing.T) {
 
 // dylt call foo
 func TestMainSubCall(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Independent values
 	cmdName := "dylt"
 	cmdFlags := []string{}
@@ -67,14 +76,14 @@ func TestMainSubCall(t *testing.T) {
 
 		// Create dependent values for subcommand + test
 	subCmdString := fmt.Sprintf("%s %s", cmdName, subCmdName)
-	subCmd := _TestSubcommandCreation[*CallCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.IsType(t, &CallCommand{}, subCmd)
+	require.IsType(t, &BaseCommand{}, subCmd)
 }
 
 func TestMainSubConfig (t *testing.T) {
@@ -110,6 +119,9 @@ func TestMainSubConfig (t *testing.T) {
 
 // dylt config get foo
 func TestMainSubConfigGetFoo(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Independent values
 	cmdName := "dylt"
 	cmdFlags := []string{}
@@ -172,6 +184,9 @@ func TestMainSubGet(t *testing.T) {
 
 
 func TestMainSubHost(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Independent values
 	cmdName := "dylt"
 	cmdFlags := []string{}
@@ -237,6 +252,9 @@ func TestMainSubHostInit(t *testing.T) {
 
 // dylt init --etcd-domain foo.dylt.dev
 func TestMainSubInit(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Create + parse main command with "dylt get foo"
 	// Independent values
 	cmdName := "dylt"
@@ -302,6 +320,9 @@ func TestMainSubList(t *testing.T) {
 
 // dylt misc
 func TestMainSubMisc(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Independent values
 	cmdName := "dylt"
 	cmdFlags := []string{}
@@ -363,6 +384,9 @@ func TestMainSubMiscLookupHostname(t *testing.T) {
 }
 
 func TestMainSubStatus(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Independent values
 	cmdName := "dylt"
 	cmdFlags := []string{}
@@ -425,6 +449,9 @@ func TestMainSubVm(t *testing.T) {
 
 // dylt watch
 func TestMainSubWatch(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// Independent values
 	cmdName := "dylt"
 	cmdFlags := []string{}

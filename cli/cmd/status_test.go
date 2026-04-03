@@ -7,6 +7,9 @@ import (
 )
 
 func TestStatus (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "status"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -17,6 +20,9 @@ func TestStatus (t *testing.T) {
 }
 
 func TestStatusHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "status"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}

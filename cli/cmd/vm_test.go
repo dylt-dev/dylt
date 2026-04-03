@@ -8,6 +8,9 @@ import (
 )
 
 func TestVm (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "vm"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -18,6 +21,9 @@ func TestVm (t *testing.T) {
 
 
 func TestVmHelp (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "vm"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
@@ -28,6 +34,9 @@ func TestVmHelp (t *testing.T) {
 }
 
 func TestVmAdd (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "vm"
 	subCmdName := "add"
@@ -53,6 +62,9 @@ func TestVmAdd (t *testing.T) {
 
 
 func TestVmAddHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "vm"
 	subCmdName := "add"
 	subCmdFlags := []string{"--help"}
@@ -73,6 +85,9 @@ func TestVmAddHelp(t *testing.T) {
 }
 
 func TestVmAll (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "vm"
 	subCmdName := "all"
@@ -93,6 +108,9 @@ func TestVmAll (t *testing.T) {
 }
 
 func TestVmDel (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "vm"
 	subCmdName := "del"
@@ -116,6 +134,9 @@ func TestVmDel (t *testing.T) {
 
 
 func TestVmDelHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "vm"
 	subCmdName := "del"
 	subCmdFlags := []string{"--help"}
@@ -136,6 +157,9 @@ func TestVmDelHelp(t *testing.T) {
 }
 
 func TestVmGet (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "vm"
 	subCmdName := "get"
@@ -158,6 +182,9 @@ func TestVmGet (t *testing.T) {
 }
 
 func TestVmList (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "vm"
 	subCmdName := "list"
@@ -179,6 +206,9 @@ func TestVmList (t *testing.T) {
 
 
 func TestVmListHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "vm"
 	subCmdName := "list"
 	subCmdFlags := []string{"--help"}
@@ -200,6 +230,9 @@ func TestVmListHelp(t *testing.T) {
 
 
 func TestVmSet (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "vm"
 	subCmdName := "set"
@@ -227,6 +260,9 @@ func TestVmSet (t *testing.T) {
 
 
 func TestVmSetHelp(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "vm"
 	subCmdName := "set"
 	subCmdFlags := []string{"--help"}

@@ -8,6 +8,9 @@ import (
 )
 
 func TestHelpFlag (t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
 	cmd := NewBaseCommand("base", []string{"dylt", "--help"}, nil, "usage", nil, ArgCountValidator{nExpected: 3})
 	err := cmd.HandleArgs()
 	fmt.Printf("cmd.Help=%v\n", cmd.Help)
