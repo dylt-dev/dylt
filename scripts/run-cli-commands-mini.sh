@@ -5,7 +5,7 @@
 
 main ()
 {
-    local COMMANDS_FILE_PATH='./cli-commands.sh'
+    local COMMANDS_FILE_PATH='./cli-commands-mini.sh'
     # shellcheck disable=SC2016
     [[ -f "$COMMANDS_FILE_PATH" ]] || { printf 'Non-existent path: %s\n' "$COMMANDS_FILE_PATH" >&2; return 1; }
 
@@ -18,7 +18,7 @@ main ()
         echo
         echo
         echo
-    done <"$COMMANDS_FILE_PATH"
+    done <"$COMMANDS_FILE_PATH"    
 }
 
 

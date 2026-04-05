@@ -219,7 +219,7 @@ func NewVmSetCommand(cmdline Cmdline, parent Command) Command {
 		fnRun: fnRun,
 		opts: opts,
 		usage: CreateUsageString(USG_Vm_Set),
-		validator: ArgCountGEValidator{nExpected: 0},
+		validator: ArgCountValidator{nExpected: 3},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 

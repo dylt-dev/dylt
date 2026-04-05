@@ -142,7 +142,7 @@ func (cmd *BaseCommand[Opts]) CreateSubCommand() (Command, error) {
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 
-	subCmd := cmdFactoryFunc.(func (Cmdline, Command) Command)(cmdline, cmd)
+	subCmd := cmdFactoryFunc(cmdline, cmd)
 	return subCmd, nil
 }
 
@@ -239,7 +239,7 @@ func (cmd *BaseCommand[_]) Run() error {
 	}
 
 	// execute command
-	fmt.Printf("cmd.fnRun=%v\n", cmd.fnRun)
+	fmt.Printf("cmd.fnRun=%p\n", cmd.fnRun)
 	if cmd.fnRun != nil {
 		return cmd.fnRun(cmd)
 	}
