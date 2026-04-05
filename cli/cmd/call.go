@@ -11,7 +11,7 @@ type CallOpts struct {
 type CallCommand BaseCommand[CallOpts]
 
 func NewCallCommand(cmdline Cmdline, parent Command) *BaseCommand[CallOpts] {
-	// call command
+	// create config object + BaseCommand
 	name := "call"
 	opts := CallOpts{}
 	fnRun := func(cmd *BaseCommand[CallOpts]) error {
@@ -19,20 +19,19 @@ func NewCallCommand(cmdline Cmdline, parent Command) *BaseCommand[CallOpts] {
 		err := lib.RunCall(opts.ScriptPath, scriptArgs)
 		return err
 	}
-
-	// create config object + BaseCommand
 	cfg := BaseCommandConfig[CallOpts]{
 		name:            name,
-		opts:            opts
-		validator:       ArgCountGEValidator{nExpected: 1},
-		isUsageOnNoArgs: true,
 		fnRun:           fnRun,
+		opts:            opts,
 		usage:           CreateUsageString(USG_Call),
+		validator:       ArgCountGEValidator{nExpected: 1},
 	}
-	cmd := NewBaseCommand[CallOpts](cmdline, parent, cfg)
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// Add flags & args
-	cmd.StringVar(&opts.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
+	cmd.StringVar(&cmd.opts.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
 
+	// subcommand map if any
+	
 	return cmd
 }

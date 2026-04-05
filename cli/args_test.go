@@ -91,7 +91,10 @@ func TestInitCommand(t *testing.T) {
 	assert.Equal(t, "init", cmd)
 	initCmd := clicmd.InitCommandF.New(args, nil).(*clicmd.BaseCommand[clicmd.InitOpts])
 	initCmd.Parse()
-	assert.Equal(t, "hello.dylt.dev", initCmd.Opts().EtcdDomain)
+	opts, is := initCmd.Opts().(*clicmd.InitOpts)
+	require.True(t, is)
+	require.NotNil(t, opts)
+	assert.Equal(t, "hello.dylt.dev", opts.EtcdDomain)
 
 	t.Log(strings.Join(args, " "))
 }
@@ -187,36 +190,36 @@ type MeCommand struct{ *clicmd.BaseCommand[clicmd.EmptyOpts] }
 func (cmd *PappyCommand) HandleArgs() error { return nil }
 func (cmd *PappyCommand) Run() error        { return nil }
 
-type EC clicmd.Command[clicmd.EmptyOpts]
+type EC clicmd.Command
 
-func NewPappyCommand(cmdline clicmd.Cmdline, parent clicmd.Command[EC]) *PappyCommand {
+func NewPappyCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *PappyCommand {
 	return &PappyCommand{BaseCommand: &clicmd.BaseCommand[clicmd.EmptyOpts]{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
 }
 
 func (cmd *DaddyCommand) HandleArgs() error { return nil }
 func (cmd *DaddyCommand) Run() error        { return nil }
 
-func NewDaddyCommand(cmdline clicmd.Cmdline, parent clicmd.Command[clicmd.EmptyOpts]) *DaddyCommand {
+func NewDaddyCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *DaddyCommand {
 	return &DaddyCommand{BaseCommand: &clicmd.BaseCommand[clicmd.EmptyOpts]{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
 func (cmd *MeCommand) HandleArgs() error { return nil }
 func (cmd *MeCommand) Run() error        { return nil }
 
-func NewMeCommand(cmdline clicmd.Cmdline, parent clicmd.Command[clicmd.EmptyOpts]) *MeCommand {
+func NewMeCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *MeCommand {
 	return &MeCommand{BaseCommand: &clicmd.BaseCommand[clicmd.EmptyOpts]{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
 type ECF clicmd.CommandFactory[clicmd.EmptyOpts]
-var PappyCommandF ECF = ECF{ FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command[EC]) clicmd.Command[clicmd.EmptyOpts] { return NewPappyCommand(cmdline, parent) }}
-var DaddyCommandF clicmd.CommandFactory = clicmd.CommandFactory{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewDaddyCommand(cmdline, parent) }}
-var MeCommandF clicmd.CommandFactory = clicmd.CommandFactory{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewMeCommand(cmdline, parent) }}
+var PappyCommandF ECF = ECF{ FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewPappyCommand(cmdline, parent) }}
+var DaddyCommandF ECF = ECF{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewDaddyCommand(cmdline, parent) }}
+var MeCommandF ECF = ECF{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewMeCommand(cmdline, parent) }}
 
 func TestPappyDaddyMe(t *testing.T) {
 	var cmdline clicmd.Cmdline = []string{"pappy", "daddy", "me", "foo"}
 
 	// Create `pappy` subcommand
-	pappy := PappyCommandF.New(cmdline, nil)
+	pappy := PappyCommandF.FnNew(cmdline, nil)
 	_TestPreParseValues(t, pappy)
 	// Parse and check again
 	pappy.Parse()
@@ -226,7 +229,7 @@ func TestPappyDaddyMe(t *testing.T) {
 	// Create `daddy` subcommand
 	daddyArgs, is := pappy.Args()
 	require.True(t, is)
-	daddy := DaddyCommandF.New(daddyArgs, pappy)
+	daddy := DaddyCommandF.FnNew(daddyArgs, pappy)
 	_TestPreParseValues(t, daddy)
 	// Parse and check again
 	daddy.Parse()
@@ -235,7 +238,7 @@ func TestPappyDaddyMe(t *testing.T) {
 
 	// Create `me` subcommand
 	meArgs, is := daddy.Args()
-	me := MeCommandF.New(meArgs, daddy)
+	me := MeCommandF.FnNew(meArgs, daddy)
 	_TestPreParseValues(t, me)
 	// Parse and check again
 	me.Parse()

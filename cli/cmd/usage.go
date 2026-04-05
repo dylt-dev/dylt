@@ -125,6 +125,7 @@ var USG_Misc_Lookup = createUsage("misc lookup hostname", USG_Misc_GenScript_Des
 const USG_Status_Desc = "current dylt status"
 
 var USG_Status_Short = createUsageShort("status", USG_Status_Desc)
+var USG_Status = createUsage("status", USG_Status_Desc)
 
 // dylt vm
 const USB_Vm_Desc = "VM-related operations"

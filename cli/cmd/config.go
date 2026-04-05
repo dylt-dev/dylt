@@ -7,7 +7,7 @@ import (
 type ConfigOpts struct {
 }
 
-func NewConfigCommand(cmdline Cmdline, parent Command[ConfigOpts]) Command[ConfigOpts] {
+func NewConfigCommand(cmdline Cmdline, parent Command) Command {
 	// config command
 	name := "config"
 	opts := ConfigOpts{}
@@ -71,7 +71,7 @@ func NewConfigGetCommand(cmdline Cmdline, parent Command) *BaseCommand[ConfigGet
 
 	// flags + args if any
 	cmd.argMap = map[int]*string{
-		0: &opts.Key,
+		0: &cmd.opts.Key,
 	}
 
 	// subcommand map if any
@@ -103,8 +103,8 @@ func NewConfigSetCommand(cmdline Cmdline, parent Command) Command {
 
 	// flags + args if any
 	cmd.argMap = map[int]*string{
-		0: &opts.Key,
-		1: &opts.Value,
+		0: &cmd.opts.Key,
+		1: &cmd.opts.Value,
 	}
 
 	// subcommand map if any

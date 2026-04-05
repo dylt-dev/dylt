@@ -23,7 +23,7 @@ type BaseCommand[Opts CommandOpts] struct {
 	opts            Opts
 	subCommandMap   CommandMap
 	validator       CommandValidator
-	fnRun           func(Command) error
+	fnRun           func(*BaseCommand[Opts]) error
 	isUsageOnNoArgs bool
 }
 
@@ -46,6 +46,7 @@ func NewBaseCommand[Opts CommandOpts] (cmdline Cmdline,
 	cmd := &BaseCommand[Opts]{
 		Cmdline:       cmdline,
 		Parent:        parent,
+		fnRun:         cfg.fnRun,
 		opts:          cfg.opts,
 		validator:     cfg.validator,
 		FlagSet:       flag.NewFlagSet(cfg.name, flag.ExitOnError),
@@ -119,7 +120,7 @@ type NoSubcommandsError struct{}
 
 func (o NoSubcommandsError) Error() string { return "No Subcommands" }
 
-func (cmd *BaseCommand[_]) CreateSubCommand() (Command, error) {
+func (cmd *BaseCommand[Opts]) CreateSubCommand() (Command, error) {
 	common.Logger.Debugf("%s %v\n", "cmd.CommandMap()", cmd.CommandMap())
 	cmdline, is := cmd.Args()
 	if !is {
@@ -141,7 +142,7 @@ func (cmd *BaseCommand[_]) CreateSubCommand() (Command, error) {
 		return nil, fmt.Errorf("unrecognized command: %s", cmdName)
 	}
 
-	subCmd := cmdFactoryFunc(cmdline, cmd)
+	subCmd := cmdFactoryFunc.(func (Cmdline, Command) Command)(cmdline, cmd)
 	return subCmd, nil
 }
 
@@ -181,7 +182,7 @@ func (cmd *BaseCommand[_]) Help() bool {
 	return cmd.help
 }
 
-func (cmd *BaseCommand[T]) Opts() T {
+func (cmd *BaseCommand[T]) Opts() any {
 	return cmd.opts
 }
 
@@ -238,6 +239,7 @@ func (cmd *BaseCommand[_]) Run() error {
 	}
 
 	// execute command
+	fmt.Printf("cmd.fnRun=%v\n", cmd.fnRun)
 	if cmd.fnRun != nil {
 		return cmd.fnRun(cmd)
 	}

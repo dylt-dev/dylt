@@ -13,9 +13,9 @@ import (
 // Expected: --help=False SubCommand="vm" SubArgs="list")
 func TestVmMainList(t *testing.T) {
 	cmdline := []string{"vm", "list"}
-	cmd := clicmd.MainCommandF.New(cmdline, nil).(*clicmd.MainCommand)
+	cmd := clicmd.MainCommandF.New(cmdline, nil).(*clicmd.BaseCommand[clicmd.MainOpts])
 	cmd.HandleArgs()
-	require.False(t, cmd.Help)
+	require.False(t, cmd.Help())
 	require.Equal(t, "vm", cmd.SubCommand)
 	require.Equal(t, []string{"list"}, cmd.SubArgs)
 }

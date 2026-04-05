@@ -19,8 +19,9 @@ func TestCall(t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{"command", "foo", "bar", "bum"}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &BaseCommand[struct{}]{}, cmd)
+	cmd, is := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[CallOpts])
+	require.True(t, is)
+	require.NotNil(t, cmd)
 }
 
 func TestCallHelp(t *testing.T) {
@@ -44,8 +45,9 @@ func TestCallScriptPath(t *testing.T) {
 	cmdFlags := []string{"--script-path", flagVal}
 	cmdArgs := []string{"command", "foo", "bar", "bum"}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[CallCommandOpts])
-	require.IsType(t, &BaseCommand[struct{}]{}, cmd)
+	cmd, is := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[CallOpts])
+	require.True(t, is)
+	require.NotNil(t, cmd)
 	require.Equal(t, flagVal, cmd.opts.ScriptPath)
 }
 

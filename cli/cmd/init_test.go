@@ -15,13 +15,14 @@ func TestInit (t *testing.T) {
 	defer fnTeardown(t)
 	
 	cmdName := "init"
-	etcdDomain := "foo.dylt.dev"
-	cmdFlags := []string{"--etcd-domain", etcdDomain}
+	flagVal := "foo.dylt.dev"
+	cmdFlags := []string{"--etcd-domain", flagVal}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[InitOpts])
+	cmd, is := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[InitOpts])
+	require.True(t, is)
 	require.NotNil(t, cmd)
-	require.Equal(t, etcdDomain, cmd.opts.EtcdDomain)
+	require.Equal(t, flagVal, cmd.opts.EtcdDomain)
 	
 }
 

@@ -16,7 +16,7 @@ func TestWatch(t *testing.T) {
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
 	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &WatchCommand{}, cmd)
+	require.IsType(t, &BaseCommand[WatchOpts]{}, cmd)
 }
 
 
@@ -28,9 +28,9 @@ func TestWatchHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*WatchCommand)
-	require.IsType(t, &WatchCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, WatchCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[WatchOpts])
+	require.IsType(t, &BaseCommand[WatchOpts]{}, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestWatchScript (t *testing.T) {
@@ -49,15 +49,15 @@ func TestWatchScript (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*WatchScriptCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[WatchScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, scriptKey, subCmd.ScriptKey)
-	require.Equal(t, targetPath, subCmd.TargetPath)
+	require.Equal(t, scriptKey, subCmd.opts.ScriptKey)
+	require.Equal(t, targetPath, subCmd.opts.TargetPath)
 }
 
 
@@ -74,14 +74,14 @@ func TestWatchScriptHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*WatchScriptCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[WatchScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestWatchSvc (t *testing.T) {
@@ -99,14 +99,14 @@ func TestWatchSvc (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*WatchSvcCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[WatchSvcOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.Name)
+	require.Equal(t, name, subCmd.opts.Name)
 }
 
 
@@ -123,12 +123,12 @@ func TestWatchSvcHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*WatchSvcCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[WatchSvcOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }

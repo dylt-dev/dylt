@@ -6,29 +6,29 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type HostCommandOpts struct {
+type HostOpts struct {
 }
 
 func NewHostCommand(cmdline Cmdline, parent Command) Command {
 	// host command
 	name := "host"
-	opts := HostCommandOpts{}
-	cfg := BaseCommandConfig[HostCommandOpts]{
-		name: name,
+	opts := HostOpts{}
+	cfg := BaseCommandConfig[HostOpts]{
+		name:            name,
 		isUsageOnNoArgs: true,
-		opts: opts,
-		usage: CreateUsageString(USG_Host),
-		validator: ArgCountGEValidator{nExpected: 0},
+		opts:            opts,
+		usage:           CreateUsageString(USG_Host),
+		validator:       ArgCountGEValidator{nExpected: 0},
 	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
-	
-	// flags + args if any 
-	
+
+	// flags + args if any
+
 	// subcommand map if any
 	cmd.subCommandMap = CommandMap{
 		"init": HostInitCommandF.New,
 	}
-	
+
 	return cmd
 }
 
@@ -47,7 +47,7 @@ func RunHost(cmdline Cmdline, parent Command) error {
 	return nil
 }
 
-type HostInitCommandOpts struct {
+type HostInitOpts struct {
 	Gid int // --gid
 	Uid int // --uid
 }
@@ -55,24 +55,24 @@ type HostInitCommandOpts struct {
 func NewHostInitCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
 	name := "host.init"
-	opts := HostInitCommandOpts{}
-	fnRun := func(cmd *BaseCommand[HostInitCommandOpts]) error { return api.RunHostInit(cmd.opts.Uid, cmd.opts.Gid) }
-	cfg := BaseCommandConfig[HostInitCommandOpts]{
-		name: name,
-		fnRun: fnRun,
+	opts := HostInitOpts{}
+	fnRun := func(cmd *BaseCommand[HostInitOpts]) error { return api.RunHostInit(cmd.opts.Uid, cmd.opts.Gid) }
+	cfg := BaseCommandConfig[HostInitOpts]{
+		name:            name,
+		fnRun:           fnRun,
 		isUsageOnNoArgs: true,
-		opts: opts,
-		usage: CreateUsageString(USG_Config_Get),
-		validator: ArgCountValidator{nExpected: 0},
-	}	
+		opts:            opts,
+		usage:           CreateUsageString(USG_Config_Get),
+		validator:       ArgCountValidator{nExpected: 0},
+	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	// flags + args if any 
+	// flags + args if any
 	cmd.IntVar(&cmd.opts.Gid, "gid", 2000, "gid")
 	cmd.IntVar(&cmd.opts.Uid, "uid", 2000, "uid")
 
 	// subcommand map if any
-	
+
 	// done
 	return cmd
 }

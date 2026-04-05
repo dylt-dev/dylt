@@ -4,24 +4,32 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type MiscCommand struct {
-	*BaseCommand
+type MiscOpts struct {
 }
 
-func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
-	// misc command
+func NewMiscCommand(cmdline Cmdline, parent Command) Command {
+	// config command
 	name := "misc"
-	cmdMap := CommandMap{
+	opts := MiscOpts{}
+	cfg := BaseCommandConfig[MiscOpts]{
+		name:            name,
+		isUsageOnNoArgs: true,
+		opts:            opts,
+		usage:           CreateUsageString(USG_Misc),
+		validator:       ArgCountGEValidator{nExpected: 0},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+
+	// subcommand map if any
+	cmd.subCommandMap = CommandMap{
 		"create-two-node-cluster": CreateTwoNodeClusterCommandF.New,
 		"gen-etcd-run-script":     GenEtcdRunScriptCommandF.New,
 		"lookup":                  LookupCommandF.New,
 	}
-	validator := ArgCountGEValidator{nExpected: 0}
-	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap, validator)}
-	cmd.isUsageOnNoArgs = true
 
-	//init flags (if any)
-
+	// done
 	return cmd
 }
 
@@ -40,54 +48,76 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 // 	return nil
 // }
 
-type CreateTwoNodeClusterCommand struct {
-	*BaseCommand
+type CreateTwoNodeClusterOpts struct {
 }
 
-func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoNodeClusterCommand {
-	// misc create-two-node-cluster command
+func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "misc.create-two-node-cluster"
-	validator := ArgCountGEValidator{nExpected: 0}
-	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil, validator)}
-	cmd.fnRun = func() error { return api.RunCreateTwoNodeCluster() }
+	opts := CreateTwoNodeClusterOpts{}
+	fnRun := func(cmd *BaseCommand[CreateTwoNodeClusterOpts]) error { return api.RunCreateTwoNodeCluster() }
+	cfg := BaseCommandConfig[CreateTwoNodeClusterOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Misc_TwoNode),
+		validator: ArgCountGEValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	// init flags (if any)
-
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
-type GenEtcdRunScriptCommand struct {
-	*BaseCommand
+type GenEtcdRunScriptOpts struct {
 }
 
-func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScriptCommand {
-	// misc gen-etcd-run-script command
+func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "misc.gen-etcd-run-script"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil, validator)}
-	cmd.fnRun = func() error { return api.RunGenEtcdRunScript() }
+	opts := GenEtcdRunScriptOpts{}
+	fnRun := func(cmd *BaseCommand[GenEtcdRunScriptOpts]) error { return api.RunGenEtcdRunScript() }
+	cfg := BaseCommandConfig[GenEtcdRunScriptOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Misc_GenScript),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	//init flags (if any)
-
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
-type LookupCommand struct {
-	*BaseCommand
+type LookupOpts struct {
 	Hostname string //arg 0
 }
 
-func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
-	// misc lookup command
+func NewLookupCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "misc.lookup"
-	validator := ArgCountValidator{nExpected: 1}
-	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil, validator)}
+	opts := LookupOpts{}
+	fnRun := func(cmd *BaseCommand[LookupOpts]) error { return api.RunLookupCommand(cmd.opts.Hostname) }
+	cfg := BaseCommandConfig[LookupOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 1},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
 	cmd.argMap = map[int]*string{
-		0: &cmd.Hostname,
+		0: &cmd.opts.Hostname,
 	}
-	cmd.fnRun = func() error { return api.RunLookupCommand(cmd.Hostname) }
-
-	//init flags (if any)
-
+	// subcommand map if any
+	
+	// done
 	return cmd
 }

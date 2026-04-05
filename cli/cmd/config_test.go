@@ -18,7 +18,7 @@ func TestConfig(t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ConfigCommandOpts])
+	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ConfigOpts])
 	require.NotNil(t, cmd)
 }
 
@@ -30,7 +30,7 @@ func TestConfigHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ConfigCommandOpts])
+	cmd := CreateAndTestCommand(t, ConfigCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ConfigOpts])
 	require.True(t, cmd.Help())
 }
 
@@ -164,7 +164,7 @@ func TestConfigShowHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ConfigShowCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ConfigShowCommandOpts])
+	cmd := CreateAndTestCommand(t, ConfigShowCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ConfigShowOpts])
 	require.True(t, cmd.Help())
 }
 
@@ -231,7 +231,7 @@ func TestCreateSubcommandRaw(t *testing.T) {
 	err = subCmd.Parse()
 	require.NoError(t, err)
 	require.NotNil(t, subCmd)
-	require.True(t, subCmd.(*BaseCommand[ConfigGetCommandOpts]).Help())
+	require.True(t, subCmd.(*BaseCommand[ConfigGetOpts]).Help())
 }
 
 func TestRunConfigShow(t *testing.T) {

@@ -11,14 +11,33 @@ import (
 	"github.com/dylt-dev/dylt/common"
 )
 
-type MainCommand struct {
-	*BaseCommand
+type MainOpts struct {
 }
 
-func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
-	// main command
+func NewMainCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "dylt"
-	cmdMap := CommandMap{
+	opts := MainOpts{}
+	fnRun := func (cmd *BaseCommand[MainOpts]) error {
+		args, flag := cmd.Args()
+		if !flag {
+			return errors.New("command is not parsed")
+		}
+		return RunMain(args, cmd)
+	}
+	cfg := BaseCommandConfig[MainOpts]{
+		name:            name,
+		fnRun:           fnRun,
+		opts:            opts,
+		usage:           CreateUsageString(USG_Main),
+		validator:       ArgCountGEValidator{nExpected: 0},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+
+	// subcommand map if any
+	cmd.subCommandMap = CommandMap{
 		"call": CallCommandF.New,
 		"config": ConfigCommandF.New,
 		"get": GetCommandF.New,
@@ -30,18 +49,8 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 		"vm": VmCommandF.New,
 		"watch": WatchCommandF.New,
 	}
-	validator := ArgCountGEValidator{nExpected: 0}
-	cmd := &MainCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Main, cmdMap, validator)}
-	cmd.fnRun = func () error {
-		args, flag := cmd.Args()
-		if !flag {
-			return errors.New("command is not parsed")
-		}
-		return RunMain(args, cmd)
-	}
 
-	//init flags (if any)
-
+	// done
 	return cmd
 }
 
@@ -54,7 +63,7 @@ func NewMainCommand(cmdline Cmdline, parent Command) *MainCommand {
 // }
 
 
-func RunMain(cmdline Cmdline, cmd *MainCommand) error {
+func RunMain(cmdline Cmdline, cmd *BaseCommand[MainOpts]) error {
 	slog.Debug("RunMain()", "cmdline", cmdline)
 
 	// Check if it's the user's first time. If so, act accordingly.

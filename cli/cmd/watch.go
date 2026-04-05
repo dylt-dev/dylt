@@ -4,23 +4,31 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type WatchCommand struct {
-	*BaseCommand
+type WatchOpts struct {
 }
 
-func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
-	// watch command
+func NewWatchCommand(cmdline Cmdline, parent Command) Command {
+	// config command
 	name := "watch"
-	cmdMap := CommandMap{
+	opts := WatchOpts{}
+	cfg := BaseCommandConfig[WatchOpts]{
+		name:            name,
+		isUsageOnNoArgs: true,
+		opts:            opts,
+		usage:           CreateUsageString(USG_Watch),
+		validator: ArgCountGEValidator{nExpected: 0},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+
+	// subcommand map if any
+	cmd.subCommandMap = CommandMap{
 		"script": WatchScriptCommandF.New,
 		"svc":    WatchSvcCommandF.New,
 	}
-	validator := ArgCountGEValidator{nExpected: 0}
-	cmd := &WatchCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch, cmdMap, validator)}
-	cmd.isUsageOnNoArgs = true
 
-	//init flags (if any)
-
+	// done
 	return cmd
 }
 
@@ -29,7 +37,7 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 // 	// Create the subcommand and run it
 // 	subCmd, err := parent.CreateSubCommand()
 // 	if err != nil {
-// 		return err
+
 // 	}
 // 	err = subCmd.Run()
 // 	if err != nil {
@@ -42,47 +50,65 @@ func NewWatchCommand(cmdline Cmdline, parent Command) *WatchCommand {
 // Usage
 //
 //	watch script scriptKey targetPath
-type WatchScriptCommand struct {
-	*BaseCommand
+type WatchScriptOpts struct {
 	ScriptKey  string // arg 0
 	TargetPath string // arg 1
 }
 
-func NewWatchScriptCommand(cmdline Cmdline, parent Command) *WatchScriptCommand {
-	// watch script command
+func NewWatchScriptCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "watch.script"
-	validator := ArgCountValidator{nExpected: 2}
-	cmd := &WatchScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Script, nil, validator)}
+	opts := WatchScriptOpts{}
+	fnRun := func(cmd *BaseCommand[WatchScriptOpts]) error { return api.RunWatchScript(cmd.opts.ScriptKey, cmd.opts.TargetPath) }
+	cfg := BaseCommandConfig[WatchScriptOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Watch_Script),
+		validator: ArgCountValidator{nExpected: 2},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
 	cmd.argMap = map[int]*string{
-		0: &cmd.ScriptKey,
-		1: &cmd.TargetPath,
+		0: &cmd.opts.ScriptKey,
+		1: &cmd.opts.TargetPath,
 	}
-	cmd.fnRun = func() error { return api.RunWatchScript(cmd.ScriptKey, cmd.TargetPath) }
-
-	//init flags (if any)
-
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
 // Usage
 //
 //	watch svc name
-type WatchSvcCommand struct {
-	*BaseCommand
+type WatchSvcOpts struct {
 	Name string
 }
 
-func NewWatchSvcCommand(cmdline Cmdline, parent Command) *WatchSvcCommand {
-	// watch svc command
+func NewWatchSvcCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "watch.svc"
-	validator := ArgCountValidator{nExpected: 1}
-	cmd := &WatchSvcCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Watch_Svc, nil, validator)}
+	opts := WatchSvcOpts{}
+	fnRun := func(cmd *BaseCommand[WatchSvcOpts]) error { return api.RunWatchSvc() }
+	cfg := BaseCommandConfig[WatchSvcOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 1},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
 	cmd.argMap = map[int]*string{
-		0: &cmd.Name,
+		0: &cmd.opts.Name,
 	}
-	cmd.fnRun = func() error { return api.RunWatchSvc() }
-
-	//init flags (if any)
-
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }

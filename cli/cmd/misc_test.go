@@ -20,7 +20,7 @@ func TestMisc (t *testing.T) {
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
 	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &MiscCommand{}, cmd)
+	require.IsType(t, &BaseCommand[MiscOpts]{}, cmd)
 }
 
 
@@ -32,9 +32,9 @@ func TestMiscHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*MiscCommand)
-	require.IsType(t, &MiscCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[MiscOpts])
+	require.IsType(t, &BaseCommand[MiscOpts]{}, cmd)
+	require.True(t, cmd.Help())
 }
 
 
@@ -52,7 +52,7 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+	_TestSubcommandCreation[*BaseCommand[CreateTwoNodeClusterOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -75,14 +75,14 @@ func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[CreateTwoNodeClusterOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 
@@ -100,7 +100,7 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+	_TestSubcommandCreation[*BaseCommand[GenEtcdRunScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -122,14 +122,14 @@ func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[GenEtcdRunScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestMiscLookup (t *testing.T) {
@@ -147,14 +147,14 @@ func TestMiscLookup (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[LookupOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, hostname, subCmd.Hostname)
+	require.Equal(t, hostname, subCmd.opts.Hostname)
 }
 
 
@@ -171,14 +171,14 @@ func TestMiscLookupHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[LookupOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestGetStdinStdoutStderrFdNums(t *testing.T) {
