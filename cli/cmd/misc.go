@@ -13,18 +13,17 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 	name := "misc"
 	cmdMap := CommandMap{
 		"create-two-node-cluster": CreateTwoNodeClusterCommandF.New,
-		"gen-etcd-run-script": GenEtcdRunScriptCommandF.New,
-		"lookup": LookupCommandF.New,
+		"gen-etcd-run-script":     GenEtcdRunScriptCommandF.New,
+		"lookup":                  LookupCommandF.New,
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &MiscCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc, cmdMap, validator)}
 	cmd.isUsageOnNoArgs = true
-	
+
 	//init flags (if any)
-	
+
 	return cmd
 }
-
 
 // func RunMisc(cmdline Cmdline, parent Command) error {
 // 	common.Logger.Debug("RunMisc()", "cmdline", cmdline, "parent", parent)
@@ -41,7 +40,6 @@ func NewMiscCommand(cmdline Cmdline, parent Command) *MiscCommand {
 // 	return nil
 // }
 
-
 type CreateTwoNodeClusterCommand struct {
 	*BaseCommand
 }
@@ -51,10 +49,10 @@ func NewCreateTwoNodeClusterCommand(cmdline Cmdline, parent Command) *CreateTwoN
 	name := "misc.create-two-node-cluster"
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &CreateTwoNodeClusterCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_TwoNode, nil, validator)}
-	cmd.fnRun = func () error { return api.RunCreateTwoNodeCluster() }
+	cmd.fnRun = func() error { return api.RunCreateTwoNodeCluster() }
 
 	// init flags (if any)
-	
+
 	return cmd
 }
 
@@ -67,16 +65,16 @@ func NewGenEtcdRunScriptCommand(cmdline Cmdline, parent Command) *GenEtcdRunScri
 	name := "misc.gen-etcd-run-script"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &GenEtcdRunScriptCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_GenScript, nil, validator)}
-	cmd.fnRun = func () error { return api.RunGenEtcdRunScript() }
-	
+	cmd.fnRun = func() error { return api.RunGenEtcdRunScript() }
+
 	//init flags (if any)
-	
+
 	return cmd
 }
 
 type LookupCommand struct {
 	*BaseCommand
-	Hostname string		//arg 0
+	Hostname string //arg 0
 }
 
 func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
@@ -84,12 +82,12 @@ func NewLookupCommand(cmdline Cmdline, parent Command) *LookupCommand {
 	name := "misc.lookup"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &LookupCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Misc_Lookup, nil, validator)}
-	cmd.argmap  = map[int]*string {
+	cmd.argMap = map[int]*string{
 		0: &cmd.Hostname,
 	}
-	cmd.fnRun = func () error { return api.RunLookupCommand(cmd.Hostname) }
-	
+	cmd.fnRun = func() error { return api.RunLookupCommand(cmd.Hostname) }
+
 	//init flags (if any)
-	
+
 	return cmd
 }

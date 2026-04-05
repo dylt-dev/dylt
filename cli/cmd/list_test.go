@@ -18,8 +18,8 @@ func TestList (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ListCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &ListCommand{}, cmd)
+	cmd := CreateAndTestCommand(t, ListCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ListOpts])
+	require.NotNil(t, cmd)
 }
 
 func TestListHelp(t *testing.T) {
@@ -30,8 +30,9 @@ func TestListHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, ListCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*ListCommand)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, ListCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ListOpts])
+	require.NotNil(t, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestRunList (t *testing.T) {

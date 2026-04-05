@@ -13,13 +13,13 @@ type VmCommand struct {
 func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 	// vm command
 	name := "vm"
-	cmdMap := CommandMap {
-		"add": VmAddCommandF.New,
-		"all": VmAllCommandF.New,
-		"del": VmDelCommandF.New,
-		"get": VmGetCommandF.New,
+	cmdMap := CommandMap{
+		"add":  VmAddCommandF.New,
+		"all":  VmAllCommandF.New,
+		"del":  VmDelCommandF.New,
+		"get":  VmGetCommandF.New,
 		"list": VmListCommandF.New,
-		"set": VmSetCommandF.New,
+		"set":  VmSetCommandF.New,
 	}
 	validator := ArgCountGEValidator{nExpected: 0}
 	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm, cmdMap, validator)}
@@ -29,7 +29,6 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 
 	return cmd
 }
-
 
 // func RunVm(cmdline Cmdline, parent *VmCommand) error {
 // 	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
@@ -57,11 +56,11 @@ func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
 	name := "vm.add"
 	validator := ArgCountValidator{nExpected: 2}
 	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add, nil, validator)}
-	cmd.argmap  = map[int]*string {
+	cmd.argMap = map[int]*string{
 		0: &cmd.Name,
 		1: &cmd.Fqdn,
 	}
-	cmd.fnRun = func () error { return api.RunVmAdd(cmd.Name, cmd.Fqdn) }
+	cmd.fnRun = func() error { return api.RunVmAdd(cmd.Name, cmd.Fqdn) }
 
 	//init flags (if any)
 
@@ -78,13 +77,12 @@ func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
 	name := "vm.all"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All, nil, validator)}
-	cmd.fnRun = func () error { return api.RunVmAll() }
+	cmd.fnRun = func() error { return api.RunVmAll() }
 
 	// init flags (if any)
 
 	return cmd
 }
-
 
 // Usage
 //
@@ -99,10 +97,10 @@ func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
 	name := "vm.del"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del, nil, validator)}
-	cmd.argmap  = map[int]*string {
+	cmd.argMap = map[int]*string{
 		0: &cmd.Name,
 	}
-	cmd.fnRun = func () error { return api.RunVmDel(cmd.Name) }
+	cmd.fnRun = func() error { return api.RunVmDel(cmd.Name) }
 
 	return cmd
 }
@@ -120,10 +118,10 @@ func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
 	name := "vm.get"
 	validator := ArgCountValidator{nExpected: 1}
 	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get, nil, validator)}
-	cmd.argmap  = map[int]*string {
+	cmd.argMap = map[int]*string{
 		0: &cmd.Name,
 	}
-	cmd.fnRun = func () error { return api.RunVmGet(cmd.Name) }
+	cmd.fnRun = func() error { return api.RunVmGet(cmd.Name) }
 
 	//init flags (if any)
 
@@ -142,7 +140,7 @@ func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
 	name := "vm.list"
 	validator := ArgCountValidator{nExpected: 0}
 	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List, nil, validator)}
-	cmd.fnRun = func () error { return api.RunVmList() }
+	cmd.fnRun = func() error { return api.RunVmList() }
 
 	//init flags (if any)
 
@@ -164,12 +162,12 @@ func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 	name := "vm.set"
 	validator := ArgCountValidator{nExpected: 3}
 	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set, nil, validator)}
-	cmd.argmap  = map[int]*string {
+	cmd.argMap = map[int]*string{
 		0: &cmd.Name,
 		1: &cmd.Key,
 		2: &cmd.Value,
 	}
-	cmd.fnRun = func () error { return api.RunVmSet(cmd.Name, cmd.Key, cmd.Value) }
+	cmd.fnRun = func() error { return api.RunVmSet(cmd.Name, cmd.Key, cmd.Value) }
 
 	//init flags (if any)
 

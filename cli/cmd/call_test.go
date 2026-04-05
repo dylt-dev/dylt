@@ -20,7 +20,7 @@ func TestCall(t *testing.T) {
 	cmdArgs := []string{"command", "foo", "bar", "bum"}
 	cmdString := fmt.Sprintf("%s", cmdName)
 	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &BaseCommand{}, cmd)
+	require.IsType(t, &BaseCommand[struct{}]{}, cmd)
 }
 
 func TestCallHelp(t *testing.T) {
@@ -31,8 +31,22 @@ func TestCallHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.True(t, cmd.Help())
+}
+
+func TestCallScriptPath(t *testing.T) {
+	fnTeardown := setup(t)
+	defer fnTeardown(t)
+	
+	cmdName := "call"
+	flagVal := "/script/path"
+	cmdFlags := []string{"--script-path", flagVal}
+	cmdArgs := []string{"command", "foo", "bar", "bum"}
+	cmdString := fmt.Sprintf("%s", cmdName)
+	cmd := CreateAndTestCommand(t, CallCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[CallCommandOpts])
+	require.IsType(t, &BaseCommand[struct{}]{}, cmd)
+	require.Equal(t, flagVal, cmd.opts.ScriptPath)
 }
 
 func TestRunCall0(t *testing.T) {

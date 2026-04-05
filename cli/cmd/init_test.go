@@ -19,9 +19,9 @@ func TestInit (t *testing.T) {
 	cmdFlags := []string{"--etcd-domain", etcdDomain}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*InitCommand)
-	require.IsType(t, &InitCommand{}, cmd)
-	require.Equal(t, etcdDomain, cmd.EtcdDomain)
+	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[InitOpts])
+	require.NotNil(t, cmd)
+	require.Equal(t, etcdDomain, cmd.opts.EtcdDomain)
 	
 }
 
@@ -33,8 +33,9 @@ func TestInitHelp(t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*InitCommand)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[InitOpts])
+	require.NotNil(t, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestRunInit (t *testing.T) {

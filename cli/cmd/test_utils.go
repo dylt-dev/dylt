@@ -24,12 +24,13 @@ func CheckRunCommandSuccessNoOutput(sCmdlineArgs string, t *testing.T) error {
 	return err
 }
 
-func CreateAndTestCommand[U Command](t *testing.T,
-                                     fact func(Cmdline, Command) U,
-                                     cmdName string,
-                                     cmdFlags []string,
-                                     cmdArgs []string,
-                                     cmdString string) U {
+func CreateAndTestCommand(t *testing.T,
+                          fact func(Cmdline, Command) Command,
+                          cmdName string,
+                          cmdFlags []string,
+                          cmdArgs []string,
+                          cmdString string,
+                         ) Command {
 	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
 	t.Logf("cmdline=%v", cmdline)
 	cmd := fact(cmdline, nil)

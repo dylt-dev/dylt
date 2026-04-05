@@ -2,7 +2,8 @@ package cmd
 
 import "fmt"
 
-type Command interface {
+type Command[Opts CommandOpts] interface {
+	ArgMap() (ArgMap)
 	Args() (Cmdline, bool)
 	CommandLine() Cmdline
 	CommandName() string
@@ -12,6 +13,8 @@ type Command interface {
 	CommandValidator() CommandValidator
 	CreateSubCommand() (Command, error)
 	HandleArgs() error
+	Help() bool
+	Opts() Opts
 	Parse() error
 	PrintUsage()
 	Run() error
@@ -20,8 +23,9 @@ type Command interface {
 	UsageOnNoArgs() bool
 }
 
-type CommandFactoryFunc func(Cmdline, Command) Command
-type CommandMap map[string]CommandFactoryFunc
+type ArgMap map[int]*string
+type CommandFactoryFunc[Opts CommandOpts] func(Cmdline, Command[Opts]) Command[Opts]
+type CommandMap map[string]any
 
 type CommandValidator interface {
 	IsValid(args []string) bool

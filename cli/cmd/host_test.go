@@ -23,8 +23,8 @@ func TestHost (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*HostCommand)
-	require.IsType(t, &HostCommand{}, cmd)
+	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[HostCommandOpts])
+	require.NotNil(t, cmd)
 }
 
 
@@ -36,9 +36,9 @@ func TestHostHelp (t *testing.T) {
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*HostCommand)
-	require.IsType(t, &HostCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[HostCommandOpts])
+	require.NotNil(t, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestHostInit (t *testing.T) {
@@ -57,15 +57,15 @@ func TestHostInit (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*HostInitCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[HostInitCommandOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, gid, subCmd.Gid)
-	require.Equal(t, uid, subCmd.Uid)
+	require.Equal(t, gid, subCmd.opts.Gid)
+	require.Equal(t, uid, subCmd.opts.Uid)
 }
 
 
@@ -82,14 +82,15 @@ func TestHostInitHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*HostInitCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[HostInitCommandOpts]](
+		t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 
