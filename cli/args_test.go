@@ -210,7 +210,7 @@ func NewMeCommand(cmdline clicmd.Cmdline, parent clicmd.Command) *MeCommand {
 	return &MeCommand{BaseCommand: &clicmd.BaseCommand[clicmd.EmptyOpts]{Cmdline: cmdline, FlagSet: &flag.FlagSet{}, Parent: parent}}
 }
 
-type ECF clicmd.CommandFactory[clicmd.EmptyOpts]
+type ECF clicmd.CommandFactory
 var PappyCommandF ECF = ECF{ FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewPappyCommand(cmdline, parent) }}
 var DaddyCommandF ECF = ECF{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewDaddyCommand(cmdline, parent) }}
 var MeCommandF ECF = ECF{FnNew: func (cmdline clicmd.Cmdline, parent clicmd.Command) clicmd.Command { return NewMeCommand(cmdline, parent) }}
