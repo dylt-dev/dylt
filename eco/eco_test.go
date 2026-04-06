@@ -514,14 +514,14 @@ func dumpOps(t *testing.T, ops []etcd.Op) {
 		if op.IsGet() {
 			key := string(op.KeyBytes())
 			s := fmt.Sprintf("%s %s", "GET", key)
-			fmt.Println(s)
+			t.Log(s)
 		} else if op.IsPut() {
 			key := string(op.KeyBytes())
 			val := string(op.ValueBytes())
 			s := fmt.Sprintf("%s %s %s", "PUT", common.Lowlight(key), val)
-			fmt.Println(s)
+			t.Log(s)
 		} else {
-			fmt.Printf("%#v\n", op)
+			t.Logf("%#v\n", op)
 		}
 	}
 }

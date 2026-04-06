@@ -70,6 +70,7 @@ func CreateEtcdClientFromConfig() (*EtcdClient, error) {
 		return nil, common.NewError(err)
 	}
 	domain := cfg.EtcdDomain
+	fmt.Printf("domain=%v\n", domain)
 	cli, err := NewEtcdClient(domain)
 	return cli, err
 }
