@@ -1,6 +1,9 @@
 package cmd
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // dylt (main)
 var USG_Main = []string{
@@ -98,7 +101,11 @@ var USG_Misc_Short = createUsageShort("misc", USG_Misc_Desc)
 
 // dylt misc create-two-node-cluster
 const USG_Misc_TwoNode_Desc = "Create a simple 2 node daylight cluster"
-
+var USG_Misc = []string {
+	USG_Misc_TwoNode_Short,
+	USG_Misc_GenScript_Short,
+	USG_Misc_Lookup_Short,
+}
 var USG_Misc_TwoNode_Short = createUsageShort("misc create-two-node-cluster", USG_Misc_TwoNode_Desc)
 var USG_Misc_TwoNode = createUsage("misc create-two-node-cluster", USG_Misc_TwoNode_Desc)
 
@@ -112,19 +119,27 @@ var USG_Misc_GenScript = createUsage("misc gen-etcd-run-script", USG_Misc_GenScr
 const USG_Misc_Lookup_Desc = "Do a DNS lookup of a hostname"
 
 var USG_Misc_Lookup_Short = createUsageShort("misc lookup", USG_Misc_GenScript_Desc)
-var USG_Misc_Lookup = createUsage("misc lookup", USG_Misc_GenScript_Desc)
+var USG_Misc_Lookup = createUsage("misc lookup hostname", USG_Misc_GenScript_Desc)
 
 // dylt status
 const USG_Status_Desc = "current dylt status"
 
 var USG_Status_Short = createUsageShort("status", USG_Status_Desc)
+var USG_Status = createUsage("status", USG_Status_Desc)
 
 // dylt vm
 const USB_Vm_Desc = "VM-related operations"
-
 var USG_Vm_Short = createUsageShort("vm", USB_Vm_Desc)
+var USG_Vm = []string{
+	USG_Vm_Add_Short,
+	USG_Vm_All_Short,
+	USG_Vm_Del_Short,
+	USG_Vm_Get_Short,
+	USG_Vm_List_Short,
+	USG_Vm_Set_Short,
+}
 
-// dy;t vm add
+// dylt vm add
 const USG_Vm_Add_Desc = "create a new VM"
 
 var USG_Vm_Add_Short = createUsageShort("vm add", USG_Vm_Add_Desc)
@@ -189,12 +204,29 @@ func createUsage(cmdFull string, desc string) string {
 	return fmt.Sprintf("%s    # %s", cmdFull, desc)
 }
 
-type UsageText interface {
-	~string |
-		~[]string
+type UsageTextType interface { ~string | ~[]string }
+
+func CreateUsageString[U UsageTextType](usageText U) string{
+	var sb strings.Builder
+	switch arg := any(usageText).(type) {
+	case string:
+		sb.WriteString("\n")
+		sb.WriteString(fmt.Sprintf("\t%s\n", arg))
+		sb.WriteString("\n")
+	case []string:
+		sb.WriteString("\n")
+		for _, line := range arg {
+			sb.WriteString(fmt.Sprintf("\t%s\n", line))
+		}
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
 }
 
-func PrintUsage[T UsageText](lines T) {
+
+
+func PrintUsage[U UsageTextType](lines U) {
 	switch arg := any(lines).(type) {
 	case string:
 		fmt.Println()

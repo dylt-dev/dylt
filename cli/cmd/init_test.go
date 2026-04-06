@@ -5,38 +5,54 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInit (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "init"
-	etcdDomain := "foo.dylt.dev"
-	cmdFlags := []string{"--etcd-domain", etcdDomain}
+	flagVal := "foo.dylt.dev"
+	cmdFlags := []string{"--etcd-domain", flagVal}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewInitCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &InitCommand{}, cmd)
-	require.Equal(t, etcdDomain, cmd.EtcdDomain)
+	cmd, is := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[InitOpts])
+	require.True(t, is)
+	require.NotNil(t, cmd)
+	require.Equal(t, flagVal, cmd.opts.EtcdDomain)
 	
 }
 
 func TestInitHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "init"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewInitCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, InitCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[InitOpts])
+	require.NotNil(t, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestRunInit (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	etcDomain := "hello.dylt.dev"
-	err := RunInit(etcDomain)
+	err := api.RunInit(etcDomain)
 	assert.Nil(t, err)
 }
 
 func TestInitCmd0 (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -49,6 +65,9 @@ func TestInitCmd0 (t *testing.T) {
 }
 
 func TestInitCmd1 (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}

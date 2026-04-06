@@ -14,86 +14,30 @@
 package cmd
 
 import (
-	"fmt"
-	"log/slog"
-
-	"github.com/dylt-dev/dylt/lib"
+	"github.com/dylt-dev/dylt/api"
 )
 
-type StatusCommand struct {
-	*BaseCommand
+type StatusOpts struct {
 }
 
-func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
-	// status command
+func NewStatusCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "status"
-	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	opts := StatusOpts{}
+	fnRun := func (cmd *BaseCommand[StatusOpts]) error { return api.RunStatus() }
+	cfg := BaseCommandConfig[StatusOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Status),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
 	
-	//init flags (if any)
-
+	// subcommand map if any
+	
+	// done
 	return cmd
-}
-
-func (cmd *StatusCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-
-	return nil
-}
-
-func (cmd *StatusCommand) PrintUsage() {
-	PrintUsage(USG_Status_Short)
-}
-
-func (cmd *StatusCommand) Run() error {
-	slog.Debug("StatusCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// execute command
-	// @getit
-	err = RunStatus()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func RunStatus() error {
-	slog.Debug("RunStatus()")
-
-	lib.RunStatus()
-
-	return nil
 }

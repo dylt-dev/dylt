@@ -1,104 +1,34 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-	"log/slog"
-
-	"github.com/dylt-dev/dylt/common"
+	"github.com/dylt-dev/dylt/api"
 )
 
-type InitCommand struct {
-	*BaseCommand
-	EtcdDomain string
+type InitOpts struct {
+	EtcdDomain string // --etcd-domain
 }
 
-func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
-	// init command
+func NewInitCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "init"
-	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	opts := InitOpts{}
+	fnRun := func (cmd *BaseCommand[InitOpts]) error { return api.RunInit(cmd.opts.EtcdDomain) }
+	cfg := BaseCommandConfig[InitOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any 
+	cmd.FlagSet.StringVar(&cmd.opts.EtcdDomain, "etcd-domain", "", "etcd-domain")
+
+	// subcommand map if any
 	
-	//init flags (if any)
-	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
-
+	// done
 	return cmd
-}
-
-func (cmd *InitCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate required flags
-	var requiredFlag string = "etcd-domain"
-	if cmd.Lookup(requiredFlag).Value.String() == "" {
-		cmd.PrintUsage()
-		return fmt.Errorf("required flag missing: %s", requiredFlag)
-	}
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 0
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-	// init positional params (nop - no params)
-
-	return nil
-}
-
-func (cmd *InitCommand) PrintUsage() {
-	PrintUsage(USG_Init)
-}
-
-func (cmd *InitCommand) Run() error {
-	slog.Debug("InitCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// execute command
-	err = RunInit(cmd.EtcdDomain)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func RunInit(etcdDomain string) error {
-	slog.Debug("RunInit()", "etcDomain", etcdDomain)
-	// create a new config file using the etcdDomain
-	if etcdDomain == "" {
-		return errors.New("etcd-domain must be set")
-	}
-	cfg := common.ConfigStruct{EtcdDomain: etcdDomain}
-	err := common.SaveConfig(cfg)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // func CreateInitCommand() *cobra.Command {

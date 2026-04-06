@@ -8,42 +8,52 @@ import (
 
 	"text/template"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMisc (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &MiscCommand{}, cmd)
+	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.IsType(t, &BaseCommand[MiscOpts]{}, cmd)
 }
 
 
 func TestMiscHelp (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, NewMiscCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &MiscCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[MiscOpts])
+	require.IsType(t, &BaseCommand[MiscOpts]{}, cmd)
+	require.True(t, cmd.Help())
 }
 
 
 func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "create-two-node-cluster"
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+	_TestSubcommandCreation[*BaseCommand[CreateTwoNodeClusterOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -54,38 +64,44 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 
 
 func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	subCmdName := "create-two-node-cluster"
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[CreateTwoNodeClusterOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 
 func TestMiscGenEtcdRunScript  (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "gen-etcd-run-script"
 	subCmdFlags := []string{}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+	_TestSubcommandCreation[*BaseCommand[GenEtcdRunScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -95,26 +111,32 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 }
 
 func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	subCmdName := "gen-etcd-run-script"
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{"foo"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[GenEtcdRunScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestMiscLookup (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	// config get foo
 	cmdName := "misc"
 	subCmdName := "lookup"
@@ -122,68 +144,48 @@ func TestMiscLookup (t *testing.T) {
 	subCmdFlags := []string{}
 	subCmdArgs := []string{hostname}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[LookupOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, hostname, subCmd.Hostname)
+	require.Equal(t, hostname, subCmd.opts.Hostname)
 }
 
 
 func TestMiscLookupHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "misc"
 	subCmdName := "lookup"
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{"hostname"}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewMiscCommand(cmdline, nil)
+	cmd := MiscCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[LookupOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
-}
-
-func TestGenEtcdRunScript(t *testing.T) {
-	type EtcdRunScriptData struct {
-		Name                string
-		DataDir             string
-		AdvertiseClientUrls []string
-		ListenClientUrls    []string
-		ClientCertAuth      bool
-	}
-	data := EtcdRunScriptData{
-		Name:                "arleytown",
-		AdvertiseClientUrls: []string{"https:/127.0.0.1:2239", "ip2:2239"},
-		ListenClientUrls:    []string{"https:/127.0.0.1:2239"},
-		ClientCertAuth:      false,
-	}
-	buf, err := content.ReadFile("content/run-etcd.sh.tmpl")
-	require.NoError(t, err)
-	tmpl := template.New("hello")
-	tmpl.Funcs(template.FuncMap{
-		"join": strings.Join,
-	})
-	tmpl, err = tmpl.Parse(string(buf))
-	require.NoError(t, err)
-	err = tmpl.Execute(os.Stdout, data)
-	require.NoError(t, err)
+	require.True(t, subCmd.Help())
 }
 
 func TestGetStdinStdoutStderrFdNums(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	var nStdin, nStdout, nStderr uintptr
 	nStdin = os.Stdin.Fd()
 	nStdout = os.Stdout.Fd()
@@ -194,6 +196,9 @@ func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 }
 
 func TestNewCmdline (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
@@ -203,6 +208,9 @@ func TestNewCmdline (t *testing.T) {
 }
 
 func TestNewCmdlineArgs (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := []string{}
 	cmdArgs := []string{"config", "get", "foo"}
@@ -212,6 +220,9 @@ func TestNewCmdlineArgs (t *testing.T) {
 }
 
 func TestNewCmdlineArgsFlags (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
 	cmdArgs := []string{"get", "foo"}
@@ -221,6 +232,9 @@ func TestNewCmdlineArgsFlags (t *testing.T) {
 }
 
 func TestNewCmdlineFlags (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "dylt"
 	cmdFlags := strings.Fields("--etcdDomain etcd.example.org")
 	cmdArgs := []string{}
@@ -230,6 +244,9 @@ func TestNewCmdlineFlags (t *testing.T) {
 }
 
 func TestNewlineKiller(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	s := `
 	line1
 	{{- if .Line2 }}
@@ -249,11 +266,17 @@ func TestNewlineKiller(t *testing.T) {
 }
 
 func TestPrintMultiLineUsage_String(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	data := "MEAT!!!"
 	PrintUsage(data)
 }
 
 func TestPrintMultiLineUsage_StringSlice(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	data := []string{"meat", "Meat", "MEAT"}
 	PrintUsage(data)
 }

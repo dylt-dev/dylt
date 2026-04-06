@@ -5,34 +5,49 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/require"
 )
 
 func TestList (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "list"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewListCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &ListCommand{}, cmd)
+	cmd := CreateAndTestCommand(t, ListCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ListOpts])
+	require.NotNil(t, cmd)
 }
 
 func TestListHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdName := "list"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewListCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, ListCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[ListOpts])
+	require.NotNil(t, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestRunList (t *testing.T) {
-	err := RunList()
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
+	err := api.RunList()
 	require.Nil(t, err)
 }
 
 func TestListCmd0 (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -45,8 +60,11 @@ func TestListCmd0 (t *testing.T) {
 }
 
 func TestListHandleArgs_None (t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	args := []string{}
-	cmd := NewListCommand(args, nil)
+	cmd := ListCommandF.New(args, nil)
 	err := cmd.HandleArgs()
 	require.NoError(t, err)
 	subArgs, _ := cmd.SubArgs()

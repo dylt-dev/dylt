@@ -108,7 +108,9 @@ func TestShowConfig(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+
 func TestStrings(t *testing.T) {
+	t.Skip("This might have been a one-off test to compare these values. The strings don't match -- 'linux_amd' vs 'linux-amd' -- so this test will always fail")
 	str0 := "> GET /etcd-io/etcd/releases/download/v3.5.16/etcd-v3.5.16-linux_amd64.tar.gz HTTP/2"
 	str1 := "> GET /etcd-io/etcd/releases/download/v3.5.16/etcd-v3.5.16-linux-amd64.tar.gz HTTP/2"
 	len0 := len(str0)

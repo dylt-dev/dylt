@@ -46,9 +46,11 @@ func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 		ctx.logger.Infof("getVal()=%v (%s)", getVal, getVal)
 		err = json.Unmarshal(getVal, i)
 		if err != nil {
+			ctx.logger.Errorf("Unmarshalling error: %s (%#v)", err.Error(), getVal)
 			return err
 		}
 		// @note - should we return here?
+		return nil
 	}
 
 	// Some non-simple type are supported. The rest of the function checks for them.
@@ -561,6 +563,10 @@ func putAndTest(t *testing.T, etcdClient *EtcdClient, key string, i any) {
 	resp, err := etcdClient.Put(context.Background(), key, string(j))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
+	buf, err := etcdClient.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, j, buf)
+	require.Equal(t, string(j), string(buf))
 	// t.Logf("%#v", resp)
 }
 

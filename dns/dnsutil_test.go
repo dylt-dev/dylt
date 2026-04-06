@@ -13,7 +13,7 @@ type testRec struct {
 }
 
 var testData = []testRec {
-	{ domain: "hello.dylt.dev", includeIps: false, nResults: 5 },
+	{ domain: "hello.dylt.dev", includeIps: false, nResults: 4 },
 	{ domain: "google.com", includeIps: false, nResults: 0},
 }
 

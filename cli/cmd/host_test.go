@@ -15,73 +15,86 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHost (t *testing.T) {
+func TestHost(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	cmdName := "host"
 	cmdFlags := []string{}
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
-	cmd := CreateAndTestCommand(t, NewHostCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &HostCommand{}, cmd)
+	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[HostOpts])
+	require.NotNil(t, cmd)
 }
 
+func TestHostHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
 
-func TestHostHelp (t *testing.T) {
 	cmdName := "host"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, NewHostCommand, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &HostCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, HostCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[HostOpts])
+	require.NotNil(t, cmd)
+	require.True(t, cmd.Help())
 }
 
-func TestHostInit (t *testing.T) {
+func TestHostInit(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	// config get foo
 	cmdName := "host"
 	subCmdName := "init"
 	gid := 1000
-	uid := 2000	
-	subCmdFlags:= []string{"--gid", fmt.Sprint(gid), "--uid", fmt.Sprint(uid)}
+	uid := 2000
+	subCmdFlags := []string{"--gid", fmt.Sprint(gid), "--uid", fmt.Sprint(uid)}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewHostCommand(cmdline, nil)
+	cmd := HostCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*HostInitCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[HostInitOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, gid, subCmd.Gid)
-	require.Equal(t, uid, subCmd.Uid)
+	require.Equal(t, gid, subCmd.opts.Gid)
+	require.Equal(t, uid, subCmd.opts.Uid)
 }
 
-
 func TestHostInitHelp(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	cmdName := "host"
 	subCmdName := "init"
 	subCmdFlags := []string{"--help"}
 	subCmdArgs := []string{}
 	cmdline, cmdArgs, subCmdString := CreateCommandParams(cmdName, subCmdName, subCmdFlags, subCmdArgs)
-	cmd := NewHostCommand(cmdline, nil)
+	cmd := HostCommandF.New(cmdline, nil)
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*HostInitCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[HostInitOpts]](
+		t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
-
 func TestRunHost(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -94,6 +107,9 @@ func TestRunHost(t *testing.T) {
 }
 
 func TestHostCmd0(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip()
 	}
@@ -105,38 +121,10 @@ func TestHostCmd0(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestRunHostInit(t *testing.T) {
-	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
-		t.Skip()
-	}
-	err := RunHostInit(501, 20)
-	assert.Nil(t, err)
-}
-
-func TestHostInitCmd0(t *testing.T) {
-	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
-		t.Skip()
-	}
-	dyltPath, ok := os.LookupEnv("DYLT_EXE_PATH")
-	assert.True(t, ok)
-	assert.NotEmpty(t, dyltPath)
-	cmd := fmt.Sprintf("%s host init", dyltPath)
-	err := lib.CheckRunCommandSuccess(cmd, t)
-	assert.Nil(t, err)
-}
-
-// not-a-test
-// Print out all the files in EMBED_SvcFiles. Useful sanity check.
-func TestWalkSvcFolder(t *testing.T) {
-	fs.WalkDir(api.EMBED_SvcFiles, ".", func(p string, d fs.DirEntry, err error) error {
-		if !d.IsDir() {
-			fmt.Printf("%s\n", p)
-		}
-		return nil
-	})
-}
-
 func TestEmitWatchDaylightRunScript(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	tmplSvc, err := template.NewTemplate(fsSvcFiles, "watch-daylight")
@@ -149,6 +137,9 @@ func TestEmitWatchDaylightRunScript(t *testing.T) {
 }
 
 func TestEmitWatchDaylightUnitFile(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	tmplSvc, err := template.NewTemplate(fsSvcFiles, "watch-daylight")
@@ -161,6 +152,9 @@ func TestEmitWatchDaylightUnitFile(t *testing.T) {
 }
 
 func TestChmodR0(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	svcPath := "/opt/svc/watch-daylight"
 	// uid + gid for local user on local workstation
 	err := common.ChownR(svcPath, 501, 20)
@@ -168,6 +162,9 @@ func TestChmodR0(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteRunScript(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	svcName := "watch-daylight"
@@ -180,6 +177,9 @@ func Test_WatchDaylight_WriteRunScript(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteUnitFile(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
 	assert.NoError(t, err)
 	svcName := "watch-daylight"

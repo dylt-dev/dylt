@@ -1,84 +1,37 @@
 package cmd
 
 import (
-	"fmt"
-	"log/slog"
-
 	"github.com/dylt-dev/dylt/lib"
 )
 
-type GetCommand struct {
-	*BaseCommand
+type GetOpts struct {
 	Key string // arg 0
 }
 
-func NewGetCommand(cmdline Cmdline, parent Command) *GetCommand {
-	// get command
+func NewGetCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "get"
-	cmd := &GetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent)}
+	opts := GetOpts{}
+	fnRun := func (cmd *BaseCommand[GetOpts]) error { return lib.RunGet(cmd.opts.Key) }
+
+	cfg := BaseCommandConfig[GetOpts]{
+		name:            name,
+		fnRun:           fnRun,
+		opts:            opts,
+		usage:           USG_Call,
+		validator:       ArgCountValidator{nExpected: 1},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 	
-	//init flags (if any)
+	// flags + args if any 
+	cmd.argMap = ArgMap{
+		0: &opts.Key,
+	}
 	
+	// subcommand map if any
+	
+	// done
 	return cmd
-}
-
-func (cmd *GetCommand) HandleArgs() error {
-	// parse flags
-	err := cmd.Parse()
-	if err != nil {
-		return err
-	}
-
-	// if Help flag is set, no further processing is necessary
-	if cmd.Help {
-		return nil
-	}
-
-	// validate arg count
-	cmdArgs, _ := cmd.Args()
-	nExpected := 1
-	if len(cmdArgs) != nExpected {
-		cmd.PrintUsage()
-		cmdString, _ := cmd.CommandString()
-		return fmt.Errorf("`%s` expects %d argument(s); received %d",
-			cmdString,
-			nExpected,
-			len(cmdArgs))
-	}
-	// init positional params
-	cmd.Key = cmdArgs[0]
-
-	return nil
-}
-
-func (cmd *GetCommand) PrintUsage() {
-	fmt.Println()
-	fmt.Printf("\t%s\n", USG_Get)
-	fmt.Println()
-}
-
-func (cmd *GetCommand) Run() error {
-	slog.Debug("GetCommand.Run()", "args", cmd.Cmdline)
-
-	// parse flags & get positional args
-	err := cmd.HandleArgs()
-	if err != nil {
-		return err
-	}
-
-	// If help flag set, print usage + return
-	if cmd.Help {
-		cmd.PrintUsage()
-		return nil
-	}
-
-	// execute command
-	err = lib.RunGet(cmd.Key)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // func GetCommand () *cobra.Command {

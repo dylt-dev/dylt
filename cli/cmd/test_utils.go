@@ -24,12 +24,13 @@ func CheckRunCommandSuccessNoOutput(sCmdlineArgs string, t *testing.T) error {
 	return err
 }
 
-func CreateAndTestCommand[U Command](t *testing.T,
-                                     fact func(Cmdline, Command) U,
-                                     cmdName string,
-                                     cmdFlags []string,
-                                     cmdArgs []string,
-                                     cmdString string) U {
+func CreateAndTestCommand(t *testing.T,
+                          fact func(Cmdline, Command) Command,
+                          cmdName string,
+                          cmdFlags []string,
+                          cmdArgs []string,
+                          cmdString string,
+                         ) Command {
 	cmdline := NewCmdline(cmdName, cmdFlags, cmdArgs)
 	t.Logf("cmdline=%v", cmdline)
 	cmd := fact(cmdline, nil)
@@ -48,6 +49,7 @@ func CreateCommandString(cmdName string, cmdArgs []string) string {
 	return strings.Join(append([]string{cmdName}, cmdArgs...), " ")
 }
 
+// Test cmd.CommandString() against an expected command string
 func _TestCommandString(t *testing.T, targetCmdString string, cmd Command) {
 	cmdString, flag := cmd.CommandString()
 	require.True(t, flag)
@@ -106,7 +108,9 @@ func _TestSubcommandCreation[TCmd Command](t *testing.T,
 	subCmdline := NewCmdline(subName, subCmdFlags, targetSubArgs)
 	_TestSubCommandAndArgs(t, cmd, subName, subCmdline)
 	// Create subcommand, HandleArg(), confirm return type
+	t.Log("Creating Subcommand ...")
 	subCmdRaw, err := cmd.CreateSubCommand()
+	t.Log("done")
 	require.NoError(t, err)
 	require.NotNil(t, subCmdRaw)
 	subCmd, ok := subCmdRaw.(TCmd)

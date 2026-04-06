@@ -16,6 +16,9 @@ func TestDecodeTeam_Misc (t *testing.T) {
 }
 
 func TestDecodeTeam_Stats(t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
 	var val StatSlice
 	decodeAndTest(t, "/test/team/astros/Players/altuve/Stats", &val)
 	require.NotEmpty(t, val)

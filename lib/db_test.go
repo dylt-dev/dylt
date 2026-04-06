@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"html/template"
+	"os"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -11,6 +12,11 @@ import (
 )
 
 func TestDbConnect (t *testing.T) {
+	envvar, is := os.LookupEnv("DYLT_SYSTEST")
+	if !is || envvar != "Y" {
+		t.Skip("sys test only")
+	}
+	
 	const MARIADB_DATABASE = "mc15"
 	const MARIADB_HOST = "localhost"
 	const MARIADB_PASSWORD = "mc15"
