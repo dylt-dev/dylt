@@ -4,18 +4,27 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type ListCommand struct {
-	*BaseCommand
+type ListOpts struct {
 }
 
-func NewListCommand(cmdline Cmdline, parent Command) *ListCommand {
-	// list command
+func NewListCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "list"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &ListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_List, nil, validator)}
-	cmd.fnRun = func () error { return api.RunList() }
+	opts := ListOpts{}
+	fnRun := func (cmd *BaseCommand[ListOpts]) error { return api.RunList() }
+	cfg := BaseCommandConfig[ListOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any 
+
+	// subcommand map if any
 	
-	//init flags (if any)
-	
+	// done
 	return cmd
 }

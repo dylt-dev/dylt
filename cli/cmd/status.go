@@ -17,18 +17,27 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type StatusCommand struct {
-	*BaseCommand
+type StatusOpts struct {
 }
 
-func NewStatusCommand(cmdline Cmdline, parent Command) *StatusCommand {
-	// status command
+func NewStatusCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "status"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &StatusCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Status_Short, nil, validator)}
-	cmd.fnRun = func () error { return api.RunStatus() }
-	
-	//init flags (if any)
+	opts := StatusOpts{}
+	fnRun := func (cmd *BaseCommand[StatusOpts]) error { return api.RunStatus() }
+	cfg := BaseCommandConfig[StatusOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Status),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
+	// flags + args if any
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }

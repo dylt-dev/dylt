@@ -8,11 +8,12 @@ import (
 
 	"text/template"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMisc (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -20,26 +21,26 @@ func TestMisc (t *testing.T) {
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
 	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &MiscCommand{}, cmd)
+	require.IsType(t, &BaseCommand[MiscOpts]{}, cmd)
 }
 
 
 func TestMiscHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*MiscCommand)
-	require.IsType(t, &MiscCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, MiscCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[MiscOpts])
+	require.IsType(t, &BaseCommand[MiscOpts]{}, cmd)
+	require.True(t, cmd.Help())
 }
 
 
 func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -52,7 +53,7 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+	_TestSubcommandCreation[*BaseCommand[CreateTwoNodeClusterOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -63,7 +64,7 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 
 
 func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -75,19 +76,19 @@ func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*CreateTwoNodeClusterCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[CreateTwoNodeClusterOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 
 func TestMiscGenEtcdRunScript  (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -100,7 +101,7 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+	_TestSubcommandCreation[*BaseCommand[GenEtcdRunScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -110,7 +111,7 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 }
 
 func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -122,18 +123,18 @@ func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*GenEtcdRunScriptCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[GenEtcdRunScriptOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestMiscLookup (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -147,19 +148,19 @@ func TestMiscLookup (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[LookupOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, hostname, subCmd.Hostname)
+	require.Equal(t, hostname, subCmd.opts.Hostname)
 }
 
 
 func TestMiscLookupHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -171,18 +172,18 @@ func TestMiscLookupHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*LookupCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[LookupOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestGetStdinStdoutStderrFdNums(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	var nStdin, nStdout, nStderr uintptr
@@ -195,7 +196,7 @@ func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 }
 
 func TestNewCmdline (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -207,7 +208,7 @@ func TestNewCmdline (t *testing.T) {
 }
 
 func TestNewCmdlineArgs (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -219,7 +220,7 @@ func TestNewCmdlineArgs (t *testing.T) {
 }
 
 func TestNewCmdlineArgsFlags (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -231,7 +232,7 @@ func TestNewCmdlineArgsFlags (t *testing.T) {
 }
 
 func TestNewCmdlineFlags (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -243,7 +244,7 @@ func TestNewCmdlineFlags (t *testing.T) {
 }
 
 func TestNewlineKiller(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	s := `
@@ -265,7 +266,7 @@ func TestNewlineKiller(t *testing.T) {
 }
 
 func TestPrintMultiLineUsage_String(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	data := "MEAT!!!"
@@ -273,7 +274,7 @@ func TestPrintMultiLineUsage_String(t *testing.T) {
 }
 
 func TestPrintMultiLineUsage_StringSlice(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	data := []string{"meat", "Meat", "MEAT"}

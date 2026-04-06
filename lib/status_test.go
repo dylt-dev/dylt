@@ -69,6 +69,10 @@ func TestIncusIsAvailable(t *testing.T) {
 // Test if the incus `dylt` container exists
 // @note I'm not actually sure what the `dylt` container is for
 func TestIncusIsDyltContainerExist(t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+	
 	flag, err := isIncusDyltContainerExist()
 	require.NoError(t, err)
 	require.True(t, flag)

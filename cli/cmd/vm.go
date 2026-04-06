@@ -6,30 +6,37 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type VmCommand struct {
-	*BaseCommand
+type VmOpts struct {
 }
 
-func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
-	// vm command
+func NewVmCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm"
-	cmdMap := CommandMap {
-		"add": VmAddCommandF.New,
-		"all": VmAllCommandF.New,
-		"del": VmDelCommandF.New,
-		"get": VmGetCommandF.New,
-		"list": VmListCommandF.New,
-		"set": VmSetCommandF.New,
+	opts := VmOpts{}
+	cfg := BaseCommandConfig[VmOpts]{
+		name:            name,
+		isUsageOnNoArgs: true,
+		opts:            opts,
+		usage:           CreateUsageString(USG_Vm),
+		validator: ArgCountGEValidator{nExpected: 0},
 	}
-	validator := ArgCountGEValidator{nExpected: 0}
-	cmd := &VmCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm, cmdMap, validator)}
-	cmd.isUsageOnNoArgs = true
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	//init flags (if any)
+	// flags + args if any
 
+	// subcommand map if any
+	cmd.subCommandMap = CommandMap{
+		"add":  VmAddCommandF.New,
+		"all":  VmAllCommandF.New,
+		"del":  VmDelCommandF.New,
+		"get":  VmGetCommandF.New,
+		"list": VmListCommandF.New,
+		"set":  VmSetCommandF.New,
+	}
+
+	// done
 	return cmd
 }
-
 
 // func RunVm(cmdline Cmdline, parent *VmCommand) error {
 // 	slog.Debug("RunVm()", "cmdline", cmdline, "parent", parent)
@@ -46,133 +53,186 @@ func NewVmCommand(cmdline Cmdline, parent Command) *VmCommand {
 // 	return nil
 // }
 
-type VmAddCommand struct {
-	*BaseCommand
+type VmAddOpts struct {
 	Name string // arg 0
 	Fqdn string // arg 1
 }
 
-func NewVmAddCommand(cmdline Cmdline, parent Command) *VmAddCommand {
-	// vm add command
+func NewVmAddCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm.add"
-	validator := ArgCountValidator{nExpected: 2}
-	cmd := &VmAddCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Add, nil, validator)}
-	cmd.argmap  = map[int]*string {
-		0: &cmd.Name,
-		1: &cmd.Fqdn,
+	opts := VmAddOpts{}
+	fnRun := func(cmd *BaseCommand[VmAddOpts]) error { return api.RunVmAdd(cmd.opts.Name, cmd.opts.Fqdn) }
+	cfg := BaseCommandConfig[VmAddOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage:           CreateUsageString(USG_Vm_Add),
+		validator: ArgCountValidator{nExpected: 2},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+	cmd.argMap = map[int]*string{
+		0: &cmd.opts.Name,
+		1: &cmd.opts.Fqdn,
 	}
-	cmd.fnRun = func () error { return api.RunVmAdd(cmd.Name, cmd.Fqdn) }
-
-	//init flags (if any)
-
+	// subcommand map if any
+	
+	// done
 	return cmd
-
 }
 
-type VmAllCommand struct {
-	*BaseCommand
+type VmAllOpts struct {
 }
 
-func NewVmAllCommand(cmdline Cmdline, parent Command) *VmAllCommand {
-	// vm all command
+func NewVmAllCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm.all"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &VmAllCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_All, nil, validator)}
-	cmd.fnRun = func () error { return api.RunVmAll() }
+	opts := VmAllOpts{}
+	fnRun := func(cmd *BaseCommand[VmAllOpts]) error { return api.RunVmAll() }
+	cfg := BaseCommandConfig[VmAllOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Vm_All),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	// init flags (if any)
-
+	// flags + args if any
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
-
 
 // Usage
 //
 //	vm del vmName
-type VmDelCommand struct {
-	*BaseCommand
+type VmDelOpts struct {
 	Name string // arg 0
 }
 
-func NewVmDelCommand(cmdline Cmdline, parent Command) *VmDelCommand {
-	// vm del command
+func NewVmDelCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm.del"
-	validator := ArgCountValidator{nExpected: 1}
-	cmd := &VmDelCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Del, nil, validator)}
-	cmd.argmap  = map[int]*string {
-		0: &cmd.Name,
-	}
-	cmd.fnRun = func () error { return api.RunVmDel(cmd.Name) }
+	opts := VmDelOpts{}
+	fnRun := func(cmd *BaseCommand[VmDelOpts]) error { return api.RunVmDel(cmd.opts.Name) }
+	cfg := BaseCommandConfig[VmDelOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Vm_Del),
+		validator: ArgCountValidator{nExpected: 1},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
+	// flags + args if any
+	cmd.argMap = map[int]*string{
+		0: &cmd.opts.Name,
+	}
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
 // Usage
 //
 //	vm get vmName
-type VmGetCommand struct {
-	*BaseCommand
+type VmGetOpts struct {
 	Name string // arg 0
 }
 
-func NewVmGetCommand(cmdline Cmdline, parent Command) *VmGetCommand {
-	// vm get command
+func NewVmGetCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm.get"
-	validator := ArgCountValidator{nExpected: 1}
-	cmd := &VmGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Get, nil, validator)}
-	cmd.argmap  = map[int]*string {
-		0: &cmd.Name,
+	opts := VmGetOpts{}
+	fnRun := func(cmd *BaseCommand[VmGetOpts]) error { return api.RunVmGet(cmd.opts.Name) }
+	cfg := BaseCommandConfig[VmGetOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Vm_Get),
+		validator: ArgCountValidator{nExpected: 1},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+	cmd.argMap = map[int]*string{
+		0: &cmd.opts.Name,
 	}
-	cmd.fnRun = func () error { return api.RunVmGet(cmd.Name) }
-
-	//init flags (if any)
-
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
 // Usage
 //
 //	vm list
-type VmListCommand struct {
-	*BaseCommand
+type VmListOpts struct {
 }
 
-func NewVmListCommand(cmdline Cmdline, parent Command) *VmListCommand {
-	// vm list command
+func NewVmListCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm.list"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &VmListCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_List, nil, validator)}
-	cmd.fnRun = func () error { return api.RunVmList() }
+	opts := VmListOpts{}
+	fnRun := func(cmd *BaseCommand[VmListOpts]) error { return api.RunVmList() }
+	cfg := BaseCommandConfig[VmListOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Vm_List),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	//init flags (if any)
-
+	// flags + args if any
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
 // Usage
 //
 //	vm set vmName key val
-type VmSetCommand struct {
-	*BaseCommand
+type VmSetOpts struct {
 	Name  string // arg 0
 	Key   string // arg 1
 	Value string // arg 2
 }
 
-func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
-	// vm set command
+func NewVmSetCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "vm.set"
-	validator := ArgCountValidator{nExpected: 3}
-	cmd := &VmSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Vm_Set, nil, validator)}
-	cmd.argmap  = map[int]*string {
-		0: &cmd.Name,
-		1: &cmd.Key,
-		2: &cmd.Value,
+	opts := VmSetOpts{}
+	fnRun := func(cmd *BaseCommand[VmSetOpts]) error { return api.RunVmSet(cmd.opts.Name, cmd.opts.Key, cmd.opts.Value) }
+	cfg := BaseCommandConfig[VmSetOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Vm_Set),
+		validator: ArgCountValidator{nExpected: 3},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+	cmd.argMap = ArgMap{
+		0: &cmd.opts.Name,
+		1: &cmd.opts.Key,
+		2: &cmd.opts.Value,
 	}
-	cmd.fnRun = func () error { return api.RunVmSet(cmd.Name, cmd.Key, cmd.Value) }
-
-	//init flags (if any)
-
+	
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
@@ -180,7 +240,7 @@ func NewVmSetCommand(cmdline Cmdline, parent Command) *VmSetCommand {
 // 	*flag.FlagSet
 // }
 
-// func NewVmShowCommand () *VmShowCommand {
+// New\w\+CommandFunc NewVmShowCommand () Command {
 // 	// create command
 // 	flagSet := flag.NewFlagSet("vm.show", flag.ExitOnError)
 // 	cmd := VmShowCommand{FlagSet: flagSet}

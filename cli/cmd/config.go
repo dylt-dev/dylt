@@ -4,25 +4,33 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type ConfigCommand struct {
-	*BaseCommand
+type ConfigOpts struct {
 }
 
-func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
+func NewConfigCommand(cmdline Cmdline, parent Command) Command {
 	// config command
 	name := "config"
-	cmdMap := CommandMap{
+	opts := ConfigOpts{}
+	cfg := BaseCommandConfig[ConfigOpts]{
+		name:            name,
+		isUsageOnNoArgs: true,
+		opts:            opts,
+		usage:           CreateUsageString(USG_Config),
+		validator:       ArgCountGEValidator{nExpected: 0},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// flags + args if any
+
+	// subcommand map if any
+	cmd.subCommandMap = CommandMap{
 		"get":  ConfigGetCommandF.New,
 		"set":  ConfigSetCommandF.New,
 		"show": ConfigShowCommandF.New,
 	}
-	validator := ArgCountGEValidator{nExpected: 0}
-	cmd := ConfigCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config, cmdMap, validator)}
-	cmd.isUsageOnNoArgs = true
 
-	// init flag vars (nop -- no flags)
-
-	return &cmd
+	// done
+	return cmd
 }
 
 // func RunConfig(cmdline Cmdline, parent Command) error {
@@ -43,57 +51,89 @@ func NewConfigCommand(cmdline Cmdline, parent Command) *ConfigCommand {
 // Usage
 //
 //	dylt get key     # get key from config
-type ConfigGetCommand struct {
-	*BaseCommand
-	Key string  // arg 0
+type ConfigGetOpts struct {
+	Key string // arg 0
 }
 
-func NewConfigGetCommand(cmdline Cmdline, parent Command) *ConfigGetCommand {
-	// config get command
+func NewConfigGetCommand(cmdline Cmdline, parent Command) *BaseCommand[ConfigGetOpts] {
+	// create config object + BaseCommand
 	name := "config.get"
-	validator := ArgCountValidator{nExpected: 1}
-	cmd := &ConfigGetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Get, nil, validator)}
-	cmd.argmap  = map[int]*string {
-		0: &cmd.Key,
+	opts := ConfigGetOpts{}
+	fnRun := func(cmd *BaseCommand[ConfigGetOpts]) error { return api.RunConfigGet(cmd.opts.Key) }
+	cfg := BaseCommandConfig[ConfigGetOpts]{
+		name:      name,
+		fnRun:     fnRun,
+		opts:      opts,
+		usage:     CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 1},
 	}
-	cmd.fnRun = func () error { return api.RunConfigGet(cmd.Key) }
-		
-	// init flag vars (nop -- no flags)
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
+	// flags + args if any
+	cmd.argMap = map[int]*string{
+		0: &cmd.opts.Key,
+	}
+
+	// subcommand map if any
+
+	// done
 	return cmd
 }
 
-type ConfigSetCommand struct {
-	*BaseCommand
+type ConfigSetOpts struct {
 	Key   string // arg 0
 	Value string // arg 1
 }
 
-func NewConfigSetCommand(cmdline Cmdline, parent Command) *ConfigSetCommand {
-	// config set command
+func NewConfigSetCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "config.set"
-	validator := ArgCountValidator{nExpected: 2}
-	cmd := &ConfigSetCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Set, nil, validator)}
-	cmd.argmap  = map[int]*string {
-		0: &cmd.Key,
-		1: &cmd.Value,
+	opts := ConfigSetOpts{}
+	fnRun := func(cmd *BaseCommand[ConfigSetOpts]) error {
+		return api.RunConfigSet(cmd.opts.Key, cmd.opts.Value)
 	}
-	cmd.fnRun = func () error { return api.RunConfigSet(cmd.Key, cmd.Value) }
+	cfg := BaseCommandConfig[ConfigSetOpts]{
+		name:      name,
+		fnRun:     fnRun,
+		opts:      opts,
+		usage:     CreateUsageString(USG_Config_Set),
+		validator: ArgCountValidator{nExpected: 2},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
+	// flags + args if any
+	cmd.argMap = map[int]*string{
+		0: &cmd.opts.Key,
+		1: &cmd.opts.Value,
+	}
+
+	// subcommand map if any
+
+	// done
 	return cmd
 }
 
-type ConfigShowCommand struct {
-	*BaseCommand
+type ConfigShowOpts struct {
 }
 
-func NewConfigShowCommand(cmdline Cmdline, parent Command) *ConfigShowCommand {
-	// config show command
-	name := "config.set"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &ConfigShowCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Config_Show, nil, validator)}
-	cmd.fnRun = func () error { return api.RunConfigShow() }
-	//init flags (if any)
+func NewConfigShowCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
+	name := "config.show"
+	opts := ConfigShowOpts{}
+	fnRun := func(cmd *BaseCommand[ConfigShowOpts]) error { return api.RunConfigShow() }
+	cfg := BaseCommandConfig[ConfigShowOpts]{
+		name:      name,
+		fnRun:     fnRun,
+		opts:      opts,
+		usage:     CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 0},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
+	// flags + args if any
+
+	// subcommand map if any
+
+	// done
 	return cmd
 }

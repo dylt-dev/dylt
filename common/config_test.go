@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ConfigFile_Init (t *testing.T) {
@@ -117,15 +118,16 @@ func TestConfigMapSet2(t *testing.T) {
 	val := "bar"
 	data := ConfigMap{}
 	data.Set(key, val)
-	data1 := data["a"]
-	assert.NotNil(t, data1)
-	assert.IsType(t, map[string]any{}, data1)
-	data2 := (data1.(map[string]any))["b"]
-	assert.NotNil(t, data2)
-	assert.IsType(t, map[string]any{}, data2)
-	data3 := (data2.(map[string]any))["c"]
-	assert.NotNil(t, data3)
-	assert.Equal(t, val, data3)
+	data1, is := data["a"].(ConfigMap)
+	require.NotNil(t, data1)
+	require.True(t, is)
+	data2, is := data1["b"].(ConfigMap)
+	require.NotNil(t, data2)
+	require.True(t, is)
+	data3, is := data2["c"].(string)
+	require.NotNil(t, data3)
+	require.True(t, is)
+	require.Equal(t, val, data3)
 }
 
 func TestConfigMapSet3(t *testing.T) {

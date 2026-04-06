@@ -12,12 +12,19 @@ import (
 // cmdline: dylt vm list
 // Expected: --help=False SubCommand="vm" SubArgs="list")
 func TestVmMainList(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+
 	cmdline := []string{"vm", "list"}
-	cmd := clicmd.MainCommandF.New(cmdline, nil).(*clicmd.MainCommand)
+	cmd := clicmd.MainCommandF.New(cmdline, nil).(*clicmd.BaseCommand[clicmd.MainOpts])
 	cmd.HandleArgs()
-	require.False(t, cmd.Help)
-	require.Equal(t, "vm", cmd.SubCommand)
-	require.Equal(t, []string{"list"}, cmd.SubArgs)
+	require.False(t, cmd.Help())
+	subCmd, is := cmd.SubCommand()
+	require.True(t, is)
+	require.Equal(t, "list", subCmd)
+	subArgs, is := cmd.SubArgs()
+	require.True(t, is)
+	require.Equal(t, clicmd.Cmdline{}, subArgs)
 }
 
 func TestRun(t *testing.T) {

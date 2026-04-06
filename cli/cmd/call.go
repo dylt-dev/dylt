@@ -4,24 +4,34 @@ import (
 	"github.com/dylt-dev/dylt/lib"
 )
 
-type CallCommandOpts struct {
-	ScriptPath string   // flag
+type CallOpts struct {
+	ScriptPath string // flag
 }
 
-func NewCallCommand(cmdline Cmdline, parent Command) *BaseCommand {
-	// call command
+type CallCommand BaseCommand[CallOpts]
+
+func NewCallCommand(cmdline Cmdline, parent Command) *BaseCommand[CallOpts] {
+	// create config object + BaseCommand
 	name := "call"
-	validator := ArgCountGEValidator{nExpected: 1}
-	opts := CallCommandOpts{}
-	cmd := NewBaseCommand(name, cmdline, parent, USG_Call, nil, validator)
-	// init flag vars
-	cmd.StringVar(&opts.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
-	cmd.fnRun = func () error {
+	opts := CallOpts{}
+	fnRun := func(cmd *BaseCommand[CallOpts]) error {
 		scriptArgs := cmd.Cmdline.Args()
-		err := lib.RunCall(opts.ScriptPath, scriptArgs)
+		err := lib.RunCall(cmd.opts.ScriptPath, scriptArgs)
 		return err
 	}
-	cmd.isUsageOnNoArgs = true
+	cfg := BaseCommandConfig[CallOpts]{
+		name:            name,
+		fnRun:           fnRun,
+		opts:            opts,
+		usage:           CreateUsageString(USG_Call),
+		validator:       ArgCountGEValidator{nExpected: 1},
+	}
+	cmd := NewBaseCommand(cmdline, parent, cfg)
+
+	// Add flags & args
+	cmd.StringVar(&cmd.opts.ScriptPath, "script-path", "/opt/bin/daylight.sh", "script-path")
+
+	// subcommand map if any
+	
 	return cmd
 }
-

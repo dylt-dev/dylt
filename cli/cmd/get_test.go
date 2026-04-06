@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGet (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "get"
@@ -16,21 +17,19 @@ func TestGet (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{key}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, GetCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*GetCommand)
-	require.IsType(t, &GetCommand{}, cmd)
-	require.Equal(t, key, cmd.Key)
+	cmd := CreateAndTestCommand(t, GetCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.Equal(t, key, *cmd.ArgMap()[0])
 }
 
 
 func TestGetHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "get"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, GetCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*GetCommand)
-	require.IsType(t, &GetCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, GetCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
+	require.True(t, cmd.Help())
 }

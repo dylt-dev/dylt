@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestVm (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -16,25 +17,25 @@ func TestVm (t *testing.T) {
 	cmdArgs := []string{}
 	cmdString := CreateCommandString(cmdName, cmdArgs)
 	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.IsType(t, &VmCommand{}, cmd)
+	require.IsType(t, &BaseCommand[VmOpts]{}, cmd)
 }
 
 
 func TestVmHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
 	cmdFlags := []string{"--help"}
 	cmdArgs := []string{}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*VmCommand)
-	require.IsType(t, &VmCommand{}, cmd)
-	require.True(t, cmd.Help)
+	cmd := CreateAndTestCommand(t, VmCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[VmOpts])
+	require.IsType(t, &BaseCommand[VmOpts]{}, cmd)
+	require.True(t, cmd.Help())
 }
 
 func TestVmAdd (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -49,20 +50,20 @@ func TestVmAdd (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*VmAddCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmAddOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, fqdn, subCmd.Fqdn)
-	require.Equal(t, name, subCmd.Name)
+	require.Equal(t, fqdn, subCmd.opts.Fqdn)
+	require.Equal(t, name, subCmd.opts.Name)
 }
 
 
 func TestVmAddHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -74,18 +75,18 @@ func TestVmAddHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*VmAddCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmAddOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestVmAll (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -98,7 +99,7 @@ func TestVmAll (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*VmAllCommand](t,
+	_TestSubcommandCreation[*BaseCommand[VmAllOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -108,7 +109,7 @@ func TestVmAll (t *testing.T) {
 }
 
 func TestVmDel (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -122,19 +123,19 @@ func TestVmDel (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*VmDelCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmDelOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.Name)
+	require.Equal(t, name, subCmd.opts.Name)
 }
 
 
 func TestVmDelHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -146,18 +147,18 @@ func TestVmDelHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*VmDelCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmDelOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 func TestVmGet (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -171,18 +172,18 @@ func TestVmGet (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*VmGetCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmGetOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.Name)
+	require.Equal(t, name, subCmd.opts.Name)
 }
 
 func TestVmList (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -195,7 +196,7 @@ func TestVmList (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	_TestSubcommandCreation[*VmListCommand](t,
+	_TestSubcommandCreation[*BaseCommand[VmListOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
@@ -206,7 +207,7 @@ func TestVmList (t *testing.T) {
 
 
 func TestVmListHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -218,19 +219,19 @@ func TestVmListHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*VmListCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmListOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }
 
 
 func TestVmSet (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -246,21 +247,21 @@ func TestVmSet (t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test subcommand
-	subCmd := _TestSubcommandCreation[*VmSetCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmSetOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.Equal(t, name, subCmd.Name)
-	require.Equal(t, key, subCmd.Key)
-	require.Equal(t, value, subCmd.Value)
+	require.Equal(t, name, subCmd.opts.Name)
+	require.Equal(t, key, subCmd.opts.Key)
+	require.Equal(t, value, subCmd.opts.Value)
 }
 
 
 func TestVmSetHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -272,12 +273,12 @@ func TestVmSetHelp(t *testing.T) {
 	// test parent command
 	_TestParentCommand(t, cmd, cmdName, cmdArgs)
 	// create + test  subcommand
-	subCmd := _TestSubcommandCreation[*VmSetCommand](t,
+	subCmd := _TestSubcommandCreation[*BaseCommand[VmSetOpts]](t,
 		cmd,
 		subCmdName,
 		subCmdFlags,
 		subCmdArgs,
 		subCmdString,
 	)
-	require.True(t, subCmd.Help)
+	require.True(t, subCmd.Help())
 }

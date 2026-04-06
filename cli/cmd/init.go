@@ -4,21 +4,30 @@ import (
 	"github.com/dylt-dev/dylt/api"
 )
 
-type InitCommand struct {
-	*BaseCommand
+type InitOpts struct {
 	EtcdDomain string // --etcd-domain
 }
 
-func NewInitCommand(cmdline Cmdline, parent Command) *InitCommand {
-	// init command
+func NewInitCommand(cmdline Cmdline, parent Command) Command {
+	// create config object + BaseCommand
 	name := "init"
-	validator := ArgCountValidator{nExpected: 0}
-	cmd := &InitCommand{BaseCommand: NewBaseCommand(name, cmdline, parent, USG_Init, nil, validator)}
-	cmd.fnRun = func () error { return api.RunInit(cmd.EtcdDomain) }
-	
-	//init flags (if any)
-	cmd.FlagSet.StringVar(&cmd.EtcdDomain, "etcd-domain", "", "etcd-domain")
+	opts := InitOpts{}
+	fnRun := func (cmd *BaseCommand[InitOpts]) error { return api.RunInit(cmd.opts.EtcdDomain) }
+	cfg := BaseCommandConfig[InitOpts]{
+		name: name,
+		fnRun: fnRun,
+		opts: opts,
+		usage: CreateUsageString(USG_Config_Get),
+		validator: ArgCountValidator{nExpected: 0},
+	}	
+	cmd := NewBaseCommand(cmdline, parent, cfg)
 
+	// flags + args if any 
+	cmd.FlagSet.StringVar(&cmd.opts.EtcdDomain, "etcd-domain", "", "etcd-domain")
+
+	// subcommand map if any
+	
+	// done
 	return cmd
 }
 
