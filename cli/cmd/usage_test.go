@@ -7,18 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setup (t *testing.T) func (t *testing.T) {
-	t.Log("setup() ...")
-	common.InitLogging()
-	return teardown
-}
-
-func teardown (t *testing.T) {
-	t.Log("teardown() ...")
-}
-
 func TestConfigUsage (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdline := Cmdline{"dylt", "config"}
@@ -33,7 +23,7 @@ func TestConfigUsage (t *testing.T) {
 }
 
 func TestHostUsage (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdline := Cmdline{"dylt", "host"}
@@ -48,7 +38,7 @@ func TestHostUsage (t *testing.T) {
 }
 
 func TestMiscUsage (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdline := Cmdline{"dylt", "misc"}
@@ -63,7 +53,7 @@ func TestMiscUsage (t *testing.T) {
 }
 
 func TestVmUsage (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdline := Cmdline{"dylt", "vm"}
@@ -78,7 +68,7 @@ func TestVmUsage (t *testing.T) {
 }
 
 func TestWatchUsage (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdline := Cmdline{"dylt", "watch"}

@@ -16,7 +16,7 @@ import (
 )
 
 func TestHost(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "host"
@@ -28,7 +28,7 @@ func TestHost(t *testing.T) {
 }
 
 func TestHostHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "host"
@@ -41,7 +41,7 @@ func TestHostHelp(t *testing.T) {
 }
 
 func TestHostInit(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	// config get foo
@@ -68,7 +68,7 @@ func TestHostInit(t *testing.T) {
 }
 
 func TestHostInitHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "host"
@@ -92,7 +92,7 @@ func TestHostInitHelp(t *testing.T) {
 }
 
 func TestRunHost(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
@@ -107,7 +107,7 @@ func TestRunHost(t *testing.T) {
 }
 
 func TestHostCmd0(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
@@ -122,7 +122,7 @@ func TestHostCmd0(t *testing.T) {
 }
 
 func TestEmitWatchDaylightRunScript(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
@@ -137,7 +137,7 @@ func TestEmitWatchDaylightRunScript(t *testing.T) {
 }
 
 func TestEmitWatchDaylightUnitFile(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
@@ -152,7 +152,7 @@ func TestEmitWatchDaylightUnitFile(t *testing.T) {
 }
 
 func TestChmodR0(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	svcPath := "/opt/svc/watch-daylight"
@@ -162,7 +162,7 @@ func TestChmodR0(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteRunScript(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")
@@ -177,7 +177,7 @@ func Test_WatchDaylight_WriteRunScript(t *testing.T) {
 }
 
 func Test_WatchDaylight_WriteUnitFile(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	fsSvcFiles, err := fs.Sub(api.EMBED_SvcFiles, "svcfiles")

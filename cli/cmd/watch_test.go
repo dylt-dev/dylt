@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestWatch(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "watch"
@@ -21,7 +22,7 @@ func TestWatch(t *testing.T) {
 
 
 func TestWatchHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "watch"
@@ -34,7 +35,7 @@ func TestWatchHelp (t *testing.T) {
 }
 
 func TestWatchScript (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -62,7 +63,7 @@ func TestWatchScript (t *testing.T) {
 
 
 func TestWatchScriptHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "watch"
@@ -85,7 +86,7 @@ func TestWatchScriptHelp(t *testing.T) {
 }
 
 func TestWatchSvc (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -111,7 +112,7 @@ func TestWatchSvc (t *testing.T) {
 
 
 func TestWatchSvcHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "watch"

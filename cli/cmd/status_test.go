@@ -3,11 +3,12 @@ package cmd
 import (
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStatus (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "status"
@@ -20,7 +21,7 @@ func TestStatus (t *testing.T) {
 }
 
 func TestStatusHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "status"

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +26,7 @@ func CreateCommandParams(cmdName string,
 }
 
 func TestMain(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -41,7 +42,7 @@ func TestMain(t *testing.T) {
 
 // dylt --help
 func TestHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -57,7 +58,7 @@ func TestHelp (t *testing.T) {
 
 // dylt call foo
 func TestMainSubCall(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Independent values
@@ -122,7 +123,7 @@ func TestMainSubConfig (t *testing.T) {
 
 // dylt config get foo
 func TestMainSubConfigGetFoo(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Independent values
@@ -187,7 +188,7 @@ func TestMainSubGet(t *testing.T) {
 
 
 func TestMainSubHost(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Independent values
@@ -255,7 +256,7 @@ func TestMainSubHostInit(t *testing.T) {
 
 // dylt init --etcd-domain foo.dylt.dev
 func TestMainSubInit(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Create + parse main command with "dylt get foo"
@@ -323,7 +324,7 @@ func TestMainSubList(t *testing.T) {
 
 // dylt misc
 func TestMainSubMisc(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Independent values
@@ -387,7 +388,7 @@ func TestMainSubMiscLookupHostname(t *testing.T) {
 }
 
 func TestMainSubStatus(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Independent values
@@ -452,7 +453,7 @@ func TestMainSubVm(t *testing.T) {
 
 // dylt watch
 func TestMainSubWatch(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// Independent values

@@ -8,11 +8,12 @@ import (
 
 	"text/template"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMisc (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -25,7 +26,7 @@ func TestMisc (t *testing.T) {
 
 
 func TestMiscHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -39,7 +40,7 @@ func TestMiscHelp (t *testing.T) {
 
 
 func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -63,7 +64,7 @@ func TestMiscCreateTwoNodeClusterCommand (t *testing.T) {
 
 
 func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -87,7 +88,7 @@ func TestMiscCreateTwoNodeClusterHelp(t *testing.T) {
 
 
 func TestMiscGenEtcdRunScript  (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -110,7 +111,7 @@ func TestMiscGenEtcdRunScript  (t *testing.T) {
 }
 
 func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -133,7 +134,7 @@ func TestMiscGenEtcdRunScriptHelp(t *testing.T) {
 }
 
 func TestMiscLookup (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -159,7 +160,7 @@ func TestMiscLookup (t *testing.T) {
 
 
 func TestMiscLookupHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "misc"
@@ -182,7 +183,7 @@ func TestMiscLookupHelp(t *testing.T) {
 }
 
 func TestGetStdinStdoutStderrFdNums(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	var nStdin, nStdout, nStderr uintptr
@@ -195,7 +196,7 @@ func TestGetStdinStdoutStderrFdNums(t *testing.T) {
 }
 
 func TestNewCmdline (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -207,7 +208,7 @@ func TestNewCmdline (t *testing.T) {
 }
 
 func TestNewCmdlineArgs (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -219,7 +220,7 @@ func TestNewCmdlineArgs (t *testing.T) {
 }
 
 func TestNewCmdlineArgsFlags (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -231,7 +232,7 @@ func TestNewCmdlineArgsFlags (t *testing.T) {
 }
 
 func TestNewCmdlineFlags (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "dylt"
@@ -243,7 +244,7 @@ func TestNewCmdlineFlags (t *testing.T) {
 }
 
 func TestNewlineKiller(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	s := `
@@ -265,7 +266,7 @@ func TestNewlineKiller(t *testing.T) {
 }
 
 func TestPrintMultiLineUsage_String(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	data := "MEAT!!!"
@@ -273,7 +274,7 @@ func TestPrintMultiLineUsage_String(t *testing.T) {
 }
 
 func TestPrintMultiLineUsage_StringSlice(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	data := []string{"meat", "Meat", "MEAT"}

@@ -2,12 +2,17 @@ package lib
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCallDaylightScript (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+	
 	args := []string{"hello"}
 	rc, err := CallDaylightScript(args)
 	if err != nil { t.Fatalf("%v\n", err) }
@@ -16,6 +21,10 @@ func TestCallDaylightScript (t *testing.T) {
 
 
 func TestCallDaylightScriptO (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+	
 	args := []string{"hello"}
 	rc, stdout, err := CallDaylightScriptO(args)
 	fmt.Printf("stdout=%s\n", stdout)
@@ -24,6 +33,10 @@ func TestCallDaylightScriptO (t *testing.T) {
 }
 
 func TestIsExecutable0 (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+	
 	path := "/tmp/i-am-program"
 	flag, err := IsPathExecutable(path)
 	assert.True(t, flag)
@@ -31,6 +44,10 @@ func TestIsExecutable0 (t *testing.T) {
 }
 
 func TestIsExecutable1 (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+
 	path := "/tmp/i-am-file"
 	flag, err := IsPathExecutable(path)
 	assert.False(t, flag)
@@ -38,6 +55,10 @@ func TestIsExecutable1 (t *testing.T) {
 }
 
 func TestIsExecutable2 (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+
 	path := "/tmp/i-am-not"
 	flag, err := IsPathExecutable(path)
 	assert.False(t, flag)
@@ -45,6 +66,10 @@ func TestIsExecutable2 (t *testing.T) {
 }
 
 func TestRun0 (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
+
 	path := "/tmp/i-am-program"
 	rc, stdout, err := RunScript(path, []string{})
 	assert.Equal(t, 0, rc)

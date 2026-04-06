@@ -16,7 +16,7 @@ func NewCallCommand(cmdline Cmdline, parent Command) *BaseCommand[CallOpts] {
 	opts := CallOpts{}
 	fnRun := func(cmd *BaseCommand[CallOpts]) error {
 		scriptArgs := cmd.Cmdline.Args()
-		err := lib.RunCall(opts.ScriptPath, scriptArgs)
+		err := lib.RunCall(cmd.opts.ScriptPath, scriptArgs)
 		return err
 	}
 	cfg := BaseCommandConfig[CallOpts]{

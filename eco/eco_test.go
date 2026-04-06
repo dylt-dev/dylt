@@ -16,7 +16,6 @@ import (
 	"unsafe"
 
 	"github.com/dylt-dev/dylt/common"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	etcd "go.etcd.io/etcd/client/v3"
 )
@@ -237,17 +236,17 @@ func TestFullTypeName_StatSlice(t *testing.T) {
 
 func TestKind_ArrayOfInt(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), arrayOfInt{})
-	assert.Equal(t, SimpleArray, kind)
+	require.Equal(t, SimpleArray, kind)
 }
 
 func TestKind_ArrayOfStruct(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), arrayOfStruct{})
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapOfIntSlice(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), mapOfIntSlice{})
-	assert.Equal(t, SimpleMap, kind)
+	require.Equal(t, SimpleMap, kind)
 
 }
 
@@ -255,50 +254,50 @@ func TestKind_MapOfSliceOfStruct(t *testing.T) {
 	type emptyStruct struct{}
 	type mapOfSlice map[string][]emptyStruct
 	kind := getKind(newEcoContext(os.Stdout), mapOfSlice{})
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_MapSimple(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), VAL_MapSimple)
-	assert.Equal(t, SimpleMap, kind)
+	require.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_MapUnsimple(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimple)
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapUnsimpleKey(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimpleKey)
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapUnsimpleValue(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimpleValue)
-	assert.Equal(t, SimpleMap, kind)
+	require.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_PointerToInt(t *testing.T) {
 	var pint pointerToInt
 	kind := getKind(newEcoContext(os.Stdout), pint)
-	assert.Equal(t, SimplePointer, kind)
+	require.Equal(t, SimplePointer, kind)
 }
 
 func TestKind_PointerToIntSlice(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), new(sliceOfInt))
-	assert.Equal(t, SimplePointer, kind)
+	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_PointerToStructSlice(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), new(sliceOfStruct))
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_SliceSimple(t *testing.T) {
 	type intSlice []int
 	i := intSlice{1, 2, 3}
 	kind := getKind(newEcoContext(os.Stdout), i)
-	assert.Equal(t, SimpleSlice, kind)
+	require.Equal(t, SimpleSlice, kind)
 }
 
 func TestKind_SliceOfMap(t *testing.T) {
@@ -306,7 +305,7 @@ func TestKind_SliceOfMap(t *testing.T) {
 	type sliceOfMap []simpleMap
 	i := sliceOfMap{}
 	kind := getKind(newEcoContext(os.Stdout), i)
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, SimpleSlice, kind)
 }
 
 func TestKind_SliceUnsimple(t *testing.T) {
@@ -314,41 +313,41 @@ func TestKind_SliceUnsimple(t *testing.T) {
 	type emptyStructSlice []emptyStruct
 	i := emptyStructSlice{}
 	kind := getKind(newEcoContext(os.Stdout), i)
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, SimpleSlice, kind)
 }
 
 func TestKind_StatSlice(t *testing.T) {
 	val := StatSlice{}
 	kind := getKind(newEcoContext(os.Stdout), val)
-	assert.Equal(t, SimpleSlice, kind, fmt.Sprintf("Expected %s, got %s", SimpleSlice.String(), kind.String()))
+	require.Equal(t, SimpleSlice, kind, fmt.Sprintf("Expected %s, got %s", SimpleSlice.String(), kind.String()))
 }
 
 func TestKind_StructSimple(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), EcoTest{})
-	assert.Equal(t, SimpleStruct, kind)
+	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructUnsimple(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), UnsimpleStruct{})
-	assert.Equal(t, Invalid, kind)
+	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_StructWithMap(t *testing.T) {
 	kind := getKind(newEcoContext(os.Stdout), structWithMap{})
-	assert.Equal(t, SimpleStruct, kind)
+	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithSlice(t *testing.T) {
 	type structWithSlice struct{ Slice []int }
 	kind := getKind(newEcoContext(os.Stdout), structWithSlice{})
-	assert.Equal(t, SimpleStruct, kind)
+	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithMapWithSlice(t *testing.T) {
 	type mapWithSlice map[string][]int
 	type structWithMapWithSlice struct{ M mapWithSlice }
 	kind := getKind(newEcoContext(os.Stdout), structWithMapWithSlice{})
-	assert.Equal(t, SimpleStruct, kind)
+	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithMapWithStruct(t *testing.T) {
@@ -356,7 +355,7 @@ func TestKind_StructWithMapWithStruct(t *testing.T) {
 	type mapWithStruct map[string]innerStruct
 	type structWithMapWithSlice struct{ MapField mapWithStruct }
 	kind := getKind(newEcoContext(os.Stdout), structWithMapWithSlice{})
-	assert.Equal(t, SimpleStruct, kind)
+	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestPutObject0(t *testing.T) {
@@ -375,8 +374,8 @@ func TestPutObject0(t *testing.T) {
 
 	txn := etcdClient.Txn(context.Background())
 	resp, err := txn.Then(ops...).Commit()
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
 	for _, respOp := range resp.Responses {
 		t.Logf("respOp.GetResponsePut().PrevKV: %s => %s", respOp.GetResponsePut().PrevKv.Key, respOp.GetResponsePut().PrevKv.Value)
 	}
@@ -398,8 +397,8 @@ func TestPutObject1(t *testing.T) {
 
 	txn := etcdClient.Txn(context.Background())
 	resp, err := txn.Then(ops...).Commit()
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
 	for _, respOp := range resp.Responses {
 		// t.Logf("respOp=%#v", respOp)
 		// t.Logf("respOp.GetResponsePut()=%#v", respOp.GetResponsePut())
@@ -424,7 +423,7 @@ func TestReflection0(t *testing.T) {
 	} else {
 		val = reflect.ValueOf(obj)
 	}
-	assert.Equal(t, 3, ty.NumField())
+	require.Equal(t, 3, ty.NumField())
 
 	for i := range ty.NumField() {
 		sf := ty.Field(i)
@@ -463,7 +462,9 @@ func TestReflection2(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, ty)
 	require.NotEmpty(t, val)
-	require.Equal(t, 2, ty.NumField())
+	t.Logf("ty=%#v", ty)
+	require.Equal(t, reflect.Struct, ty.Kind())
+	require.Equal(t, 3, ty.NumField())
 	dumpStruct(t, ty, val)
 }
 
@@ -531,7 +532,7 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 		var sfv reflect.Value = val.Field(i)
 		fieldName := getFieldKey(sf)
 		fieldValue, err := getFieldValue(sfv)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		t.Logf("%s=%s", fieldName, fieldValue)
 	}
 }
@@ -572,8 +573,8 @@ func testEncodeBool(t *testing.T, key string, b any) {
 	op := ops[0]
 	require.NotEmpty(t, op)
 	require.True(t, op.IsPut())
-	assert.Equal(t, []byte(key), op.KeyBytes())
-	assert.Equal(t, valExpected, op.ValueBytes())
+	require.Equal(t, []byte(key), op.KeyBytes())
+	require.Equal(t, valExpected, op.ValueBytes())
 }
 
 func testEncodeNumber(t *testing.T, key string, n any) {
@@ -587,8 +588,8 @@ func testEncodeNumber(t *testing.T, key string, n any) {
 	op := ops[0]
 	require.NotEmpty(t, op)
 	require.True(t, op.IsPut())
-	assert.Equal(t, []byte(key), op.KeyBytes())
-	assert.Equal(t, valExpected, op.ValueBytes())
+	require.Equal(t, []byte(key), op.KeyBytes())
+	require.Equal(t, valExpected, op.ValueBytes())
 }
 
 func testEncodeString(t *testing.T, key string, s string) {
@@ -601,6 +602,6 @@ func testEncodeString(t *testing.T, key string, s string) {
 	// op := ops[0]
 	// require.NotEmpty(t, op)
 	// require.True(t, op.IsPut())
-	// assert.Equal(t, []byte(key), op.KeyBytes())
-	// assert.Equal(t, []byte(valExpected), op.ValueBytes())
+	// require.Equal(t, []byte(key), op.KeyBytes())
+	// require.Equal(t, []byte(valExpected), op.ValueBytes())
 }

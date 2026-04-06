@@ -5,13 +5,15 @@ import (
 	"testing"
 
 	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestConfig(t *testing.T) {
-	fnTeardown := setup(t)
+
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "config"
@@ -23,7 +25,7 @@ func TestConfig(t *testing.T) {
 }
 
 func TestConfigHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "list"
@@ -35,7 +37,7 @@ func TestConfigHelp(t *testing.T) {
 }
 
 func TestConfigGet(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	// config get foo
@@ -61,7 +63,7 @@ func TestConfigGet(t *testing.T) {
 }
 
 func TestConfigGetHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "config"
@@ -84,7 +86,7 @@ func TestConfigGetHelp(t *testing.T) {
 }
 
 func TestConfigSet(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	// config set foo bar
@@ -109,7 +111,7 @@ func TestConfigSet(t *testing.T) {
 }
 
 func TestConfigSetHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "config"
@@ -132,7 +134,7 @@ func TestConfigSetHelp(t *testing.T) {
 }
 
 func TestConfigShow(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	// config set foo bar
@@ -157,7 +159,7 @@ func TestConfigShow(t *testing.T) {
 }
 
 func TestConfigShowHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	cmdName := "config show"
@@ -169,7 +171,7 @@ func TestConfigShowHelp(t *testing.T) {
 }
 
 func TestRunConfigGet(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	key := "etcd-domain"
@@ -178,7 +180,7 @@ func TestRunConfigGet(t *testing.T) {
 }
 
 func TestConfigGetCmd(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	dyltPath := lib.GetAndValidateDyltPath(t)
@@ -187,7 +189,7 @@ func TestConfigGetCmd(t *testing.T) {
 }
 
 func TestRunConfigSet(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	key := "etcd-domain"
@@ -197,7 +199,7 @@ func TestRunConfigSet(t *testing.T) {
 }
 
 func TestConfigSetCmd0(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt config set etcd-domain MOO"
@@ -205,7 +207,7 @@ func TestConfigSetCmd0(t *testing.T) {
 }
 
 func TestConfigSetCmd1(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt config set etcd-domain hello.dylt.dev"
@@ -216,7 +218,7 @@ func TestConfigSetCmd1(t *testing.T) {
 // simple code. Turned out I was forgetting to Parse(). I was used to my
 // test_utils helper function doing it for me.
 func TestCreateSubcommandRaw(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	var err error
@@ -235,7 +237,7 @@ func TestCreateSubcommandRaw(t *testing.T) {
 }
 
 func TestRunConfigShow(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	err := api.RunConfigShow()
@@ -243,7 +245,7 @@ func TestRunConfigShow(t *testing.T) {
 }
 
 func TestConfigShowCmd(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt config show"

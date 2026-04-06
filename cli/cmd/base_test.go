@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestHelpFlag (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cfg := BaseCommandConfig[EmptyOpts]{

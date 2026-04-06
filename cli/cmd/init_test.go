@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInit (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "init"
@@ -27,7 +28,7 @@ func TestInit (t *testing.T) {
 }
 
 func TestInitHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "init"
@@ -40,7 +41,7 @@ func TestInitHelp(t *testing.T) {
 }
 
 func TestRunInit (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	etcDomain := "hello.dylt.dev"
@@ -49,7 +50,7 @@ func TestRunInit (t *testing.T) {
 }
 
 func TestInitCmd0 (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
@@ -64,7 +65,7 @@ func TestInitCmd0 (t *testing.T) {
 }
 
 func TestInitCmd1 (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {

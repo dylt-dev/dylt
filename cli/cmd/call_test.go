@@ -6,13 +6,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCall(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "call"
@@ -25,7 +26,7 @@ func TestCall(t *testing.T) {
 }
 
 func TestCallHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "call"
@@ -37,7 +38,7 @@ func TestCallHelp(t *testing.T) {
 }
 
 func TestCallScriptPath(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "call"
@@ -52,7 +53,7 @@ func TestCallScriptPath(t *testing.T) {
 }
 
 func TestRunCall0(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	scriptPath := "/tmp/daylight.sh"
@@ -67,7 +68,7 @@ func TestRunCall0(t *testing.T) {
 }
 
 func TestRunCallCmd0(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	sCmdline := "/Users/chris/src/dylt-dev/dylt/dylt call --script-path /tmp/daylight.sh hello"
@@ -75,7 +76,7 @@ func TestRunCallCmd0(t *testing.T) {
 }
 
 func TestCallNoScript(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	sCmdline := "XXX call --script-path /tmp/daylight.sh hello"

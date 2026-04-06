@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 func TestVm (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -21,7 +22,7 @@ func TestVm (t *testing.T) {
 
 
 func TestVmHelp (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -34,7 +35,7 @@ func TestVmHelp (t *testing.T) {
 }
 
 func TestVmAdd (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -62,7 +63,7 @@ func TestVmAdd (t *testing.T) {
 
 
 func TestVmAddHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -85,7 +86,7 @@ func TestVmAddHelp(t *testing.T) {
 }
 
 func TestVmAll (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -108,7 +109,7 @@ func TestVmAll (t *testing.T) {
 }
 
 func TestVmDel (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -134,7 +135,7 @@ func TestVmDel (t *testing.T) {
 
 
 func TestVmDelHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -157,7 +158,7 @@ func TestVmDelHelp(t *testing.T) {
 }
 
 func TestVmGet (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -182,7 +183,7 @@ func TestVmGet (t *testing.T) {
 }
 
 func TestVmList (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -206,7 +207,7 @@ func TestVmList (t *testing.T) {
 
 
 func TestVmListHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"
@@ -230,7 +231,7 @@ func TestVmListHelp(t *testing.T) {
 
 
 func TestVmSet (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	// config get foo
@@ -260,7 +261,7 @@ func TestVmSet (t *testing.T) {
 
 
 func TestVmSetHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "vm"

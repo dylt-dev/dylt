@@ -24,9 +24,7 @@ type Command interface {
 }
 
 type ArgMap map[int]*string
-type CommandFactoryFunc[Opts CommandOpts] func(Cmdline, Command) Command
-type SubCommandFactoryFunc func(Cmdline, Command) Command
-type CommandMap map[string]SubCommandFactoryFunc
+type CommandMap map[string]NewCommandFunc
 
 type CommandValidator interface {
 	IsValid(args []string) bool

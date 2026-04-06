@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	clicmd "github.com/dylt-dev/dylt/cli/cmd"
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +22,10 @@ func (cmd SimpleCommand) HandleArgs() error { return nil }
 func (cmd SimpleCommand) Run() error        { return nil }
 
 func TestCommandArgs(t *testing.T) {
+
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdline := clicmd.Cmdline{"foo", "bar", "bum"}
 	cmd := SimpleCommand{BaseCommand: &clicmd.BaseCommand[clicmd.EmptyOpts]{Cmdline: cmdline, FlagSet: &flag.FlagSet{}}}
 	err := cmd.Parse()
@@ -83,15 +88,19 @@ func TestBoolFlag(t *testing.T) {
 }
 
 func TestInitCommand(t *testing.T) {
+	fnTeardown := common.Setup(t)
+	defer fnTeardown(t)
+	
 	cmdline := clicmd.Cmdline(strings.Split("dylt init --etcd-domain hello.dylt.dev", " "))
 	mainCmd := flag.NewFlagSet("dylt", flag.PanicOnError)
 	mainCmd.Parse(cmdline.Args())
 	var args clicmd.Cmdline = mainCmd.Args()
 	cmd := args.Command()
 	assert.Equal(t, "init", cmd)
-	initCmd := clicmd.InitCommandF.New(args, nil).(*clicmd.BaseCommand[clicmd.InitOpts])
+	initCmd, is := clicmd.InitCommandF.New(args, nil).(*clicmd.BaseCommand[clicmd.InitOpts])
+	require.True(t, is)
 	initCmd.Parse()
-	opts, is := initCmd.Opts().(*clicmd.InitOpts)
+	opts, is := initCmd.Opts().(clicmd.InitOpts)
 	require.True(t, is)
 	require.NotNil(t, opts)
 	assert.Equal(t, "hello.dylt.dev", opts.EtcdDomain)

@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/dylt-dev/dylt/api"
+	"github.com/dylt-dev/dylt/common"
 	"github.com/dylt-dev/dylt/lib"
 	"github.com/stretchr/testify/require"
 )
 
 func TestList (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "list"
@@ -23,7 +24,7 @@ func TestList (t *testing.T) {
 }
 
 func TestListHelp(t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	cmdName := "list"
@@ -36,7 +37,7 @@ func TestListHelp(t *testing.T) {
 }
 
 func TestRunList (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	err := api.RunList()
@@ -44,7 +45,7 @@ func TestRunList (t *testing.T) {
 }
 
 func TestListCmd0 (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
@@ -59,7 +60,7 @@ func TestListCmd0 (t *testing.T) {
 }
 
 func TestListHandleArgs_None (t *testing.T) {
-	fnTeardown := setup(t)
+	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 	
 	args := []string{}
