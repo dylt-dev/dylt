@@ -562,36 +562,6 @@ func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error
 	return mapKeys, nil
 }
 
-func testEncodeBool(t *testing.T, key string, b any) {
-	valExpected, err := json.Marshal(b)
-	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(os.Stdout), key, b)
-	require.NoError(t, err)
-	dumpOps(t, ops)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
-	op := ops[0]
-	require.NotEmpty(t, op)
-	require.True(t, op.IsPut())
-	require.Equal(t, []byte(key), op.KeyBytes())
-	require.Equal(t, valExpected, op.ValueBytes())
-}
-
-func testEncodeNumber(t *testing.T, key string, n any) {
-	valExpected, err := json.Marshal(n)
-	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(os.Stdout), key, n)
-	require.NoError(t, err)
-	dumpOps(t, ops)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
-	op := ops[0]
-	require.NotEmpty(t, op)
-	require.True(t, op.IsPut())
-	require.Equal(t, []byte(key), op.KeyBytes())
-	require.Equal(t, valExpected, op.ValueBytes())
-}
-
 func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd.Op {
 	ops, err := Encode(ctx, key, val)
 	require.NoError(t, err)

@@ -66,9 +66,10 @@ func TestEncode_FloatSlice(t *testing.T) {
 
 
 func TestEncode_Int(t *testing.T) {
+	ctx := newEcoContext(os.Stdout)
 	key := "key"
 	i := 13
-	testEncodeNumber(t, key, i)
+	testEncodeScalar(t, ctx, key, i)
 }
 
 func TestEncode_Interface(t *testing.T) {
