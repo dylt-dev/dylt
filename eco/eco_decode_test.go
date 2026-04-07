@@ -410,8 +410,6 @@ func TestGetString (t *testing.T) {
 }
 
 
-
-
 func TestFloat(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
 

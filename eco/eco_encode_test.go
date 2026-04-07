@@ -131,7 +131,7 @@ func TestEncode_String(t *testing.T) {
 	ctx, _ := initAndTest(t)
 	key := "key"
 	i := "foo"
-	testEncodeString(t, ctx, key, i)
+	testEncodeScalar(t, ctx, key, i)
 }
 
 func TestEncode_StringSlice(t *testing.T) {

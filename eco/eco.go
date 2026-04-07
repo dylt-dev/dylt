@@ -44,11 +44,9 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32,
-		reflect.Float64:
+		reflect.Float64,
+		reflect.String:
 		ops, err = encodeScalar(ctx, key, val)
-
-	case reflect.String:
-		ops, err = encodeString(ctx, key, val)
 
 	case reflect.Array:
 		ops, err = encodeSlice(ctx, key, val)

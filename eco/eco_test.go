@@ -579,21 +579,21 @@ func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd
 	return ops
 }
 
-func testEncodeString(t *testing.T, ctx *ecoContext, key string, val string) []etcd.Op {
-	ops, err := Encode(ctx, key, val)
-	require.NoError(t, err)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
+// func testEncodeString(t *testing.T, ctx *ecoContext, key string, val string) []etcd.Op {
+// 	ops, err := Encode(ctx, key, val)
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, ops)
+// 	require.Equal(t, 1, len(ops))
 
-	valExpected := []byte(val)
-	var op etcd.Op = ops[0]
-	require.NotNil(t, op)
-	require.True(t, op.IsPut())
-	require.Equal(t, key, string(op.KeyBytes()))
-	require.Equal(t, valExpected, op.ValueBytes())
+// 	valExpected := []byte(val)
+// 	var op etcd.Op = ops[0]
+// 	require.NotNil(t, op)
+// 	require.True(t, op.IsPut())
+// 	require.Equal(t, key, string(op.KeyBytes()))
+// 	require.Equal(t, valExpected, op.ValueBytes())
 
-	return ops
-}
+// 	return ops
+// }
 
 func testPutScalar(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val any) {
 	ops := testEncodeScalar(t, ctx, key, val)
@@ -609,7 +609,7 @@ func testPutScalar(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, v
 }
 
 func testPutString(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val string) {
-	ops := testEncodeString(t, ctx, key, val)
+	ops := testEncodeScalar(t, ctx, key, val)
 	
 	txn := createTxn(t, cli)
 	require.NotNil(t, txn)
