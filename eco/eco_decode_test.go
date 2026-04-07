@@ -274,6 +274,33 @@ func TestBoolSlice(t *testing.T) {
 	t.Log(decodedVal)
 }
 
+func TestDecodeBool(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	
+	key := "/test/bool"
+	op := testDecodeScalar(t, ctx, key)
+
+	expectedVal := true	
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	t.Logf("resp=%v", resp)
+	require.Equal(t, 1, len(resp.Responses))
+	rangeResp := resp.Responses[0].GetResponseRange()
+	require.NotNil(t, rangeResp)
+	require.Equal(t, int64(1), rangeResp.Count)
+	require.Equal(t, 1, len(rangeResp.Kvs))
+	keyBytes := []byte(key) 
+	require.NoError(t, err)
+	require.NoError(t, err)
+	kv := rangeResp.Kvs[0]
+	require.Equal(t, keyBytes, kv.Key)
+	var val bool
+	err = json.Unmarshal(kv.Value, &val)
+	require.Equal(t, expectedVal, val)
+}
+
 func TestFloat(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
 
@@ -334,6 +361,7 @@ func TestInt(t *testing.T) {
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
 }
+
 
 func TestDecode_IntSlice(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
@@ -423,6 +451,23 @@ func TestNilPointer(t *testing.T) {
 	var pm *map[string]string = &m
 	t.Logf("reflect.ValueOf(pm).IsNil()=%v", reflect.ValueOf(pm).IsNil())
 	t.Logf("reflect.ValueOf(pm).Elem().IsNil()=%v", reflect.ValueOf(pm).Elem().IsNil())
+}
+
+func TestGetBool(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	
+	key := "/testing/flag"
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
 }
 
 func TestString(t *testing.T) {
@@ -570,6 +615,15 @@ func putAndTest(t *testing.T, etcdClient *EtcdClient, key string, i any) {
 	// t.Logf("%#v", resp)
 }
 
+func testDecodeScalar(t *testing.T, ctx *ecoContext, key string) etcd.Op {
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+	
+	return op	
+}
 /*
 ap[string]reflect.Value
 {

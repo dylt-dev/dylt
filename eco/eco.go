@@ -44,9 +44,11 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
 		reflect.Float32,
-		reflect.Float64,
-		reflect.String:
-		ops, err = encodeDefault(ctx, key, val)
+		reflect.Float64:
+		ops, err = encodeScalar(ctx, key, val)
+
+	case reflect.String:
+		ops, err = encodeString(ctx, key, val)
 
 	case reflect.Array:
 		ops, err = encodeSlice(ctx, key, val)
@@ -205,20 +207,16 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	return Invalid
 }
 
-func encodeDefault(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	ctx.logger.signature("encodeDefault", key, val.Type())
+
+func decodeScalar(ctx *ecoContext, key string) (etcd.Op, error) {
+	ctx.logger.signature("decodeScalar", key)
 	ctx.inc()
 	defer ctx.dec()
 
-	i := val.Interface()
-	j, err := json.Marshal(i)
-	if err != nil {
-		return nil, err
-	}
-	opPut := etcd.OpPut(key, string(j))
-
-	return []etcd.Op{opPut}, nil
+	op := etcd.OpGet(key)
+	return op, nil
 }
+
 
 func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.logger.signature("encodeMap", key, val.Type())
@@ -250,6 +248,21 @@ func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error
 	return ops, nil
 }
 
+func encodeScalar(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+	ctx.logger.signature("encodeDefault", key, val.Type())
+	ctx.inc()
+	defer ctx.dec()
+
+	i := val.Interface()
+	j, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	opPut := etcd.OpPut(key, string(j))
+
+	return []etcd.Op{opPut}, nil
+}
+
 func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.logger.signature("encodeSlice", key, val.Type())
 	ctx.inc()
@@ -278,6 +291,17 @@ func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, err
 	// op := etcd.OpPut(key, string(j))
 
 	return ops, nil
+}
+
+func encodeString(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+	ctx.logger.signature("encodeString", key, val.Type())
+	ctx.inc()
+	defer ctx.dec()
+
+	s := val.String()
+	opPut := etcd.OpPut(key, string(s))
+
+	return []etcd.Op{opPut}, nil
 }
 
 func encodeStruct(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
@@ -706,12 +730,17 @@ func createSignature(name string, args ...any) string {
 	args2 := make([]any, len(args)+1)
 	args2[0] = common.Highlight(name)
 	for i, arg := range args {
-		ty, is := arg.(reflect.Type)
+		typ, is := arg.(reflect.Type)
 		var sArg string
 		if is {
-			sArg = fmt.Sprintf("-%s-", common.FullTypeName(ty))
+			sArg = fmt.Sprintf("-%s-", common.FullTypeName(typ))
 		} else {
-			sArg = fmt.Sprintf("%v", arg)
+			_, is := arg.(string)
+			if is {
+				sArg = fmt.Sprintf("\"%s\"", arg)
+			} else {
+				sArg = fmt.Sprintf("%v", arg)
+			}
 		}
 		args2[i+1] = common.Lowlight(sArg)
 	}

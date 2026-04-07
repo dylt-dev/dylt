@@ -22,9 +22,10 @@ func TestEncodeAstros(t *testing.T) {
 }
 
 func TestEncode_Bool(t *testing.T) {
-	key := "key"
-	i := false
-	testEncodeBool(t, key, i)
+	ctx, _ := initAndTest(t)
+	key := "/test/bool"
+	i := true
+	testEncodeScalar(t, ctx, key, i)
 }
 
 func TestEncode_BoolSlice(t *testing.T) {
@@ -48,9 +49,10 @@ func TestEncode_EcoTest(t *testing.T) {
 }
 
 func TestEncode_Float(t *testing.T) {
+	ctx, _ := initAndTest(t)
 	key := "key"
-	i := 42.0
-	testEncodeNumber(t, key, i)
+	val := 42.0
+	testEncodeScalar(t, ctx, key, val)
 }
 
 func TestEncode_FloatSlice(t *testing.T) {
@@ -125,9 +127,10 @@ func TestEncode_Map_String_Struct(t *testing.T) {
 }
 
 func TestEncode_String(t *testing.T) {
+	ctx, _ := initAndTest(t)
 	key := "key"
 	i := "foo"
-	testEncodeString(t, key, i)
+	testEncodeString(t, ctx, key, i)
 }
 
 func TestEncode_StringSlice(t *testing.T) {
@@ -157,6 +160,14 @@ func TestEncoding0(t *testing.T) {
 }
 
 
+func TestPut_Bool(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	key := "/test/bool"
+	val := true
+	testPutScalar(t, ctx, cli, key, val)
+}
+
+
 func TestPut_BoolSlice(t *testing.T) {
 	ctx := newEcoContext(os.Stdout)
 	slice := []bool{true, false, true, true}
@@ -171,19 +182,32 @@ func TestPut_BoolSlice(t *testing.T) {
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
 
+func TestPut_Float(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	key := "/test/float"
+	val := 42.0
+	testPutScalar(t, ctx, cli, key, val)
+}
+
+
 func TestPut_FloatSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx, cli := initAndTest(t)
 	slice := []float64{13.0, 169.13, -42.0}
 	key := "/test/floatSlice"
 	ops := createSliceOps(t, ctx, slice, key)
 	testSliceOps(t, slice, key, ops)
 
-	cli, err := CreateEtcdClientFromConfig()
-	require.NoError(t, err)
 	putSlice(t, ctx, cli, ops)
-	
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
+
+func TestPut_Int(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	key := "/test/int"
+	val := 13
+	testPutScalar(t, ctx, cli, key, val)
+}
+
 
 func TestPut_IntSlice(t *testing.T) {
 	ctx := newEcoContext(os.Stdout)
@@ -196,6 +220,13 @@ func TestPut_IntSlice(t *testing.T) {
 	putSlice(t, ctx, cli, ops)
 
 	testSliceValuesInEtcd(t, slice, cli, key)
+}
+
+func TestPut_String(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	key := "/test/string"
+	val := "hello"
+	testPutString(t, ctx, cli, key, val)
 }
 
 func TestPut_StringSlice(t *testing.T) {
