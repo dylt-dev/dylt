@@ -246,8 +246,8 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 func TestBool(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
 
-	key := "/test/flag"
-	val := bool(false)
+	key := "/test/bool"
+	val := bool(true)
 	putAndTest(t, etcdClient, key, val)
 
 	var decodedVal bool
@@ -273,6 +273,142 @@ func TestBoolSlice(t *testing.T) {
 	assert.Equal(t, boolslice(val), decodedVal)
 	t.Log(decodedVal)
 }
+
+func TestGetBool(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	
+	key := "/test/bool"
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	require.Equal(t, 1, len(resp.Responses))
+	rangeResp := resp.Responses[0].GetResponseRange()
+	require.NotNil(t, rangeResp)
+	require.Equal(t, int64(1), rangeResp.Count)
+	require.Equal(t, 1, len(rangeResp.Kvs))
+	
+	kv := rangeResp.Kvs[0]
+	expectedKeyBytes := []byte(key) 
+	require.NoError(t, err)
+	require.NoError(t, err)
+	require.Equal(t, expectedKeyBytes, kv.Key)
+	var val bool
+	err = json.Unmarshal(kv.Value, &val)
+	expectedVal := true	
+	require.Equal(t, expectedVal, val)
+}
+
+
+func TestGetFloat(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	
+	key := "/test/float"
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	require.Equal(t, 1, len(resp.Responses))
+	rangeResp := resp.Responses[0].GetResponseRange()
+	require.NotNil(t, rangeResp)
+	require.Equal(t, int64(1), rangeResp.Count)
+	require.Equal(t, 1, len(rangeResp.Kvs))
+	
+	kv := rangeResp.Kvs[0]
+	expectedKeyBytes := []byte(key) 
+	require.NoError(t, err)
+	require.NoError(t, err)
+	require.Equal(t, expectedKeyBytes, kv.Key)
+	var val float64
+	err = json.Unmarshal(kv.Value, &val)
+	require.NoError(t, err)
+	expectedVal := 42.0	
+	require.Equal(t, expectedVal, val)
+}
+
+
+func TestGetInt(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	
+	key := "/test/int"
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	require.Equal(t, 1, len(resp.Responses))
+	rangeResp := resp.Responses[0].GetResponseRange()
+	require.NotNil(t, rangeResp)
+	require.Equal(t, int64(1), rangeResp.Count)
+	require.Equal(t, 1, len(rangeResp.Kvs))
+	
+	kv := rangeResp.Kvs[0]
+	expectedKeyBytes := []byte(key) 
+	require.NoError(t, err)
+	require.NoError(t, err)
+	require.Equal(t, expectedKeyBytes, kv.Key)
+	var val int
+	err = json.Unmarshal(kv.Value, &val)
+	require.NoError(t, err)
+	expectedVal := 13
+	require.Equal(t, expectedVal, val)
+}
+
+
+func TestGetString (t *testing.T) {
+	ctx, cli := initAndTest(t)
+	
+	key := "/test/string"
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	require.Equal(t, 1, len(resp.Responses))
+	rangeResp := resp.Responses[0].GetResponseRange()
+	require.NotNil(t, rangeResp)
+	require.Equal(t, int64(1), rangeResp.Count)
+	require.Equal(t, 1, len(rangeResp.Kvs))
+	
+	kv := rangeResp.Kvs[0]
+	t.Logf("kv=%#v", kv)
+	expectedKeyBytes := []byte(key) 
+	require.NoError(t, err)
+	require.NoError(t, err)
+	require.Equal(t, expectedKeyBytes, kv.Key)
+	var val string
+	err = json.Unmarshal(kv.Value, &val)
+	require.NoError(t, err)
+	expectedVal := "hello"
+	require.Equal(t, expectedVal, val)
+}
+
 
 func TestFloat(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
@@ -334,6 +470,7 @@ func TestInt(t *testing.T) {
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
 }
+
 
 func TestDecode_IntSlice(t *testing.T) {
 	ctx, etcdClient := initAndTest(t)
@@ -570,6 +707,15 @@ func putAndTest(t *testing.T, etcdClient *EtcdClient, key string, i any) {
 	// t.Logf("%#v", resp)
 }
 
+func testDecodeScalar(t *testing.T, ctx *ecoContext, key string) etcd.Op {
+	op, err := decodeScalar(ctx, key)
+	require.NoError(t, err)
+	require.NotNil(t, op)
+	require.True(t, op.IsGet())
+	require.Equal(t, key, string(op.KeyBytes()))
+	
+	return op	
+}
 /*
 ap[string]reflect.Value
 {

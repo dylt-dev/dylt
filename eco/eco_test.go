@@ -562,46 +562,61 @@ func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error
 	return mapKeys, nil
 }
 
-func testEncodeBool(t *testing.T, key string, b any) {
-	valExpected, err := json.Marshal(b)
+func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd.Op {
+	ops, err := Encode(ctx, key, val)
 	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(os.Stdout), key, b)
-	require.NoError(t, err)
-	dumpOps(t, ops)
-	require.NotEmpty(t, ops)
+	require.NotNil(t, ops)
 	require.Equal(t, 1, len(ops))
-	op := ops[0]
-	require.NotEmpty(t, op)
+
+	valExpected, err := json.Marshal(val)
+	require.NoError(t, err)
+	var op etcd.Op = ops[0]
+	require.NotNil(t, op)
 	require.True(t, op.IsPut())
-	require.Equal(t, []byte(key), op.KeyBytes())
+	require.Equal(t, key, string(op.KeyBytes()))
 	require.Equal(t, valExpected, op.ValueBytes())
+
+	return ops
 }
 
-func testEncodeNumber(t *testing.T, key string, n any) {
-	valExpected, err := json.Marshal(n)
+// func testEncodeString(t *testing.T, ctx *ecoContext, key string, val string) []etcd.Op {
+// 	ops, err := Encode(ctx, key, val)
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, ops)
+// 	require.Equal(t, 1, len(ops))
+
+// 	valExpected := []byte(val)
+// 	var op etcd.Op = ops[0]
+// 	require.NotNil(t, op)
+// 	require.True(t, op.IsPut())
+// 	require.Equal(t, key, string(op.KeyBytes()))
+// 	require.Equal(t, valExpected, op.ValueBytes())
+
+// 	return ops
+// }
+
+func testPutScalar(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val any) {
+	ops := testEncodeScalar(t, ctx, key, val)
+
+	txn := createTxn(t, cli)
+	require.NotNil(t, txn)
+	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(os.Stdout), key, n)
-	require.NoError(t, err)
-	dumpOps(t, ops)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
-	op := ops[0]
-	require.NotEmpty(t, op)
-	require.True(t, op.IsPut())
-	require.Equal(t, []byte(key), op.KeyBytes())
-	require.Equal(t, valExpected, op.ValueBytes())
+	require.NotNil(t, resp)
+	require.Equal(t, 1, len(resp.Responses))
+	resp0 := resp.Responses[0]
+	require.NotNil(t, resp0.GetResponsePut())
 }
 
-func testEncodeString(t *testing.T, key string, s string) {
-	ops, err := Encode(newEcoContext(os.Stdout), key, s)
-	dumpOps(t, ops)
-	// valExpected := fmt.Sprintf(`"%s"`, s)
+func testPutString(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val string) {
+	ops := testEncodeScalar(t, ctx, key, val)
+	
+	txn := createTxn(t, cli)
+	require.NotNil(t, txn)
+	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
-	// op := ops[0]
-	// require.NotEmpty(t, op)
-	// require.True(t, op.IsPut())
-	// require.Equal(t, []byte(key), op.KeyBytes())
-	// require.Equal(t, []byte(valExpected), op.ValueBytes())
+	require.NotNil(t, resp)
+	require.Equal(t, 1, len(resp.Responses))
+	resp0 := resp.Responses[0]
+	require.NotNil(t, resp0.GetResponsePut())
 }

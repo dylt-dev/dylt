@@ -2,7 +2,6 @@ package eco
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,20 +28,24 @@ func TestEncodeTeam_Stats (t *testing.T) {
 	encodeAndTest(t, "/test/team/astros/Players/altuve/Stats", VAL_AltuveStats)
 }
 
-func createTxn (t *testing.T) etcd.Txn{
-	etcd, err := CreateEtcdClientFromConfig()
-	require.NoError(t, err)
-	txn := etcd.Txn(context.Background())
+func createTxn (t *testing.T, cli *EtcdClient) etcd.Txn{
+	var err error
+	if cli == nil {
+		cli, err = CreateEtcdClientFromConfig()
+		require.NoError(t, err)
+	}
+	require.NotNil(t, cli)
+	txn := cli.Txn(context.Background())
 	require.NotEmpty(t, txn)
 	
 	return txn
 }
 
 func encodeAndTest (t *testing.T, key string, val any) {
-	ctx := newEcoContext(os.Stdout)
+	ctx, cli := initAndTest(t)
 	ops, err := Encode(ctx, key, val)
 	require.NoError(t, err)
-	txn := createTxn(t)
+	txn := createTxn(t, cli)
 	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
 	t.Logf("%#v", resp)
