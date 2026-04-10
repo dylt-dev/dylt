@@ -30,16 +30,12 @@ func (d* MapDecoder) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue
 
 func (d* ScalarDecoder[U]) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error {
 	data := kvs[0].Value
-	val := new(U)
-	err := json.Unmarshal(data, &val)
-	pp := p.(**U)
-	*pp = val
+	err := json.Unmarshal(data, p)
 	return err
 }
 
 func (d* SliceDecoder) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error { return nil }
 func (d* StructDecoder) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error { return nil }
-
 
 var decoders DecoderMap = DecoderMap { 
 	reflect.Bool: &ScalarDecoder[bool]{},
@@ -776,13 +772,13 @@ func testGetScalar[U any] (t *testing.T, key string, expectedVal U) {
 	require.NoError(t, err)
 
 	// Get the KVs from the response
-	var pval *U
+	pval := new(U)
 	rangeResp := resp.Responses[0].GetResponseRange()
 	kvs := rangeResp.Kvs
 
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}
-	err = decoder.Decode(ctx, key, kvs, &pval)
+	err = decoder.Decode(ctx, key, kvs, pval)
 	require.NoError(t, err)
 	require.NotNil(t, pval)
 	require.Equal(t, expectedVal, *pval)
