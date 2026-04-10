@@ -384,59 +384,7 @@ func TestBoolSlice(t *testing.T) {
 }
 
 func TestGetBool(t *testing.T) {
-	ctx, cli := initAndTest(t)
-	
-	// Seed etcd with test data
-	key := "/test/bool"
-	expectedVal := true
-	putAndTest(t, ctx, cli, key, expectedVal)
-
-	// Create the GET Op
-	op := etcd.OpGet(key)
-
-	// Get the response from etcd
-	txn := createTxn(t, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-
-	// Get the KVs from the response
-	var pval *bool
-	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
-
-	// Get the decoder from the DecoderMap and decode
-	decoder := &ScalarDecoder[bool]{}
-	err = decoder.Decode(ctx, key, kvs, &pval)
-	require.NoError(t, err)
-	require.NotNil(t, pval)
-	require.Equal(t, expectedVal, *pval)
-
-	// op, err := decodeScalar(ctx, key)
-	// require.NoError(t, err)
-	// require.NotNil(t, op)
-	// require.True(t, op.IsGet())
-	// require.Equal(t, key, string(op.KeyBytes()))
-
-	// txn := createTxn(t, cli)
-	// resp, err := txn.Then(op).Commit()
-	// require.NoError(t, err)
-	// require.NotNil(t, resp)
-
-	// require.Equal(t, 1, len(resp.Responses))
-	// rangeResp := resp.Responses[0].GetResponseRange()
-	// require.NotNil(t, rangeResp)
-	// require.Equal(t, int64(1), rangeResp.Count)
-	// require.Equal(t, 1, len(rangeResp.Kvs))
-	
-	// kv := rangeResp.Kvs[0]
-	// expectedKeyBytes := []byte(key) 
-	// require.NoError(t, err)
-	// require.NoError(t, err)
-	// require.Equal(t, expectedKeyBytes, kv.Key)
-	// var val bool
-	// err = json.Unmarshal(kv.Value, &val)
-	// expectedVal := true	
-	// require.Equal(t, expectedVal, val)
+	testGetScalar(t, "test/bool", true)
 }
 
 
@@ -484,182 +432,17 @@ func TestGetBoolSlice(t *testing.T) {
 
 
 func TestGetFloat(t *testing.T) {
-	ctx, cli := initAndTest(t)
-	
-	// Seed etcd with test data
-	key := "/test/float"
-	expectedVal := float32(42.0)
-	putAndTest(t, ctx, cli, key, expectedVal)
-
-	// Create the GET Op
-	op := etcd.OpGet(key)
-
-	// Get the response from etcd
-	txn := createTxn(t, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-
-	// Get the KVs from the response
-	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
-
-	// Get the decoder from the DecoderMap and decode
-	decoder := &ScalarDecoder[float32]{}
-	var pval *float32
-	err = decoder.Decode(ctx, key, kvs, &pval)
-	require.NoError(t, err)
-	require.NotNil(t, pval)
-	require.Equal(t, expectedVal, *pval)
-
-
-
-	// key := "/test/float"
-	// op, err := decodeScalar(ctx, key)
-	// require.NoError(t, err)
-	// require.NotNil(t, op)
-	// require.True(t, op.IsGet())
-	// require.Equal(t, key, string(op.KeyBytes()))
-
-	// txn := createTxn(t, cli)
-	// resp, err := txn.Then(op).Commit()
-	// require.NoError(t, err)
-	// require.NotNil(t, resp)
-
-	// require.Equal(t, 1, len(resp.Responses))
-	// rangeResp := resp.Responses[0].GetResponseRange()
-	// require.NotNil(t, rangeResp)
-	// require.Equal(t, int64(1), rangeResp.Count)
-	// require.Equal(t, 1, len(rangeResp.Kvs))
-	
-	// kv := rangeResp.Kvs[0]
-	// expectedKeyBytes := []byte(key) 
-	// require.NoError(t, err)
-	// require.NoError(t, err)
-	// require.Equal(t, expectedKeyBytes, kv.Key)
-	// var val float64
-	// err = json.Unmarshal(kv.Value, &val)
-	// require.NoError(t, err)
-	// expectedVal := 42.0	
-	// require.Equal(t, expectedVal, val)
+	testGetScalar(t, "/test/float", 42.0)
 }
 
 
 func TestGetInt(t *testing.T) {
-	ctx, cli := initAndTest(t)
-	
-	// Seed etcd with test data
-	key := "/test/int"
-	expectedVal := 13
-	putAndTest(t, ctx, cli, key, expectedVal)
-
-	// Create the GET Op
-	op := etcd.OpGet(key)
-
-	// Get the response from etcd
-	txn := createTxn(t, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-
-	// Get the KVs from the response
-	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
-
-	// Get the decoder from the DecoderMap and decode
-	decoder := &ScalarDecoder[int]{}
-	var pval *int
-	err = decoder.Decode(ctx, key, kvs, &pval)
-	require.NoError(t, err)
-	require.NotNil(t, pval)
-	require.Equal(t, expectedVal, *pval)
-
-	// key := "/test/int"
-	// op, err := decodeScalar(ctx, key)
-	// require.NoError(t, err)
-	// require.NotNil(t, op)
-	// require.True(t, op.IsGet())
-	// require.Equal(t, key, string(op.KeyBytes()))
-
-	// txn := createTxn(t, cli)
-	// resp, err := txn.Then(op).Commit()
-	// require.NoError(t, err)
-	// require.NotNil(t, resp)
-
-	// require.Equal(t, 1, len(resp.Responses))
-	// rangeResp := resp.Responses[0].GetResponseRange()
-	// require.NotNil(t, rangeResp)
-	// require.Equal(t, int64(1), rangeResp.Count)
-	// require.Equal(t, 1, len(rangeResp.Kvs))
-	
-	// kv := rangeResp.Kvs[0]
-	// expectedKeyBytes := []byte(key) 
-	// require.NoError(t, err)
-	// require.NoError(t, err)
-	// require.Equal(t, expectedKeyBytes, kv.Key)
-	// var val int
-	// err = json.Unmarshal(kv.Value, &val)
-	// require.NoError(t, err)
-	// expectedVal := 13
-	// require.Equal(t, expectedVal, val)
+	testGetScalar(t, "/test/int", 13)
 }
 
 
 func TestGetString (t *testing.T) {
-	ctx, cli := initAndTest(t)
-	
-	// Seed etcd with test data
-	key := "/test/string"
-	expectedVal := "hello world"
-	putAndTest(t, ctx, cli, key, expectedVal)
-
-	// Create the GET Op
-	op := etcd.OpGet(key)
-
-	// Get the response from etcd
-	txn := createTxn(t, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-
-	// Get the KVs from the response
-	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
-
-	// Get the decoder from the DecoderMap and decode
-	decoder := &ScalarDecoder[string]{}
-	var pval *string
-	err = decoder.Decode(ctx, key, kvs, &pval)
-	require.NoError(t, err)
-	require.NotNil(t, pval)
-	require.Equal(t, expectedVal, *pval)
-
-	// key := "/test/string"
-	// op, err := decodeScalar(ctx, key)
-	// require.NoError(t, err)
-	// require.NotNil(t, op)
-	// require.True(t, op.IsGet())
-	// require.Equal(t, key, string(op.KeyBytes()))
-
-	// txn := createTxn(t, cli)
-	// resp, err := txn.Then(op).Commit()
-	// require.NoError(t, err)
-	// require.NotNil(t, resp)
-
-	// require.Equal(t, 1, len(resp.Responses))
-	// rangeResp := resp.Responses[0].GetResponseRange()
-	// require.NotNil(t, rangeResp)
-	// require.Equal(t, int64(1), rangeResp.Count)
-	// require.Equal(t, 1, len(rangeResp.Kvs))
-	
-	// kv := rangeResp.Kvs[0]
-	// t.Logf("kv=%#v", kv)
-	// expectedKeyBytes := []byte(key) 
-	// require.NoError(t, err)
-	// require.NoError(t, err)
-	// require.Equal(t, expectedKeyBytes, kv.Key)
-	// var val string
-	// err = json.Unmarshal(kv.Value, &val)
-	// require.NoError(t, err)
-	// expectedVal := "hello"
-	// require.Equal(t, expectedVal, val)
+	testGetScalar(t, "/test/string", "hello world")
 }
 
 
@@ -978,25 +761,32 @@ func testDecodeScalar(t *testing.T, ctx *ecoContext, key string) etcd.Op {
 	return op	
 }
 
-func TestReflectionToGenerics (t *testing.T) {
-	var parserMap map[string]Parser = map[string]Parser {
-		"int": &ScalarParser[int]{},
-	}
-	parserMap["int"].parse("hi")
+func testGetScalar[U any] (t *testing.T, key string, expectedVal U) {
+	ctx, cli := initAndTest(t)
+	
+	// Seed etcd with test data
+	putAndTest(t, ctx, cli, key, expectedVal)
 
-	var p *int = new(int)
-	buf := []byte("13")
-	err := json.Unmarshal(buf, p)
+	// Create the GET Op
+	op := etcd.OpGet(key)
+
+	// Get the response from etcd
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
-	require.Equal(t, 13, *p)
+
+	// Get the KVs from the response
+	var pval *U
+	rangeResp := resp.Responses[0].GetResponseRange()
+	kvs := rangeResp.Kvs
+
+	// Get the decoder from the DecoderMap and decode
+	decoder := &ScalarDecoder[U]{}
+	err = decoder.Decode(ctx, key, kvs, &pval)
+	require.NoError(t, err)
+	require.NotNil(t, pval)
+	require.Equal(t, expectedVal, *pval)
 }
-
-type Parser interface { parse (any) error }
-
-type ScalarParser[U any] struct {}
-func (p *ScalarParser[_]) parse (_ any) error { return nil }
-
-
 
 
 /*
