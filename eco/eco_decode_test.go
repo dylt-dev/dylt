@@ -1,7 +1,6 @@
 package eco
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,8 +13,54 @@ import (
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
 )
+
+type KeyValue mvccpb.KeyValue
+type Decode func (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error
+type Decoder interface { Decode (*ecoContext, string, []*mvccpb.KeyValue, any) error}
+type MapDecoder struct {}
+type ScalarDecoder[U any] struct {}
+type SliceDecoder struct {}
+type StructDecoder struct {}
+type DecoderMap map[reflect.Kind]Decoder
+
+func (d* MapDecoder) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error { return nil }
+
+func (d* ScalarDecoder[U]) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error {
+	data := kvs[0].Value
+	val := new(U)
+	err := json.Unmarshal(data, &val)
+	pp := p.(**U)
+	*pp = val
+	return err
+}
+
+func (d* SliceDecoder) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error { return nil }
+func (d* StructDecoder) Decode (ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error { return nil }
+
+
+var decoders DecoderMap = DecoderMap { 
+	reflect.Bool: &ScalarDecoder[bool]{},
+	reflect.Int: &ScalarDecoder[int]{},
+	reflect.Int8: &ScalarDecoder[int8]{},
+	reflect.Int16: &ScalarDecoder[int16]{},
+	reflect.Int32: &ScalarDecoder[int32]{},
+	reflect.Int64: &ScalarDecoder[int64]{},
+	reflect.Uint: &ScalarDecoder[uint]{},
+	reflect.Uint8: &ScalarDecoder[uint8]{},
+	reflect.Uint16: &ScalarDecoder[uint16]{},
+	reflect.Uint32: &ScalarDecoder[uint32]{},
+	reflect.Uint64: &ScalarDecoder[uint64]{},
+	reflect.Float32: &ScalarDecoder[float32]{},
+	reflect.Float64: &ScalarDecoder[float64]{},
+	reflect.String: &ScalarDecoder[string]{},
+	reflect.Array: &SliceDecoder{},
+	reflect.Slice: &SliceDecoder{},
+	reflect.Map: &MapDecoder{},
+	reflect.Struct: &StructDecoder{},
+}
 
 func decode(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	ctx.logger.signature("decode", key, reflect.TypeOf(i).Elem())
@@ -137,6 +182,70 @@ func decodeMap(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error
 	return nil
 }
 
+
+func decodeResponse(ctx* ecoContext, key string, kvs []*mvccpb.KeyValue, i any) error {
+	// Confirm that the incoming variable is a pointer
+	iType := reflect.TypeOf(i)
+	if iType.Kind() != reflect.Pointer {
+		return fmt.Errorf("unsupported type (%s) -  must be pointer", common.FullTypeName(iType))
+	}
+
+	// Get the kind of incoming pointer, to determine how to unmarshal
+	elemKind := iType.Elem().Kind()
+	var decoder Decoder = decoders[elemKind]
+	err := decoder.Decode(ctx, key, kvs, i)
+	return err
+}
+
+func decodeResponseMap(ctx* ecoContext, key string, kvs []*mvccpb.KeyValue, i any) error { return nil }
+
+func decodeResponseScalar(ctx* ecoContext, key string, kvs []*mvccpb.KeyValue, i any) error {
+	kv := kvs[0]
+	err := json.Unmarshal(kv.Value, i)
+	return err
+}
+
+func decodeResponseSlice(ctx* ecoContext, key string, kvs []*mvccpb.KeyValue, p any) error {
+	var iMax int = -1
+	for _, kv := range kvs {
+		index, err := getSliceKeyIndex(string(kv.Key))
+		if err != nil {
+			return err
+		}
+		if index > iMax {
+			iMax = index
+		}
+	}
+	ctx.logger.Infof("iMax=%d", iMax)
+
+	// typeP := reflect.TypeOf(p)
+	// typeEl := typeP.Elem()
+	// size := iMax+1
+	// slice := reflect.MakeSlice(typeEl, size, size)
+	// for _, kv := range kvs {
+		// index, err := getSliceKeyIndex(string(kv.Key))
+		// if err != nil {
+		// 	return err
+		// }
+		// err = json.Unmarshal(kv.Value, &slice[index])
+		// if err == nil {
+		// 	return err
+		// }
+	// }
+
+	// *p = slice
+	return nil
+
+	// slice := make([]bool, respRange.Count)
+	// for i := range slice {
+	// 	err = json.Unmarshal(respRange.Kvs[i].Value, &slice[i])
+	// 	ctx.logger.Infof("respRange.Kvs[i].Value=%#v slice[%d]=%#v", string(respRange.Kvs[i].Value), i, slice[i])
+	// 	require.NoError(t, err)
+	// }
+}
+
+func decodeResponseStruct(ctx* ecoContext, key string, kvs []*mvccpb.KeyValue, i any) error { return nil }
+
 func decodeSlice(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) error {
 	ctx.logger.signature("decodeSlice", key, reflect.TypeOf(i).Elem())
 	ctx.inc()
@@ -244,31 +353,31 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 }
 
 func TestBool(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/bool"
 	val := bool(true)
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	var decodedVal bool
 	var i = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestBoolSlice(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/boolslice"
 	val := []bool{true, true, false}
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	type boolslice []bool
 	var decodedVal boolslice
 	var i = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, boolslice(val), decodedVal)
 	t.Log(decodedVal)
@@ -277,10 +386,73 @@ func TestBoolSlice(t *testing.T) {
 func TestGetBool(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	
+	// Seed etcd with test data
 	key := "/test/bool"
-	op, err := decodeScalar(ctx, key)
+	expectedVal := true
+	putAndTest(t, ctx, cli, key, expectedVal)
+
+	// Create the GET Op
+	op := etcd.OpGet(key)
+
+	// Get the response from etcd
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
-	require.NotNil(t, op)
+
+	// Get the KVs from the response
+	var pval *bool
+	rangeResp := resp.Responses[0].GetResponseRange()
+	kvs := rangeResp.Kvs
+
+	// Get the decoder from the DecoderMap and decode
+	decoder := &ScalarDecoder[bool]{}
+	err = decoder.Decode(ctx, key, kvs, &pval)
+	require.NoError(t, err)
+	require.NotNil(t, pval)
+	require.Equal(t, expectedVal, *pval)
+
+	// op, err := decodeScalar(ctx, key)
+	// require.NoError(t, err)
+	// require.NotNil(t, op)
+	// require.True(t, op.IsGet())
+	// require.Equal(t, key, string(op.KeyBytes()))
+
+	// txn := createTxn(t, cli)
+	// resp, err := txn.Then(op).Commit()
+	// require.NoError(t, err)
+	// require.NotNil(t, resp)
+
+	// require.Equal(t, 1, len(resp.Responses))
+	// rangeResp := resp.Responses[0].GetResponseRange()
+	// require.NotNil(t, rangeResp)
+	// require.Equal(t, int64(1), rangeResp.Count)
+	// require.Equal(t, 1, len(rangeResp.Kvs))
+	
+	// kv := rangeResp.Kvs[0]
+	// expectedKeyBytes := []byte(key) 
+	// require.NoError(t, err)
+	// require.NoError(t, err)
+	// require.Equal(t, expectedKeyBytes, kv.Key)
+	// var val bool
+	// err = json.Unmarshal(kv.Value, &val)
+	// expectedVal := true	
+	// require.Equal(t, expectedVal, val)
+}
+
+
+func TestGetBoolSlice(t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	// Seed etcd with test data
+	key := "/test/boolSlice"
+	expectedVals := []bool{true, false, true, true}
+	for i, expectedVal := range expectedVals {
+		subkey := fmt.Sprintf("%s/%d", key, i)
+		putAndTest(t, ctx, cli, subkey, expectedVal)
+	}
+
+	// Create etcd OpGet
+	op := etcd.OpGet(key, etcd.WithPrefix())
 	require.True(t, op.IsGet())
 	require.Equal(t, key, string(op.KeyBytes()))
 
@@ -289,137 +461,218 @@ func TestGetBool(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 
-	require.Equal(t, 1, len(resp.Responses))
-	rangeResp := resp.Responses[0].GetResponseRange()
-	require.NotNil(t, rangeResp)
-	require.Equal(t, int64(1), rangeResp.Count)
-	require.Equal(t, 1, len(rangeResp.Kvs))
-	
-	kv := rangeResp.Kvs[0]
-	expectedKeyBytes := []byte(key) 
+	respRange := resp.Responses[0].GetResponseRange()
+	ctx.logger.Infof("respRange.Count=%d", respRange.Count)
+	kvs := respRange.Kvs
+	for i, kv := range kvs {
+		ctx.logger.Infof("i=%d key=%s val=%s", i, string(kv.Key), string(kv.Value))
+	}
+	// ctx.logger.Infof("%#v", resp.Responses)
+	// ctx.logger.Infof("%#v", resp.Responses[0])
+
+	slice := make([]bool, respRange.Count)
+	err = decodeResponseSlice(ctx, key, kvs, &slice)
 	require.NoError(t, err)
-	require.NoError(t, err)
-	require.Equal(t, expectedKeyBytes, kv.Key)
-	var val bool
-	err = json.Unmarshal(kv.Value, &val)
-	expectedVal := true	
-	require.Equal(t, expectedVal, val)
+	// for i := range slice {
+	// 	err = json.Unmarshal(respRange.Kvs[i].Value, &slice[i])
+	// 	ctx.logger.Infof("respRange.Kvs[i].Value=%#v slice[%d]=%#v", string(respRange.Kvs[i].Value), i, slice[i])
+	// 	require.NoError(t, err)
+	// }
+
+	ctx.logger.Infof("slice=%#v", slice)	
 }
 
 
 func TestGetFloat(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	
+	// Seed etcd with test data
 	key := "/test/float"
-	op, err := decodeScalar(ctx, key)
-	require.NoError(t, err)
-	require.NotNil(t, op)
-	require.True(t, op.IsGet())
-	require.Equal(t, key, string(op.KeyBytes()))
+	expectedVal := float32(42.0)
+	putAndTest(t, ctx, cli, key, expectedVal)
 
+	// Create the GET Op
+	op := etcd.OpGet(key)
+
+	// Get the response from etcd
 	txn := createTxn(t, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
-	require.NotNil(t, resp)
 
-	require.Equal(t, 1, len(resp.Responses))
+	// Get the KVs from the response
 	rangeResp := resp.Responses[0].GetResponseRange()
-	require.NotNil(t, rangeResp)
-	require.Equal(t, int64(1), rangeResp.Count)
-	require.Equal(t, 1, len(rangeResp.Kvs))
+	kvs := rangeResp.Kvs
+
+	// Get the decoder from the DecoderMap and decode
+	decoder := &ScalarDecoder[float32]{}
+	var pval *float32
+	err = decoder.Decode(ctx, key, kvs, &pval)
+	require.NoError(t, err)
+	require.NotNil(t, pval)
+	require.Equal(t, expectedVal, *pval)
+
+
+
+	// key := "/test/float"
+	// op, err := decodeScalar(ctx, key)
+	// require.NoError(t, err)
+	// require.NotNil(t, op)
+	// require.True(t, op.IsGet())
+	// require.Equal(t, key, string(op.KeyBytes()))
+
+	// txn := createTxn(t, cli)
+	// resp, err := txn.Then(op).Commit()
+	// require.NoError(t, err)
+	// require.NotNil(t, resp)
+
+	// require.Equal(t, 1, len(resp.Responses))
+	// rangeResp := resp.Responses[0].GetResponseRange()
+	// require.NotNil(t, rangeResp)
+	// require.Equal(t, int64(1), rangeResp.Count)
+	// require.Equal(t, 1, len(rangeResp.Kvs))
 	
-	kv := rangeResp.Kvs[0]
-	expectedKeyBytes := []byte(key) 
-	require.NoError(t, err)
-	require.NoError(t, err)
-	require.Equal(t, expectedKeyBytes, kv.Key)
-	var val float64
-	err = json.Unmarshal(kv.Value, &val)
-	require.NoError(t, err)
-	expectedVal := 42.0	
-	require.Equal(t, expectedVal, val)
+	// kv := rangeResp.Kvs[0]
+	// expectedKeyBytes := []byte(key) 
+	// require.NoError(t, err)
+	// require.NoError(t, err)
+	// require.Equal(t, expectedKeyBytes, kv.Key)
+	// var val float64
+	// err = json.Unmarshal(kv.Value, &val)
+	// require.NoError(t, err)
+	// expectedVal := 42.0	
+	// require.Equal(t, expectedVal, val)
 }
 
 
 func TestGetInt(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	
+	// Seed etcd with test data
 	key := "/test/int"
-	op, err := decodeScalar(ctx, key)
-	require.NoError(t, err)
-	require.NotNil(t, op)
-	require.True(t, op.IsGet())
-	require.Equal(t, key, string(op.KeyBytes()))
+	expectedVal := 13
+	putAndTest(t, ctx, cli, key, expectedVal)
 
+	// Create the GET Op
+	op := etcd.OpGet(key)
+
+	// Get the response from etcd
 	txn := createTxn(t, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
-	require.NotNil(t, resp)
 
-	require.Equal(t, 1, len(resp.Responses))
+	// Get the KVs from the response
 	rangeResp := resp.Responses[0].GetResponseRange()
-	require.NotNil(t, rangeResp)
-	require.Equal(t, int64(1), rangeResp.Count)
-	require.Equal(t, 1, len(rangeResp.Kvs))
+	kvs := rangeResp.Kvs
+
+	// Get the decoder from the DecoderMap and decode
+	decoder := &ScalarDecoder[int]{}
+	var pval *int
+	err = decoder.Decode(ctx, key, kvs, &pval)
+	require.NoError(t, err)
+	require.NotNil(t, pval)
+	require.Equal(t, expectedVal, *pval)
+
+	// key := "/test/int"
+	// op, err := decodeScalar(ctx, key)
+	// require.NoError(t, err)
+	// require.NotNil(t, op)
+	// require.True(t, op.IsGet())
+	// require.Equal(t, key, string(op.KeyBytes()))
+
+	// txn := createTxn(t, cli)
+	// resp, err := txn.Then(op).Commit()
+	// require.NoError(t, err)
+	// require.NotNil(t, resp)
+
+	// require.Equal(t, 1, len(resp.Responses))
+	// rangeResp := resp.Responses[0].GetResponseRange()
+	// require.NotNil(t, rangeResp)
+	// require.Equal(t, int64(1), rangeResp.Count)
+	// require.Equal(t, 1, len(rangeResp.Kvs))
 	
-	kv := rangeResp.Kvs[0]
-	expectedKeyBytes := []byte(key) 
-	require.NoError(t, err)
-	require.NoError(t, err)
-	require.Equal(t, expectedKeyBytes, kv.Key)
-	var val int
-	err = json.Unmarshal(kv.Value, &val)
-	require.NoError(t, err)
-	expectedVal := 13
-	require.Equal(t, expectedVal, val)
+	// kv := rangeResp.Kvs[0]
+	// expectedKeyBytes := []byte(key) 
+	// require.NoError(t, err)
+	// require.NoError(t, err)
+	// require.Equal(t, expectedKeyBytes, kv.Key)
+	// var val int
+	// err = json.Unmarshal(kv.Value, &val)
+	// require.NoError(t, err)
+	// expectedVal := 13
+	// require.Equal(t, expectedVal, val)
 }
 
 
 func TestGetString (t *testing.T) {
 	ctx, cli := initAndTest(t)
 	
+	// Seed etcd with test data
 	key := "/test/string"
-	op, err := decodeScalar(ctx, key)
-	require.NoError(t, err)
-	require.NotNil(t, op)
-	require.True(t, op.IsGet())
-	require.Equal(t, key, string(op.KeyBytes()))
+	expectedVal := "hello world"
+	putAndTest(t, ctx, cli, key, expectedVal)
 
+	// Create the GET Op
+	op := etcd.OpGet(key)
+
+	// Get the response from etcd
 	txn := createTxn(t, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
-	require.NotNil(t, resp)
 
-	require.Equal(t, 1, len(resp.Responses))
+	// Get the KVs from the response
 	rangeResp := resp.Responses[0].GetResponseRange()
-	require.NotNil(t, rangeResp)
-	require.Equal(t, int64(1), rangeResp.Count)
-	require.Equal(t, 1, len(rangeResp.Kvs))
+	kvs := rangeResp.Kvs
+
+	// Get the decoder from the DecoderMap and decode
+	decoder := &ScalarDecoder[string]{}
+	var pval *string
+	err = decoder.Decode(ctx, key, kvs, &pval)
+	require.NoError(t, err)
+	require.NotNil(t, pval)
+	require.Equal(t, expectedVal, *pval)
+
+	// key := "/test/string"
+	// op, err := decodeScalar(ctx, key)
+	// require.NoError(t, err)
+	// require.NotNil(t, op)
+	// require.True(t, op.IsGet())
+	// require.Equal(t, key, string(op.KeyBytes()))
+
+	// txn := createTxn(t, cli)
+	// resp, err := txn.Then(op).Commit()
+	// require.NoError(t, err)
+	// require.NotNil(t, resp)
+
+	// require.Equal(t, 1, len(resp.Responses))
+	// rangeResp := resp.Responses[0].GetResponseRange()
+	// require.NotNil(t, rangeResp)
+	// require.Equal(t, int64(1), rangeResp.Count)
+	// require.Equal(t, 1, len(rangeResp.Kvs))
 	
-	kv := rangeResp.Kvs[0]
-	t.Logf("kv=%#v", kv)
-	expectedKeyBytes := []byte(key) 
-	require.NoError(t, err)
-	require.NoError(t, err)
-	require.Equal(t, expectedKeyBytes, kv.Key)
-	var val string
-	err = json.Unmarshal(kv.Value, &val)
-	require.NoError(t, err)
-	expectedVal := "hello"
-	require.Equal(t, expectedVal, val)
+	// kv := rangeResp.Kvs[0]
+	// t.Logf("kv=%#v", kv)
+	// expectedKeyBytes := []byte(key) 
+	// require.NoError(t, err)
+	// require.NoError(t, err)
+	// require.Equal(t, expectedKeyBytes, kv.Key)
+	// var val string
+	// err = json.Unmarshal(kv.Value, &val)
+	// require.NoError(t, err)
+	// expectedVal := "hello"
+	// require.Equal(t, expectedVal, val)
 }
 
 
 func TestFloat(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/f"
 	val := float32(42.0)
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	var decodedVal float32
 	var i = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
@@ -441,31 +694,31 @@ func TestFieldNameMap(t *testing.T) {
 }
 
 func TestFloatSlice(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/float32slice"
 	val := []float32{42.0, 1764.0, 6.54321}
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	type float32slice []float32
 	var decodedVal float32slice
 	var i = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, float32slice(val), decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestInt(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/n"
 	val := int(-13)
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	var decodedVal int
 	var i = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
@@ -488,7 +741,7 @@ func TestDecode_IntSlice(t *testing.T) {
 }
 
 func TestMapStringString(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/map/stringstring"
 	val1 := "meat"
@@ -501,13 +754,13 @@ func TestMapStringString(t *testing.T) {
 		"bum": val3,
 	}
 	for k, v := range val {
-		putAndTest(t, etcdClient, filepath.Join(key, k), v)
+		putAndTest(t, ctx, cli, filepath.Join(key, k), v)
 	}
 
 	var decodedVal mapstringstring = nil
 	type pmapstringstring *mapstringstring
 	var i pmapstringstring = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, (val), decodedVal)
 	t.Log(decodedVal)
@@ -564,17 +817,17 @@ func TestNilPointer(t *testing.T) {
 
 func TestString(t *testing.T) {
 	ctx := newEcoContext(os.Stdout)
-	etcdClient, err := NewEtcdClientFromConfig()
+	cli, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	require.NotNil(t, cli)
 
 	key := "/test/s"
 	val := `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	var decodedVal string
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err = decode(ctx, cli, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
@@ -582,38 +835,38 @@ func TestString(t *testing.T) {
 
 func TestStringSlice(t *testing.T) {
 	ctx := newEcoContext(os.Stdout)
-	etcdClient, err := NewEtcdClientFromConfig()
+	cli, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	require.NotNil(t, cli)
 
 	key := "/test/stringslice"
 	val := []string{"foo", "bar", "bum"}
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	type stringslice []string
 	var decodedVal stringslice
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err = decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, stringslice(val), decodedVal)
 	t.Log(decodedVal)
 }
 
 func TestStructEcoTest(t *testing.T) {
-	ctx, etcdClient := initAndTest(t)
+	ctx, cli := initAndTest(t)
 
 	key := "/test/struct/ecotest"
 	name := "Me"
 	luckyNumber := 13
 	val := NewEcoTest(name, float64(luckyNumber))
-	putAndTest(t, etcdClient, filepath.Join(key, "name"), val.Name)
-	putAndTest(t, etcdClient, filepath.Join(key, "lucky_number"), val.LuckyNumber)
-	putAndTest(t, etcdClient, filepath.Join(key, "Anon"), val.Anon)
+	putAndTest(t, ctx, cli, filepath.Join(key, "name"), val.Name)
+	putAndTest(t, ctx, cli, filepath.Join(key, "lucky_number"), val.LuckyNumber)
+	putAndTest(t, ctx, cli, filepath.Join(key, "Anon"), val.Anon)
 
 	var decodedVal EcoTest
 	type pEcoTest *EcoTest
 	var i pEcoTest = &decodedVal
-	err := decode(ctx, etcdClient, key, i)
+	err := decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, *val, *i)
 	t.Log(decodedVal)
@@ -649,17 +902,17 @@ func TestStructSetField1(t *testing.T) {
 
 func TestUint(t *testing.T) {
 	ctx := newEcoContext(os.Stdout)
-	etcdClient, err := NewEtcdClientFromConfig()
+	cli, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	require.NotNil(t, cli)
 
 	key := "/test/n"
 	val := uint(13)
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	var decodedVal uint
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err = decode(ctx, cli, key, i)
 	assert.NoError(t, err)
 	assert.Equal(t, val, decodedVal)
 	t.Log(decodedVal)
@@ -667,18 +920,18 @@ func TestUint(t *testing.T) {
 
 func TestUintSlice(t *testing.T) {
 	ctx := newEcoContext(os.Stdout)
-	etcdClient, err := NewEtcdClientFromConfig()
+	cli, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
+	require.NotNil(t, cli)
 
 	key := "/test/uintslice"
 	val := []uint{5, 12, 13}
-	putAndTest(t, etcdClient, key, val)
+	putAndTest(t, ctx, cli, key, val)
 
 	type uintslice []uint
 	var decodedVal uintslice
 	var i = &decodedVal
-	err = decode(ctx, etcdClient, key, i)
+	err = decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	assert.Equal(t, uintslice(val), decodedVal)
 	t.Log(decodedVal)
@@ -693,18 +946,26 @@ func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
 	return ctx, etcdClient
 }
 
-func putAndTest(t *testing.T, etcdClient *EtcdClient, key string, i any) {
+// With the EtcdClient, Put a value to etcd, then Get it back to confirm the 
+// Put succeeded
+func putAndTest(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key string, i any) {
 	// resp, err := etcdClient.Put(context.Background(), key, val)
+	ctx.inc()
+	defer ctx.dec()
+
+	ctx.logger.Infof("Writing to %s... ", key)
 	j, err := json.Marshal(i)
 	require.NoError(t, err)
-	resp, err := etcdClient.Put(context.Background(), key, string(j))
+	resp, err := etcdClient.Put(ctx, key, string(j))
 	require.NoError(t, err)
 	require.NotNil(t, resp)
+
+	ctx.logger.Infof("Reading %s... ", key)
 	buf, err := etcdClient.Get(key)
 	require.NoError(t, err)
 	require.Equal(t, j, buf)
 	require.Equal(t, string(j), string(buf))
-	// t.Logf("%#v", resp)
+	ctx.logger.Infof("%#v", resp)
 }
 
 func testDecodeScalar(t *testing.T, ctx *ecoContext, key string) etcd.Op {
@@ -716,6 +977,28 @@ func testDecodeScalar(t *testing.T, ctx *ecoContext, key string) etcd.Op {
 	
 	return op	
 }
+
+func TestReflectionToGenerics (t *testing.T) {
+	var parserMap map[string]Parser = map[string]Parser {
+		"int": &ScalarParser[int]{},
+	}
+	parserMap["int"].parse("hi")
+
+	var p *int = new(int)
+	buf := []byte("13")
+	err := json.Unmarshal(buf, p)
+	require.NoError(t, err)
+	require.Equal(t, 13, *p)
+}
+
+type Parser interface { parse (any) error }
+
+type ScalarParser[U any] struct {}
+func (p *ScalarParser[_]) parse (_ any) error { return nil }
+
+
+
+
 /*
 ap[string]reflect.Value
 {

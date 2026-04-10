@@ -3,7 +3,6 @@ package eco
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -48,20 +47,18 @@ func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 		reflect.String:
 		ops, err = encodeScalar(ctx, key, val)
 
-	case reflect.Array:
+	case reflect.Array,
+		reflect.Slice:
 		ops, err = encodeSlice(ctx, key, val)
 
 	case reflect.Map:
 		ops, err = encodeMap(ctx, key, val)
 
-	case reflect.Slice:
-		ops, err = encodeSlice(ctx, key, val)
-
 	case reflect.Struct:
 		ops, err = encodeStruct(ctx, key, val)
 
 	default:
-		err = errors.New("unsupported")
+		err = fmt.Errorf("unsupported reflection kind (%s)", kind.String())
 	}
 
 	if err != nil {
