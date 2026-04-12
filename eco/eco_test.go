@@ -132,7 +132,7 @@ var VAL_Astros = Team{
 type EcoTest struct {
 	Name        string  `eco:"name"`
 	LuckyNumber float64 `eco:"lucky_number"`
-	Anon        string
+	NoTag       string
 }
 
 type structWithMap struct {
