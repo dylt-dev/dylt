@@ -20,7 +20,7 @@ import (
 )
 
 type Decoder interface {
-	Decode(*ecoContext, []*mvccpb.KeyValue, string, any) error
+	Decode(*ecoContext, []*mvccpb.KeyValue, string, reflect.Value) error
 }
 type MapDecoder struct{}
 type MainDecoder struct{}
@@ -51,48 +51,65 @@ var decoderMap DecoderMap = DecoderMap{
 }
 
 
-func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	// Get the decoder from the decoder map, if it exists
-	pKind := reflect.TypeOf(p).Elem().Elem().Kind()
+	pKind := rv.Elem().Elem().Kind()
 	decoder, is := decoderMap[pKind]
 	if !is {
 		return fmt.Errorf("Unsupported pointer type (kind=%s)", pKind.String())
 	}
 
-	return decoder.Decode(ctx, kvs, key, p)
+	return decoder.Decode(ctx, kvs, key, rv)
 }
 
-func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	return nil
 }
 
-func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, i any) error {
-	sliceData := getSliceData(kvs, key)
-	maxIndex := sliceData.MaxIndex()
-	typSlice, err := getUnderlyingType(i)
-	if err != nil {
-		return err
-	}
-	len := maxIndex+1
-	cap := maxIndex+1
-	rSlice := reflect.MakeSlice(typSlice, len, cap)
-	slice := rSlice.Interface()
-	pp := i.(**any)
-	p := *pp
-	*p = &slice
-
-	return nil
-}
-
-func (d *StructDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
-	return nil
-}
-
-func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	data := kvs[0].Value
 	ctx.logger.Infof("data=%#v", data)
-	err := json.Unmarshal(data, p)
+	i := rv.Interface()
+	err := json.Unmarshal(data, i)
 	return err
+}
+
+
+func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
+	sliceData := getSliceData(kvs, key)
+	maxIndex := sliceData.MaxIndex()
+	typSlice := rv.Type().Elem().Elem()
+	len := maxIndex+1
+	cap := maxIndex+1
+	rvSlice := reflect.MakeSlice(typSlice, len, cap)
+
+	// Unmarshal all the elements
+	for i, data := range sliceData {
+		// Get a pointer to the slice element at the specified index
+		el := rvSlice.Index(i)
+		addr := el.Addr()
+		pEl := addr.Interface()
+
+		// Unmarshal the specified data into the element pointer
+		err := json.Unmarshal(data, pEl)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Make a slice pointer + assign the new slice to the pointer's Elem()
+	rvPSlice := reflect.New(typSlice)
+	rvPSlice.Elem().Set(rvSlice)
+
+	// Assign the new slice pointer to the incoming rv
+	rv.Elem().Set(rvPSlice)
+
+	return nil
+}
+
+
+func (d *StructDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
+	return nil
 }
 
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {

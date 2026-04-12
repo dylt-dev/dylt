@@ -108,7 +108,6 @@ func TestShowConfig(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-
 func TestStrings(t *testing.T) {
 	t.Skip("This might have been a one-off test to compare these values. The strings don't match -- 'linux_amd' vs 'linux-amd' -- so this test will always fail")
 	str0 := "> GET /etcd-io/etcd/releases/download/v3.5.16/etcd-v3.5.16-linux_amd64.tar.gz HTTP/2"
@@ -327,4 +326,85 @@ func TestAllocateSlice(t *testing.T) {
 	require.NotNil(t, &pslice)
 	require.Equal(t, 5, len(*pslice))
 	require.Equal(t, 5, cap(*pslice))
+}
+
+func TestSetPointerWithReflection(t *testing.T) {
+	var expectedVal int = 13
+	var p *int = new(int)
+	rv := reflect.ValueOf(p)
+	rvExpected := reflect.ValueOf(expectedVal)
+	reflect.Indirect(rv).Set(rvExpected)
+	require.Equal(t, expectedVal, *p)
+	var p2 *int = rv.Interface().(*int)
+	require.Equal(t, expectedVal, *p2)
+}
+
+func TestSetPointerPointerWithReflection(t *testing.T) {
+	var expectedVal int = 13
+	var p *int
+	rv := reflect.ValueOf(&p)
+
+	// Create a new int pointer using reflection
+	rvNew := reflect.New(reflect.TypeFor[*int]())
+	require.True(t, rvNew.Elem().CanSet())
+	require.Equal(t, reflect.Pointer, rvNew.Type().Kind())
+	require.Equal(t, reflect.Pointer, rvNew.Type().Elem().Kind())
+	require.Equal(t, reflect.Int, rvNew.Type().Elem().Elem().Kind())
+
+	rvExpected := reflect.ValueOf(&expectedVal)
+	rvNew.Elem().Set(rvExpected)
+	require.Equal(t, int64(expectedVal), rvNew.Elem().Elem().Int())
+
+	require.True(t, rv.Elem().CanSet())
+	rv.Elem().Set(rvNew.Elem())
+	require.Equal(t, expectedVal, *p)
+
+	var pp **int = rv.Interface().(**int)
+	require.Equal(t, expectedVal, **pp)
+}
+
+func TestSetSliceElementWithReflection(t *testing.T) {
+	var expectedVal int = 13
+	slice := make([]int, 1)
+	var pslice *[]int = &slice
+	rv := reflect.ValueOf(pslice)
+	rvEl := reflect.Indirect(rv).Index(0)
+	rvEl.Set(reflect.ValueOf(expectedVal))
+	require.Equal(t, expectedVal, slice[0])
+}
+
+func TestSetAllocateSliceWithReflection(t *testing.T) {
+	var expectedVal int = 13
+	expectedBuf := fmt.Sprint(expectedVal)
+	// Get reflect.Value for pointer to pointer to slice
+	var pslice *[]int
+
+	// Make a slice
+	typSlice := reflect.TypeOf(pslice).Elem()
+	require.Equal(t, reflect.Slice, typSlice.Kind())
+	rvSlice := reflect.MakeSlice(typSlice, 1, 1)
+	require.Equal(t, reflect.Slice, rvSlice.Type().Kind())
+
+	// Get the address of a slice element and Unmarshal into it
+	require.True(t, rvSlice.Index(0).CanAddr())
+	i := rvSlice.Index(0).Addr().Interface()
+	pSliceEl := i.(*int)
+	err := json.Unmarshal([]byte(expectedBuf), pSliceEl)
+	require.NoError(t, err)
+	require.Equal(t, int64(expectedVal), rvSlice.Index(0).Int())
+
+	// Make a slice pointer (wonder if an array pointer is better since I have the size)
+	rvPSlice := reflect.New(typSlice)
+	require.Equal(t, reflect.Pointer, rvPSlice.Type().Kind())
+	require.Equal(t, reflect.Slice, rvPSlice.Type().Elem().Kind())
+	require.True(t, rvPSlice.Elem().CanSet())
+	rvPSlice.Elem().Set(rvSlice)
+
+	// Set the rvPP element to the slice pointer
+	rvPP := reflect.ValueOf(&pslice)
+	require.True(t, rvPP.Elem().CanSet())
+	rvPP.Elem().Set(rvPSlice)
+
+	// **pslice = slice
+	require.Equal(t, expectedVal, (*pslice)[0])
 }
