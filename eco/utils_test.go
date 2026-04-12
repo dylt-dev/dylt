@@ -26,7 +26,7 @@ func TestGetSliceKeyIndexNoSlash(t *testing.T) {
 	key := "foobarbum0"	
 	expectedVal := -1
 	index, is := getSliceKeyIndex(key)
-	require.True(t, is)
+	require.False(t, is)
 	require.Equal(t, expectedVal, index)
 }
 

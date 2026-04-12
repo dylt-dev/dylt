@@ -9,6 +9,9 @@ import (
 )
 
 func TestDecodeTeam_Misc (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
 	var val MiscMap
 	decodeAndTest(t, "/test/team/astros/Players/altuve/Misc", &val)
 	require.NotEmpty(t, val)

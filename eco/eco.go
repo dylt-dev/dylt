@@ -485,6 +485,13 @@ func getFieldValue(val reflect.Value) (string, error) {
 }
 
 func getSliceKeyIndex (key string) (int, bool) {
+	// Trim the last character if its a slash
+	lastChar := key[len(key)-1:]
+	if lastChar == "/" {
+		key = key[0:len(key)-1]
+	}
+
+	// Confirm key contains at least one slash
 	iLastSlash := strings.LastIndex(key, "/")
 	if iLastSlash == -1 {
 		return -1, false

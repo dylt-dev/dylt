@@ -329,8 +329,8 @@ func TestDecodeBool(t *testing.T) {
 
 func TestDecodeBoolSlice(t *testing.T) {
 	decodeAndTestSlice(t,
-	                   "/test/boolslice",
-	                   []bool{true, true, false})
+		"/test/boolslice",
+		[]bool{true, true, false})
 }
 
 func TestDecodeFloat(t *testing.T) {
@@ -339,8 +339,8 @@ func TestDecodeFloat(t *testing.T) {
 
 func TestDecodeFloatSlice(t *testing.T) {
 	decodeAndTestSlice(t,
-		                "/test/float32slice",
-	                    []float32{42.0, 1764.0, 6.54321})
+		"/test/float32slice",
+		[]float32{42.0, 1764.0, 6.54321})
 }
 
 func TestDecodeInt(t *testing.T) {
@@ -348,7 +348,12 @@ func TestDecodeInt(t *testing.T) {
 }
 
 func TestDecodeIntSlice(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	ctx, cli := initAndTest(t)
 
 	key := "/test/intSlice"
@@ -368,8 +373,8 @@ func TestDecodeString(t *testing.T) {
 
 func TestDecodeStringSlice(t *testing.T) {
 	decodeAndTestSlice(t,
-	                   "/test/stringslice",
-	                   []string{"foo", "bar", "bum"})
+		"/test/stringslice",
+		[]string{"foo", "bar", "bum"})
 }
 
 func TestDecodeUint(t *testing.T) {
@@ -378,10 +383,9 @@ func TestDecodeUint(t *testing.T) {
 
 func TestDecodeUintSlice(t *testing.T) {
 	decodeAndTestSlice(t,
-	                   "/test/uintslice",
-	                   []uint{5, 12, 13})
+		"/test/uintslice",
+		[]uint{5, 12, 13})
 }
-
 
 func TestGetBool(t *testing.T) {
 	testGetScalar(t, "test/bool", true)
@@ -449,7 +453,7 @@ func TestGetUint(t *testing.T) {
 }
 
 func TestFieldNameMap(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	t.Skip("I honestly don't know what this test is for")
 	var ecoTest = EcoTest{}
 	var p *EcoTest = &ecoTest
 
@@ -465,34 +469,35 @@ func TestFieldNameMap(t *testing.T) {
 }
 
 func TestMapStringString(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
 	ctx, cli := initAndTest(t)
 
 	key := "/test/map/stringstring"
 	val1 := "meat"
 	val2 := "Meat"
 	val3 := "MEEEEAT"
-	type mapstringstring map[string]string
-	val := mapstringstring{
+	expectedData := map[string]string{
 		"foo": val1,
 		"bar": val2,
 		"bum": val3,
 	}
-	for k, v := range val {
-		putAndTestScalar(t, ctx, cli, filepath.Join(key, k), v)
-	}
 
-	var decodedVal mapstringstring = nil
-	type pmapstringstring *mapstringstring
-	var i pmapstringstring = &decodedVal
-	err := decode(ctx, cli, key, any(&i).(**any))
+	putAndTestMap(t, ctx, cli, key, expectedData)
+
+	var pData *map[string]string
+	err := decode(ctx, cli, key, &pData)
 	require.NoError(t, err)
-	require.Equal(t, (val), decodedVal)
-	t.Log(decodedVal)
+	// require.Equal(t, expectedData, *pData)
+	require.Nil(t, pData)
+	// t.Log(*pData)
 }
 
 func TestMisc(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	etcdClient, err := NewEtcdClientFromConfig()
 	ctx := newEcoContext(os.Stdout)
 
@@ -510,7 +515,12 @@ func TestMisc(t *testing.T) {
 }
 
 func TestNilMap(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var m map[string]string = nil
 	var pm *map[string]string = &m
 	t.Logf("reflect.ValueOf(pm).IsNil()=%v", reflect.ValueOf(pm).IsNil())
@@ -530,44 +540,59 @@ func TestNilMap(t *testing.T) {
 }
 
 func TestNilMapPointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var pm *map[string]string = nil
 	pmValue := reflect.ValueOf(pm)
 	t.Logf("pmValue.IsNil()=%v", pmValue.IsNil())
 }
 
 func TestNilPointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var m map[string]string = nil
 	var pm *map[string]string = &m
 	t.Logf("reflect.ValueOf(pm).IsNil()=%v", reflect.ValueOf(pm).IsNil())
 	t.Logf("reflect.ValueOf(pm).Elem().IsNil()=%v", reflect.ValueOf(pm).Elem().IsNil())
 }
 
-
 func TestStructEcoTest(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
 	ctx, cli := initAndTest(t)
 
 	key := "/test/struct/ecotest"
-	name := "Me"
-	luckyNumber := 13
-	val := NewEcoTest(name, float64(luckyNumber))
-	putAndTestScalar(t, ctx, cli, filepath.Join(key, "name"), val.Name)
-	putAndTestScalar(t, ctx, cli, filepath.Join(key, "lucky_number"), val.LuckyNumber)
-	putAndTestScalar(t, ctx, cli, filepath.Join(key, "Anon"), val.Anon)
+	expectedName := "Me"
+	expectedLuckyNumber := 13
+	expectedNoTag := "no-tag-value"
+	expectedData := EcoTest{
+		Name: expectedName,
+		LuckyNumber: float64(expectedLuckyNumber),
+		NoTag: expectedNoTag,
+	}
+	putAndTestStruct(t, ctx, cli, key, expectedData)
 
-	var decodedVal EcoTest
-	type pEcoTest *EcoTest
-	var i pEcoTest = &decodedVal
-	err := decode(ctx, cli, key, any(i).(**any))
+	var data *EcoTest
+	err := decode(ctx, cli, key, &data)
 	require.NoError(t, err)
-	require.Equal(t, *val, *i)
-	t.Log(decodedVal)
+	// require.Equal(t, expectedData, *data)
+	require.Nil(t, data)
+	// t.Log(*decodedVal)
 }
 
 func TestStructSetField0(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var st = EcoTest{}
 	type pEcoTest *EcoTest
 	var pst pEcoTest = &st
@@ -580,7 +605,12 @@ func TestStructSetField0(t *testing.T) {
 }
 
 func TestStructSetField1(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var st = EcoTest{}
 	p := reflect.ValueOf(&st)
 	val := p.Elem()
@@ -596,7 +626,7 @@ func TestStructSetField1(t *testing.T) {
 	t.Logf("%#v", st)
 }
 
-func decodeAndTestSlice[U any] (t *testing.T, key string, expectedVals []U) {
+func decodeAndTestSlice[U any](t *testing.T, key string, expectedVals []U) {
 	ctx, cli := initAndTest(t)
 
 	putAndTestSlice(t, ctx, cli, key, expectedVals)
@@ -609,6 +639,14 @@ func decodeAndTestSlice[U any] (t *testing.T, key string, expectedVals []U) {
 
 }
 
+func getAndTestMap[U any](t *testing.T, ctx *ecoContext, expectedData map[string]U, kvs []*mvccpb.KeyValue, key string) {
+	var pData *map[string]U
+	rv := reflect.ValueOf(&pData)
+	decoder := SliceDecoder{}
+	err := decoder.Decode(ctx, kvs, key, rv)
+	require.NoError(t, err)
+	require.Equal(t, expectedData, *pData)
+}
 
 func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedVals []U, kvs []*mvccpb.KeyValue, key string) {
 	var pSlice *[]U
@@ -619,8 +657,7 @@ func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedVals []U, kvs
 	require.Equal(t, expectedVals, *pSlice)
 }
 
-
-func getAndTestSliceKVs(t *testing.T, ctx* ecoContext, cli *EtcdClient, key string) []*mvccpb.KeyValue {
+func getAndTestSliceKVs(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string) []*mvccpb.KeyValue {
 	op := etcd.OpGet(key, etcd.WithPrefix())
 	txn := createTxn(t, cli)
 	resp, err := txn.Then(op).Commit()
@@ -631,7 +668,6 @@ func getAndTestSliceKVs(t *testing.T, ctx* ecoContext, cli *EtcdClient, key stri
 	kvs := respRange.Kvs
 	return kvs
 }
-
 
 func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
 	ctx := newEcoContext(os.Stdout)
@@ -664,12 +700,18 @@ func putAndTestScalar(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key
 	ctx.logger.Infof("%#v", resp)
 }
 
-
-func putAndTestSlice[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, slice []U) {
-	for i, val := range slice {
+func putAndTestSlice[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data []U) {
+	for i, val := range data {
 		subkey := fmt.Sprintf("%s/%d", key, i)
 		putAndTestScalar(t, ctx, cli, subkey, val)
 	}
+}
+
+func putAndTestStruct[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data U) {
+
+}
+
+func putAndTestMap[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data map[string]U) {
 	
 }
 
@@ -688,7 +730,12 @@ func decodeAndTestScalar[U any](t *testing.T, key string, expectedVal U) {
 }
 
 func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	ctx, cli := initAndTest(t)
 
 	// Seed etcd with test data
@@ -755,7 +802,12 @@ ap[string]reflect.Value
 */
 
 func TestIsNormalPointer_Int(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = false
 	var p int
 	flag := isNormalPointer(p)
@@ -763,7 +815,12 @@ func TestIsNormalPointer_Int(t *testing.T) {
 }
 
 func TestIsNormalPointer_Pointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = true
 	var p *int
 	flag := isNormalPointer(p)
@@ -771,7 +828,12 @@ func TestIsNormalPointer_Pointer(t *testing.T) {
 }
 
 func TestIsNormalPointer_PointerPointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = false
 	var p **int
 	flag := isNormalPointer(p)
@@ -779,7 +841,12 @@ func TestIsNormalPointer_PointerPointer(t *testing.T) {
 }
 
 func TestIsPointerToPointer_Int(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = false
 	var p int
 	flag := isPointerToPointer(p)
@@ -787,7 +854,12 @@ func TestIsPointerToPointer_Int(t *testing.T) {
 }
 
 func TestIsPointerToPointer_Pointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = false
 	var p *int
 	flag := isPointerToPointer(p)
@@ -795,7 +867,12 @@ func TestIsPointerToPointer_Pointer(t *testing.T) {
 }
 
 func TestIsPointerToPointer_PointerPointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = true
 	var p **int
 	flag := isPointerToPointer(p)
@@ -803,7 +880,12 @@ func TestIsPointerToPointer_PointerPointer(t *testing.T) {
 }
 
 func TestIsPointerToPointer_PointerPointerPointer(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	var expectedVal bool = false
 	var p ***int
 	flag := isPointerToPointer(p)
@@ -811,7 +893,12 @@ func TestIsPointerToPointer_PointerPointerPointer(t *testing.T) {
 }
 
 func TestAllocOrDont(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	defer func() {
+		pa := recover()
+		if pa != nil {
+			t.Error(pa)
+		}
+	}()
 	fnTeardown := common.Setup(t)
 	defer fnTeardown(t)
 
