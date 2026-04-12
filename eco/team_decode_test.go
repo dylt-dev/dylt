@@ -9,6 +9,9 @@ import (
 )
 
 func TestDecodeTeam_Misc (t *testing.T) {
+	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
+		t.Skip("sys test only")
+	}
 	var val MiscMap
 	decodeAndTest(t, "/test/team/astros/Players/altuve/Misc", &val)
 	require.NotEmpty(t, val)
@@ -30,7 +33,7 @@ func decodeAndTest (t *testing.T, key string, i any) {
 	etcd, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	ctx := newEcoContext(os.Stdout)
-	err = decode(ctx, etcd, key, i)
+	err = decode(ctx, etcd, key, any(i).(**any))
 	require.NoError(t, err)
 	el := reflect.ValueOf(i).Elem()
 	require.NotNil(t, el)

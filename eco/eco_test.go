@@ -17,6 +17,7 @@ import (
 
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
@@ -131,7 +132,7 @@ var VAL_Astros = Team{
 type EcoTest struct {
 	Name        string  `eco:"name"`
 	LuckyNumber float64 `eco:"lucky_number"`
-	Anon        string
+	NoTag       string
 }
 
 type structWithMap struct {
@@ -225,13 +226,48 @@ func TestMatchChildKey(t *testing.T) {
 	require.False(t, rx.Match([]byte(badkey)))
 }
 
-func TestGetObject(t *testing.T) {
-
+func TestFullTypeName_StatSlice(t *testing.T) {
+	s := common.FullTypeName(reflect.TypeFor[StatSlice]())
+	t.Log(s)
 }
 
-func TestFullTypeName_StatSlice(t *testing.T) {
-	s := common.FullTypeName(reflect.TypeOf(*new(StatSlice)))
-	t.Log(s)
+func TestGetSliceKeysAndMaxIndex(t *testing.T) {
+	expectedMaxIndex := 2
+	expectedKeyCount := 3
+	expectedValue := []byte("13")
+	sliceKey := "/test/slice"
+	kvs := []*mvccpb.KeyValue{
+		{Key: []byte("/test/slice/0")},
+		{Key: []byte("/test/slice/1"), Value: expectedValue},
+		{Key: []byte("/test/slice/2")},
+	}
+
+	sliceData := getSliceData(kvs, sliceKey)
+	maxIndex := sliceData.MaxIndex()
+	require.Equal(t, expectedMaxIndex, maxIndex)
+	require.Equal(t, expectedKeyCount, len(sliceData))
+	require.Equal(t, expectedValue, sliceData[1])
+}
+
+func TestGetSliceKeysAndMaxIndex2(t *testing.T) {
+	expectedMaxIndex := 2
+	expectedKeyCount := 3
+	expectedValue := []byte("13")
+	sliceKey := "/test/slice"
+	kvs := []*mvccpb.KeyValue{
+		{Key: []byte("/test/slice/0")},
+		{Key: []byte("/test/slice/1"), Value: expectedValue},
+		{Key: []byte("/test/slice/2")},
+		{Key: []byte("/test/slice/foo")},
+		{Key: []byte("/test/slice/bar")},
+		{Key: []byte("/test/slice/3/bum")},
+	}
+
+	sliceData := getSliceData(kvs, sliceKey)
+	maxIndex := sliceData.MaxIndex()
+	require.Equal(t, expectedMaxIndex, maxIndex)
+	require.Equal(t, expectedKeyCount, len(sliceData))
+	require.Equal(t, expectedValue, sliceData[1])
 }
 
 func TestKind_ArrayOfInt(t *testing.T) {
@@ -478,6 +514,51 @@ func TestReflection3(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUnderlyingTypeInt(t *testing.T) {
+	var expectedVal reflect.Kind = reflect.Int
+	var p int
+	pType, err := getUnderlyingType(p)
+	require.Error(t, err)
+	pKind := pType.Kind()
+	require.Equal(t, expectedVal, pKind)
+}
+
+func TestUnderlyingTypeIntPointer(t *testing.T) {
+	var expectedVal reflect.Kind = reflect.Int
+	var p *int
+	pType, err := getUnderlyingType(p)
+	require.NoError(t, err)
+	pKind := pType.Kind()
+	require.Equal(t, expectedVal, pKind)
+}
+
+func TestUnderlyingTypeIntPointerPointer(t *testing.T) {
+	var expectedVal reflect.Kind = reflect.Int
+	var p **int
+	pType, err := getUnderlyingType(p)
+	require.NoError(t, err)
+	pKind := pType.Kind()
+	require.Equal(t, expectedVal, pKind)
+}
+
+func TestUnderlyingTypeIntPointerPointerPointer(t *testing.T) {
+	var expectedVal reflect.Kind = reflect.Pointer
+	var p ***int
+	pType, err := getUnderlyingType(p)
+	require.Error(t, err)
+	pKind := pType.Kind()
+	require.Equal(t, expectedVal, pKind)
+}
+
+func TestUnderlyingTypeSlicePointerPointer(t *testing.T) {
+	var expectedVal reflect.Kind = reflect.Slice
+	var p **[]bool
+	pType, err := getUnderlyingType(p)
+	require.NoError(t, err)
+	pKind := pType.Kind()
+	require.Equal(t, expectedVal, pKind)
+}
+
 func reflectStruct(obj any) (reflect.Type, reflect.Value, error) {
 	ty := reflect.TypeOf(obj)
 	val := reflect.ValueOf(obj)
@@ -514,14 +595,14 @@ func dumpOps(t *testing.T, ops []etcd.Op) {
 		if op.IsGet() {
 			key := string(op.KeyBytes())
 			s := fmt.Sprintf("%s %s", "GET", key)
-			fmt.Println(s)
+			t.Log(s)
 		} else if op.IsPut() {
 			key := string(op.KeyBytes())
 			val := string(op.ValueBytes())
 			s := fmt.Sprintf("%s %s %s", "PUT", common.Lowlight(key), val)
-			fmt.Println(s)
+			t.Log(s)
 		} else {
-			fmt.Printf("%#v\n", op)
+			t.Logf("%#v\n", op)
 		}
 	}
 }
@@ -562,46 +643,61 @@ func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error
 	return mapKeys, nil
 }
 
-func testEncodeBool(t *testing.T, key string, b any) {
-	valExpected, err := json.Marshal(b)
+func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd.Op {
+	ops, err := Encode(ctx, key, val)
 	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(os.Stdout), key, b)
-	require.NoError(t, err)
-	dumpOps(t, ops)
-	require.NotEmpty(t, ops)
+	require.NotNil(t, ops)
 	require.Equal(t, 1, len(ops))
-	op := ops[0]
-	require.NotEmpty(t, op)
+
+	valExpected, err := json.Marshal(val)
+	require.NoError(t, err)
+	var op etcd.Op = ops[0]
+	require.NotNil(t, op)
 	require.True(t, op.IsPut())
-	require.Equal(t, []byte(key), op.KeyBytes())
+	require.Equal(t, key, string(op.KeyBytes()))
 	require.Equal(t, valExpected, op.ValueBytes())
+
+	return ops
 }
 
-func testEncodeNumber(t *testing.T, key string, n any) {
-	valExpected, err := json.Marshal(n)
+// func testEncodeString(t *testing.T, ctx *ecoContext, key string, val string) []etcd.Op {
+// 	ops, err := Encode(ctx, key, val)
+// 	require.NoError(t, err)
+// 	require.NotEmpty(t, ops)
+// 	require.Equal(t, 1, len(ops))
+
+// 	valExpected := []byte(val)
+// 	var op etcd.Op = ops[0]
+// 	require.NotNil(t, op)
+// 	require.True(t, op.IsPut())
+// 	require.Equal(t, key, string(op.KeyBytes()))
+// 	require.Equal(t, valExpected, op.ValueBytes())
+
+// 	return ops
+// }
+
+func testPutScalar(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val any) {
+	ops := testEncodeScalar(t, ctx, key, val)
+
+	txn := createTxn(t, cli)
+	require.NotNil(t, txn)
+	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
-	ops, err := Encode(newEcoContext(os.Stdout), key, n)
-	require.NoError(t, err)
-	dumpOps(t, ops)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
-	op := ops[0]
-	require.NotEmpty(t, op)
-	require.True(t, op.IsPut())
-	require.Equal(t, []byte(key), op.KeyBytes())
-	require.Equal(t, valExpected, op.ValueBytes())
+	require.NotNil(t, resp)
+	require.Equal(t, 1, len(resp.Responses))
+	resp0 := resp.Responses[0]
+	require.NotNil(t, resp0.GetResponsePut())
 }
 
-func testEncodeString(t *testing.T, key string, s string) {
-	ops, err := Encode(newEcoContext(os.Stdout), key, s)
-	dumpOps(t, ops)
-	// valExpected := fmt.Sprintf(`"%s"`, s)
+func testPutString(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val string) {
+	ops := testEncodeScalar(t, ctx, key, val)
+
+	txn := createTxn(t, cli)
+	require.NotNil(t, txn)
+	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
-	require.NotEmpty(t, ops)
-	require.Equal(t, 1, len(ops))
-	// op := ops[0]
-	// require.NotEmpty(t, op)
-	// require.True(t, op.IsPut())
-	// require.Equal(t, []byte(key), op.KeyBytes())
-	// require.Equal(t, []byte(valExpected), op.ValueBytes())
+	require.NotNil(t, resp)
+	require.Equal(t, 1, len(resp.Responses))
+	resp0 := resp.Responses[0]
+	require.NotNil(t, resp0.GetResponsePut())
 }
