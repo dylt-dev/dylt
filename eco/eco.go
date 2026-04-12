@@ -53,7 +53,7 @@ var decoderMap DecoderMap = DecoderMap{
 
 func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	// Get the decoder from the decoder map, if it exists
-	pKind := rv.Elem().Elem().Kind()
+	pKind := rv.Type().Elem().Elem().Kind()
 	decoder, is := decoderMap[pKind]
 	if !is {
 		return fmt.Errorf("Unsupported pointer type (kind=%s)", pKind.String())
@@ -98,11 +98,11 @@ func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key strin
 	}
 
 	// Make a slice pointer + assign the new slice to the pointer's Elem()
-	rvPSlice := reflect.New(typSlice)
-	rvPSlice.Elem().Set(rvSlice)
+	rvNew := reflect.New(typSlice)
+	rvNew.Elem().Set(rvSlice)
 
 	// Assign the new slice pointer to the incoming rv
-	rv.Elem().Set(rvPSlice)
+	rv.Elem().Set(rvNew)
 
 	return nil
 }

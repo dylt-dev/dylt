@@ -323,39 +323,65 @@ func decodeStruct(ctx *ecoContext, etcdClient *EtcdClient, key string, i any) er
 	return nil
 }
 
-func TestBoolSlice(t *testing.T) {
-	ctx, cli := initAndTest(t)
-	key := "/test/boolslice"
-	expectedVal := []bool{true, true, false}
-	putAndTest(t, ctx, cli, key, expectedVal)
-
-	var p *[]bool
-	pp := &p
-	err := decode(ctx, cli, key, pp)
-	require.NoError(t, err)
-	require.Equal(t, expectedVal, p)
-	t.Log(p)
+func TestDecodeBool(t *testing.T) {
+	decodeAndTestScalar(t, "/test/bool", true)
 }
 
-func TestDecodeBool(t *testing.T) {
-	testDecodeScalar(t, "/test/bool", true)
+func TestDecodeBoolSlice(t *testing.T) {
+	decodeAndTestSlice(t,
+	                   "/test/boolslice",
+	                   []bool{true, true, false})
 }
 
 func TestDecodeFloat(t *testing.T) {
-	testDecodeScalar(t, "/test/float", float32(42.0))
+	decodeAndTestScalar(t, "/test/float", float32(42.0))
+}
+
+func TestDecodeFloatSlice(t *testing.T) {
+	decodeAndTestSlice(t,
+		                "/test/float32slice",
+	                    []float32{42.0, 1764.0, 6.54321})
 }
 
 func TestDecodeInt(t *testing.T) {
-	testDecodeScalar(t, "/test/int", int(-13.0))
+	decodeAndTestScalar(t, "/test/int", int(-13.0))
+}
+
+func TestDecodeIntSlice(t *testing.T) {
+	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+	ctx, cli := initAndTest(t)
+
+	key := "/test/intSlice"
+	expectedVals := []int{5, 8, 13}
+	putAndTestSlice(t, ctx, cli, key, expectedVals)
+
+	var pSlice *[]int
+	err := decode(ctx, cli, key, &pSlice)
+	require.NoError(t, err)
+	require.Equal(t, expectedVals, *pSlice)
+	t.Log(*pSlice)
 }
 
 func TestDecodeString(t *testing.T) {
-	testDecodeScalar(t, "/test/string", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+	decodeAndTestScalar(t, "/test/string", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+}
+
+func TestDecodeStringSlice(t *testing.T) {
+	decodeAndTestSlice(t,
+	                   "/test/stringslice",
+	                   []string{"foo", "bar", "bum"})
 }
 
 func TestDecodeUint(t *testing.T) {
-	testDecodeScalar(t, "/test/uint", uint(13.0))
+	decodeAndTestScalar(t, "/test/uint", uint(13.0))
 }
+
+func TestDecodeUintSlice(t *testing.T) {
+	decodeAndTestSlice(t,
+	                   "/test/uintslice",
+	                   []uint{5, 12, 13})
+}
+
 
 func TestGetBool(t *testing.T) {
 	testGetScalar(t, "test/bool", true)
@@ -367,32 +393,13 @@ func TestGetBoolSlice(t *testing.T) {
 	// Seed etcd with test data
 	key := "/test/boolSlice"
 	expectedVals := []bool{true, false, true, true}
-	for i, expectedVal := range expectedVals {
-		subkey := fmt.Sprintf("%s/%d", key, i)
-		putAndTest(t, ctx, cli, subkey, expectedVal)
-	}
+	putAndTestSlice(t, ctx, cli, key, expectedVals)
 
 	// Get kvs for seeded data
-	// // Create etcd OpGet
-	op := etcd.OpGet(key, etcd.WithPrefix())
-	txn := createTxn(t, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	respRange := resp.Responses[0].GetResponseRange()
-	ctx.logger.Infof("respRange.Count=%d", respRange.Count)
-	kvs := respRange.Kvs
+	kvs := getAndTestSliceKVs(t, ctx, cli, key)
 
-	// Decode the slice
-	var p *[]bool
-	pp := &p
-	rv := reflect.ValueOf(pp)
-	decoder := SliceDecoder{}
-	err = decoder.Decode(ctx, kvs, key, rv)
-	i := rv.Interface()
-	pp = i.(**[]bool)
-	require.NoError(t, err)
-	require.Equal(t, expectedVals, **pp)
+	// Decode the slice and test expected values
+	getAndTestSlice(t, ctx, expectedVals, kvs, key)
 
 	// // Create etcd OpGet
 	// op := etcd.OpGet(key, etcd.WithPrefix())
@@ -457,39 +464,6 @@ func TestFieldNameMap(t *testing.T) {
 	t.Logf("%#v", p)
 }
 
-func TestFloatSlice(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
-	ctx, cli := initAndTest(t)
-
-	key := "/test/float32slice"
-	val := []float32{42.0, 1764.0, 6.54321}
-	putAndTest(t, ctx, cli, key, val)
-
-	type float32slice []float32
-	var decodedVal float32slice
-	var i = &decodedVal
-	err := decode(ctx, cli, key, any(i).(**any))
-	require.NoError(t, err)
-	require.Equal(t, float32slice(val), decodedVal)
-	t.Log(decodedVal)
-}
-
-func TestDecode_IntSlice(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
-	ctx, etcdClient := initAndTest(t)
-
-	key := "/test/intSlice"
-	val := []int{5, 8, 13}
-
-	type intslice []int
-	var decodedVal intslice
-	var i = &decodedVal
-	err := decode(ctx, etcdClient, key, any(i).(**any))
-	require.NoError(t, err)
-	require.Equal(t, intslice(val), decodedVal)
-	t.Log(decodedVal)
-}
-
 func TestMapStringString(t *testing.T) {
 	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
 	ctx, cli := initAndTest(t)
@@ -505,7 +479,7 @@ func TestMapStringString(t *testing.T) {
 		"bum": val3,
 	}
 	for k, v := range val {
-		putAndTest(t, ctx, cli, filepath.Join(key, k), v)
+		putAndTestScalar(t, ctx, cli, filepath.Join(key, k), v)
 	}
 
 	var decodedVal mapstringstring = nil
@@ -571,26 +545,6 @@ func TestNilPointer(t *testing.T) {
 }
 
 
-func TestStringSlice(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
-	ctx := newEcoContext(os.Stdout)
-	cli, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, cli)
-
-	key := "/test/stringslice"
-	val := []string{"foo", "bar", "bum"}
-	putAndTest(t, ctx, cli, key, val)
-
-	type stringslice []string
-	var decodedVal stringslice
-	var i = &decodedVal
-	err = decode(ctx, cli, key, any(i).(**any))
-	require.NoError(t, err)
-	require.Equal(t, stringslice(val), decodedVal)
-	t.Log(decodedVal)
-}
-
 func TestStructEcoTest(t *testing.T) {
 	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
 	ctx, cli := initAndTest(t)
@@ -599,9 +553,9 @@ func TestStructEcoTest(t *testing.T) {
 	name := "Me"
 	luckyNumber := 13
 	val := NewEcoTest(name, float64(luckyNumber))
-	putAndTest(t, ctx, cli, filepath.Join(key, "name"), val.Name)
-	putAndTest(t, ctx, cli, filepath.Join(key, "lucky_number"), val.LuckyNumber)
-	putAndTest(t, ctx, cli, filepath.Join(key, "Anon"), val.Anon)
+	putAndTestScalar(t, ctx, cli, filepath.Join(key, "name"), val.Name)
+	putAndTestScalar(t, ctx, cli, filepath.Join(key, "lucky_number"), val.LuckyNumber)
+	putAndTestScalar(t, ctx, cli, filepath.Join(key, "Anon"), val.Anon)
 
 	var decodedVal EcoTest
 	type pEcoTest *EcoTest
@@ -642,25 +596,42 @@ func TestStructSetField1(t *testing.T) {
 	t.Logf("%#v", st)
 }
 
-func TestUintSlice(t *testing.T) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
-	ctx := newEcoContext(os.Stdout)
-	cli, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, cli)
+func decodeAndTestSlice[U any] (t *testing.T, key string, expectedVals []U) {
+	ctx, cli := initAndTest(t)
 
-	key := "/test/uintslice"
-	val := []uint{5, 12, 13}
-	putAndTest(t, ctx, cli, key, val)
+	putAndTestSlice(t, ctx, cli, key, expectedVals)
 
-	type uintslice []uint
-	var decodedVal uintslice
-	var i = &decodedVal
-	err = decode(ctx, cli, key, any(i).(**any))
+	var pSlice *[]U
+	err := decode(ctx, cli, key, &pSlice)
 	require.NoError(t, err)
-	require.Equal(t, uintslice(val), decodedVal)
-	t.Log(decodedVal)
+	require.Equal(t, expectedVals, *pSlice)
+	t.Log(*pSlice)
+
 }
+
+
+func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedVals []U, kvs []*mvccpb.KeyValue, key string) {
+	var pSlice *[]U
+	rv := reflect.ValueOf(&pSlice)
+	decoder := SliceDecoder{}
+	err := decoder.Decode(ctx, kvs, key, rv)
+	require.NoError(t, err)
+	require.Equal(t, expectedVals, *pSlice)
+}
+
+
+func getAndTestSliceKVs(t *testing.T, ctx* ecoContext, cli *EtcdClient, key string) []*mvccpb.KeyValue {
+	op := etcd.OpGet(key, etcd.WithPrefix())
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	respRange := resp.Responses[0].GetResponseRange()
+	ctx.logger.Infof("respRange.Count=%d", respRange.Count)
+	kvs := respRange.Kvs
+	return kvs
+}
+
 
 func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
 	ctx := newEcoContext(os.Stdout)
@@ -673,7 +644,7 @@ func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
 
 // With the EtcdClient, Put a value to etcd, then Get it back to confirm the
 // Put succeeded
-func putAndTest(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key string, i any) {
+func putAndTestScalar(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key string, i any) {
 	// resp, err := etcdClient.Put(context.Background(), key, val)
 	ctx.inc()
 	defer ctx.dec()
@@ -693,16 +664,24 @@ func putAndTest(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key strin
 	ctx.logger.Infof("%#v", resp)
 }
 
-func testDecodeScalar[U any](t *testing.T, key string, expectedVal U) {
-	defer func() { pa := recover(); if pa != nil { t.Error(pa) } }()
+
+func putAndTestSlice[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, slice []U) {
+	for i, val := range slice {
+		subkey := fmt.Sprintf("%s/%d", key, i)
+		putAndTestScalar(t, ctx, cli, subkey, val)
+	}
+	
+}
+
+func decodeAndTestScalar[U any](t *testing.T, key string, expectedVal U) {
 	ctx, cli := initAndTest(t)
 
 	// Seed test data
-	putAndTest(t, ctx, cli, key, expectedVal)
+	putAndTestScalar(t, ctx, cli, key, expectedVal)
 
 	var decodedVal *U
 	var i = &decodedVal
-	err := decode(ctx, cli, key, any(i).(**any))
+	err := decode(ctx, cli, key, i)
 	require.NoError(t, err)
 	require.Equal(t, expectedVal, *decodedVal)
 	t.Log(decodedVal)
@@ -713,7 +692,7 @@ func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
 	ctx, cli := initAndTest(t)
 
 	// Seed etcd with test data
-	putAndTest(t, ctx, cli, key, expectedVal)
+	putAndTestScalar(t, ctx, cli, key, expectedVal)
 
 	// Create the GET Op
 	op := etcd.OpGet(key)

@@ -342,7 +342,7 @@ func TestSetPointerWithReflection(t *testing.T) {
 func TestSetPointerPointerWithReflection(t *testing.T) {
 	var expectedVal int = 13
 	var p *int
-	rv := reflect.ValueOf(&p)
+	// var pp **int = &p
 
 	// Create a new int pointer using reflection
 	rvNew := reflect.New(reflect.TypeFor[*int]())
@@ -355,12 +355,13 @@ func TestSetPointerPointerWithReflection(t *testing.T) {
 	rvNew.Elem().Set(rvExpected)
 	require.Equal(t, int64(expectedVal), rvNew.Elem().Elem().Int())
 
+	rv := reflect.ValueOf(&p)
 	require.True(t, rv.Elem().CanSet())
 	rv.Elem().Set(rvNew.Elem())
 	require.Equal(t, expectedVal, *p)
 
-	var pp **int = rv.Interface().(**int)
-	require.Equal(t, expectedVal, **pp)
+	var pp2 **int = rv.Interface().(**int)
+	require.Equal(t, expectedVal, **pp2)
 }
 
 func TestSetSliceElementWithReflection(t *testing.T) {
@@ -394,16 +395,16 @@ func TestSetAllocateSliceWithReflection(t *testing.T) {
 	require.Equal(t, int64(expectedVal), rvSlice.Index(0).Int())
 
 	// Make a slice pointer (wonder if an array pointer is better since I have the size)
-	rvPSlice := reflect.New(typSlice)
-	require.Equal(t, reflect.Pointer, rvPSlice.Type().Kind())
-	require.Equal(t, reflect.Slice, rvPSlice.Type().Elem().Kind())
-	require.True(t, rvPSlice.Elem().CanSet())
-	rvPSlice.Elem().Set(rvSlice)
+	rvNew := reflect.New(typSlice)
+	require.Equal(t, reflect.Pointer, rvNew.Type().Kind())
+	require.Equal(t, reflect.Slice, rvNew.Type().Elem().Kind())
+	require.True(t, rvNew.Elem().CanSet())
+	rvNew.Elem().Set(rvSlice)
 
-	// Set the rvPP element to the slice pointer
-	rvPP := reflect.ValueOf(&pslice)
-	require.True(t, rvPP.Elem().CanSet())
-	rvPP.Elem().Set(rvPSlice)
+	// Set the rv element to the slice pointer
+	rv := reflect.ValueOf(&pslice)
+	require.True(t, rv.Elem().CanSet())
+	rv.Elem().Set(rvNew)
 
 	// **pslice = slice
 	require.Equal(t, expectedVal, (*pslice)[0])
