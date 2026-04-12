@@ -15,8 +15,85 @@ import (
 
 	"github.com/dylt-dev/dylt/color"
 	"github.com/dylt-dev/dylt/common"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
 )
+
+type Decoder interface {
+	Decode(*ecoContext, []*mvccpb.KeyValue, string, any) error
+}
+type MapDecoder struct{}
+type MainDecoder struct{}
+type ScalarDecoder[U any] struct{}
+type SliceDecoder struct{}
+type StructDecoder struct{}
+type DecoderMap map[reflect.Kind]Decoder
+
+var decoderMap DecoderMap = DecoderMap{
+	reflect.Bool:    &ScalarDecoder[bool]{},
+	reflect.Int:     &ScalarDecoder[int]{},
+	reflect.Int8:    &ScalarDecoder[int8]{},
+	reflect.Int16:   &ScalarDecoder[int16]{},
+	reflect.Int32:   &ScalarDecoder[int32]{},
+	reflect.Int64:   &ScalarDecoder[int64]{},
+	reflect.Uint:    &ScalarDecoder[uint]{},
+	reflect.Uint8:   &ScalarDecoder[uint8]{},
+	reflect.Uint16:  &ScalarDecoder[uint16]{},
+	reflect.Uint32:  &ScalarDecoder[uint32]{},
+	reflect.Uint64:  &ScalarDecoder[uint64]{},
+	reflect.Float32: &ScalarDecoder[float32]{},
+	reflect.Float64: &ScalarDecoder[float64]{},
+	reflect.String:  &ScalarDecoder[string]{},
+	reflect.Array:   &SliceDecoder{},
+	reflect.Slice:   &SliceDecoder{},
+	reflect.Map:     &MapDecoder{},
+	reflect.Struct:  &StructDecoder{},
+}
+
+
+func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+	// Get the decoder from the decoder map, if it exists
+	pKind := reflect.TypeOf(p).Elem().Elem().Kind()
+	decoder, is := decoderMap[pKind]
+	if !is {
+		return fmt.Errorf("Unsupported pointer type (kind=%s)", pKind.String())
+	}
+
+	return decoder.Decode(ctx, kvs, key, p)
+}
+
+func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+	return nil
+}
+
+func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, i any) error {
+	sliceData := getSliceData(kvs, key)
+	maxIndex := sliceData.MaxIndex()
+	typSlice, err := getUnderlyingType(i)
+	if err != nil {
+		return err
+	}
+	len := maxIndex+1
+	cap := maxIndex+1
+	rSlice := reflect.MakeSlice(typSlice, len, cap)
+	slice := rSlice.Interface()
+	pp := i.(**any)
+	p := *pp
+	*p = &slice
+
+	return nil
+}
+
+func (d *StructDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+	return nil
+}
+
+func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
+	data := kvs[0].Value
+	ctx.logger.Infof("data=%#v", data)
+	err := json.Unmarshal(data, p)
+	return err
+}
 
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	ctx.logger.signature("Encode", key, reflect.TypeOf(i))
@@ -390,6 +467,58 @@ func getFieldValue(val reflect.Value) (string, error) {
 	return s, nil
 }
 
+func getSliceKeyIndex (key string) (int, bool) {
+	iLastSlash := strings.LastIndex(key, "/")
+	if iLastSlash == -1 {
+		return -1, false
+	}
+	sIndex := key[iLastSlash+1:]
+	index, err := strconv.Atoi(sIndex)
+	if err != nil {
+		return -1, false
+	}
+	return index, true
+}
+
+type SliceData map[int][]byte
+
+func (m SliceData) MaxIndex() int {
+	maxIndex := 0
+	for key := range m {
+		if key > maxIndex {
+			maxIndex = key
+		}
+	
+	}
+		return maxIndex
+}
+
+func getSliceData(kvs []*mvccpb.KeyValue, sliceKey string) SliceData {
+	sliceData := SliceData{}
+	maxIndex := -1
+	for _, kv := range kvs {
+		key := string(kv.Key)
+		iLastSlash := strings.LastIndex(key, "/")
+		if iLastSlash == -1 {
+			continue
+		}
+		sPreSlash := key[:iLastSlash]
+		if sliceKey != sPreSlash {
+			continue
+		}
+		index, is := getSliceKeyIndex(key)
+		if is {
+			sliceData[index] = kv.Value
+			if index > maxIndex {
+				maxIndex = index
+			} 
+		}
+	}	
+
+	return sliceData
+}
+
+
 func getKind(ctx *ecoContext, i any) kind {
 	ctx.logger.signature("getKind", reflect.TypeOf(i))
 	ctx.inc()
@@ -435,6 +564,50 @@ func getTypeKind(ctx *ecoContext, ty reflect.Type) kind {
 	}
 }
 
+
+// Unmarshalling functions like json.Unmarshaller() sometimes take an argument
+// of type any, that can be either a pointer, or a pointer to a pointer. The
+// idea is that if the argument is a pointer, then the pointer refers to an 
+// initialized data structure that the Unmarshalling function is expected to
+// populate. If on the other hand the argument is a pointer to a pointer, then
+// it is assumed the caller has not initialized a data structure to receive
+// the unmarshalled data, and the Unmarshaller is expected to allocate a new
+// structure, then dereference the pointer-to-pointer and assign the new 
+// structure's address. If this is confusing it's because pointer-to-pointer
+// scenarios are always confusing to mere mortals, eg your author.
+//
+// Note in these Unmarshalling scenarios, it is often an error if the argument
+// is nil. When the argument is nil there is no way to create a new structure
+// and assign its address to the dereferenced argument, because if the argument
+// is nil it cannot be dereferenced. This function is unopinionated regarding
+// the value of the argument. It only cares about the argument type.
+func getUnderlyingType (p any) (reflect.Type, error) {
+	// Check if the type is a pointer
+	pType := reflect.TypeOf(p)
+	pKind := pType.Kind()
+	if pKind != reflect.Pointer {
+		return pType, fmt.Errorf("Not a pointer (kind=%s)", pKind.String())
+	}
+
+	// If not a pointer to a pointer, return the element type
+	elType := pType.Elem()
+	elKind := elType.Kind()
+	if elKind != reflect.Pointer {
+		return elType, nil
+	}
+
+	// Pointer-to-pointer, so get the element type again
+	elType = elType.Elem()
+	elKind = elType.Kind()
+	if elKind == reflect.Pointer {
+		return elType, fmt.Errorf("**p must not be a pointer - that's too deep")
+	}
+	
+	// We have a valid pointer-to-pointer, so we're done
+	return elType, nil
+}
+
+
 func interfaceKind(ctx *ecoContext, ty reflect.Type) kind {
 	ctx.logger.signature("interfaceKind", ty)
 	ctx.inc()
@@ -447,6 +620,65 @@ func interfaceKind(ctx *ecoContext, ty reflect.Type) kind {
 
 	return Invalid
 }
+
+func isNormalPointer (p any) bool {
+	if p == nil {
+		return false
+	}
+
+	var typ reflect.Type
+	var knd reflect.Kind
+
+	// Confirm p is a pointer
+	typ = reflect.TypeOf(p)
+	knd = typ.Kind()
+	if knd != reflect.Pointer {
+		return false
+	}
+	
+	// Confirm *p is _not_ a pointer
+	typ = typ.Elem()
+	knd = typ.Kind()
+	if knd == reflect.Pointer {
+		return false
+	}
+
+	return true
+}
+
+
+func isPointerToPointer (p any) bool {
+	if p == nil {
+		return false
+	}
+
+	var typ reflect.Type
+	var knd reflect.Kind
+	
+	// Confirm p is a pointer
+	typ = reflect.TypeOf(p)
+	knd = typ.Kind()
+	if knd != reflect.Pointer {
+		return false
+	}
+	
+	// Confirm *p is a pointer
+	typ = typ.Elem()
+	knd = typ.Kind()
+	if knd != reflect.Pointer {
+		return false
+	}
+	
+	// Confirm **p is _not_ a pointer
+	typ = typ.Elem()
+	knd = typ.Kind()
+	if knd == reflect.Pointer {
+		return false
+	}
+
+	return true
+}
+
 
 func isScalar(kind reflect.Kind) bool {
 	switch kind {
@@ -717,6 +949,13 @@ func (l *ecoLogger) info(s string) {
 func (l *ecoLogger) signature(name string, args ...any) {
 	sig := createSignature(name, args...)
 	l.Logger.Info(l.indent() + sig)
+}
+
+func allocateSlice[U any] (pslice **[]U, len int, cap int) {
+	typ := reflect.TypeFor[[]U]()
+	rSlice := reflect.MakeSlice(typ, len, cap)
+	slice := rSlice.Interface().([]U)
+	*pslice = &slice
 }
 
 func createSignature(name string, args ...any) string {

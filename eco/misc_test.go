@@ -318,3 +318,13 @@ func TestPrints(t *testing.T) {
 	var aus any = us
 	t.Logf("%#v %#v", ans, aus)
 }
+
+func TestAllocateSlice(t *testing.T) {
+	var pslice *[]int
+	var expectedLen int = 5
+	var expectedCap int = 5
+	allocateSlice(&pslice, expectedLen, expectedCap)
+	require.NotNil(t, &pslice)
+	require.Equal(t, 5, len(*pslice))
+	require.Equal(t, 5, cap(*pslice))
+}
