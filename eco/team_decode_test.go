@@ -30,7 +30,7 @@ func decodeAndTest (t *testing.T, key string, i any) {
 	etcd, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	ctx := newEcoContext(os.Stdout)
-	err = decode(ctx, etcd, key, i)
+	err = decode(ctx, etcd, key, any(i).(**any))
 	require.NoError(t, err)
 	el := reflect.ValueOf(i).Elem()
 	require.NotNil(t, el)
