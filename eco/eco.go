@@ -101,18 +101,25 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string,
 	mapData := getMapData(kvs, key)
 
 	// populate the new map with the data
-	for k, v := range mapData {
+	for k, _ := range mapData {
 		ctx.logger.Infof("Decoding %s ...", k)	
 		// create a new map item
 		pnew := reflect.New(typValue)
-
-		// get the address of the new element and unmarshal the mapData value
-		addr := pnew.Elem().Addr()
-		i := addr.Interface()
-		err := json.Unmarshal(v, i)
+		decoder := decoderMap[typValue.Kind()]
+		subkey := fmt.Sprintf("%s/%s", key, k)
+		fmt.Printf("subkey=%v\n", subkey)
+		err := decoder.Decode(ctx, kvs, subkey, pnew)
 		if err != nil {
 			return err
 		}
+		// // get the address of the new element and unmarshal the mapData value
+		// addr := pnew.Elem().Addr()
+		// i := addr.Interface()
+		// err := json.Unmarshal(v, i)
+		// if err != nil {
+		// 	return err
+		// }
+
 
 		// Create reflect.Value for mapData key and add key+val to new map 
 		rk := reflect.ValueOf(k)
@@ -132,7 +139,16 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string,
 
 
 func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	data := kvs[0].Value
+	var kv *mvccpb.KeyValue
+	for _, kv = range kvs {
+		if string(kv.Key) == key {
+			break
+		}
+	}
+	if kv == nil {
+		return fmt.Errorf("kvs did not contain key (key=%s)", key)
+	}
+	data := kv.Value
 	ctx.logger.Infof("data=%#v", data)
 	i := rv.Interface()
 	err := json.Unmarshal(data, i)

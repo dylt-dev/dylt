@@ -341,6 +341,10 @@ func TestDecodeFloat(t *testing.T) {
 	decodeAndTestScalar(t, "/test/float", float32(42.0))
 }
 
+func TestDecodeFloat2(t *testing.T) {
+	decodeAndTestScalar2(t, "/test/float2", float32(42.0))
+}
+
 func TestDecodeFloatSlice(t *testing.T) {
 	decodeAndTestSlice(t,
 		"/test/float32slice",
@@ -349,6 +353,10 @@ func TestDecodeFloatSlice(t *testing.T) {
 
 func TestDecodeInt(t *testing.T) {
 	decodeAndTestScalar(t, "/test/int", int(-13.0))
+}
+
+func TestDecodeInt2(t *testing.T) {
+	decodeAndTestScalar2(t, "/test/int2", int(-13.0))
 }
 
 func TestDecodeIntSlice(t *testing.T) {
@@ -369,6 +377,10 @@ func TestDecodeString(t *testing.T) {
 	decodeAndTestScalar(t, "/test/string", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
 }
 
+func TestDecodeString2(t *testing.T) {
+	decodeAndTestScalar2(t, "/test/string2", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+}
+
 func TestDecodeStringSlice(t *testing.T) {
 	decodeAndTestSlice(t,
 		"/test/stringslice",
@@ -377,6 +389,10 @@ func TestDecodeStringSlice(t *testing.T) {
 
 func TestDecodeUint(t *testing.T) {
 	decodeAndTestScalar(t, "/test/uint", uint(13.0))
+}
+
+func TestDecodeUint2(t *testing.T) {
+	decodeAndTestScalar2(t, "/test/uint2", uint(13.0))
 }
 
 func TestDecodeUintSlice(t *testing.T) {
