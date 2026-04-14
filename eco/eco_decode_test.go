@@ -29,7 +29,7 @@ func decode(ctx *ecoContext, cli *EtcdClient, key string, pp any) error {
 			reflect.TypeOf(pp).Kind().String())
 	}
 
-	// Get object from etcd + make sure there's only 1
+	// Get kvs from etcd
 	op := etcd.OpGet(key, etcd.WithPrefix())
 	txn := cli.Txn(ctx)
 	resp, err := txn.Then(op).Commit()
@@ -786,12 +786,12 @@ func decodeAndTestScalar[U any](t *testing.T, key string, expectedVal U) {
 	// Seed test data
 	putAndTestScalar(t, ctx, cli, key, expectedVal)
 
-	var decodedVal *U
-	var i = &decodedVal
+	var p *U
+	var i = &p
 	err := decode(ctx, cli, key, i)
 	require.NoError(t, err)
-	require.Equal(t, expectedVal, *decodedVal)
-	t.Log(decodedVal)
+	require.Equal(t, expectedVal, *p)
+	t.Log(p)
 }
 
 func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
