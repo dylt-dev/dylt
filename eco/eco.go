@@ -164,17 +164,20 @@ func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key strin
 	rvSlice := reflect.MakeSlice(typSlice, len, cap)
 
 	// Unmarshal all the elements
-	for i, data := range sliceData {
+	for i, _ := range sliceData {
 		// Get a pointer to the slice element at the specified index
 		el := rvSlice.Index(i)
 		addr := el.Addr()
-		pEl := addr.Interface()
+		subkey := fmt.Sprintf("%s/%d", key, i)
+		decoder := decoderMap[el.Kind()]
+		decoder.Decode(ctx, kvs, subkey, addr)
+		// pEl := addr.Interface()
 
-		// Unmarshal the specified data into the element pointer
-		err := json.Unmarshal(data, pEl)
-		if err != nil {
-			return err
-		}
+		// // Unmarshal the specified data into the element pointer
+		// err := json.Unmarshal(data, pEl)
+		// if err != nil {
+		// 	return err
+		// }
 	}
 
 	// Make a slice pointer + assign the new slice to the pointer's Elem()
