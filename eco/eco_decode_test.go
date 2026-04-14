@@ -24,7 +24,7 @@ func decode(ctx *ecoContext, cli *EtcdClient, key string, pp any) error {
 	defer ctx.dec()
 
 	// Confirm p is a 'normal pointer', ie a pointer that is not a pointer-to-a-pointer
-	if !isPointerToPointer(pp) {
+	if !isValidPointer(pp) {
 		return fmt.Errorf("p must be a pointer-to-a-pointer, with an element type that is not a pointer (kind=%s)",
 			reflect.TypeOf(pp).Kind().String())
 	}
@@ -327,6 +327,10 @@ func TestDecodeBool(t *testing.T) {
 	decodeAndTestScalar(t, "/test/bool", true)
 }
 
+func TestDecodeBool2(t *testing.T) {
+	decodeAndTestScalar2(t, "/test/bool2", true)
+}
+
 func TestDecodeBoolSlice(t *testing.T) {
 	decodeAndTestSlice(t,
 		"/test/boolslice",
@@ -385,6 +389,11 @@ func TestGetBool(t *testing.T) {
 	testGetScalar(t, "test/bool", true)
 }
 
+func TestGetBool2(t *testing.T) {
+	testGetScalar2(t, "test/bool2", true)
+}
+
+
 func TestGetBoolSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
@@ -402,6 +411,10 @@ func TestGetBoolSlice(t *testing.T) {
 
 func TestGetFloat(t *testing.T) {
 	testGetScalar(t, "/test/float", float32(42.0))
+}
+
+func TestGetFloat2(t *testing.T) {
+	testGetScalar2(t, "/test/float2", float32(42.0))
 }
 
 func TestGetFloatSlice(t *testing.T) {
@@ -422,6 +435,10 @@ func TestGetFloatSlice(t *testing.T) {
 
 func TestGetInt(t *testing.T) {
 	testGetScalar(t, "/test/int", int(-13))
+}
+
+func TestGetInt2(t *testing.T) {
+	testGetScalar2(t, "/test/int2", int(-13))
 }
 
 func TestGetIntSlice(t *testing.T) {
@@ -486,6 +503,10 @@ func TestGetString(t *testing.T) {
 	testGetScalar(t, "/test/string", "hello world")
 }
 
+func TestGetString2(t *testing.T) {
+	testGetScalar2(t, "/test/string2", "hello world")
+}
+
 func TestGetStringSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
@@ -503,6 +524,10 @@ func TestGetStringSlice(t *testing.T) {
 
 func TestGetUint(t *testing.T) {
 	testGetScalar(t, "/test/uint", uint(13))
+}
+
+func TestGetUint2(t *testing.T) {
+	testGetScalar2(t, "/test/uint2", uint(13))
 }
 
 func TestGetUintSlice(t *testing.T) {
@@ -794,13 +819,21 @@ func decodeAndTestScalar[U any](t *testing.T, key string, expectedVal U) {
 	t.Log(p)
 }
 
+func decodeAndTestScalar2[U any](t *testing.T, key string, expectedVal U) {
+	ctx, cli := initAndTest(t)
+
+	// Seed test data
+	putAndTestScalar(t, ctx, cli, key, expectedVal)
+
+	var v U
+	var p *U = &v
+	err := decode(ctx, cli, key, p)
+	require.NoError(t, err)
+	require.Equal(t, expectedVal, *p)
+	t.Log(p)
+}
+
 func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
-	defer func() {
-		pa := recover()
-		if pa != nil {
-			t.Error(pa)
-		}
-	}()
 	ctx, cli := initAndTest(t)
 
 	// Seed etcd with test data
@@ -818,6 +851,35 @@ func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
 	p := new(U)
 	pp := &p
 	rv := reflect.ValueOf(pp)
+	rangeResp := resp.Responses[0].GetResponseRange()
+	kvs := rangeResp.Kvs
+
+	// Get the decoder from the DecoderMap and decode
+	decoder := &ScalarDecoder[U]{}
+	err = decoder.Decode(ctx, kvs, key, rv)
+	require.NoError(t, err)
+	require.NotNil(t, p)
+	require.Equal(t, expectedVal, *p)
+}
+
+func testGetScalar2[U any](t *testing.T, key string, expectedVal U) {
+	ctx, cli := initAndTest(t)
+
+	// Seed etcd with test data
+	putAndTestScalar(t, ctx, cli, key, expectedVal)
+
+	// Create the GET Op
+	op := etcd.OpGet(key)
+
+	// Get the response from etcd
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+
+	// Get the KVs from the response
+	var v U
+	p := &v
+	rv := reflect.ValueOf(p)
 	rangeResp := resp.Responses[0].GetResponseRange()
 	kvs := rangeResp.Kvs
 
