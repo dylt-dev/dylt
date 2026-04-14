@@ -56,7 +56,10 @@ var decoderMap DecoderMap = DecoderMap{
 
 func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	// Get the decoder from the decoder map, if it exists
-	pKind := rv.Type().Elem().Elem().Kind()
+	pKind, err := getUnderlyingPointerKind(rv)
+	if err != nil {
+		return err
+	}
 	decoder, is := decoderMap[pKind]
 	if !is {
 		return fmt.Errorf("Unsupported pointer type (kind=%s)", pKind.String())
@@ -700,6 +703,43 @@ func getTypeKind(ctx *ecoContext, ty reflect.Type) kind {
 	}
 }
 
+func getUnderlyingPointerKind(p any) (reflect.Kind, error) {
+	if p == nil {
+		return reflect.Invalid, fmt.Errorf("expecting a pointer or pointer-to-pointer")
+	}
+
+	if reflect.TypeOf(p) == reflect.TypeFor[reflect.Value]() {
+		v := p.(reflect.Value)
+		p = v.Interface()
+	}
+
+	var typ reflect.Type
+	var knd reflect.Kind
+
+	// Confirm p is a pointer
+	typ = reflect.TypeOf(p)
+	knd = typ.Kind()
+	if knd != reflect.Pointer {
+		return reflect.Invalid, fmt.Errorf("expecting a pointer or pointer-to-pointer")
+	}
+
+	// If *p is not pointer we're done
+	typ = typ.Elem()
+	knd = typ.Kind()
+	if knd != reflect.Pointer {
+		return knd, nil
+	}
+
+	// Confirm **p is _not_ a pointer
+	typ = typ.Elem()
+	knd = typ.Kind()
+	if knd == reflect.Pointer {
+		return reflect.Invalid, fmt.Errorf("expecting a pointer or pointer-to-pointer")
+	}
+
+	return knd, nil
+}
+
 // Unmarshalling functions like json.Unmarshaller() sometimes take an argument
 // of type any, that can be either a pointer, or a pointer to a pointer. The
 // idea is that if the argument is a pointer, then the pointer refers to an
@@ -852,6 +892,45 @@ func isScalar(kind reflect.Kind) bool {
 
 func isTypeScalar(ty reflect.Type) bool {
 	return isScalar(ty.Kind())
+}
+
+func isValidPointer(p any) bool {
+	if p == nil {
+		return false
+	}
+
+	var (
+		typP  reflect.Type
+		// typPP reflect.Type
+		kndP  reflect.Kind
+		// kndPP reflect.Kind
+		// valP  reflect.Value
+	)
+	// Confirm p is a pointer
+	typP = reflect.TypeOf(p)
+	kndP = typP.Kind()
+	if kndP != reflect.Pointer {
+		return false
+	}
+
+	// // Confirm *p is a pointer
+	// typPP = typP.Elem()
+	// kndPP = typP.Kind()
+	// if kndPP != reflect.Pointer {
+	// 	// *p is a pointer, so p is a pointer, not a pointer to pointer.
+	// 	// We need to confirm its not nil.
+	// 	valP := valueOf(p)
+
+	// }
+
+	// // Confirm **p is _not_ a pointer
+	// typ = typ.Elem()
+	// knd = typ.Kind()
+	// if knd == reflect.Pointer {
+	// 	return false
+	// }
+
+	return true
 }
 
 func mapKind(ctx *ecoContext, ty reflect.Type) kind {

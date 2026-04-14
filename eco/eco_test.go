@@ -624,6 +624,31 @@ func TestUnderlyingMapType4 (t *testing.T) {
 }
 
 
+func TestUnderlyingPointerType (t *testing.T) {
+	var p *int
+	knd, err := getUnderlyingPointerKind(p)
+	require.NoError(t, err)
+	require.Equal(t, reflect.Int, knd)
+}
+
+
+func TestUnderlyingPointerType2 (t *testing.T) {
+	var p **int
+	knd, err := getUnderlyingPointerKind(p)
+	require.NoError(t, err)
+	require.Equal(t, reflect.Int, knd)
+}
+
+
+func TestUnderlyingPointerType3 (t *testing.T) {
+	var p **int
+	v := reflect.ValueOf(p)
+	knd, err := getUnderlyingPointerKind(v)
+	require.NoError(t, err)
+	require.Equal(t, reflect.Int, knd)
+}
+
+
 func TestUnderlyingSliceTypeInt(t *testing.T) {
 	var expectedVal reflect.Kind = reflect.Int
 	var p int
