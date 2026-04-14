@@ -727,11 +727,18 @@ func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
 // With the EtcdClient, Put a value to etcd, then Get it back to confirm the
 // Put succeeded
 func putAndTestMap[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data map[string]U) {
+	ctx.logger.Infof("Writing slice at %s ...", key)
+	ops := []etcd.Op{}
 	for itemKey, val := range data {
 		subkey := fmt.Sprintf("%s/%s", key, itemKey)
-		putAndTestScalar(t, ctx, cli, subkey, val)
+		bufVal, err := json.Marshal(val)
+		require.NoError(t, err)
+		op := etcd.OpPut(subkey, string(bufVal))
+		ops = append(ops, op)
 	}
-	
+	txn := createTxn(t, cli)
+	require.NotNil(t, txn)
+	txn.Then(ops...).Commit()
 }
 
 func putAndTestScalar(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key string, i any) {
@@ -755,10 +762,18 @@ func putAndTestScalar(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key
 }
 
 func putAndTestSlice[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data []U) {
+	ctx.logger.Infof("Writing map at %s ...", key)
+	ops := []etcd.Op{}
 	for i, val := range data {
 		subkey := fmt.Sprintf("%s/%d", key, i)
-		putAndTestScalar(t, ctx, cli, subkey, val)
+		bufVal, err := json.Marshal(val)
+		require.NoError(t, err)
+		op := etcd.OpPut(subkey, string(bufVal))
+		ops = append(ops, op)
 	}
+	txn := createTxn(t, cli)
+	require.NotNil(t, txn)
+	txn.Then(ops...).Commit()
 }
 
 func putAndTestStruct[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data U) {
