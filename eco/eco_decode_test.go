@@ -177,7 +177,7 @@ func decodeResponseScalar(ctx *ecoContext, key string, kvs []*mvccpb.KeyValue, i
 func decodeResponseSlice(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error {
 	var iMax int = -1
 	for _, kv := range kvs {
-		index, is := getSliceKeyIndex(string(kv.Key))
+		index, is := getSliceItemKey(key, string(kv.Key))
 		if !is {
 			return fmt.Errorf("key is not a valid slice element key (key='%s')", key)
 		}
@@ -348,22 +348,16 @@ func TestDecodeInt(t *testing.T) {
 }
 
 func TestDecodeIntSlice(t *testing.T) {
-	defer func() {
-		pa := recover()
-		if pa != nil {
-			t.Error(pa)
-		}
-	}()
 	ctx, cli := initAndTest(t)
 
 	key := "/test/intSlice"
-	expectedVals := []int{5, 8, 13}
-	putAndTestSlice(t, ctx, cli, key, expectedVals)
+	expectedData := []int{5, 8, 13}
+	putAndTestSlice(t, ctx, cli, key, expectedData)
 
 	var pSlice *[]int
 	err := decode(ctx, cli, key, &pSlice)
 	require.NoError(t, err)
-	require.Equal(t, expectedVals, *pSlice)
+	require.Equal(t, expectedData, *pSlice)
 	t.Log(*pSlice)
 }
 
@@ -396,60 +390,135 @@ func TestGetBoolSlice(t *testing.T) {
 
 	// Seed etcd with test data
 	key := "/test/boolSlice"
-	expectedVals := []bool{true, false, true, true}
-	putAndTestSlice(t, ctx, cli, key, expectedVals)
+	expectedData := []bool{true, false, true, true}
+	putAndTestSlice(t, ctx, cli, key, expectedData)
 
 	// Get kvs for seeded data
 	kvs := getAndTestSliceKVs(t, ctx, cli, key)
 
 	// Decode the slice and test expected values
-	getAndTestSlice(t, ctx, expectedVals, kvs, key)
-
-	// // Create etcd OpGet
-	// op := etcd.OpGet(key, etcd.WithPrefix())
-	// require.True(t, op.IsGet())
-	// require.Equal(t, key, string(op.KeyBytes()))
-
-	// txn := createTxn(t, cli)
-	// resp, err := txn.Then(op).Commit()
-	// require.NoError(t, err)
-	// require.NotNil(t, resp)
-
-	// respRange := resp.Responses[0].GetResponseRange()
-	// ctx.logger.Infof("respRange.Count=%d", respRange.Count)
-	// kvs := respRange.Kvs
-	// for i, kv := range kvs {
-	// 	ctx.logger.Infof("i=%d key=%s val=%s", i, string(kv.Key), string(kv.Value))
-	// }
-	// // ctx.logger.Infof("%#v", resp.Responses)
-	// // ctx.logger.Infof("%#v", resp.Responses[0])
-
-	// slice := make([]bool, respRange.Count)
-	// err = decodeResponseSlice(ctx, kvs, key, &slice)
-	// require.NoError(t, err)
-	// // for i := range slice {
-	// // 	err = json.Unmarshal(respRange.Kvs[i].Value, &slice[i])
-	// // 	ctx.logger.Infof("respRange.Kvs[i].Value=%#v slice[%d]=%#v", string(respRange.Kvs[i].Value), i, slice[i])
-	// // 	require.NoError(t, err)
-	// // }
-
-	// ctx.logger.Infof("*pslice=%#v", *pp)
+	getAndTestSlice(t, ctx, expectedData, kvs, key)
 }
 
 func TestGetFloat(t *testing.T) {
 	testGetScalar(t, "/test/float", float32(42.0))
 }
 
+func TestGetFloatSlice(t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	// Seed etcd with test data
+	key := "/test/floatSlice"
+	expectedData := []float32{42.0, 1764.0, 6.54321}
+
+	putAndTestSlice(t, ctx, cli, key, expectedData)
+
+	// Get kvs for seeded data
+	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+
+	// Decode the slice and test expected values
+	getAndTestSlice(t, ctx, expectedData, kvs, key)
+}
+
 func TestGetInt(t *testing.T) {
 	testGetScalar(t, "/test/int", int(-13))
+}
+
+func TestGetIntSlice(t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	// Seed etcd with test data
+	key := "/test/intSlice"
+	expectedData := []int{5, 8, 13}
+
+	putAndTestSlice(t, ctx, cli, key, expectedData)
+
+	// Get kvs for seeded data
+	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+
+	// Decode the slice and test expected values
+	getAndTestSlice(t, ctx, expectedData, kvs, key)
+}
+
+func TestGetMap(t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	key := "/test/team/astros/Players/altuve"
+	expectedBorn := "Venezuela"
+	expectedId := "1"
+	expectedIsActive := "true"
+	expectedName := "Jose Altuve"
+	expectedWeight := "160"
+	expectedData := map[string]string{
+		"Born": expectedBorn,
+		"Id": expectedId,
+		"IsActive": expectedIsActive,
+		"Name": expectedName,
+		"Weight": expectedWeight,
+	}
+	putAndTestMap(t, ctx, cli, key, expectedData)
+
+	// Create the GET Op
+	op := etcd.OpGet(key, etcd.WithPrefix())
+
+	// Get the response from etcd
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(op).Commit()
+	require.NoError(t, err)
+
+	// Get the KVs from the response
+	rangeResp := resp.Responses[0].GetResponseRange()
+	kvs := rangeResp.Kvs
+
+	// Decode the map
+	var pmap *map[string]string
+	decoder := MapDecoder{}
+	err = decoder.Decode(ctx, kvs, key, reflect.ValueOf(&pmap))
+	require.NoError(t, err)
+
+	// Check the contents
+	require.Equal(t, expectedData, *pmap)
+
+	t.Log(*pmap)
 }
 
 func TestGetString(t *testing.T) {
 	testGetScalar(t, "/test/string", "hello world")
 }
 
+func TestGetStringSlice(t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	// Seed etcd with test data
+	key := "/test/stringSlice"
+	expectedData := []string{"foo", "bar", "bum"}
+	putAndTestSlice(t, ctx, cli, key, expectedData)
+
+	// Get kvs for seeded data
+	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+
+	// Decode the slice and test expected values
+	getAndTestSlice(t, ctx, expectedData, kvs, key)
+}
+
 func TestGetUint(t *testing.T) {
 	testGetScalar(t, "/test/uint", uint(13))
+}
+
+func TestGetUintSlice(t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	// Seed etcd with test data
+	key := "/test/uintSlice"
+	expectedData := []uint{5, 12, 13}
+
+	putAndTestSlice(t, ctx, cli, key, expectedData)
+
+	// Get kvs for seeded data
+	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+
+	// Decode the slice and test expected values
+	getAndTestSlice(t, ctx, expectedData, kvs, key)
 }
 
 func TestFieldNameMap(t *testing.T) {
@@ -466,29 +535,6 @@ func TestFieldNameMap(t *testing.T) {
 	fieldNameMap["name"].Set(reflect.ValueOf("Me"))
 	fieldNameMap["lucky_number"].Set(reflect.ValueOf(13.0))
 	t.Logf("%#v", p)
-}
-
-func TestMapStringString(t *testing.T) {
-	ctx, cli := initAndTest(t)
-
-	key := "/test/map/stringstring"
-	val1 := "meat"
-	val2 := "Meat"
-	val3 := "MEEEEAT"
-	expectedData := map[string]string{
-		"foo": val1,
-		"bar": val2,
-		"bum": val3,
-	}
-
-	putAndTestMap(t, ctx, cli, key, expectedData)
-
-	var pData *map[string]string
-	err := decode(ctx, cli, key, &pData)
-	require.NoError(t, err)
-	// require.Equal(t, expectedData, *pData)
-	require.Nil(t, pData)
-	// t.Log(*pData)
 }
 
 func TestMisc(t *testing.T) {
@@ -572,9 +618,9 @@ func TestStructEcoTest(t *testing.T) {
 	expectedLuckyNumber := 13
 	expectedNoTag := "no-tag-value"
 	expectedData := EcoTest{
-		Name: expectedName,
+		Name:        expectedName,
 		LuckyNumber: float64(expectedLuckyNumber),
-		NoTag: expectedNoTag,
+		NoTag:       expectedNoTag,
 	}
 	putAndTestStruct(t, ctx, cli, key, expectedData)
 
@@ -626,15 +672,15 @@ func TestStructSetField1(t *testing.T) {
 	t.Logf("%#v", st)
 }
 
-func decodeAndTestSlice[U any](t *testing.T, key string, expectedVals []U) {
+func decodeAndTestSlice[U any](t *testing.T, key string, expectedData []U) {
 	ctx, cli := initAndTest(t)
 
-	putAndTestSlice(t, ctx, cli, key, expectedVals)
+	putAndTestSlice(t, ctx, cli, key, expectedData)
 
 	var pSlice *[]U
 	err := decode(ctx, cli, key, &pSlice)
 	require.NoError(t, err)
-	require.Equal(t, expectedVals, *pSlice)
+	require.Equal(t, expectedData, *pSlice)
 	t.Log(*pSlice)
 
 }
@@ -648,13 +694,13 @@ func getAndTestMap[U any](t *testing.T, ctx *ecoContext, expectedData map[string
 	require.Equal(t, expectedData, *pData)
 }
 
-func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedVals []U, kvs []*mvccpb.KeyValue, key string) {
+func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedData []U, kvs []*mvccpb.KeyValue, key string) {
 	var pSlice *[]U
 	rv := reflect.ValueOf(&pSlice)
 	decoder := SliceDecoder{}
 	err := decoder.Decode(ctx, kvs, key, rv)
 	require.NoError(t, err)
-	require.Equal(t, expectedVals, *pSlice)
+	require.Equal(t, expectedData, *pSlice)
 }
 
 func getAndTestSliceKVs(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string) []*mvccpb.KeyValue {
@@ -680,6 +726,14 @@ func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
 
 // With the EtcdClient, Put a value to etcd, then Get it back to confirm the
 // Put succeeded
+func putAndTestMap[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data map[string]U) {
+	for itemKey, val := range data {
+		subkey := fmt.Sprintf("%s/%s", key, itemKey)
+		putAndTestScalar(t, ctx, cli, subkey, val)
+	}
+	
+}
+
 func putAndTestScalar(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key string, i any) {
 	// resp, err := etcdClient.Put(context.Background(), key, val)
 	ctx.inc()
@@ -709,10 +763,6 @@ func putAndTestSlice[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key 
 
 func putAndTestStruct[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data U) {
 
-}
-
-func putAndTestMap[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data map[string]U) {
-	
 }
 
 func decodeAndTestScalar[U any](t *testing.T, key string, expectedVal U) {

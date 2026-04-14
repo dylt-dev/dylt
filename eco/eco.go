@@ -29,6 +29,10 @@ type SliceDecoder struct{}
 type StructDecoder struct{}
 type DecoderMap map[reflect.Kind]Decoder
 
+type MapData map[string][]byte
+type SliceData map[int][]byte
+
+
 var decoderMap DecoderMap = DecoderMap{
 	reflect.Bool:    &ScalarDecoder[bool]{},
 	reflect.Int:     &ScalarDecoder[int]{},
@@ -50,7 +54,6 @@ var decoderMap DecoderMap = DecoderMap{
 	reflect.Struct:  &StructDecoder{},
 }
 
-
 func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	// Get the decoder from the decoder map, if it exists
 	pKind := rv.Type().Elem().Elem().Kind()
@@ -62,9 +65,68 @@ func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string
 	return decoder.Decode(ctx, kvs, key, rv)
 }
 
-func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
+// Decode the kvs at the key into a map
+// The map is specified by a pointer-to-a-pointer-to-map (ppm). The pointer to
+// the map (pm) is assumed to be nil, and it is this function's job to allocate
+// the map. and then assign the address of the allocated map to the ppm. This is
+// how a function can allocation a value and 'return' it via an incoming
+// parameter.
+//
+// @note it might not make a lot of sense to deal with double indirection just
+// to support allocating a new value to an incoming parameter. It's what
+// json.Unmarshal() does but that's because json.Unmarshal() also supports
+// unmarshalling into an existing data structure, as well as allocation. If a
+// a function is always allocating and unmarshalling into a new object, it might
+// make sense to just return it.
+//
+// ctx	Context for logging+etcd client
+// kvs  key-value pairs which comprise the data
+// key  key that prefixes all map keys
+// rv   reflection pointer-to-pointer-to-map
+func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, ppMap reflect.Value) error {
+	// get the reflect.Type for the map to allocate
+	typ, err := getUnderlyingMapType(ppMap.Type())
+	if err != nil {
+		return err
+	}
+
+	// allocate the new map + save the value type
+	rMap := reflect.MakeMap(typ)
+	typValue := rMap.Type().Elem()
+
+	// get the map data from the kvs+key
+	mapData := getMapData(kvs, key)
+
+	// populate the new map with the data
+	for k, v := range mapData {
+		ctx.logger.Infof("Decoding %s ...", k)	
+		// create a new map item
+		pnew := reflect.New(typValue)
+
+		// get the address of the new element and unmarshal the mapData value
+		addr := pnew.Elem().Addr()
+		i := addr.Interface()
+		err := json.Unmarshal(v, i)
+		if err != nil {
+			return err
+		}
+
+		// Create reflect.Value for mapData key and add key+val to new map 
+		rk := reflect.ValueOf(k)
+		rMap.SetMapIndex(rk, pnew.Elem())
+	}
+
+	// Create a new map pointer and assign the new map to it
+	pMap := reflect.New(typ)
+	pMap.Elem().Set(rMap)
+
+	// assign the new map to the rv
+	ppMap.Elem().Set(pMap)
+
+	// done :)
 	return nil
 }
+
 
 func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	data := kvs[0].Value
@@ -74,13 +136,12 @@ func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key s
 	return err
 }
 
-
 func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	sliceData := getSliceData(kvs, key)
 	maxIndex := sliceData.MaxIndex()
 	typSlice := rv.Type().Elem().Elem()
-	len := maxIndex+1
-	cap := maxIndex+1
+	len := maxIndex + 1
+	cap := maxIndex + 1
 	rvSlice := reflect.MakeSlice(typSlice, len, cap)
 
 	// Unmarshal all the elements
@@ -106,7 +167,6 @@ func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key strin
 
 	return nil
 }
-
 
 func (d *StructDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
 	return nil
@@ -296,7 +356,6 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	return Invalid
 }
 
-
 func decodeScalar(ctx *ecoContext, key string) (etcd.Op, error) {
 	ctx.logger.signature("decodeScalar", key)
 	ctx.inc()
@@ -305,7 +364,6 @@ func decodeScalar(ctx *ecoContext, key string) (etcd.Op, error) {
 	op := etcd.OpGet(key)
 	return op, nil
 }
-
 
 func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.logger.signature("encodeMap", key, val.Type())
@@ -484,64 +542,78 @@ func getFieldValue(val reflect.Value) (string, error) {
 	return s, nil
 }
 
-func getSliceKeyIndex (key string) (int, bool) {
+
+// All the data that comprises the map specified by the parentKey. This is the
+// subset of kvs with keys that match {parentKey}/mapKey, where mapKey is a
+// single key segment. 
+func getMapData (kvs []*mvccpb.KeyValue, parentKey string) MapData {
+	mapData := MapData{}
+
+	for _, kv := range kvs {
+		key := string(kv.Key)
+		itemKey, is := getMapItemKey(parentKey, key)
+		if is {
+			mapData[itemKey] = kv.Value
+		}
+	}
+
+	return mapData
+}
+
+
+// Get the index portion of this slice key, which is the trailing portion
+// of the key after the final slash, other than an optional trailing slash.
+// The trailing portion must be an integer.
+//
+// This function also validates that the key is actually a slice key index.
+// If it isn't, the bool return value will be false.
+func getMapItemKey(key string, subkey string) (string, bool) {
+	if !strings.HasPrefix(subkey, key) {
+		return "", false
+	}
+
 	// Trim the last character if its a slash
-	lastChar := key[len(key)-1:]
+	lastChar := subkey[len(subkey)-1:]
 	if lastChar == "/" {
-		key = key[0:len(key)-1]
+		subkey = subkey[0 : len(subkey)-1]
 	}
 
 	// Confirm key contains at least one slash
-	iLastSlash := strings.LastIndex(key, "/")
+	iLastSlash := strings.LastIndex(subkey, "/")
 	if iLastSlash == -1 {
-		return -1, false
+		return "", false
 	}
-	sIndex := key[iLastSlash+1:]
-	index, err := strconv.Atoi(sIndex)
-	if err != nil {
-		return -1, false
+
+	// Confirm the part of the subkey preceding the last slash marches the map key
+	prefix := subkey[:iLastSlash]
+	if prefix != key {
+		return "", false
 	}
-	return index, true
+
+	// Use the piece following the trailing slash as
+	itemKey := subkey[iLastSlash+1:]
+
+	return itemKey, true
 }
 
-type SliceData map[int][]byte
-
-func (m SliceData) MaxIndex() int {
-	maxIndex := 0
-	for key := range m {
-		if key > maxIndex {
-			maxIndex = key
-		}
-	
-	}
-		return maxIndex
-}
-
+// All the data that comprises the slice. Uses all keys of the
+// form /key/N, where N is any integer. The data is returned as a map form,
+// where the map keys are the N index values for each element
+//
+// @note I think Im allowing negative indexes
 func getSliceData(kvs []*mvccpb.KeyValue, sliceKey string) SliceData {
 	sliceData := SliceData{}
-	maxIndex := -1
+	
 	for _, kv := range kvs {
 		key := string(kv.Key)
-		iLastSlash := strings.LastIndex(key, "/")
-		if iLastSlash == -1 {
-			continue
-		}
-		sPreSlash := key[:iLastSlash]
-		if sliceKey != sPreSlash {
-			continue
-		}
-		index, is := getSliceKeyIndex(key)
+		itemKey, is := getSliceItemKey(sliceKey, key)
 		if is {
-			sliceData[index] = kv.Value
-			if index > maxIndex {
-				maxIndex = index
-			} 
+			sliceData[itemKey] = kv.Value
 		}
-	}	
+	}
 
 	return sliceData
 }
-
 
 func getKind(ctx *ecoContext, i any) kind {
 	ctx.logger.signature("getKind", reflect.TypeOf(i))
@@ -554,6 +626,46 @@ func getKind(ctx *ecoContext, i any) kind {
 	}
 
 	return getTypeKind(ctx, reflect.TypeOf(i))
+}
+
+// Get the index portion of this slice key, which is the trailing portion
+// of the key after the final slash, other than an optional trailing slash.
+// The trailing portion must be an integer.
+//
+// This function also validates that the key is actually a slice key index.
+// If it isn't, the bool return value will be false.
+func getSliceItemKey(key string, subkey string) (int, bool) {
+	if !strings.HasPrefix(subkey, key) {
+		return -1, false
+	}
+	// Trim the last character if its a slash
+	lastChar := subkey[len(subkey)-1:]
+	if lastChar == "/" {
+		subkey = subkey[0 : len(subkey)-1]
+	}
+
+	// Confirm key contains at least one slash
+	iLastSlash := strings.LastIndex(subkey, "/")
+	if iLastSlash == -1 {
+		return -1, false
+	}
+	sIndex := subkey[iLastSlash+1:]
+	index, err := strconv.Atoi(sIndex)
+	if err != nil || index < 0 {
+		return -1, false
+	}
+	return index, true
+}
+
+func (m SliceData) MaxIndex() int {
+	maxIndex := 0
+	for key := range m {
+		if key > maxIndex {
+			maxIndex = key
+		}
+
+	}
+	return maxIndex
 }
 
 func getTypeKind(ctx *ecoContext, ty reflect.Type) kind {
@@ -588,15 +700,14 @@ func getTypeKind(ctx *ecoContext, ty reflect.Type) kind {
 	}
 }
 
-
 // Unmarshalling functions like json.Unmarshaller() sometimes take an argument
 // of type any, that can be either a pointer, or a pointer to a pointer. The
-// idea is that if the argument is a pointer, then the pointer refers to an 
+// idea is that if the argument is a pointer, then the pointer refers to an
 // initialized data structure that the Unmarshalling function is expected to
 // populate. If on the other hand the argument is a pointer to a pointer, then
 // it is assumed the caller has not initialized a data structure to receive
 // the unmarshalled data, and the Unmarshaller is expected to allocate a new
-// structure, then dereference the pointer-to-pointer and assign the new 
+// structure, then dereference the pointer-to-pointer and assign the new
 // structure's address. If this is confusing it's because pointer-to-pointer
 // scenarios are always confusing to mere mortals, eg your author.
 //
@@ -605,7 +716,7 @@ func getTypeKind(ctx *ecoContext, ty reflect.Type) kind {
 // and assign its address to the dereferenced argument, because if the argument
 // is nil it cannot be dereferenced. This function is unopinionated regarding
 // the value of the argument. It only cares about the argument type.
-func getUnderlyingType (p any) (reflect.Type, error) {
+func getUnderlyingSliceType(p any) (reflect.Type, error) {
 	// Check if the type is a pointer
 	pType := reflect.TypeOf(p)
 	pKind := pType.Kind()
@@ -626,11 +737,35 @@ func getUnderlyingType (p any) (reflect.Type, error) {
 	if elKind == reflect.Pointer {
 		return elType, fmt.Errorf("**p must not be a pointer - that's too deep")
 	}
-	
+
 	// We have a valid pointer-to-pointer, so we're done
 	return elType, nil
 }
 
+func getUnderlyingMapType(ppMapType reflect.Type) (reflect.Type, error) {
+	var knd reflect.Kind
+
+	// Confirm ppMapType is a pointer
+	knd = ppMapType.Kind()
+	if knd != reflect.Pointer {
+		return nil, fmt.Errorf("Expecting a pointer-to-pointer-to map (kind=%s)", knd.String())
+	}
+
+	// Confirm *ppMapType is a pointer
+	knd = ppMapType.Elem().Kind()
+	if knd != reflect.Pointer {
+		return nil, fmt.Errorf("Expecting a pointer-to-pointer-to map (kind=%s)", knd.String())
+	}
+
+	// Confirm **ppMapType is a map
+	knd = ppMapType.Elem().Kind()
+	if knd != reflect.Pointer {
+		return nil, fmt.Errorf("Expecting a pointer-to-pointer-to map (kind=%s)", knd.String())
+	}
+
+	// We're good :)
+	return ppMapType.Elem().Elem(), nil
+}
 
 func interfaceKind(ctx *ecoContext, ty reflect.Type) kind {
 	ctx.logger.signature("interfaceKind", ty)
@@ -645,7 +780,7 @@ func interfaceKind(ctx *ecoContext, ty reflect.Type) kind {
 	return Invalid
 }
 
-func isNormalPointer (p any) bool {
+func isNormalPointer(p any) bool {
 	if p == nil {
 		return false
 	}
@@ -659,7 +794,7 @@ func isNormalPointer (p any) bool {
 	if knd != reflect.Pointer {
 		return false
 	}
-	
+
 	// Confirm *p is _not_ a pointer
 	typ = typ.Elem()
 	knd = typ.Kind()
@@ -670,29 +805,28 @@ func isNormalPointer (p any) bool {
 	return true
 }
 
-
-func isPointerToPointer (p any) bool {
+func isPointerToPointer(p any) bool {
 	if p == nil {
 		return false
 	}
 
 	var typ reflect.Type
 	var knd reflect.Kind
-	
+
 	// Confirm p is a pointer
 	typ = reflect.TypeOf(p)
 	knd = typ.Kind()
 	if knd != reflect.Pointer {
 		return false
 	}
-	
+
 	// Confirm *p is a pointer
 	typ = typ.Elem()
 	knd = typ.Kind()
 	if knd != reflect.Pointer {
 		return false
 	}
-	
+
 	// Confirm **p is _not_ a pointer
 	typ = typ.Elem()
 	knd = typ.Kind()
@@ -702,7 +836,6 @@ func isPointerToPointer (p any) bool {
 
 	return true
 }
-
 
 func isScalar(kind reflect.Kind) bool {
 	switch kind {
@@ -975,7 +1108,7 @@ func (l *ecoLogger) signature(name string, args ...any) {
 	l.Logger.Info(l.indent() + sig)
 }
 
-func allocateSlice[U any] (pslice **[]U, len int, cap int) {
+func allocateSlice[U any](pslice **[]U, len int, cap int) {
 	typ := reflect.TypeFor[[]U]()
 	rSlice := reflect.MakeSlice(typ, len, cap)
 	slice := rSlice.Interface().([]U)

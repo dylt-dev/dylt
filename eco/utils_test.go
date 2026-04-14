@@ -7,41 +7,41 @@ import (
 )
 
 func TestGetSliceKeyIndex(t *testing.T) {
-	key := "/test/boolSlice/13"	
+	key := "/test/boolSlice/13"
 	expectedVal := 13
-	index, is := getSliceKeyIndex(key)
+	index, is := getSliceItemKey("/test/boolSlice", key)
 	require.True(t, is)
 	require.Equal(t, expectedVal, index)
 }
 
 func TestGetSliceKeyIndexEmpty(t *testing.T) {
-	key := ""	
+	key := ""
 	expectedVal := -1
-	index, is := getSliceKeyIndex(key)
+	index, is := getSliceItemKey("/slice", key)
 	require.False(t, is)
 	require.Equal(t, expectedVal, index)
 }
 
 func TestGetSliceKeyIndexNoSlash(t *testing.T) {
-	key := "foobarbum0"	
+	key := "/slice/barbum0"
 	expectedVal := -1
-	index, is := getSliceKeyIndex(key)
+	index, is := getSliceItemKey("/foo", key)
 	require.False(t, is)
 	require.Equal(t, expectedVal, index)
 }
 
 func TestGetSliceKeyIndexNoTrailingInt(t *testing.T) {
-	key := "/foo/bar/bum"	
+	key := "/foo/bar/bum"
 	expectedVal := -1
-	index, is := getSliceKeyIndex(key)
+	index, is := getSliceItemKey("/foo/bar", key)
 	require.False(t, is)
 	require.Equal(t, expectedVal, index)
 }
 
 func TestGetSliceKeyTrailingSlash(t *testing.T) {
-	key := "/test/boolSlice/13/"	
+	key := "/test/boolSlice/13/"
 	expectedVal := 13
-	index, is := getSliceKeyIndex(key)
+	index, is := getSliceItemKey("/test/boolSlice", key)
 	require.True(t, is)
 	require.Equal(t, expectedVal, index)
 }
