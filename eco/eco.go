@@ -547,6 +547,19 @@ func fieldNameMap(i any) (map[string]reflect.Value, error) {
 	return fieldNameMap, nil
 }
 
+
+func findKv (key string, kvs []*mvccpb.KeyValue) *mvccpb.KeyValue {
+	var kv *mvccpb.KeyValue
+	for _, kv = range kvs {
+		s := string(kv.Key)
+		if s == key {
+			break
+		}
+	}
+
+	return kv
+}
+
 func getFieldKey(sf reflect.StructField) string {
 	tagValue, ok := sf.Tag.Lookup("eco")
 	var fieldName string
