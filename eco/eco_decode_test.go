@@ -515,6 +515,29 @@ func TestGetMap(t *testing.T) {
 	t.Log(*pmap)
 }
 
+
+func TestGetMapOfMaps(t *testing.T) {
+	ctx, cli := initAndTest(t)
+	key := "/test/stros"
+	map0 := map[string]string{"Name": "Altuve", "Position": "LF"}
+	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
+	map2 := map[string]string{"Name": "Javier", "Position": "P"}
+	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
+	ops, err := Encode(newEcoContext(os.Stdout), key, mapStros)
+	require.NoError(t, err)
+
+	ctx.logger.Info("writing keys ...")
+	txn := createTxn(t, cli)
+	resp, err := txn.Then(ops...).Commit()
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	// decode because why not
+	var data map[int]map[string]string
+	decode(ctx, cli, key, &data)
+	t.Log(data)
+}
+
 func TestGetString(t *testing.T) {
 	testGetScalar(t, "/test/string", "hello world")
 }

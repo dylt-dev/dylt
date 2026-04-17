@@ -32,7 +32,6 @@ type DecoderMap map[reflect.Kind]Decoder
 type MapData map[string][]byte
 type SliceData map[int][]byte
 
-
 var decoderMap DecoderMap = DecoderMap{
 	reflect.Bool:    &ScalarDecoder[bool]{},
 	reflect.Int:     &ScalarDecoder[int]{},
@@ -87,6 +86,10 @@ func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string
 // key  key that prefixes all map keys
 // rv   reflection pointer-to-pointer-to-map
 func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, ppMap reflect.Value) error {
+	ctx.logger.signature("MapDecoder.Decode()", key, reflect.TypeOf(ppMap))
+	ctx.inc()
+	defer ctx.dec()
+	
 	// get the reflect.Type for the map to allocate
 	typ, err := getUnderlyingMapType(ppMap.Type())
 	if err != nil {
@@ -156,6 +159,10 @@ func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key s
 }
 
 func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
+	ctx.logger.signature("SliceDecoder.Decode()", key, reflect.TypeOf(rv).Elem())
+	ctx.inc()
+	defer ctx.dec()
+
 	sliceData := getSliceData(kvs, key)
 	maxIndex := sliceData.MaxIndex()
 	typSlice := rv.Type().Elem().Elem()
@@ -165,10 +172,12 @@ func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key strin
 
 	// Unmarshal all the elements
 	for i, _ := range sliceData {
+		ctx.logger.Infof("Decoding %d ...", i)
 		// Get a pointer to the slice element at the specified index
 		el := rvSlice.Index(i)
 		addr := el.Addr()
 		subkey := fmt.Sprintf("%s/%d", key, i)
+		ctx.logger.Infof("subkey=%s ...", subkey)
 		decoder := decoderMap[el.Kind()]
 		decoder.Decode(ctx, kvs, subkey, addr)
 		// pEl := addr.Interface()
@@ -377,6 +386,15 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	ctx.logger.info("conditions were not met; returning Invalid")
 	return Invalid
 }
+
+func createKv (k string, v string) *mvccpb.KeyValue{
+	kv := new(mvccpb.KeyValue)
+	kv.Key = []byte(k)
+	kv.Value = []byte(v)
+
+	return kv
+}
+
 
 func decodeScalar(ctx *ecoContext, key string) (etcd.Op, error) {
 	ctx.logger.signature("decodeScalar", key)

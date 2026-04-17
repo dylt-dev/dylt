@@ -90,7 +90,7 @@ func TestEncode_IntSlice(t *testing.T) {
 }
 
 func TestEncode_MapOfMaps(t *testing.T) {
-	key := "stros"
+	key := "/test/stros"
 	map0 := map[string]string{"Name": "Altuve", "Position": "LF"}
 	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
 	map2 := map[string]string{"Name": "Javier", "Position": "P"}

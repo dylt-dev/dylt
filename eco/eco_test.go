@@ -204,47 +204,49 @@ func TestGetChildKeys(t *testing.T) {
 	}
 }
 
-
 /*
-var VAL_AltuveStats = StatSlice{
-	{Name: "All-Stars", Value: 9},
-	{Name: "Height", Value: 5.5},
-}
-var VAL_AltuveMisc = map[string]string{
-	"Born": "Venezuela",
-}
-var VAL_Altuve = Player{
-	Name:     "Jose Altuve",
-	Id:       1,
-	IsActive: true,
-	Weight:   1.0,
-	Stats:    VAL_AltuveStats,
-	Misc:     VAL_AltuveMisc,
-}
-	"/test/team/astros/Players/altuve/Id",
-	"/test/team/astros/Players/altuve/IsActive",
-	"/test/team/astros/Players/altuve/Misc/Born",
-	"/test/team/astros/Players/altuve/Name",
-	"/test/team/astros/Players/altuve/Stats/0/Name",
-	"/test/team/astros/Players/altuve/Stats/0/Value",
-	"/test/team/astros/Players/altuve/Stats/1/Name",
-	"/test/team/astros/Players/altuve/Stats/1/Value",
+	var VAL_AltuveStats = StatSlice{
+		{Name: "All-Stars", Value: 9},
+		{Name: "Height", Value: 5.5},
+	}
+
+	var VAL_AltuveMisc = map[string]string{
+		"Born": "Venezuela",
+	}
+
+	var VAL_Altuve = Player{
+		Name:     "Jose Altuve",
+		Id:       1,
+		IsActive: true,
+		Weight:   1.0,
+		Stats:    VAL_AltuveStats,
+		Misc:     VAL_AltuveMisc,
+	}
+
+"/test/team/astros/Players/altuve/Id",
+"/test/team/astros/Players/altuve/IsActive",
+"/test/team/astros/Players/altuve/Misc/Born",
+"/test/team/astros/Players/altuve/Name",
+"/test/team/astros/Players/altuve/Stats/0/Name",
+"/test/team/astros/Players/altuve/Stats/0/Value",
+"/test/team/astros/Players/altuve/Stats/1/Name",
+"/test/team/astros/Players/altuve/Stats/1/Value",
 */
-func TestGetMapData (t *testing.T) {
+func TestGetMapData(t *testing.T) {
 	parentKey := "/test/team/astros/Players/altuve"
 	expectedBorn := "Venezuela"
 	expectedId := "1"
 	expectedIsActive := "true"
 	expectedName := "Jose Altuve"
 	kvs := []*mvccpb.KeyValue{
-		{ Key: []byte("/test/team/astros/Players/altuve/Id"), Value: []byte(expectedId)},
-		{ Key: []byte("/test/team/astros/Players/altuve/IsActive"), Value: []byte(expectedIsActive)},
-		{ Key: []byte("/test/team/astros/Players/altuve/Misc/Born"), Value: []byte(expectedBorn)},
-		{ Key: []byte("/test/team/astros/Players/altuve/Name"), Value: []byte(expectedName)},
-		{ Key: []byte("/test/team/astros/Players/altuve/Stats/0/Name"), Value: []byte("All-Stars")},
-		{ Key: []byte("/test/team/astros/Players/altuve/Stats/0/Value"), Value: []byte("9")},
-		{ Key: []byte("/test/team/astros/Players/altuve/Stats/1/Name"), Value: []byte("Height")},
-		{ Key: []byte("/test/team/astros/Players/altuve/Stats/1/Value"), Value: []byte("5.5")},
+		{Key: []byte("/test/team/astros/Players/altuve/Id"), Value: []byte(expectedId)},
+		{Key: []byte("/test/team/astros/Players/altuve/IsActive"), Value: []byte(expectedIsActive)},
+		{Key: []byte("/test/team/astros/Players/altuve/Misc/Born"), Value: []byte(expectedBorn)},
+		{Key: []byte("/test/team/astros/Players/altuve/Name"), Value: []byte(expectedName)},
+		{Key: []byte("/test/team/astros/Players/altuve/Stats/0/Name"), Value: []byte("All-Stars")},
+		{Key: []byte("/test/team/astros/Players/altuve/Stats/0/Value"), Value: []byte("9")},
+		{Key: []byte("/test/team/astros/Players/altuve/Stats/1/Name"), Value: []byte("Height")},
+		{Key: []byte("/test/team/astros/Players/altuve/Stats/1/Value"), Value: []byte("5.5")},
 	}
 	mapData := getMapData(kvs, parentKey)
 	id, is := mapData["Id"]
@@ -258,8 +260,7 @@ func TestGetMapData (t *testing.T) {
 	require.Equal(t, expectedName, string(name))
 }
 
-
-func TestGetMapItemKey (t *testing.T) {
+func TestGetMapItemKey(t *testing.T) {
 	parentKey := "/test/team/astros/Players/altuve"
 	key := "/test/team/astros/Players/altuve/Stats/1/Name"
 	itemKey, is := getMapItemKey(parentKey, key)
@@ -268,8 +269,7 @@ func TestGetMapItemKey (t *testing.T) {
 
 }
 
-
-func TestGetMapItemKey2 (t *testing.T) {
+func TestGetMapItemKey2(t *testing.T) {
 	parentKey := "/test/team/astros/Players/altuve"
 	key := "/test/team/astros/Players/altuve/Id"
 	itemKey, is := getMapItemKey(parentKey, key)
@@ -277,7 +277,6 @@ func TestGetMapItemKey2 (t *testing.T) {
 	require.Equal(t, "Id", itemKey)
 
 }
-
 
 // func TestGetChildKeys1 (t *testing.T) {
 // 	prefix := "/test/team/astros/Players/javier/Stats"
@@ -589,8 +588,7 @@ func TestReflection3(t *testing.T) {
 	require.Error(t, err)
 }
 
-
-func TestUnderlyingMapType (t *testing.T) {
+func TestUnderlyingMapType(t *testing.T) {
 	expectedData := reflect.TypeFor[map[string]int]()
 	typ := reflect.TypeFor[**map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
@@ -598,8 +596,7 @@ func TestUnderlyingMapType (t *testing.T) {
 	require.Equal(t, expectedData, typUnderlying)
 }
 
-
-func TestUnderlyingMapType2 (t *testing.T) {
+func TestUnderlyingMapType2(t *testing.T) {
 	expectedData := reflect.TypeFor[map[string]map[string]map[string]int]()
 	typ := reflect.TypeFor[**map[string]map[string]map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
@@ -607,47 +604,41 @@ func TestUnderlyingMapType2 (t *testing.T) {
 	require.Equal(t, expectedData, typUnderlying)
 }
 
-
-func TestUnderlyingMapType3 (t *testing.T) {
+func TestUnderlyingMapType3(t *testing.T) {
 	typ := reflect.TypeFor[*map[string]map[string]map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
 	require.Error(t, err)
 	require.Nil(t, typUnderlying)
 }
 
-
-func TestUnderlyingMapType4 (t *testing.T) {
+func TestUnderlyingMapType4(t *testing.T) {
 	typ := reflect.TypeFor[*map[string]map[string]map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
 	require.Error(t, err)
 	require.Nil(t, typUnderlying)
 }
 
-
-func TestUnderlyingPointerType (t *testing.T) {
+func TestUnderlyingPointerType(t *testing.T) {
 	var p *int
 	knd, err := getUnderlyingPointerKind(p)
 	require.NoError(t, err)
 	require.Equal(t, reflect.Int, knd)
 }
 
-
-func TestUnderlyingPointerType2 (t *testing.T) {
+func TestUnderlyingPointerType2(t *testing.T) {
 	var p **int
 	knd, err := getUnderlyingPointerKind(p)
 	require.NoError(t, err)
 	require.Equal(t, reflect.Int, knd)
 }
 
-
-func TestUnderlyingPointerType3 (t *testing.T) {
+func TestUnderlyingPointerType3(t *testing.T) {
 	var p **int
 	v := reflect.ValueOf(p)
 	knd, err := getUnderlyingPointerKind(v)
 	require.NoError(t, err)
 	require.Equal(t, reflect.Int, knd)
 }
-
 
 func TestUnderlyingSliceTypeInt(t *testing.T) {
 	var expectedVal reflect.Kind = reflect.Int
