@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"slices"
 	"strconv"
 	"testing"
 	"unsafe"
@@ -789,30 +787,30 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 	}
 }
 
-func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error) {
-	ctx.logger.signature("getSliceKeys", prefix)
-	childKeys, err := cli.GetKeys(prefix)
-	if err != nil {
-		return nil, err
-	}
-	srx := fmt.Sprintf(`^%s/(\d)`, prefix)
-	rx := regexp.MustCompile(srx)
-	matchMap := map[int]struct{}{}
-	for _, key := range childKeys {
-		if rx.MatchString(key) {
-			matches := rx.FindStringSubmatch(key)
-			i, err := strconv.Atoi(matches[1])
-			if err != nil {
-				return nil, err
-			}
-			matchMap[i] = struct{}{}
-		}
-	}
+// func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error) {
+// 	ctx.logger.signature("getSliceKeys", prefix)
+// 	childKeys, err := cli.GetKeys(prefix)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	srx := fmt.Sprintf(`^%s/(\d)`, prefix)
+// 	rx := regexp.MustCompile(srx)
+// 	matchMap := map[int]struct{}{}
+// 	for _, key := range childKeys {
+// 		if rx.MatchString(key) {
+// 			matches := rx.FindStringSubmatch(key)
+// 			i, err := strconv.Atoi(matches[1])
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			matchMap[i] = struct{}{}
+// 		}
+// 	}
 
-	var mapKeys []int = slices.Collect(maps.Keys(matchMap))
+// 	var mapKeys []int = slices.Collect(maps.Keys(matchMap))
 
-	return mapKeys, nil
-}
+// 	return mapKeys, nil
+// }
 
 func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd.Op {
 	ops, err := Encode(ctx, key, val)

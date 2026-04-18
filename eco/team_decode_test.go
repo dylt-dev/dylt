@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDecodeTeam_Misc (t *testing.T) {
+func TestDecodeTeam_Misc(t *testing.T) {
 	if os.Getenv("DYLT_TEST_SYSTEST") == "" {
 		t.Skip("sys test only")
 	}
@@ -29,11 +29,11 @@ func TestDecodeTeam_Stats(t *testing.T) {
 
 }
 
-func decodeAndTest (t *testing.T, key string, i any) {
+func decodeAndTest(t *testing.T, key string, i any) {
 	etcd, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	ctx := newEcoContext(os.Stdout)
-	err = decode(ctx, etcd, key, any(i).(**any))
+	err = Decode(ctx, etcd, key, any(i).(**any))
 	require.NoError(t, err)
 	el := reflect.ValueOf(i).Elem()
 	require.NotNil(t, el)

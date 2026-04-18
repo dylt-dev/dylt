@@ -19,190 +19,6 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-type Decoder interface {
-	Decode(*ecoContext, []*mvccpb.KeyValue, string, reflect.Value) error
-}
-type MapDecoder struct{}
-type MainDecoder struct{}
-type ScalarDecoder[U any] struct{}
-type SliceDecoder struct{}
-type StructDecoder struct{}
-type DecoderMap map[reflect.Kind]Decoder
-
-type MapData map[string][]byte
-type SliceData map[int][]byte
-
-var decoderMap DecoderMap = DecoderMap{
-	reflect.Bool:    &ScalarDecoder[bool]{},
-	reflect.Int:     &ScalarDecoder[int]{},
-	reflect.Int8:    &ScalarDecoder[int8]{},
-	reflect.Int16:   &ScalarDecoder[int16]{},
-	reflect.Int32:   &ScalarDecoder[int32]{},
-	reflect.Int64:   &ScalarDecoder[int64]{},
-	reflect.Uint:    &ScalarDecoder[uint]{},
-	reflect.Uint8:   &ScalarDecoder[uint8]{},
-	reflect.Uint16:  &ScalarDecoder[uint16]{},
-	reflect.Uint32:  &ScalarDecoder[uint32]{},
-	reflect.Uint64:  &ScalarDecoder[uint64]{},
-	reflect.Float32: &ScalarDecoder[float32]{},
-	reflect.Float64: &ScalarDecoder[float64]{},
-	reflect.String:  &ScalarDecoder[string]{},
-	reflect.Array:   &SliceDecoder{},
-	reflect.Slice:   &SliceDecoder{},
-	reflect.Map:     &MapDecoder{},
-	reflect.Struct:  &StructDecoder{},
-}
-
-func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	// Get the decoder from the decoder map, if it exists
-	pKind, err := getUnderlyingPointerKind(rv)
-	if err != nil {
-		return err
-	}
-	decoder, is := decoderMap[pKind]
-	if !is {
-		return fmt.Errorf("Unsupported pointer type (kind=%s)", pKind.String())
-	}
-
-	return decoder.Decode(ctx, kvs, key, rv)
-}
-
-// Decode the kvs at the key into a map
-// The map is specified by a pointer-to-a-pointer-to-map (ppm). The pointer to
-// the map (pm) is assumed to be nil, and it is this function's job to allocate
-// the map. and then assign the address of the allocated map to the ppm. This is
-// how a function can allocation a value and 'return' it via an incoming
-// parameter.
-//
-// @note it might not make a lot of sense to deal with double indirection just
-// to support allocating a new value to an incoming parameter. It's what
-// json.Unmarshal() does but that's because json.Unmarshal() also supports
-// unmarshalling into an existing data structure, as well as allocation. If a
-// a function is always allocating and unmarshalling into a new object, it might
-// make sense to just return it.
-//
-// ctx	Context for logging+etcd client
-// kvs  key-value pairs which comprise the data
-// key  key that prefixes all map keys
-// rv   reflection pointer-to-pointer-to-map
-func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, ppMap reflect.Value) error {
-	ctx.logger.signature("MapDecoder.Decode()", key, reflect.TypeOf(ppMap))
-	ctx.inc()
-	defer ctx.dec()
-	
-	// get the reflect.Type for the map to allocate
-	typ, err := getUnderlyingMapType(ppMap.Type())
-	if err != nil {
-		return err
-	}
-
-	// allocate the new map + save the value type
-	rMap := reflect.MakeMap(typ)
-	typValue := rMap.Type().Elem()
-
-	// get the map data from the kvs+key
-	mapData := getMapData(kvs, key)
-
-	// populate the new map with the data
-	for k, _ := range mapData {
-		ctx.logger.Infof("Decoding %s ...", k)	
-		// create a new map item
-		pnew := reflect.New(typValue)
-		decoder := decoderMap[typValue.Kind()]
-		subkey := fmt.Sprintf("%s/%s", key, k)
-		fmt.Printf("subkey=%v\n", subkey)
-		err := decoder.Decode(ctx, kvs, subkey, pnew)
-		if err != nil {
-			return err
-		}
-		// // get the address of the new element and unmarshal the mapData value
-		// addr := pnew.Elem().Addr()
-		// i := addr.Interface()
-		// err := json.Unmarshal(v, i)
-		// if err != nil {
-		// 	return err
-		// }
-
-
-		// Create reflect.Value for mapData key and add key+val to new map 
-		rk := reflect.ValueOf(k)
-		rMap.SetMapIndex(rk, pnew.Elem())
-	}
-
-	// Create a new map pointer and assign the new map to it
-	pMap := reflect.New(typ)
-	pMap.Elem().Set(rMap)
-
-	// assign the new map to the rv
-	ppMap.Elem().Set(pMap)
-
-	// done :)
-	return nil
-}
-
-
-func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	var kv *mvccpb.KeyValue
-	for _, kv = range kvs {
-		if string(kv.Key) == key {
-			break
-		}
-	}
-	if kv == nil {
-		return fmt.Errorf("kvs did not contain key (key=%s)", key)
-	}
-	data := kv.Value
-	ctx.logger.Infof("data=%#v", data)
-	i := rv.Interface()
-	err := json.Unmarshal(data, i)
-	return err
-}
-
-func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	ctx.logger.signature("SliceDecoder.Decode()", key, reflect.TypeOf(rv).Elem())
-	ctx.inc()
-	defer ctx.dec()
-
-	sliceData := getSliceData(kvs, key)
-	maxIndex := sliceData.MaxIndex()
-	typSlice := rv.Type().Elem().Elem()
-	len := maxIndex + 1
-	cap := maxIndex + 1
-	rvSlice := reflect.MakeSlice(typSlice, len, cap)
-
-	// Unmarshal all the elements
-	for i, _ := range sliceData {
-		ctx.logger.Infof("Decoding %d ...", i)
-		// Get a pointer to the slice element at the specified index
-		el := rvSlice.Index(i)
-		addr := el.Addr()
-		subkey := fmt.Sprintf("%s/%d", key, i)
-		ctx.logger.Infof("subkey=%s ...", subkey)
-		decoder := decoderMap[el.Kind()]
-		decoder.Decode(ctx, kvs, subkey, addr)
-		// pEl := addr.Interface()
-
-		// // Unmarshal the specified data into the element pointer
-		// err := json.Unmarshal(data, pEl)
-		// if err != nil {
-		// 	return err
-		// }
-	}
-
-	// Make a slice pointer + assign the new slice to the pointer's Elem()
-	rvNew := reflect.New(typSlice)
-	rvNew.Elem().Set(rvSlice)
-
-	// Assign the new slice pointer to the incoming rv
-	rv.Elem().Set(rvNew)
-
-	return nil
-}
-
-func (d *StructDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	return nil
-}
-
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	ctx.logger.signature("Encode", key, reflect.TypeOf(i))
 	if _, ok := i.(reflect.Value); ok {
@@ -387,14 +203,6 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	return Invalid
 }
 
-func decodeScalar(ctx *ecoContext, key string) (etcd.Op, error) {
-	ctx.logger.signature("decodeScalar", key)
-	ctx.inc()
-	defer ctx.dec()
-
-	op := etcd.OpGet(key)
-	return op, nil
-}
 
 func encodeMap(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.logger.signature("encodeMap", key, val.Type())
@@ -471,16 +279,16 @@ func encodeSlice(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, err
 	return ops, nil
 }
 
-func encodeString(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
-	ctx.logger.signature("encodeString", key, val.Type())
-	ctx.inc()
-	defer ctx.dec()
+// func encodeString(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
+// 	ctx.logger.signature("encodeString", key, val.Type())
+// 	ctx.inc()
+// 	defer ctx.dec()
 
-	s := val.String()
-	opPut := etcd.OpPut(key, string(s))
+// 	s := val.String()
+// 	opPut := etcd.OpPut(key, string(s))
 
-	return []etcd.Op{opPut}, nil
-}
+// 	return []etcd.Op{opPut}, nil
+// }
 
 func encodeStruct(ctx *ecoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.logger.signature("encodeStruct", key, val.Type())
@@ -578,8 +386,8 @@ func getFieldValue(val reflect.Value) (string, error) {
 // All the data that comprises the map specified by the parentKey. This is the
 // subset of kvs with keys that match {parentKey}/mapKey, where mapKey is a
 // single key segment. 
-func getMapData (kvs []*mvccpb.KeyValue, parentKey string) MapData {
-	mapData := MapData{}
+func getMapData (kvs []*mvccpb.KeyValue, parentKey string) DecoderMapData {
+	mapData := DecoderMapData{}
 
 	for _, kv := range kvs {
 		key := string(kv.Key)
@@ -633,8 +441,8 @@ func getMapItemKey(key string, subkey string) (string, bool) {
 // where the map keys are the N index values for each element
 //
 // @note I think Im allowing negative indexes
-func getSliceData(kvs []*mvccpb.KeyValue, sliceKey string) SliceData {
-	sliceData := SliceData{}
+func getSliceData(kvs []*mvccpb.KeyValue, sliceKey string) DecoderSliceData {
+	sliceData := DecoderSliceData{}
 	
 	for _, kv := range kvs {
 		key := string(kv.Key)
@@ -689,7 +497,7 @@ func getSliceItemKey(key string, subkey string) (int, bool) {
 	return index, true
 }
 
-func (m SliceData) MaxIndex() int {
+func (m DecoderSliceData) MaxIndex() int {
 	maxIndex := 0
 	for key := range m {
 		if key > maxIndex {

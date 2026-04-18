@@ -2,8 +2,6 @@ package eco
 
 import (
 	"strings"
-
-	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 type KeyValue struct {
@@ -12,13 +10,13 @@ type KeyValue struct {
 }
 
 
-func createKv (etcdKv *mvccpb.KeyValue) *KeyValue{
-	kv := new(KeyValue)
-	kv.Key = string(etcdKv.Key)
-	kv.Value = etcdKv.Value
+// func createKv (etcdKv *mvccpb.KeyValue) *KeyValue{
+// 	kv := new(KeyValue)
+// 	kv.Key = string(etcdKv.Key)
+// 	kv.Value = etcdKv.Value
 
-	return kv
-}
+// 	return kv
+// }
 
 func newKv (k string, v string) *KeyValue{
 	kv := new(KeyValue)

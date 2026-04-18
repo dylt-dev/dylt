@@ -38,7 +38,8 @@ It's hard to keep names, keys, and kvs straight. Let's try and account for them 
 
 Let's figure this out
 
-The root key is the root key. It's where the initial object data was fetched from
+The root key is the root key. It's the key that was used to fetch the initial
+object data.
 The key representing the element is the current key being processed.
 kvMap names are the first segment that follows the element key, for each child key
 the list of kvs is just child keys

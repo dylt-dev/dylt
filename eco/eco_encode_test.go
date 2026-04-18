@@ -259,13 +259,13 @@ func putSlice(t *testing.T, ctx *ecoContext, cli *EtcdClient, ops []etcd.Op) {
 }
 
 
-func dumpAndTestEncodeOps(t *testing.T, key string, val any) {
-	ctx := newEcoContext(os.Stdout)
-	ops, err := Encode(ctx, key, val)
-	require.NoError(t, err)
-	fmt.Println()
-	dumpOps(t, ops)
-}
+// func dumpAndTestEncodeOps(t *testing.T, key string, val any) {
+// 	ctx := newEcoContext(os.Stdout)
+// 	ops, err := Encode(ctx, key, val)
+// 	require.NoError(t, err)
+// 	fmt.Println()
+// 	dumpOps(t, ops)
+// }
 
 
 func testSliceValuesInEtcd[U any](t *testing.T, expectedVals []U, cli *EtcdClient, key string) {
