@@ -15,7 +15,6 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-type KeyValue mvccpb.KeyValue
 type Decode func(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, p any) error
 
 func decode(ctx *ecoContext, cli *EtcdClient, key string, pp any) error {

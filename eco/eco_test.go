@@ -182,6 +182,51 @@ func TestCreateSignature0(t *testing.T) {
 	t.Log(sig)
 }
 
+
+func TestFindKv1 (t *testing.T) {
+	expectedBorn := "Venezuela"
+	expectedId := "1"
+	expectedIsActive := "true"
+	expectedName := "Jose Altuve"
+	expectedNameKey := "/test/team/astros/Players/altuve/Name"
+	expectedData := newKv(expectedNameKey, expectedName)
+	kvs := []*KeyValue{
+		newKv("/test/team/astros/Players/altuve/Id", expectedId),
+		newKv("/test/team/astros/Players/altuve/IsActive", expectedIsActive),
+		newKv("/test/team/astros/Players/altuve/Misc/Born", expectedBorn),
+		expectedData,
+		newKv("/test/team/astros/Players/altuve/Stats/0/Name", "All-Stars"),
+		newKv("/test/team/astros/Players/altuve/Stats/0/Value", "9"),
+		newKv("/test/team/astros/Players/altuve/Stats/1/Name", "Height"),
+		newKv("/test/team/astros/Players/altuve/Stats/1/Value", "5.5"),
+	}
+	kv := findKv(expectedNameKey, kvs)
+	require.NotNil(t, kv)
+	require.Equal(t, expectedNameKey, string(kv.Key))
+	require.Equal(t, expectedName, string(kv.Value))
+}
+
+func TestFindKv2 (t *testing.T) {
+	expectedBorn := "Venezuela"
+	expectedId := "1"
+	expectedIsActive := "true"
+	expectedName := "Jose Altuve"
+	expectedNameKey := "/test/team/astros/Players/altuve/Name"
+	expectedData := newKv(expectedNameKey, expectedName)
+	kvs := []*KeyValue{
+		newKv("/test/team/astros/Players/altuve/Id", expectedId),
+		newKv("/test/team/astros/Players/altuve/IsActive", expectedIsActive),
+		newKv("/test/team/astros/Players/altuve/Misc/Born", expectedBorn),
+		expectedData,
+		newKv("/test/team/astros/Players/altuve/Stats/0/Name", "All-Stars"),
+		newKv("/test/team/astros/Players/altuve/Stats/0/Value", "9"),
+		newKv("/test/team/astros/Players/altuve/Stats/1/Name", "Height"),
+		newKv("/test/team/astros/Players/altuve/Stats/1/Value", "5.5"),
+	}
+	kv := findKv("/team", kvs)
+	require.Nil(t, kv)
+}
+
 func TestGetChildKeys(t *testing.T) {
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)

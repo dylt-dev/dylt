@@ -387,15 +387,6 @@ func arrayKind(ctx *ecoContext, ty reflect.Type) kind {
 	return Invalid
 }
 
-func createKv (k string, v string) *mvccpb.KeyValue{
-	kv := new(mvccpb.KeyValue)
-	kv.Key = []byte(k)
-	kv.Value = []byte(v)
-
-	return kv
-}
-
-
 func decodeScalar(ctx *ecoContext, key string) (etcd.Op, error) {
 	ctx.logger.signature("decodeScalar", key)
 	ctx.inc()
@@ -547,18 +538,6 @@ func fieldNameMap(i any) (map[string]reflect.Value, error) {
 	return fieldNameMap, nil
 }
 
-
-func findKv (key string, kvs []*mvccpb.KeyValue) *mvccpb.KeyValue {
-	var kv *mvccpb.KeyValue
-	for _, kv = range kvs {
-		s := string(kv.Key)
-		if s == key {
-			break
-		}
-	}
-
-	return kv
-}
 
 func getFieldKey(sf reflect.StructField) string {
 	tagValue, ok := sf.Tag.Lookup("eco")
