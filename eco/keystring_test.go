@@ -23,6 +23,56 @@ func TestChildName2(t *testing.T) {
 	require.Equal(t, expectedData, data)
 }
 
+func TestIndex(t *testing.T) {
+	expectedData := uint64(13)
+	keyString := KeyString("/foo/bar/13")
+	index, is := keyString.Index()
+	require.True(t, is)
+	require.Equal(t, expectedData, index)
+}
+
+func TestIndexBad (t *testing.T) {
+	expectedData := uint64(2)
+	keyString := KeyString("/test/boolSlice/2")
+	index, is := keyString.Index()
+	require.True(t, is)
+	require.Equal(t, expectedData, index)
+}
+
+
+func TestIndexEmpty(t *testing.T) {
+	expectedData := uint64(0)
+	keyString := KeyString("")
+	index, is := keyString.Index()
+	require.False(t, is)
+	require.Equal(t, expectedData, index)
+}
+
+func TestIndexNoInt(t *testing.T) {
+	expectedData := uint64(0)
+	keyString := KeyString("/foo/bar/bum")
+	index, is := keyString.Index()
+	require.False(t, is)
+	require.Equal(t, expectedData, index)
+}
+
+func TestIndexNoPrefix(t *testing.T) {
+	expectedData := uint64(13)
+	keyString := KeyString("/13")
+	index, is := keyString.Index()
+	require.True(t, is)
+	require.Equal(t, expectedData, index)
+}
+
+func TestIndexNoSlash(t *testing.T) {
+	expectedData := uint64(13)
+	keyString := KeyString("13")
+	index, is := keyString.Index()
+	require.True(t, is)
+	require.Equal(t, expectedData, index)
+}
+
+
 func TestSegments1(t *testing.T) {
 	var s KeyString = "/foo/bar/bum/"
 	segments := s.Segments()

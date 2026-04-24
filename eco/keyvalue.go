@@ -1,7 +1,10 @@
 package eco
 
 import (
+	"slices"
 	"strings"
+
+	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 type KeyValue struct {
@@ -10,13 +13,33 @@ type KeyValue struct {
 }
 
 
-// func createKv (etcdKv *mvccpb.KeyValue) *KeyValue{
-// 	kv := new(KeyValue)
-// 	kv.Key = string(etcdKv.Key)
-// 	kv.Value = etcdKv.Value
+func createKvSlice (etcdKvs []*mvccpb.KeyValue) []*KeyValue {
+	kvSlice := make([]*KeyValue, len(etcdKvs))
+	for i, etcdKv := range etcdKvs {
+		kvSlice[i] = newKvFromEtcd(etcdKv)
+	}
 
-// 	return kv
-// }
+	return kvSlice
+}
+
+
+func deleteKeyFromSlice (ctx *ecoContext, kvs []*KeyValue, key string) []*KeyValue {
+	ctx.logger.signature("deleteKeyFromSlice", len(kvs), key)	
+	ctx.inc()
+	defer ctx.dec()
+
+	ctx.logger.Infof("Before: len(kvs)=%d", len(kvs))
+	ctx.logger.commentf("Getting index of %s ...", key)
+	iKv := slices.IndexFunc(kvs, func (kv *KeyValue) bool { return key == kv.Key  })
+	ctx.logger.Infof("iKv=%d", iKv)
+	if iKv != -1 {
+		ctx.logger.comment("Deleting element from slice")
+		kvs = slices.Delete(kvs, iKv, iKv+1)
+	}
+	ctx.logger.Infof("After: len(kvs)=%d", len(kvs))
+	return kvs
+}
+
 
 func newKv (k string, v string) *KeyValue{
 	kv := new(KeyValue)
@@ -26,6 +49,14 @@ func newKv (k string, v string) *KeyValue{
 	return kv
 }
 
+
+func newKvFromEtcd (etcdKv *mvccpb.KeyValue) *KeyValue{
+	kv := new(KeyValue)
+	kv.Key = string(etcdKv.Key)
+	kv.Value = etcdKv.Value
+
+	return kv
+}
 
 
 /*

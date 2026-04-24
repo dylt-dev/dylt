@@ -345,14 +345,19 @@ func TestGetBoolSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
 	// Seed etcd with test data
+	ctx.logger.comment("Write test data to cluster ...")
 	key := "/test/boolSlice"
 	expectedData := []bool{true, false, true, true}
 	putAndTestSlice(t, ctx, cli, key, expectedData)
 
 	// Get kvs for seeded data
+	ctx.logger.comment("Read test data from cluster ...")
 	kvs := getAndTestSliceKVs(t, ctx, cli, key)
 
 	// Decode the slice and test expected values
+	ctx.logger.comment("Done with etcd")
+	ctx.logger.comment()
+	ctx.logger.comment("Decoding data ...")
 	getAndTestSlice(t, ctx, expectedData, kvs, key)
 }
 
@@ -430,14 +435,20 @@ func TestGetMap(t *testing.T) {
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
 
-	// Get the KVs from the response
+	// Get the etcd KVs from the response
 	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
+	etcdKvs := rangeResp.Kvs
+
+	// Create a slice of KeyValue objects
+	kvs := createKvSlice(etcdKvs)
+
+	// Create a KeyValueTree from the KVs
+	kvTree := createKvTree(ctx, key, kvs, key)
 
 	// Decode the map
 	var pmap *map[string]string
 	decoder := MapDecoder{}
-	err = decoder.Decode(ctx, kvs, key, reflect.ValueOf(&pmap))
+	err = decoder.Decode(ctx, kvTree, key, reflect.ValueOf(&pmap))
 	require.NoError(t, err)
 
 	// Check the contents
@@ -688,11 +699,16 @@ func decodeAndTestSlice[U any](t *testing.T, key string, expectedData []U) {
 // 	require.Equal(t, expectedData, *pData)
 // }
 
-func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedData []U, kvs []*mvccpb.KeyValue, key string) {
+func getAndTestSlice[U any](t *testing.T, ctx *ecoContext, expectedData []U, etcdKvs []*mvccpb.KeyValue, key string) {
 	var pSlice *[]U
 	rv := reflect.ValueOf(&pSlice)
 	decoder := SliceDecoder{}
-	err := decoder.Decode(ctx, kvs, key, rv)
+
+	kvs := createKvSlice(etcdKvs)
+	kvTree := createKvTree(ctx, key, kvs, key)
+	ctx.logger.Debugf("kvTree.Children=%#v", kvTree.Children)
+
+	err := decoder.Decode(ctx, kvTree, key, rv)
 	require.NoError(t, err)
 	require.Equal(t, expectedData, *pSlice)
 }
@@ -707,15 +723,6 @@ func getAndTestSliceKVs(t *testing.T, ctx *ecoContext, cli *EtcdClient, key stri
 	ctx.logger.Infof("respRange.Count=%d", respRange.Count)
 	kvs := respRange.Kvs
 	return kvs
-}
-
-func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
-	ctx := newEcoContext(os.Stdout)
-	etcdClient, err := NewEtcdClientFromConfig()
-	require.NoError(t, err)
-	require.NotNil(t, etcdClient)
-
-	return ctx, etcdClient
 }
 
 // With the EtcdClient, Put a value to etcd, then Get it back to confirm the
@@ -756,14 +763,17 @@ func putAndTestScalar(t *testing.T, ctx *ecoContext, etcdClient *EtcdClient, key
 }
 
 func putAndTestSlice[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data []U) {
-	ctx.logger.Infof("Writing map at %s ...", key)
+	ctx.logger.Infof("Writing slice at %s ...", key)
 	ops := []etcd.Op{}
 	for i, val := range data {
+		ctx.inc()
 		subkey := fmt.Sprintf("%s/%d", key, i)
 		bufVal, err := json.Marshal(val)
 		require.NoError(t, err)
+		ctx.logger.Infof("%s => %s", subkey, string(bufVal))
 		op := etcd.OpPut(subkey, string(bufVal))
 		ops = append(ops, op)
+		ctx.dec()
 	}
 	txn := createTxn(t, cli)
 	require.NotNil(t, txn)
@@ -806,12 +816,14 @@ func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
 	ctx, cli := initAndTest(t)
 
 	// Seed etcd with test data
+	ctx.logger.comment("Writing scalar seed data to cluster ...")
 	putAndTestScalar(t, ctx, cli, key, expectedVal)
 
 	// Create the GET Op
 	op := etcd.OpGet(key)
 
 	// Get the response from etcd
+	ctx.logger.comment("Getting scalar value from the cluster ...")
 	txn := createTxn(t, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
@@ -821,11 +833,17 @@ func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
 	pp := &p
 	rv := reflect.ValueOf(pp)
 	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
+	etcdKvs := rangeResp.Kvs
+
+	ctx.logger.comment("Done with etcd")
+	ctx.logger.comment()
+	ctx.logger.comment("Decoding data ...")
+	kvs := createKvSlice(etcdKvs)
+	kvTree := createKvTree(ctx, key, kvs, key)
 
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}
-	err = decoder.Decode(ctx, kvs, key, rv)
+	err = decoder.Decode(ctx, kvTree, key, rv)
 	require.NoError(t, err)
 	require.NotNil(t, p)
 	require.Equal(t, expectedVal, *p)
@@ -850,11 +868,14 @@ func testGetScalar2[U any](t *testing.T, key string, expectedVal U) {
 	p := &v
 	rv := reflect.ValueOf(p)
 	rangeResp := resp.Responses[0].GetResponseRange()
-	kvs := rangeResp.Kvs
+	etcdKvs := rangeResp.Kvs
+
+	kvs := createKvSlice(etcdKvs)
+	kvTree := createKvTree(ctx, key, kvs, key)
 
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}
-	err = decoder.Decode(ctx, kvs, key, rv)
+	err = decoder.Decode(ctx, kvTree, key, rv)
 	require.NoError(t, err)
 	require.NotNil(t, p)
 	require.Equal(t, expectedVal, *p)

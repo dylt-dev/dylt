@@ -1,6 +1,9 @@
 package eco
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 type KeyString string
 
@@ -34,6 +37,19 @@ func (s KeyString) ElementName(prefix string) string {
 		return ""
 	}
 	return segments[len(segments)-1]
+}
+
+func (s KeyString) Index() (uint64, bool) {
+	if string(s) == "" {
+		return 0, false
+	}
+	segments := s.Segments()
+	lastSeg := segments[len(segments)-1]
+	index, err := strconv.ParseUint(lastSeg, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return index, true
 }
 
 func (s KeyString) Segments() []string {

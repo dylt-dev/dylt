@@ -6,7 +6,22 @@ import (
 	"strings"
 )
 
-type KeyValueChildMap map[string]*KeyValueTree
+type KeyValueChildMap map[KeyString]*KeyValueTree
+
+func (m KeyValueChildMap) MaxIndex() uint64 {
+	var maxIndex uint64 = 0
+	for key := range m {
+		keyString := KeyString(key)
+		index, is := keyString.Index()
+		if is {
+			if index > maxIndex {
+				maxIndex = index
+			}
+		}
+	}
+
+	return maxIndex
+}
 
 type KeyValueTree struct {
 	Name     string
@@ -14,8 +29,7 @@ type KeyValueTree struct {
 	Children KeyValueChildMap
 }
 
-
-func (t *KeyValueTree) String () string {
+func (t *KeyValueTree) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("Name: %s\n", t.Name))
 	buf, err := json.Marshal(t.Value)
@@ -26,7 +40,6 @@ func (t *KeyValueTree) String () string {
 	fmt.Fprintf(&sb, "len(Children): %d\n", len(t.Children))
 	return sb.String()
 }
-
 
 /*
 It's hard to keep names, keys, and kvs straight. Let's try and account for them all
@@ -47,37 +60,44 @@ the key of a child map is the childMap key appended to the prefix. It's a full k
 */
 
 func createKvTree(ctx *ecoContext, key string, kvs []*KeyValue, rootKey string) *KeyValueTree {
+	ctx.logger.signature("createKvTree", key, len(kvs), rootKey)
 	ctx.inc()
 	defer ctx.dec()
-	ctx.logger.signature("createKvTree", key, len(kvs), rootKey)
 
 	// Find the kv for the specified key in the kvs list, if present
+	ctx.logger.commentf("Finding key (%s) in kv list ...", key)
 	kv := findKv(key, kvs)
 	if kv == nil {
 		return nil
 	}
-	fmt.Printf("kv=(%v, %v)\n", kv.Key, string(kv.Value))
+	ctx.logger.Infof("Key found. kv=(%v, %v)", kv.Key, string(kv.Value))
 
 	// Create a new tree + set its simp`le fields
 	tree := new(KeyValueTree)
-	ctx.logger.commentf("Getting child name of %s (rootKey=%s)", key, rootKey)
-	// name := KeyString(key).ChildName(rootKey)
+	ctx.logger.commentf("Getting element name of %s under rootKey=%s", key, rootKey)
 	name := KeyString(key).ElementName(rootKey)
-	ctx.logger.commentf("child name=%s", name)
+	ctx.logger.Infof("element name=%s", name)
 	var value []byte
 	value = kv.Value
-	fmt.Printf("name=%v\n", name)
-	fmt.Printf("value=%v\n", string(value))
+	ctx.logger.comment("name + value of element determined.")
+	ctx.logger.Infof("name=%v value=%v", name, value)
 	tree.Name = name
 	tree.Value = value
 
 	// Recursively create child nodes
+	ctx.logger.comment("creating child nodes, if present")
 	tree.Children = KeyValueChildMap{}
-	kvMap := createKvMap(ctx, key, kvs)
-	for k, v := range kvMap {
-		childKey := fmt.Sprintf("%s/%s", key, k)
-		childKvs := v
-		tree.Children[childKey] = createKvTree(ctx, childKey, childKvs, rootKey)
+	// Remove the current node from the collection of nodes to process
+	kvs = deleteKeyFromSlice(ctx, kvs, string(key))
+	// Create KeyValueMap + KeyValueTree Children from child keys, if any
+	if len(kvs) > 0 {
+		kvMap := createKvMap(ctx, key, kvs)
+		ctx.logger.Infof("%d children found", len(kvMap))
+		for k, v := range kvMap {
+			childKey := fmt.Sprintf("%s/%s", key, k)
+			childKvs := v
+			tree.Children[KeyString(childKey)] = createKvTree(ctx, childKey, childKvs, rootKey)
+		}
 	}
 
 	return tree

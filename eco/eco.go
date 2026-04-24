@@ -21,6 +21,9 @@ import (
 
 func Encode(ctx *ecoContext, key string, i any) ([]etcd.Op, error) {
 	ctx.logger.signature("Encode", key, reflect.TypeOf(i))
+	ctx.inc()
+	defer ctx.dec()
+	
 	if _, ok := i.(reflect.Value); ok {
 		ctx.logger.info("arg i is of type reflect.Value; did you mean to call i.Interface()?")
 	}
@@ -594,6 +597,13 @@ func getUnderlyingPointerKind(p any) (reflect.Kind, error) {
 // is nil it cannot be dereferenced. This function is unopinionated regarding
 // the value of the argument. It only cares about the argument type.
 func getUnderlyingSliceType(p any) (reflect.Type, error) {
+	// Check if the type is a reflect.Value - if so, use the Interface()
+	rv, is := p.(reflect.Value)
+	if is {
+		p = rv.Interface()
+		common.Logger.Info("Incoming pointer is reflect.Value -- using Interface()")
+	}
+
 	// Check if the type is a pointer
 	pType := reflect.TypeOf(p)
 	pKind := pType.Kind()
@@ -976,6 +986,11 @@ func (l *ecoLogger) ErrorContextf(ctx context.Context, sfmt string, args ...any)
 	l.Logger.ErrorContext(ctx, l.indent()+s)
 }
 
+func (l *ecoLogger) Info(args ...any) {
+	s := fmt.Sprint(args...)
+	l.Logger.Info(l.indent() + s)
+}
+
 func (l *ecoLogger) Infof(sfmt string, args ...any) {
 	s := fmt.Sprintf(sfmt, args...)
 	l.Logger.Info(l.indent() + s)
@@ -1001,7 +1016,8 @@ func (l *ecoLogger) WarnContextf(ctx context.Context, sfmt string, args ...any) 
 	l.Logger.WarnContext(ctx, l.indent()+s)
 }
 
-func (l *ecoLogger) comment(msg string) {
+func (l *ecoLogger) comment(args ...any) {
+	msg := fmt.Sprint(args...)
 	l.Logger.Info(l.indent() + string(color.Styledstring(msg).Fg(color.X11.CornflowerBlue)))
 }
 

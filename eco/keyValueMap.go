@@ -32,30 +32,34 @@ Example of KeyValueMap
 type KeyValueMap map[string][]*KeyValue
 
 func (m KeyValueMap) add(ctx *ecoContext, prefix string, kv *KeyValue) bool {
+	ctx.logger.signature("KeyValueMap.add()", prefix, kv.Key)
 	ctx.inc()
 	defer ctx.dec()
-	ctx.logger.signature("KeyValueMap.add()", prefix, kv.Key)
+	
 	// Find the first segment after the prefix. This will be the map key
 	// If there is no segment after the prefix, then return false
+	ctx.logger.comment("checking if key is a child of the prefix ...")
 	fullKey := KeyString(kv.Key)
 	ksPrefix := KeyString(prefix).WithoutEndSlash()
 	afterPrefix, is := fullKey.CutPrefix(string(ksPrefix))
 	if !is {
+		ctx.logger.Info("Not a child. Returning.")
 		return false
 	}
 	segments := KeyString(afterPrefix).Segments()
 	if len(segments) == 0 {
+		ctx.logger.Info("Not a child. Returning.")
 		return false
 	}
 	key := segments[0]
-
+	ctx.logger.Infof("Key (%s) is child.", key)
 	// Get the kvs for this key. If the key doesn't exist, create a new lv list
 	kvs := m[key]
 	if kvs == nil {
 		kvs = []*KeyValue{}
 	}
 
-	ctx.logger.commentf("append to m[%s] (key=%s)", key, kv.Key)
+	ctx.logger.commentf("append child key (%s) to to m[%s]", kv.Key, key)
 	kvs = append(kvs, kv)
 	m[key] = kvs
 	// Note this final set might be unnecessary, and conceivably inefficient
@@ -94,9 +98,9 @@ func (m KeyValueMap) String () string {
 
 
 func createKvMap(ctx *ecoContext, key string, kvs []*KeyValue) KeyValueMap {
+	ctx.logger.signature("createKvMap", key, len(kvs))
 	ctx.inc()
 	defer ctx.dec()
-	ctx.logger.signature("createKvMap", key, len(kvs))
 
 	kvMap := KeyValueMap{}
 

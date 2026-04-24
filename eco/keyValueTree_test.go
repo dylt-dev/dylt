@@ -53,9 +53,10 @@ func TestScalar(t *testing.T) {
 }
 
 func logTree (ctx *ecoContext, tree *KeyValueTree) {
+	ctx.logger.signature("logTree", tree.Name, string(tree.Value), len(tree.Children))
 	ctx.inc()
 	defer ctx.dec()
-	ctx.logger.signature("logTree", tree.Name, string(tree.Value), len(tree.Children))
+	
 	for _, child := range tree.Children {
 		logTree(ctx, child)
 	}

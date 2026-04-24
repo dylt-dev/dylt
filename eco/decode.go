@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-
 type Decoder interface {
-	Decode(*ecoContext, []*mvccpb.KeyValue, string, reflect.Value) error
+	Decode(*ecoContext, *KeyValueTree, string, reflect.Value) error
 }
 type MapDecoder struct{}
 type MainDecoder struct{}
@@ -44,7 +42,7 @@ var decoderMap DecoderMap = DecoderMap{
 	reflect.Struct:  &StructDecoder{},
 }
 
-func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
+func (d *MainDecoder) Decode(ctx *ecoContext, kvs *KeyValueTree, key string, rv reflect.Value) error {
 	// Get the decoder from the decoder map, if it exists
 	pKind, err := getUnderlyingPointerKind(rv)
 	if err != nil {
@@ -76,11 +74,11 @@ func (d *MainDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string
 // kvs  key-value pairs which comprise the data
 // key  key that prefixes all map keys
 // rv   reflection pointer-to-pointer-to-map
-func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, ppMap reflect.Value) error {
+func (d *MapDecoder) Decode(ctx *ecoContext, kvTree *KeyValueTree, key string, ppMap reflect.Value) error {
 	ctx.logger.signature("MapDecoder.Decode()", key, reflect.TypeOf(ppMap))
 	ctx.inc()
 	defer ctx.dec()
-	
+
 	// get the reflect.Type for the map to allocate
 	typ, err := getUnderlyingMapType(ppMap.Type())
 	if err != nil {
@@ -91,18 +89,18 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string,
 	rMap := reflect.MakeMap(typ)
 	typValue := rMap.Type().Elem()
 
-	// get the map data from the kvs+key
-	mapData := getMapData(kvs, key)
+	// // get the map data from the kvs+key
+	// mapData := getMapData(kvs, key)
 
 	// populate the new map with the data
-	for k := range mapData {
-		ctx.logger.Infof("Decoding %s ...", k)	
+	for k := range kvTree.Children {
+		ctx.logger.Infof("Decoding %s ...", k)
 		// create a new map item
 		pnew := reflect.New(typValue)
 		decoder := decoderMap[typValue.Kind()]
 		subkey := fmt.Sprintf("%s/%s", key, k)
 		fmt.Printf("subkey=%v\n", subkey)
-		err := decoder.Decode(ctx, kvs, subkey, pnew)
+		err := decoder.Decode(ctx, kvTree, subkey, pnew)
 		if err != nil {
 			return err
 		}
@@ -114,8 +112,7 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string,
 		// 	return err
 		// }
 
-
-		// Create reflect.Value for mapData key and add key+val to new map 
+		// Create reflect.Value for mapData key and add key+val to new map
 		rk := reflect.ValueOf(k)
 		rMap.SetMapIndex(rk, pnew.Elem())
 	}
@@ -131,46 +128,58 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string,
 	return nil
 }
 
+func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
+	ctx.logger.signature("ScalarDecoder.Decode()", kvTree.Name, key, rv.Kind().String())
+	ctx.inc()
+	defer ctx.dec()
 
-func (d *ScalarDecoder[U]) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	var kv *mvccpb.KeyValue
-	for _, kv = range kvs {
-		if string(kv.Key) == key {
-			break
-		}
+	if kvTree == nil {
+		return fmt.Errorf("no data to decode")
 	}
-	if kv == nil {
-		return fmt.Errorf("kvs did not contain key (key=%s)", key)
-	}
-	data := kv.Value
+	data := kvTree.Value
 	ctx.logger.Infof("data=%#v", data)
 	i := rv.Interface()
 	err := json.Unmarshal(data, i)
 	return err
 }
 
-func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
-	ctx.logger.signature("SliceDecoder.Decode()", key, reflect.TypeOf(rv).Elem())
+func (d *SliceDecoder) Decode(ctx *ecoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
+	ctx.logger.signature("SliceDecoder.Decode()", kvTree.Name, key, rv.Kind().String())
 	ctx.inc()
 	defer ctx.dec()
 
-	sliceData := getSliceData(kvs, key)
-	maxIndex := sliceData.MaxIndex()
-	typSlice := rv.Type().Elem().Elem()
+	// sliceData := getSliceData(kvs, key)
+	maxIndex := kvTree.Children.MaxIndex()
+	ctx.logger.Infof("%#v", kvTree)
+	ctx.logger.Infof("maxIndex=%d", maxIndex)
+	typSlice, err := getUnderlyingSliceType(rv)
+	if err != nil {
+		return err
+	}
 	len := maxIndex + 1
 	cap := maxIndex + 1
-	rvSlice := reflect.MakeSlice(typSlice, len, cap)
+	ctx.logger.Infof("Making slice: len=%d cap=%d", len, cap)
+	rvSlice := reflect.MakeSlice(typSlice, int(len), int(cap))
 
 	// Unmarshal all the elements
-	for i := range sliceData {
-		ctx.logger.Infof("Decoding %d ...", i)
+	for childKey, childTree := range kvTree.Children {
+		ctx.logger.Infof("Decoding %s ...", childKey)
+		// Check if the childKey is a uint
+		keyString := KeyString(childKey)
+		i, is := keyString.Index()
+		if !is {
+			ctx.logger.Infof("Key not a uint - skipping key (%s)", childKey)
+			continue
+		}
 		// Get a pointer to the slice element at the specified index
-		el := rvSlice.Index(i)
+		el := rvSlice.Index(int(i))
 		addr := el.Addr()
 		subkey := fmt.Sprintf("%s/%d", key, i)
 		ctx.logger.Infof("subkey=%s ...", subkey)
 		decoder := decoderMap[el.Kind()]
-		decoder.Decode(ctx, kvs, subkey, addr)
+		ctx.logger.Infof("delgating to decoder: type=%s", reflect.TypeOf(decoder))
+		decoder.Decode(ctx, childTree, subkey, addr)
+		ctx.logger.commentf("subkey (%s) decoded", subkey)
 		// pEl := addr.Interface()
 
 		// // Unmarshal the specified data into the element pointer
@@ -190,10 +199,9 @@ func (d *SliceDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key strin
 	return nil
 }
 
-func (d *StructDecoder) Decode(ctx *ecoContext, kvs []*mvccpb.KeyValue, key string, rv reflect.Value) error {
+func (d *StructDecoder) Decode(ctx *ecoContext, kvs *KeyValueTree, key string, rv reflect.Value) error {
 	return nil
 }
-
 
 func Decode(ctx *ecoContext, cli *EtcdClient, key string, pp any) error {
 	ctx.logger.signature("decode", key, reflect.TypeOf(pp).Elem())
@@ -214,11 +222,13 @@ func Decode(ctx *ecoContext, cli *EtcdClient, key string, pp any) error {
 		return nil
 	}
 
-	rangeResponse := resp.Responses[0].GetResponseRange()
-	kvs := rangeResponse.Kvs
+	rangeResp := resp.Responses[0].GetResponseRange()
+	etcdKvs := rangeResp.Kvs
+	kvs := createKvSlice(etcdKvs)
+	kvTree := createKvTree(ctx, key, kvs, key)
 	decoder := MainDecoder{}
 	rv := reflect.ValueOf(pp)
-	err = decoder.Decode(ctx, kvs, key, rv)
+	err = decoder.Decode(ctx, kvTree, key, rv)
 	return err
 
 	// // Simple objects are easy to deal with. Just use json.Unmarhsal()
