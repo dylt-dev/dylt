@@ -7,6 +7,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+
+func TestMap (t *testing.T) {
+	ctx, _ := initAndTest(t)
+
+	key := "/test/team/astros/Players/altuve"
+	expectedBorn := "Venezuela"
+	expectedId := "1"
+	expectedIsActive := "true"
+	expectedName := "Jose Altuve"
+	expectedWeight := "160"
+	// expectedData := map[string]string{
+	// 	"Born":     expectedBorn,
+	// 	"Id":       expectedId,
+	// 	"IsActive": expectedIsActive,
+	// 	"Name":     expectedName,
+	// 	"Weight":   expectedWeight,
+	// }
+	keyBorn := fmt.Sprintf("%s/Born", key)
+	keyId := fmt.Sprintf("%s/Id", key)
+	keyIsActive := fmt.Sprintf("%s/IsActive", key)
+	keyName := fmt.Sprintf("%s/Name", key)
+	keyWeight := fmt.Sprintf("%s/Weight", key)
+
+	kvs := []*KeyValue{
+		newKv(keyBorn, expectedBorn),
+		newKv(keyId, expectedId),
+		newKv(keyIsActive, expectedIsActive),
+		newKv(keyName, expectedName),
+		newKv(keyWeight, expectedWeight),
+	}
+	tree := createKvTree(ctx, key, kvs, key)
+	var child *KeyValueTree
+	// Born
+	child = tree.Children[KeyString(keyBorn)]
+	require.NotNil(t, child)
+	require.Equal(t, "Born", child.Name)
+	require.Equal(t, expectedBorn, string(child.Value))
+	// Id
+	child = tree.Children[KeyString(keyId)]
+	require.NotNil(t, child)
+	require.Equal(t, "Id", child.Name)
+	require.Equal(t, expectedId, string(child.Value))
+	// IsActive
+	child = tree.Children[KeyString(keyIsActive)]
+	require.NotNil(t, child)
+	require.Equal(t, "IsActive", child.Name)
+	require.Equal(t, expectedIsActive, string(child.Value))
+	// Name
+	child = tree.Children[KeyString(keyName)]
+	require.NotNil(t, child)
+	require.Equal(t, "Name", child.Name)
+	require.Equal(t, expectedName, string(child.Value))
+	// Weight
+	child = tree.Children[KeyString(keyWeight)]
+	require.NotNil(t, child)
+	require.Equal(t, "Weight", child.Name)
+	require.Equal(t, expectedWeight, string(child.Value))
+	t.Log("\n" + fmt.Sprint(tree))
+}
+
 func TestSimple(t *testing.T) {
 	ctx, _ := initAndTest(t)
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/dylt-dev/dylt/common"
@@ -412,7 +413,7 @@ func TestGetIntSlice(t *testing.T) {
 func TestGetMap(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
-	key := "/test/team/astros/Players/altuve"
+	key := "/test/map"
 	expectedBorn := "Venezuela"
 	expectedId := "1"
 	expectedIsActive := "true"
@@ -728,7 +729,19 @@ func getAndTestSliceKVs(t *testing.T, ctx *ecoContext, cli *EtcdClient, key stri
 // With the EtcdClient, Put a value to etcd, then Get it back to confirm the
 // Put succeeded
 func putAndTestMap[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, data map[string]U) {
-	ctx.logger.Infof("Writing slice at %s ...", key)
+	ctx.logger.comment("Deleting existing keys ...")
+	var txn etcd.Txn
+
+	if !strings.HasPrefix(key, "/test/") {
+		ctx.logger.Infof("Key (%s) does not begin with /test/ - possibly unsafe to delete all subkeys.", key)
+		return
+	}
+	opDelete := etcd.OpDelete(key, etcd.WithPrefix())
+	txn = createTxn(t, cli)
+	require.NotNil(t, txn)
+	txn.Then(opDelete).Commit()
+
+	ctx.logger.Infof("Writing map at %s ...", key)
 	ops := []etcd.Op{}
 	for itemKey, val := range data {
 		subkey := fmt.Sprintf("%s/%s", key, itemKey)
@@ -737,7 +750,7 @@ func putAndTestMap[U any](t *testing.T, ctx *ecoContext, cli *EtcdClient, key st
 		op := etcd.OpPut(subkey, string(bufVal))
 		ops = append(ops, op)
 	}
-	txn := createTxn(t, cli)
+	txn = createTxn(t, cli)
 	require.NotNil(t, txn)
 	txn.Then(ops...).Commit()
 }

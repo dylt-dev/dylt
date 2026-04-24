@@ -93,14 +93,15 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvTree *KeyValueTree, key string, p
 	// mapData := getMapData(kvs, key)
 
 	// populate the new map with the data
-	for k := range kvTree.Children {
+	for k, childTree := range kvTree.Children {
 		ctx.logger.Infof("Decoding %s ...", k)
 		// create a new map item
 		pnew := reflect.New(typValue)
 		decoder := decoderMap[typValue.Kind()]
-		subkey := fmt.Sprintf("%s/%s", key, k)
+		elemName := k.ElementName(key)
+		subkey := fmt.Sprintf("%s/%s", key, elemName)
 		fmt.Printf("subkey=%v\n", subkey)
-		err := decoder.Decode(ctx, kvTree, subkey, pnew)
+		err := decoder.Decode(ctx, childTree, subkey, pnew)
 		if err != nil {
 			return err
 		}
@@ -113,7 +114,7 @@ func (d *MapDecoder) Decode(ctx *ecoContext, kvTree *KeyValueTree, key string, p
 		// }
 
 		// Create reflect.Value for mapData key and add key+val to new map
-		rk := reflect.ValueOf(k)
+		rk := reflect.ValueOf(elemName)
 		rMap.SetMapIndex(rk, pnew.Elem())
 	}
 

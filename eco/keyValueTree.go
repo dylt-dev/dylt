@@ -3,7 +3,10 @@ package eco
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 type KeyValueChildMap map[KeyString]*KeyValueTree
@@ -30,14 +33,27 @@ type KeyValueTree struct {
 }
 
 func (t *KeyValueTree) String() string {
+	ctx := newEcoContext(os.Stdout)
+	common.InitLogging()
+	return treeToString(ctx, t)
+}
+
+func treeToString (ctx *ecoContext, kvTree *KeyValueTree) string{
+	ctx.inc()
+	defer ctx.dec()
+
 	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("Name: %s\n", t.Name))
-	buf, err := json.Marshal(t.Value)
+	sb.WriteString(fmt.Sprintf("%sName: %s\n", ctx.logger.indent(), kvTree.Name))
+	buf, err := json.Marshal(kvTree.Value)
 	if err != nil {
 		buf = []byte{}
 	}
-	fmt.Fprintf(&sb, "Value: %s\n", string(buf))
-	fmt.Fprintf(&sb, "len(Children): %d\n", len(t.Children))
+	fmt.Fprintf(&sb, "%sValue: %s\n", ctx.logger.indent(), string(buf))
+	fmt.Fprintf(&sb, "%slen(Children): %d\n", ctx.logger.indent(), len(kvTree.Children))
+	for _, child := range(kvTree.Children) {
+		sChild := treeToString(ctx, child)
+		sb.WriteString(sChild)
+	}
 	return sb.String()
 }
 
