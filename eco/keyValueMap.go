@@ -2,6 +2,8 @@ package eco
 
 import (
 	"encoding/json"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 /*
@@ -31,35 +33,35 @@ Example of KeyValueMap
 
 type KeyValueMap map[string][]*KeyValue
 
-func (m KeyValueMap) add(ctx *ecoContext, prefix string, kv *KeyValue) bool {
-	ctx.logger.signature("KeyValueMap.add()", prefix, kv.Key)
-	ctx.inc()
-	defer ctx.dec()
+func (m KeyValueMap) add(ctx *common.EcoContext, prefix string, kv *KeyValue) bool {
+	ctx.Logger.Signature("KeyValueMap.add()", prefix, kv.Key)
+	ctx.Inc()
+	defer ctx.Dec()
 	
 	// Find the first segment after the prefix. This will be the map key
 	// If there is no segment after the prefix, then return false
-	ctx.logger.comment("checking if key is a child of the prefix ...")
+	ctx.Logger.Comment("checking if key is a child of the prefix ...")
 	fullKey := KeyString(kv.Key)
 	ksPrefix := KeyString(prefix).WithoutEndSlash()
 	afterPrefix, is := fullKey.CutPrefix(string(ksPrefix))
 	if !is {
-		ctx.logger.Info("Not a child. Returning.")
+		ctx.Logger.Info("Not a child. Returning.")
 		return false
 	}
 	segments := KeyString(afterPrefix).Segments()
 	if len(segments) == 0 {
-		ctx.logger.Info("Not a child. Returning.")
+		ctx.Logger.Info("Not a child. Returning.")
 		return false
 	}
 	key := segments[0]
-	ctx.logger.Infof("Key (%s) is child.", key)
+	ctx.Logger.Infof("Key (%s) is child.", key)
 	// Get the kvs for this key. If the key doesn't exist, create a new lv list
 	kvs := m[key]
 	if kvs == nil {
 		kvs = []*KeyValue{}
 	}
 
-	ctx.logger.commentf("append child key (%s) to to m[%s]", kv.Key, key)
+	ctx.Logger.Commentf("append child key (%s) to to m[%s]", kv.Key, key)
 	kvs = append(kvs, kv)
 	m[key] = kvs
 	// Note this final set might be unnecessary, and conceivably inefficient
@@ -97,10 +99,10 @@ func (m KeyValueMap) String () string {
 }
 
 
-func createKvMap(ctx *ecoContext, key string, kvs []*KeyValue) KeyValueMap {
-	ctx.logger.signature("createKvMap", key, len(kvs))
-	ctx.inc()
-	defer ctx.dec()
+func createKvMap(ctx *common.EcoContext, key string, kvs []*KeyValue) KeyValueMap {
+	ctx.Logger.Signature("createKvMap", key, len(kvs))
+	ctx.Inc()
+	defer ctx.Dec()
 
 	kvMap := KeyValueMap{}
 

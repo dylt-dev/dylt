@@ -1,6 +1,6 @@
 module github.com/dylt-dev/dylt
 
-go 1.24.2
+go 1.26.1
 
 require (
 	github.com/dylt-dev/seq v0.0.8

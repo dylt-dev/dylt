@@ -8,13 +8,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
 func TestEncodeAstros(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	ops, err := Encode(ctx, "/test/astros", VAL_Astros)
 	require.NoError(t, err)
 	fmt.Println()
@@ -29,7 +30,7 @@ func TestEncode_Bool(t *testing.T) {
 }
 
 func TestEncode_BoolSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []bool{true, false, true, true}
 	key := "/test/boolSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -40,8 +41,8 @@ func TestEncode_BoolSlice(t *testing.T) {
 
 func TestEncode_EcoTest(t *testing.T) {
 	key := "key"
-	i := EcoTest{Name: "MEAT", LuckyNumber: 13}
-	ctx := newEcoContext(os.Stdout)
+	i := common.TestStruct{Name: "MEAT", LuckyNumber: 13}
+	ctx := common.NewEcoContext(os.Stdout)
 
 	ops, err := Encode(ctx, key, i)
 	assert.NoError(t, err)
@@ -56,7 +57,7 @@ func TestEncode_Float(t *testing.T) {
 }
 
 func TestEncode_FloatSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []float64{13.0, 169.13, -42.0}
 	key := "/test/floatSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -64,9 +65,8 @@ func TestEncode_FloatSlice(t *testing.T) {
 	testSliceOps(t, slice, key, ops)
 }
 
-
 func TestEncode_Int(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	key := "key"
 	i := 13
 	testEncodeScalar(t, ctx, key, i)
@@ -75,12 +75,12 @@ func TestEncode_Int(t *testing.T) {
 func TestEncode_Interface(t *testing.T) {
 	type inf interface{}
 	var infy = new(inf)
-	_, err := Encode(newEcoContext(os.Stdout), "key", infy)
+	_, err := Encode(common.NewEcoContext(os.Stdout), "key", infy)
 	assert.Error(t, err)
 }
 
 func TestEncode_IntSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []int{5, 8, 13}
 	key := "/test/intSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -95,7 +95,7 @@ func TestEncode_MapOfMaps(t *testing.T) {
 	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
 	map2 := map[string]string{"Name": "Javier", "Position": "P"}
 	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
-	ops, err := Encode(newEcoContext(os.Stdout), key, mapStros)
+	ops, err := Encode(common.NewEcoContext(os.Stdout), key, mapStros)
 	assert.NoError(t, err)
 	dumpOps(t, ops)
 }
@@ -103,7 +103,7 @@ func TestEncode_MapOfMaps(t *testing.T) {
 func TestEncode_MapWithIntKeys(t *testing.T) {
 	key := "key"
 	i := map[int]string{10: "print 'daylight is great'", 20: "print 'say it again'", 30: "goto 10"}
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 
 	ops, err := Encode(ctx, key, i)
 	assert.NoError(t, err)
@@ -112,7 +112,7 @@ func TestEncode_MapWithIntKeys(t *testing.T) {
 func TestEncode_SimpleMap(t *testing.T) {
 	key := "key"
 	i := map[string]string{"foo": "13", "bar": "thirteen", "bum": "th1rt33n"}
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 
 	ops, err := Encode(ctx, key, i)
 	assert.NoError(t, err)
@@ -120,7 +120,7 @@ func TestEncode_SimpleMap(t *testing.T) {
 }
 
 func TestEncode_Map_String_Struct(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	ops, err := Encode(ctx, "/test/map_string_struct", VAL_Map_String_Struct)
 	require.NoError(t, err)
 	fmt.Println()
@@ -135,7 +135,7 @@ func TestEncode_String(t *testing.T) {
 }
 
 func TestEncode_StringSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []string{"foo", "bar", "bum"}
 	key := "/test/stringSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -160,7 +160,6 @@ func TestEncoding0(t *testing.T) {
 	t.Logf("%-20s %s", "Encoded s", bb.String())
 }
 
-
 func TestPut_Bool(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	key := "/test/bool"
@@ -168,9 +167,8 @@ func TestPut_Bool(t *testing.T) {
 	testPutScalar(t, ctx, cli, key, val)
 }
 
-
 func TestPut_BoolSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []bool{true, false, true, true}
 	key := "/test/boolSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -179,7 +177,7 @@ func TestPut_BoolSlice(t *testing.T) {
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)
 	putSlice(t, ctx, cli, ops)
-	
+
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
 
@@ -189,7 +187,6 @@ func TestPut_Float(t *testing.T) {
 	val := 42.0
 	testPutScalar(t, ctx, cli, key, val)
 }
-
 
 func TestPut_FloatSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
@@ -209,9 +206,8 @@ func TestPut_Int(t *testing.T) {
 	testPutScalar(t, ctx, cli, key, val)
 }
 
-
 func TestPut_IntSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []int{5, 8, 13}
 	key := "/test/intSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -231,7 +227,7 @@ func TestPut_String(t *testing.T) {
 }
 
 func TestPut_StringSlice(t *testing.T) {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	slice := []string{"foo", "bar", "bum"}
 	key := "/test/stringSlice"
 	ops := createSliceOps(t, ctx, slice, key)
@@ -243,7 +239,7 @@ func TestPut_StringSlice(t *testing.T) {
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
 
-func createSliceOps[U any](t *testing.T, ctx *ecoContext, slice []U, key string) []etcd.Op {
+func createSliceOps[U any](t *testing.T, ctx *common.EcoContext, slice []U, key string) []etcd.Op {
 	ops, err := encodeSlice(ctx, key, reflect.ValueOf(slice))
 	require.NoError(t, err)
 	require.NotNil(t, ops)
@@ -251,25 +247,22 @@ func createSliceOps[U any](t *testing.T, ctx *ecoContext, slice []U, key string)
 	return ops
 }
 
-
-func putSlice(t *testing.T, ctx *ecoContext, cli *EtcdClient, ops []etcd.Op) {
+func putSlice(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, ops []etcd.Op) {
 	resp, err := cli.Txn(ctx).Then(ops...).Commit()
 	require.NoError(t, err)
-	ctx.logger.Infof("%#v", resp)
+	ctx.Logger.Infof("%#v", resp)
 }
 
-
 // func dumpAndTestEncodeOps(t *testing.T, key string, val any) {
-// 	ctx := newEcoContext(os.Stdout)
+// 	ctx := common.NewEcoContext(os.Stdout)
 // 	ops, err := Encode(ctx, key, val)
 // 	require.NoError(t, err)
 // 	fmt.Println()
 // 	dumpOps(t, ops)
 // }
 
-
 func testSliceValuesInEtcd[U any](t *testing.T, expectedVals []U, cli *EtcdClient, key string) {
-// Check each individual slice element in etcd
+	// Check each individual slice element in etcd
 	for i, val := range expectedVals {
 		subKey := fmt.Sprintf("%s/%d", key, i)
 		buf, err := cli.Get(subKey)
@@ -298,4 +291,3 @@ func testSliceOps[U any](t *testing.T, expectedVals []U, key string, ops []etcd.
 		assert.Equal(t, expectedVals[i], valExpected)
 	}
 }
-	

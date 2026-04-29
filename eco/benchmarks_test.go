@@ -4,12 +4,14 @@ import (
 	cryptorand "crypto/rand"
 	"reflect"
 	"testing"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
-func BenchmarkFieldMap (b *testing.B) {
-	var p *EcoTest
+func BenchmarkFieldMap(b *testing.B) {
+	var p *common.TestStruct
 	for b.Loop() {
-		p = &EcoTest{}
+		p = &common.TestStruct{}
 		fieldNameMap, _ := fieldNameMap(p)
 		// assert.NoError(b, err)
 		fieldNameMap["Anon"].Set(reflect.ValueOf("(...)"))

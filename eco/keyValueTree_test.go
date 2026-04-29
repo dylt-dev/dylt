@@ -1,14 +1,17 @@
 package eco
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
 
-func TestMap (t *testing.T) {
+func TestKvTreeMap (t *testing.T) {
 	ctx, _ := initAndTest(t)
 
 	key := "/test/team/astros/Players/altuve"
@@ -67,7 +70,7 @@ func TestMap (t *testing.T) {
 	t.Log("\n" + fmt.Sprint(tree))
 }
 
-func TestSimple(t *testing.T) {
+func TestKvTreeSimple(t *testing.T) {
 	ctx, _ := initAndTest(t)
 
 	// test data
@@ -92,7 +95,7 @@ func TestSimple(t *testing.T) {
 	logTree(ctx, tree)
 }
 
-func TestScalar(t *testing.T) {
+func TestKvTreeScalar(t *testing.T) {
 	ctx, _ := initAndTest(t)
 
 	// test data
@@ -112,10 +115,37 @@ func TestScalar(t *testing.T) {
 	logTree(ctx, tree)
 }
 
-func logTree (ctx *ecoContext, tree *KeyValueTree) {
-	ctx.logger.signature("logTree", tree.Name, string(tree.Value), len(tree.Children))
-	ctx.inc()
-	defer ctx.dec()
+func TestKvTreeStruct(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+
+	// Setup KVs
+	key := "/test/struct/ecotest"
+	expectedName := "Me"
+	expectedLuckyNumber := 13
+	expectedNoTag := "no-tag-value"
+	keyName := fmt.Sprintf("%s/%s", key, "name")
+	keyLuckyNumber := fmt.Sprintf("%s/%s", key, "lucky_number")
+	keyNoTag := fmt.Sprintf("%s/%s", key, "NoTag")
+
+	// Encode []byte values for struct fields
+	bufName := []byte(expectedName)
+	bufLuckyNumber, err := json.Marshal(expectedLuckyNumber)
+	require.NoError(t, err)
+	bufNoTag := []byte(expectedNoTag)
+	kvs := []*KeyValue{
+		{Key: keyName, Value: bufName},
+		{Key: keyLuckyNumber, Value: bufLuckyNumber},
+		{Key: keyNoTag, Value: bufNoTag},
+	}
+
+	kvTree := createKvTree(ctx, key, kvs, key)
+	logTree(ctx, kvTree)
+}
+
+func logTree (ctx *common.EcoContext, tree *KeyValueTree) {
+	ctx.Logger.Signature("logTree", tree.Name, string(tree.Value), len(tree.Children))
+	ctx.Inc()
+	defer ctx.Dec()
 	
 	for _, child := range tree.Children {
 		logTree(ctx, child)

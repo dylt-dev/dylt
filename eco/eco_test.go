@@ -59,7 +59,7 @@ type map_emptyStruct_emptyStruct map[struct{}]struct{}
 type map_emptyStruct_int map[struct{}]int
 type map_int_emptyStruct map[int]struct{}
 type map_string_int map[string]int
-type map_string_struct map[string]EcoTest
+type map_string_struct map[string]common.TestStruct
 
 type Stat struct {
 	Name  string
@@ -94,7 +94,7 @@ var VAL_SliceSimple = []int{5, 8, 13}
 var VAL_SliceUnsimple = []emptyStruct{}
 var VAL_SimplePointer = new(int)
 var VAL_UnsimplePointer = &(emptyStruct{})
-var VAL_MapWithStructKey = map[EcoTest]string{}
+var VAL_MapWithStructKey = map[common.TestStruct]string{}
 var VAL_Map_String_Struct = map_string_struct{"test": *NewEcoTest("me", 13)}
 
 var VAL_AltuveStats = StatSlice{
@@ -155,12 +155,6 @@ var VAL_Astros = Team{
 	Players: VAL_Players,
 }
 
-type EcoTest struct {
-	Name        string  `eco:"name"`
-	LuckyNumber float64 `eco:"lucky_number"`
-	NoTag       string
-}
-
 type structWithMap struct {
 	M map[int]string
 }
@@ -170,21 +164,20 @@ type UnsimpleStruct struct {
 	F func()
 }
 
-func NewEcoTest(name string, luckyNumber float64) *EcoTest {
-	return &EcoTest{Name: name, LuckyNumber: luckyNumber}
+func NewEcoTest(name string, luckyNumber float64) *common.TestStruct {
+	return &common.TestStruct{Name: name, LuckyNumber: luckyNumber}
 }
 
 // For logging
 func TestCreateSignature0(t *testing.T) {
-	sig := createSignature("greatness", "foo", "bar")
+	sig := common.CreateSignature("greatness", "foo", "bar")
 	t.Log(sig)
 }
 
-
-func TestFindKv1 (t *testing.T) {
+func TestFindKv1(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	expectedBorn := "Venezuela"
 	expectedId := "1"
 	expectedIsActive := "true"
@@ -207,7 +200,7 @@ func TestFindKv1 (t *testing.T) {
 	require.Equal(t, expectedName, string(kv.Value))
 }
 
-func TestFindKv2 (t *testing.T) {
+func TestFindKv2(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
 
@@ -234,7 +227,7 @@ func TestFindKv2 (t *testing.T) {
 func TestGetChildKeys(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)
 	prefix := "/test/team/astros/Players"
@@ -287,7 +280,7 @@ func TestGetChildKeys(t *testing.T) {
 func TestGetMapData(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	parentKey := "/test/team/astros/Players/altuve"
 	expectedBorn := "Venezuela"
 	expectedId := "1"
@@ -318,7 +311,7 @@ func TestGetMapData(t *testing.T) {
 func TestGetMapItemKey(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	parentKey := "/test/team/astros/Players/altuve"
 	key := "/test/team/astros/Players/altuve/Stats/1/Name"
 	itemKey, is := getMapItemKey(parentKey, key)
@@ -330,7 +323,7 @@ func TestGetMapItemKey(t *testing.T) {
 func TestGetMapItemKey2(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	parentKey := "/test/team/astros/Players/altuve"
 	key := "/test/team/astros/Players/altuve/Id"
 	itemKey, is := getMapItemKey(parentKey, key)
@@ -354,7 +347,7 @@ func TestGetMapItemKey2(t *testing.T) {
 func TestMatchChildKey(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	prefix := "/test/team/astros/Players"
 	var srx string = fmt.Sprintf(`^%s/?\w+$`, prefix)
 	var rx *regexp.Regexp = regexp.MustCompile(srx)
@@ -367,7 +360,7 @@ func TestMatchChildKey(t *testing.T) {
 func TestFullTypeName_StatSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	s := common.FullTypeName(reflect.TypeFor[StatSlice]())
 	t.Log(s)
 }
@@ -376,7 +369,7 @@ func TestGetSliceKeysAndMaxIndex(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
 	ctx, _ := initAndTest(t)
-	
+
 	expectedMaxIndex := uint64(2)
 	expectedKeyCount := 3
 	expectedValue := []byte("13")
@@ -400,7 +393,7 @@ func TestGetSliceKeysAndMaxIndex(t *testing.T) {
 func TestGetSliceKeysAndMaxIndex2(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	expectedMaxIndex := 2
 	expectedKeyCount := 3
 	expectedValue := []byte("13")
@@ -424,24 +417,24 @@ func TestGetSliceKeysAndMaxIndex2(t *testing.T) {
 func TestKind_ArrayOfInt(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), arrayOfInt{})
+
+	kind := getKind(common.NewEcoContext(os.Stdout), arrayOfInt{})
 	require.Equal(t, SimpleArray, kind)
 }
 
 func TestKind_ArrayOfStruct(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), arrayOfStruct{})
+
+	kind := getKind(common.NewEcoContext(os.Stdout), arrayOfStruct{})
 	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapOfIntSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), mapOfIntSlice{})
+
+	kind := getKind(common.NewEcoContext(os.Stdout), mapOfIntSlice{})
 	require.Equal(t, SimpleMap, kind)
 
 }
@@ -449,169 +442,169 @@ func TestKind_MapOfIntSlice(t *testing.T) {
 func TestKind_MapOfSliceOfStruct(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type emptyStruct struct{}
 	type mapOfSlice map[string][]emptyStruct
-	kind := getKind(newEcoContext(os.Stdout), mapOfSlice{})
+	kind := getKind(common.NewEcoContext(os.Stdout), mapOfSlice{})
 	require.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_MapSimple(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), VAL_MapSimple)
+
+	kind := getKind(common.NewEcoContext(os.Stdout), VAL_MapSimple)
 	require.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_MapUnsimple(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimple)
+
+	kind := getKind(common.NewEcoContext(os.Stdout), VAL_MapUnsimple)
 	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapUnsimpleKey(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimpleKey)
+
+	kind := getKind(common.NewEcoContext(os.Stdout), VAL_MapUnsimpleKey)
 	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_MapUnsimpleValue(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), VAL_MapUnsimpleValue)
+
+	kind := getKind(common.NewEcoContext(os.Stdout), VAL_MapUnsimpleValue)
 	require.Equal(t, SimpleMap, kind)
 }
 
 func TestKind_PointerToInt(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var pint pointerToInt
-	kind := getKind(newEcoContext(os.Stdout), pint)
+	kind := getKind(common.NewEcoContext(os.Stdout), pint)
 	require.Equal(t, SimplePointer, kind)
 }
 
 func TestKind_PointerToIntSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), new(sliceOfInt))
+
+	kind := getKind(common.NewEcoContext(os.Stdout), new(sliceOfInt))
 	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_PointerToStructSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), new(sliceOfStruct))
+
+	kind := getKind(common.NewEcoContext(os.Stdout), new(sliceOfStruct))
 	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_SliceSimple(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type intSlice []int
 	i := intSlice{1, 2, 3}
-	kind := getKind(newEcoContext(os.Stdout), i)
+	kind := getKind(common.NewEcoContext(os.Stdout), i)
 	require.Equal(t, SimpleSlice, kind)
 }
 
 func TestKind_SliceOfMap(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type simpleMap map[int]int
 	type sliceOfMap []simpleMap
 	i := sliceOfMap{}
-	kind := getKind(newEcoContext(os.Stdout), i)
+	kind := getKind(common.NewEcoContext(os.Stdout), i)
 	require.Equal(t, SimpleSlice, kind)
 }
 
 func TestKind_SliceUnsimple(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type emptyStruct struct{}
 	type emptyStructSlice []emptyStruct
 	i := emptyStructSlice{}
-	kind := getKind(newEcoContext(os.Stdout), i)
+	kind := getKind(common.NewEcoContext(os.Stdout), i)
 	require.Equal(t, SimpleSlice, kind)
 }
 
 func TestKind_StatSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	val := StatSlice{}
-	kind := getKind(newEcoContext(os.Stdout), val)
+	kind := getKind(common.NewEcoContext(os.Stdout), val)
 	require.Equal(t, SimpleSlice, kind, fmt.Sprintf("Expected %s, got %s", SimpleSlice.String(), kind.String()))
 }
 
 func TestKind_StructSimple(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), EcoTest{})
+
+	kind := getKind(common.NewEcoContext(os.Stdout), common.TestStruct{})
 	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructUnsimple(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), UnsimpleStruct{})
+
+	kind := getKind(common.NewEcoContext(os.Stdout), UnsimpleStruct{})
 	require.Equal(t, Invalid, kind)
 }
 
 func TestKind_StructWithMap(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
-	kind := getKind(newEcoContext(os.Stdout), structWithMap{})
+
+	kind := getKind(common.NewEcoContext(os.Stdout), structWithMap{})
 	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type structWithSlice struct{ Slice []int }
-	kind := getKind(newEcoContext(os.Stdout), structWithSlice{})
+	kind := getKind(common.NewEcoContext(os.Stdout), structWithSlice{})
 	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithMapWithSlice(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type mapWithSlice map[string][]int
 	type structWithMapWithSlice struct{ M mapWithSlice }
-	kind := getKind(newEcoContext(os.Stdout), structWithMapWithSlice{})
+	kind := getKind(common.NewEcoContext(os.Stdout), structWithMapWithSlice{})
 	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestKind_StructWithMapWithStruct(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type innerStruct struct{}
 	type mapWithStruct map[string]innerStruct
 	type structWithMapWithSlice struct{ MapField mapWithStruct }
-	kind := getKind(newEcoContext(os.Stdout), structWithMapWithSlice{})
+	kind := getKind(common.NewEcoContext(os.Stdout), structWithMapWithSlice{})
 	require.Equal(t, SimpleStruct, kind)
 }
 
 func TestPutObject0(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
@@ -637,7 +630,7 @@ func TestPutObject0(t *testing.T) {
 func TestPutObject1(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
@@ -669,7 +662,7 @@ func TestPutObject1(t *testing.T) {
 func TestReflection0(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	obj := NewEcoTest("Me", 13)
 
 	var ty reflect.Type
@@ -704,7 +697,7 @@ func TestReflection0(t *testing.T) {
 func TestReflection1(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	obj := NewEcoTest("Me", 13)
 
 	ty, val, err := reflectStruct(obj)
@@ -717,11 +710,11 @@ func TestReflection1(t *testing.T) {
 func TestReflection2(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	obj := NewEcoTest("Me", 13)
-	var ptr **EcoTest = &obj
-	var pptr ***EcoTest = &ptr
-	var ppptr ****EcoTest = &pptr
+	var ptr **common.TestStruct = &obj
+	var pptr ***common.TestStruct = &ptr
+	var ppptr ****common.TestStruct = &pptr
 
 	ty, val, err := reflectStruct(ppptr)
 	require.NoError(t, err)
@@ -736,7 +729,7 @@ func TestReflection2(t *testing.T) {
 func TestReflection3(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	type selfish *selfish
 	var obj selfish
 	obj = &obj
@@ -749,7 +742,7 @@ func TestReflection3(t *testing.T) {
 func TestUnderlyingMapType(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	expectedData := reflect.TypeFor[map[string]int]()
 	typ := reflect.TypeFor[**map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
@@ -760,7 +753,7 @@ func TestUnderlyingMapType(t *testing.T) {
 func TestUnderlyingMapType2(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	expectedData := reflect.TypeFor[map[string]map[string]map[string]int]()
 	typ := reflect.TypeFor[**map[string]map[string]map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
@@ -771,7 +764,7 @@ func TestUnderlyingMapType2(t *testing.T) {
 func TestUnderlyingMapType3(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	typ := reflect.TypeFor[*map[string]map[string]map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
 	require.Error(t, err)
@@ -781,7 +774,7 @@ func TestUnderlyingMapType3(t *testing.T) {
 func TestUnderlyingMapType4(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	typ := reflect.TypeFor[*map[string]map[string]map[string]int]()
 	typUnderlying, err := getUnderlyingMapType(typ)
 	require.Error(t, err)
@@ -791,7 +784,7 @@ func TestUnderlyingMapType4(t *testing.T) {
 func TestUnderlyingPointerType(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var p *int
 	knd, err := getUnderlyingPointerKind(p)
 	require.NoError(t, err)
@@ -801,7 +794,7 @@ func TestUnderlyingPointerType(t *testing.T) {
 func TestUnderlyingPointerType2(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var p **int
 	knd, err := getUnderlyingPointerKind(p)
 	require.NoError(t, err)
@@ -811,7 +804,7 @@ func TestUnderlyingPointerType2(t *testing.T) {
 func TestUnderlyingPointerType3(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var p **int
 	v := reflect.ValueOf(p)
 	knd, err := getUnderlyingPointerKind(v)
@@ -822,7 +815,7 @@ func TestUnderlyingPointerType3(t *testing.T) {
 func TestUnderlyingSliceTypeInt(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var expectedVal reflect.Kind = reflect.Int
 	var p int
 	pType, err := getUnderlyingSliceType(p)
@@ -834,7 +827,7 @@ func TestUnderlyingSliceTypeInt(t *testing.T) {
 func TestUnderlyingSliceTypeIntPointer(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var expectedVal reflect.Kind = reflect.Int
 	var p *int
 	pType, err := getUnderlyingSliceType(p)
@@ -846,7 +839,7 @@ func TestUnderlyingSliceTypeIntPointer(t *testing.T) {
 func TestUnderlyingSliceTypeIntPointerPointer(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var expectedVal reflect.Kind = reflect.Int
 	var p **int
 	pType, err := getUnderlyingSliceType(p)
@@ -858,7 +851,7 @@ func TestUnderlyingSliceTypeIntPointerPointer(t *testing.T) {
 func TestUnderlyingSliceTypeIntPointerPointerPointer(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var expectedVal reflect.Kind = reflect.Pointer
 	var p ***int
 	pType, err := getUnderlyingSliceType(p)
@@ -870,7 +863,7 @@ func TestUnderlyingSliceTypeIntPointerPointerPointer(t *testing.T) {
 func TestUnderlyingSliceTypeSlicePointerPointer(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var expectedVal reflect.Kind = reflect.Slice
 	var p **[]bool
 	pType, err := getUnderlyingSliceType(p)
@@ -882,12 +875,43 @@ func TestUnderlyingSliceTypeSlicePointerPointer(t *testing.T) {
 func TestUnderlyingSliceTypeBad(t *testing.T) {
 	common.Setup(t)
 	defer common.Teardown(t)
-	
+
 	var pSlice *[]int
 	rv := reflect.ValueOf(&pSlice)
 	typ, err := getUnderlyingSliceType(rv)
 	require.NoError(t, err)
 	t.Logf("typ=%v", typ)
+}
+
+func TestUnderlyingStructType(t *testing.T) {
+	ctx, _ := initAndTest(t)
+
+	var st common.TestStruct
+	var p *common.TestStruct = &st
+	typ, err := common.GetUnderlyingStructType(ctx, p)
+	require.NoError(t, err)
+	require.Equal(t, reflect.TypeFor[common.TestStruct](), typ)
+}
+
+func TestUnderlyingStructType2(t *testing.T) {
+	ctx, _ := initAndTest(t)
+
+	var st common.TestStruct
+	var p *common.TestStruct = &st
+	var pp **common.TestStruct = &p
+	typ, err := common.GetUnderlyingStructType(ctx, pp)
+	require.NoError(t, err)
+	require.Equal(t, reflect.TypeFor[common.TestStruct](), typ)
+}
+
+func TestUnderlyingStructTypeSlice(t *testing.T) {
+	ctx, _ := initAndTest(t)
+
+	var st []int
+	var p *[]int = &st
+	typ, err := common.GetUnderlyingStructType(ctx, p)
+	require.Error(t, err)
+	require.Equal(t, nil, typ)
 }
 
 func reflectStruct(obj any) (reflect.Type, reflect.Value, error) {
@@ -949,7 +973,7 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 	}
 }
 
-// func getSliceKeys(ctx *ecoContext, cli *EtcdClient, prefix string) ([]int, error) {
+// func getSliceKeys(ctx *common.EcoContext, cli *EtcdClient, prefix string) ([]int, error) {
 // 	ctx.logger.signature("getSliceKeys", prefix)
 // 	childKeys, err := cli.GetKeys(prefix)
 // 	if err != nil {
@@ -974,7 +998,7 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 // 	return mapKeys, nil
 // }
 
-func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd.Op {
+func testEncodeScalar(t *testing.T, ctx *common.EcoContext, key string, val any) []etcd.Op {
 	ops, err := Encode(ctx, key, val)
 	require.NoError(t, err)
 	require.NotNil(t, ops)
@@ -991,7 +1015,7 @@ func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd
 	return ops
 }
 
-// func testEncodeString(t *testing.T, ctx *ecoContext, key string, val string) []etcd.Op {
+// func testEncodeString(t *testing.T, ctx *common.EcoContext, key string, val string) []etcd.Op {
 // 	ops, err := Encode(ctx, key, val)
 // 	require.NoError(t, err)
 // 	require.NotEmpty(t, ops)
@@ -1007,7 +1031,7 @@ func testEncodeScalar(t *testing.T, ctx *ecoContext, key string, val any) []etcd
 // 	return ops
 // }
 
-func testPutScalar(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val any) {
+func testPutScalar(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key string, val any) {
 	ops := testEncodeScalar(t, ctx, key, val)
 
 	txn := createTxn(t, cli)
@@ -1020,7 +1044,7 @@ func testPutScalar(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, v
 	require.NotNil(t, resp0.GetResponsePut())
 }
 
-func testPutString(t *testing.T, ctx *ecoContext, cli *EtcdClient, key string, val string) {
+func testPutString(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key string, val string) {
 	ops := testEncodeScalar(t, ctx, key, val)
 
 	txn := createTxn(t, cli)

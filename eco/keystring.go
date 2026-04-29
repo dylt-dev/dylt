@@ -128,15 +128,15 @@ func (s KeyString) WithoutStartSlash() KeyString {
 }
 
 
-// func createKeyString (segments ...string) KeyString {
-// 	sb := strings.Builder{}
-// 	for i := range(len(segments)-1) {
-// 		segment := segments[i]
-// 		sb.WriteString(segment)
-// 		sb.WriteString("/")
-// 	}
+func createKeyString (segments ...string) KeyString {
+	sb := strings.Builder{}
+	for i := range(len(segments)-1) {
+		segment := segments[i]
+		sb.WriteString(segment)
+		sb.WriteString("/")
+	}
 	
-// 	sb.WriteString(segments[len(segments)-1])
-// 	s := sb.String()
-// 	return KeyString(s)
-// }
+	sb.WriteString(segments[len(segments)-1])
+	s := sb.String()
+	return KeyString(s)
+}

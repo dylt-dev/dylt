@@ -33,23 +33,23 @@ type KeyValueTree struct {
 }
 
 func (t *KeyValueTree) String() string {
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	common.InitLogging()
 	return treeToString(ctx, t)
 }
 
-func treeToString (ctx *ecoContext, kvTree *KeyValueTree) string{
-	ctx.inc()
-	defer ctx.dec()
+func treeToString (ctx *common.EcoContext, kvTree *KeyValueTree) string{
+	ctx.Inc()
+	defer ctx.Dec()
 
 	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("%sName: %s\n", ctx.logger.indent(), kvTree.Name))
+	sb.WriteString(fmt.Sprintf("%sName: %s\n", ctx.Logger.Indent(), kvTree.Name))
 	buf, err := json.Marshal(kvTree.Value)
 	if err != nil {
 		buf = []byte{}
 	}
-	fmt.Fprintf(&sb, "%sValue: %s\n", ctx.logger.indent(), string(buf))
-	fmt.Fprintf(&sb, "%slen(Children): %d\n", ctx.logger.indent(), len(kvTree.Children))
+	fmt.Fprintf(&sb, "%sValue: %s\n", ctx.Logger.Indent(), string(buf))
+	fmt.Fprintf(&sb, "%slen(Children): %d\n", ctx.Logger.Indent(), len(kvTree.Children))
 	for _, child := range(kvTree.Children) {
 		sChild := treeToString(ctx, child)
 		sb.WriteString(sChild)
@@ -75,40 +75,40 @@ the list of kvs is just child keys
 the key of a child map is the childMap key appended to the prefix. It's a full key
 */
 
-func createKvTree(ctx *ecoContext, key string, kvs []*KeyValue, rootKey string) *KeyValueTree {
-	ctx.logger.signature("createKvTree", key, len(kvs), rootKey)
-	ctx.inc()
-	defer ctx.dec()
+func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue, rootKey string) *KeyValueTree {
+	ctx.Logger.Signature("createKvTree", key, len(kvs), rootKey)
+	ctx.Inc()
+	defer ctx.Dec()
 
 	// Find the kv for the specified key in the kvs list, if present
-	ctx.logger.commentf("Finding key (%s) in kv list ...", key)
+	ctx.Logger.Commentf("Finding key (%s) in kv list ...", key)
 	kv := findKv(key, kvs)
 	if kv == nil {
 		return nil
 	}
-	ctx.logger.Infof("Key found. kv=(%v, %v)", kv.Key, string(kv.Value))
+	ctx.Logger.Infof("Key found. kv=(%v, %v)", kv.Key, string(kv.Value))
 
 	// Create a new tree + set its simp`le fields
 	tree := new(KeyValueTree)
-	ctx.logger.commentf("Getting element name of %s under rootKey=%s", key, rootKey)
+	ctx.Logger.Commentf("Getting element name of %s under rootKey=%s", key, rootKey)
 	name := KeyString(key).ElementName(rootKey)
-	ctx.logger.Infof("element name=%s", name)
+	ctx.Logger.Infof("element name=%s", name)
 	var value []byte
 	value = kv.Value
-	ctx.logger.comment("name + value of element determined.")
-	ctx.logger.Infof("name=%v value=%v", name, value)
+	ctx.Logger.Comment("name + value of element determined.")
+	ctx.Logger.Infof("name=%v value=%v", name, value)
 	tree.Name = name
 	tree.Value = value
 
 	// Recursively create child nodes
-	ctx.logger.comment("creating child nodes, if present")
+	ctx.Logger.Comment("creating child nodes, if present")
 	tree.Children = KeyValueChildMap{}
 	// Remove the current node from the collection of nodes to process
 	kvs = deleteKeyFromSlice(ctx, kvs, string(key))
 	// Create KeyValueMap + KeyValueTree Children from child keys, if any
 	if len(kvs) > 0 {
 		kvMap := createKvMap(ctx, key, kvs)
-		ctx.logger.Infof("%d children found", len(kvMap))
+		ctx.Logger.Infof("%d children found", len(kvMap))
 		for k, v := range kvMap {
 			childKey := fmt.Sprintf("%s/%s", key, k)
 			childKvs := v

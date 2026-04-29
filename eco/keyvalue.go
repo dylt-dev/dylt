@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/dylt-dev/dylt/common"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
@@ -23,20 +24,20 @@ func createKvSlice (etcdKvs []*mvccpb.KeyValue) []*KeyValue {
 }
 
 
-func deleteKeyFromSlice (ctx *ecoContext, kvs []*KeyValue, key string) []*KeyValue {
-	ctx.logger.signature("deleteKeyFromSlice", len(kvs), key)	
-	ctx.inc()
-	defer ctx.dec()
+func deleteKeyFromSlice (ctx *common.EcoContext, kvs []*KeyValue, key string) []*KeyValue {
+	ctx.Logger.Signature("deleteKeyFromSlice", len(kvs), key)	
+	ctx.Inc()
+	defer ctx.Dec()
 
-	ctx.logger.Infof("Before: len(kvs)=%d", len(kvs))
-	ctx.logger.commentf("Getting index of %s ...", key)
+	ctx.Logger.Infof("Before: len(kvs)=%d", len(kvs))
+	ctx.Logger.Commentf("Getting index of %s ...", key)
 	iKv := slices.IndexFunc(kvs, func (kv *KeyValue) bool { return key == kv.Key  })
-	ctx.logger.Infof("iKv=%d", iKv)
+	ctx.Logger.Infof("iKv=%d", iKv)
 	if iKv != -1 {
-		ctx.logger.comment("Deleting element from slice")
+		ctx.Logger.Comment("Deleting element from slice")
 		kvs = slices.Delete(kvs, iKv, iKv+1)
 	}
-	ctx.logger.Infof("After: len(kvs)=%d", len(kvs))
+	ctx.Logger.Infof("After: len(kvs)=%d", len(kvs))
 	return kvs
 }
 

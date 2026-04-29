@@ -32,6 +32,5 @@ func TestGetLogLevelInfo1 (t *testing.T) {
 	require.NoError(t, err)
 	logLevel := getLogLevel()
 	require.Equal(t, slog.LevelInfo, logLevel)
-
 }
 

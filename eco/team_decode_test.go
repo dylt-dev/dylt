@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,7 +33,7 @@ func TestDecodeTeam_Stats(t *testing.T) {
 func decodeAndTest(t *testing.T, key string, i any) {
 	etcd, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	err = Decode(ctx, etcd, key, any(i).(**any))
 	require.NoError(t, err)
 	el := reflect.ValueOf(i).Elem()

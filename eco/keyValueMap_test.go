@@ -1,7 +1,11 @@
 package eco
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestAdd1(t *testing.T) {
@@ -44,7 +48,6 @@ func TestAdd2(t *testing.T) {
 	t.Log(kvm)
 }
 
-
 func TestAdd3(t *testing.T) {
 	ctx, _ := initAndTest(t)
 
@@ -63,4 +66,33 @@ func TestAdd3(t *testing.T) {
 		kvm.add(ctx, key, kv)
 	}
 	t.Log(kvm)
+}
+
+func TestStruct(t *testing.T) {
+	ctx, _ := initAndTest(t)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	// Setup KVs
+	key := "/test/struct/ecotest"
+	expectedName := "Me"
+	expectedLuckyNumber := 13
+	expectedNoTag := "no-tag-value"
+	keyName := fmt.Sprintf("%s/%s", key, "name")
+	keyLuckyNumber := fmt.Sprintf("%s/%s", key, "lucky_number")
+	keyNoTag := fmt.Sprintf("%s/%s", key, "NoTag")
+
+	// Encode []byte values for struct fields
+	bufName := []byte(expectedName)
+	bufLuckyNumber, err := json.Marshal(expectedLuckyNumber)
+	require.NoError(t, err)
+	bufNoTag := []byte(expectedNoTag)
+	kvs := []*KeyValue{
+		{Key: keyName, Value: bufName},
+		{Key: keyLuckyNumber, Value: bufLuckyNumber},
+		{Key: keyNoTag, Value: bufNoTag},
+	}
+
+	kvMap := createKvMap(ctx, key, kvs)
+	ctx.Logger.Info(kvMap)
 }

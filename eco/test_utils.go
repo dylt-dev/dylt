@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func initAndTest(t *testing.T) (*ecoContext, *EtcdClient) {
+func initAndTest(t *testing.T) (*common.EcoContext, *EtcdClient) {
 	common.InitLogging()
-	ctx := newEcoContext(os.Stdout)
+	ctx := common.NewEcoContext(os.Stdout)
 	etcdClient, err := NewEtcdClientFromConfig()
 	require.NoError(t, err)
 	require.NotNil(t, etcdClient)
