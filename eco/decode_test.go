@@ -256,27 +256,119 @@ import (
 // 	return nil
 // }
 
-func TestDecodeBool(t *testing.T) {
-	decodeAndTestScalar(t, "/test/bool", true)
+func TestCreateMapAndUnmarshalValue(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	expectedKey := "foo"
+	expectedVal := "bar"
+	expectedValBuf, err := json.Marshal(expectedVal)
+	require.NoError(t, err)
+	var m common.TestMap = common.TestMap{}
+	var pm *common.TestMap = &m
+
+	p, is := common.CreateOrGetMap(ctx, reflect.ValueOf(pm))
+	require.True(t, is)
+	require.NotNil(t, p)
+	pTestMap, is := p.(*common.TestMap)
+	require.True(t, is)
+	require.Equal(t, pm, pTestMap)
+
+	// Get types for map, map key, and map value
+	typMap := reflect.TypeFor[common.TestMap]()
+	// typKey := typMap.Key()
+	typVal := typMap.Elem()
+
+	// Create a new map value
+	rvVal := reflect.New(typVal)
+	pVal := rvVal.Interface()
+	err = json.Unmarshal(expectedValBuf, pVal)
+	rvTestMap := reflect.ValueOf(*pTestMap)
+	rvTestMap.SetMapIndex(reflect.ValueOf(expectedKey), rvVal.Elem())
+
+	// Check the unmarshal worked
+	val, is := m[expectedKey]
+	require.True(t, is)
+	require.Equal(t, expectedVal, val)
+
+	// err = common.UnmarshalStructField(pst, "Name", expectedNameBuf)
+	// require.NoError(t, err)
+	// require.Equal(t, expectedName, (*pst).Name)
 }
 
-func TestDecodeBool2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/bool2", true)
+func TestCreateOrGetMapExists(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	expectedKey := "foo"
+	expectedVal := "bar"
+	expectedData := common.TestMap{
+		expectedKey: expectedVal,
+	}
+	var pExpectedData *common.TestMap = &expectedData
+
+	p, is := common.CreateOrGetMap(ctx, reflect.ValueOf(pExpectedData))
+	require.True(t, is)
+	require.NotNil(t, p)
+	pTestMap, is := p.(*common.TestMap)
+	require.True(t, is)
+	// Check that the key exists, and its value matches the expected value
+	testMap := *pTestMap
+	val, is := testMap[expectedKey]
+	require.True(t, is)
+	require.Equal(t, expectedVal, val)
 }
 
-func TestDecodeBoolSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/boolslice",
-		[]bool{true, true, false})
+// Pass CreateOtGetStruct a **struct, and confirm it allocates a struct,
+// and that the pointer to the struct can be obtained by deferencing **struct
+func TestCreateOrGetMapAlloc(t *testing.T) {
+	expectedKey := "foo"
+	expectedVal := "bar"
+	expectedData := common.TestMap{expectedKey: expectedVal}
+	ctx := common.NewEcoContext(os.Stdout)
+	var pmap *common.TestMap = nil
+	ppmap := &pmap
+
+	pNewMap, is := common.CreateOrGetMap(ctx, reflect.ValueOf(ppmap))
+	require.True(t, is)
+	require.NotNil(t, pNewMap)
+	pTestMap, is := pNewMap.(*common.TestMap)
+	require.True(t, is)
+	require.NotNil(t, pTestMap)
+	require.Equal(t, pmap, pTestMap)
+	(*pTestMap)[expectedKey] = expectedVal
+	require.Equal(t, expectedData, *pTestMap)
+	value, is := (**ppmap)[expectedKey]
+	require.True(t, is)
+	require.Equal(t, expectedVal, value)
+}
+
+func TestCreateOrGetMapNil(t *testing.T) {
+	expectedKey := "foo"
+	expectedVal := "bar"
+	expectedData := common.TestMap{expectedKey: expectedVal}
+	ctx := common.NewEcoContext(os.Stdout)
+	var m common.TestMap = nil
+	var pm *common.TestMap = &m
+
+	p, is := common.CreateOrGetMap(ctx, reflect.ValueOf(pm))
+	require.True(t, is)
+	require.NotNil(t, p)
+	pTestMap, is := p.(*common.TestMap)
+	require.True(t, is)
+	require.NotNil(t, pTestMap)
+	require.NotNil(t, *pTestMap)
+	require.Equal(t, pm, pTestMap)
+	(*pTestMap)[expectedKey] = expectedVal
+	require.Equal(t, expectedData, *pTestMap)
+	value, is := (*pTestMap)[expectedKey]
+	require.True(t, is)
+	require.Equal(t, expectedVal, value)
 }
 
 
 func TestCreateOrGetStruct(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	st := common.TestStruct{
-		Name: "foo",
+		Name:        "foo",
 		LuckyNumber: 13,
-		NoTag: "bum",
+		NoTag:       "bum",
 	}
 
 	pst, is := common.CreateOrGetStruct(ctx, reflect.ValueOf(&st))
@@ -288,17 +380,17 @@ func TestCreateOrGetStruct(t *testing.T) {
 }
 
 // Pass CreateOtGetStruct a **struct, and confirm it allocates a struct,
-// and that the pointer to the struct can be obtained by deferencing **struct 
+// and that the pointer to the struct can be obtained by deferencing **struct
 func TestCreateOrGetStructAlloc(t *testing.T) {
 	expectedName := "foo"
 	expectedLuckyNumber := float64(13.0)
 	expectedNoTag := "bar"
 	expectedStruct := common.TestStruct{
-		Name: expectedName,
+		Name:        expectedName,
 		LuckyNumber: expectedLuckyNumber,
-		NoTag: expectedNoTag,
+		NoTag:       expectedNoTag,
 	}
-	
+
 	ctx := common.NewEcoContext(os.Stdout)
 	var pst *common.TestStruct = nil
 	ppst := &pst
@@ -314,6 +406,20 @@ func TestCreateOrGetStructAlloc(t *testing.T) {
 	require.Equal(t, expectedName, (**ppst).Name)
 	require.Equal(t, expectedLuckyNumber, (**ppst).LuckyNumber)
 	require.Equal(t, expectedNoTag, (**ppst).NoTag)
+}
+
+func TestDecodeBool(t *testing.T) {
+	decodeAndTestScalar(t, "/test/bool", true)
+}
+
+func TestDecodeBool2(t *testing.T) {
+	decodeAndTestScalar2(t, "/test/bool2", true)
+}
+
+func TestDecodeBoolSlice(t *testing.T) {
+	decodeAndTestSlice(t,
+		"/test/boolslice",
+		[]bool{true, true, false})
 }
 
 func TestDecodeFloat(t *testing.T) {
@@ -507,23 +613,60 @@ func TestGetMap(t *testing.T) {
 func TestGetMapOfMaps(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	key := "/test/stros"
-	map0 := map[string]string{"Name": "Altuve", "Position": "LF"}
+	map0 := map[string]string{"Name": "Altuve", "Position": "2B"}
 	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
 	map2 := map[string]string{"Name": "Javier", "Position": "P"}
 	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
 	ops, err := Encode(common.NewEcoContext(os.Stdout), key, mapStros)
 	require.NoError(t, err)
 
-	ctx.Logger.Info("writing keys ...")
+	ctx.Logger.Comment("writing keys ...")
 	txn := createTxn(t, cli)
 	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
 	require.NotNil(t, resp)
+	ctx.Logger.Info("done - writing keys")
+	ctx.Logger.Info()
 
-	// decode because why not
-	var data map[int]map[string]string
-	Decode(ctx, cli, key, &data)
-	t.Log(data)
+	// Create the GET Op
+	op := etcd.OpGet(key, etcd.WithPrefix())
+
+	// Get the response from etcd
+	txn = createTxn(t, cli)
+	resp, err = txn.Then(op).Commit()
+	require.NoError(t, err)
+
+	// Get the etcd KVs from the response
+	rangeResp := resp.Responses[0].GetResponseRange()
+	etcdKvs := rangeResp.Kvs
+
+	// Create a slice of KeyValue objects
+	kvs := createKvSlice(etcdKvs)
+
+	// Create a KeyValueTree from the KVs
+	kvTree := createKvTree(ctx, key, kvs, key)
+
+	// Decode the map
+	ctx.Logger.Comment("decoding data ...")
+	var pmap *map[int]map[string]string
+	decoder := MapDecoder{}
+	err = decoder.Decode(ctx, kvTree, key, reflect.ValueOf(&pmap))
+	ctx.Logger.Info("done - decoding data")
+	require.NoError(t, err)
+	t.Log(*pmap)
+	mTeam := *pmap
+	mapAltuve, is := mTeam[27]
+	require.True(t, is)
+	require.Equal(t, "Altuve", mapAltuve["Name"])
+	require.Equal(t, "2B", mapAltuve["Position"])
+	mapPena, is := mTeam[3]
+	require.True(t, is)
+	require.Equal(t, "Pena", mapPena["Name"])
+	require.Equal(t, "SS", mapPena["Position"])
+	mapJavier, is := mTeam[53]
+	require.True(t, is)
+	require.Equal(t, "Javier", mapJavier["Name"])
+	require.Equal(t, "P", mapJavier["Position"])
 }
 
 func TestGetString(t *testing.T) {
@@ -548,7 +691,6 @@ func TestGetStringSlice(t *testing.T) {
 	// Decode the slice and test expected values
 	getAndTestSlice(t, ctx, expectedData, kvs, key)
 }
-
 
 func TestGetStructAndUnmarshalField(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -578,7 +720,6 @@ func TestGetStructFieldKey1(t *testing.T) {
 	require.Equal(t, expectedData, key)
 }
 
-
 func TestGetStructFieldKey2(t *testing.T) {
 	expectedData := "lucky_number"
 	typ := reflect.TypeFor[common.TestStruct]()
@@ -588,7 +729,6 @@ func TestGetStructFieldKey2(t *testing.T) {
 	require.Equal(t, expectedData, key)
 }
 
-
 func TestGetStructFieldKey3(t *testing.T) {
 	expectedData := "NoTag"
 	typ := reflect.TypeFor[common.TestStruct]()
@@ -597,7 +737,6 @@ func TestGetStructFieldKey3(t *testing.T) {
 	key := GetStructFieldKey(fld)
 	require.Equal(t, expectedData, key)
 }
-
 
 func TestGetUint(t *testing.T) {
 	testGetScalar(t, "/test/uint", uint(13))
@@ -717,10 +856,10 @@ func TestStructEcoTest(t *testing.T) {
 
 	// Setup keys and values
 	key := "/test/struct/ecotest"
-	expectedData := common.TestStruct {
-		Name: "Me",
+	expectedData := common.TestStruct{
+		Name:        "Me",
 		LuckyNumber: 169.0,
-		NoTag: "tagless",
+		NoTag:       "tagless",
 	}
 	// expectedName := ex
 	// expectedLuckyNumber := 13

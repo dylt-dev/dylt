@@ -74,33 +74,43 @@ func (d *MainDecoder) Decode(ctx *common.EcoContext, kvs *KeyValueTree, key stri
 // kvs  key-value pairs which comprise the data
 // key  key that prefixes all map keys
 // rv   reflection pointer-to-pointer-to-map
-func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, ppMap reflect.Value) error {
-	ctx.Logger.Signature("MapDecoder.Decode()", key, reflect.TypeOf(ppMap))
+func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
+	ctx.Logger.Signature("MapDecoder.Decode()", key, reflect.TypeOf(rv))
 	ctx.Inc()
 	defer ctx.Dec()
 
-	// get the reflect.Type for the map to allocate
-	typ, err := getUnderlyingMapType(ppMap.Type())
+	pMap, is := common.CreateOrGetMap(ctx, rv)
+	if !is {
+		return fmt.Errorf("Unable to create or get map for ... reasons")	
+	}
+	if pMap == nil {
+		return fmt.Errorf("nil map -- this shouldn't happen")
+	}
+	rvpMap := reflect.ValueOf(pMap)
+	if rvpMap.IsNil() {
+		return fmt.Errorf("rvpMap.IsNil() == true")
+	}
+
+	// get the reflect.Type for the underlying map
+	typMap, err := common.GetUnderlyingMapType(ctx, rv)
 	if err != nil {
 		return err
 	}
+	ctx.Logger.Infof("map type=map[%s]%s", typMap.Key(), typMap.Elem())
 
-	// allocate the new map + save the value type
-	rMap := reflect.MakeMap(typ)
-	typValue := rMap.Type().Elem()
-
-	// // get the map data from the kvs+key
-	// mapData := getMapData(kvs, key)
-
+	typKey := typMap.Key()
+	typValue := typMap.Elem()
 	// populate the new map with the data
-	for k, childTree := range kvTree.Children {
-		ctx.Logger.Infof("Decoding %s ...", k)
-		// create a new map item
+	for keyString, childTree := range kvTree.Children {
+		ctx.Logger.Infof("Decoding %s ...", keyString)
+		ctx.Logger.Infof("childTree.Name=%s childTree.Value=%#v", childTree.Name, childTree.Value)
+		// // create a new map item
 		pnew := reflect.New(typValue)
 		decoder := decoderMap[typValue.Kind()]
-		elemName := k.ElementName(key)
+		ctx.Logger.Infof("decoder type=%v\n", reflect.TypeOf(decoder))
+		elemName := keyString.ElementName(key)
 		subkey := fmt.Sprintf("%s/%s", key, elemName)
-		fmt.Printf("subkey=%v\n", subkey)
+		ctx.Logger.Infof("subkey=%v\n", subkey)
 		err := decoder.Decode(ctx, childTree, subkey, pnew)
 		if err != nil {
 			return err
@@ -111,19 +121,25 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key st
 		// err := json.Unmarshal(v, i)
 		// if err != nil {
 		// 	return err
-		// }
+		// // }
 
-		// Create reflect.Value for mapData key and add key+val to new map
-		rk := reflect.ValueOf(elemName)
-		rMap.SetMapIndex(rk, pnew.Elem())
+		// // Create reflect.Value for mapData key and add key+val to new map
+		prvKey := reflect.New(typKey)
+		pKey := prvKey.Interface()
+		err = common.UnmarshalMapKey(elemName, pKey)
+		if err != nil {
+			return err
+		}
+		ctx.Logger.Infof("rvpMap type=map[%s]%s", rvpMap.Elem().Type().Key(), rvpMap.Elem().Type().Elem())
+		rvpMap.Elem().SetMapIndex(prvKey.Elem(), pnew.Elem())
 	}
 
 	// Create a new map pointer and assign the new map to it
-	pMap := reflect.New(typ)
-	pMap.Elem().Set(rMap)
+	// pMap := reflect.New(typ)
+	// pMap.Elem().Set(rMap)
 
 	// assign the new map to the rv
-	ppMap.Elem().Set(pMap)
+	// ppMap.Elem().Set(pMap)
 
 	// done :)
 	return nil
@@ -205,26 +221,6 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 	ctx.Inc()
 	defer ctx.Dec()
 
-	// get the reflect.Type for the underlying struct to allocate
-	// typStruct, err := common.GetUnderlyingStructType(ctx, rv)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // rv is either a pointer to a struct, or a pointer-to-pointer to a struct
-	// // if it's a non-nil pointer to a struct, we don't have to allocate it
-	// if rv.Kind() != reflect.Pointer || rv.IsNil() {
-	// 	return fmt.Errorf("Non-nil pointer required")
-	// }
-	// var rvStruct reflect.Value
-	// // If rv is a pointer-to-a-pointer, allocate a new struct
-	// if rv.Elem().Type().Kind() == reflect.Pointer {
-	// 	rvStruct := reflect.New(typStruct)
-	// 	rv.Elem().Set(rvStruct.Addr())
-	// } else {
-	// 	rvStruct = rv.Elem()
-	// }
-
 	pStruct, is := common.CreateOrGetStruct(ctx, rv)
 	if !is {
 		return fmt.Errorf("Unable to create or get struct for ... reasons")	
@@ -244,7 +240,7 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 	}
 	
 	ctx.Logger.Comment("Iterating over struct fields")
-	rvStruct := common.ToRv(pStruct)
+	rvpStruct := common.ToRv(pStruct)
 	for field := range typStruct.Fields() {
 		if field.Tag != "" {
 			ctx.Logger.Infof("%-20s %-20s", field.Name, field.Type)
@@ -260,7 +256,7 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 		}
 		// Decode LV value into struct field
 		decoder := decoderMap[field.Type.Kind()]
-		structField := rvStruct.Elem().FieldByName(field.Name)
+		structField := rvpStruct.Elem().FieldByName(field.Name)
 		addr := structField.Addr()
 		decoder.Decode(ctx, kvChildTree, childKeyName, addr) 
 		// common.UnmarshalStructField(pStruct, field.Name, kv.Value)
@@ -293,22 +289,26 @@ func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
 	}
 
 	// Get etcd KVs from cluster
+	ctx.Logger.Comment("Getting KVs from cluster ...")
 	etcdKvs, err := getEtcdKvs(ctx, cli, key)
 	if err != nil {
 		return err
 	}
+	ctx.Logger.Info("Done")
+	ctx.Logger.Info()
 
 	// Create kvTree
+	ctx.Logger.Comment("Creating KV slice and KV tree ...")
 	kvs := createKvSlice(etcdKvs)
 	kvTree := createKvTree(ctx, key, kvs, key)
+	ctx.Logger.Info("Done")
+	ctx.Logger.Info()
 
 	// Create reflect.Value for i
-	rv, is := i.(reflect.Value)
-	if !is {
-		rv = reflect.ValueOf(i)
-	}
+	rv := common.ToRv(i)
 	
 	// Decode using the top-level Decoder
+	ctx.Logger.Comment("Decoding ...")
 	decoder := MainDecoder{}
 	err = decoder.Decode(ctx, kvTree, key, rv)
 	return err

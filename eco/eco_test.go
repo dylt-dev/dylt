@@ -740,45 +740,47 @@ func TestReflection3(t *testing.T) {
 }
 
 func TestUnderlyingMapType(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
 	common.Setup(t)
 	defer common.Teardown(t)
 
-	expectedData := reflect.TypeFor[map[string]int]()
-	typ := reflect.TypeFor[**map[string]int]()
-	typUnderlying, err := getUnderlyingMapType(typ)
+	expectedData := map[string]int{}
+	typUnderlying, err := common.GetUnderlyingMapType(ctx, &expectedData)
 	require.NoError(t, err)
-	require.Equal(t, expectedData, typUnderlying)
+	require.Equal(t, reflect.TypeOf(expectedData), typUnderlying)
 }
 
 func TestUnderlyingMapType2(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
 	common.Setup(t)
 	defer common.Teardown(t)
 
-	expectedData := reflect.TypeFor[map[string]map[string]map[string]int]()
-	typ := reflect.TypeFor[**map[string]map[string]map[string]int]()
-	typUnderlying, err := getUnderlyingMapType(typ)
+	expectedData := map[string]map[string]map[string]int{}
+	typUnderlying, err := common.GetUnderlyingMapType(ctx, &expectedData)
 	require.NoError(t, err)
-	require.Equal(t, expectedData, typUnderlying)
+	require.Equal(t, reflect.TypeOf(expectedData), typUnderlying)
 }
 
 func TestUnderlyingMapType3(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
 	common.Setup(t)
 	defer common.Teardown(t)
 
-	typ := reflect.TypeFor[*map[string]map[string]map[string]int]()
-	typUnderlying, err := getUnderlyingMapType(typ)
-	require.Error(t, err)
-	require.Nil(t, typUnderlying)
+	expectedData := &map[string]map[string]map[string]int{}
+	typUnderlying, err := common.GetUnderlyingMapType(ctx, expectedData)
+	require.NoError(t, err)
+	require.Equal(t, reflect.TypeOf(*expectedData), typUnderlying)
 }
 
 func TestUnderlyingMapType4(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
 	common.Setup(t)
 	defer common.Teardown(t)
 
-	typ := reflect.TypeFor[*map[string]map[string]map[string]int]()
-	typUnderlying, err := getUnderlyingMapType(typ)
-	require.Error(t, err)
-	require.Nil(t, typUnderlying)
+	expectedData := &map[string]map[string]map[string]int{}
+	typUnderlying, err := common.GetUnderlyingMapType(ctx, &expectedData)
+	require.NoError(t, err)
+	require.Equal(t, reflect.TypeOf(*expectedData), typUnderlying)
 }
 
 func TestUnderlyingPointerType(t *testing.T) {

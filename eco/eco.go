@@ -607,32 +607,6 @@ func getUnderlyingSliceType(p any) (reflect.Type, error) {
 	return elType, nil
 }
 
-func getUnderlyingMapType(ppMapType reflect.Type) (reflect.Type, error) {
-	var knd reflect.Kind
-
-	// Confirm ppMapType is a pointer
-	knd = ppMapType.Kind()
-	if knd != reflect.Pointer {
-		return nil, fmt.Errorf("Expecting a pointer-to-pointer-to map (kind=%s)", knd.String())
-	}
-
-	// Confirm *ppMapType is a pointer
-	knd = ppMapType.Elem().Kind()
-	if knd != reflect.Pointer {
-		return nil, fmt.Errorf("Expecting a pointer-to-pointer-to map (kind=%s)", knd.String())
-	}
-
-	// Confirm **ppMapType is a map
-	knd = ppMapType.Elem().Kind()
-	if knd != reflect.Pointer {
-		return nil, fmt.Errorf("Expecting a pointer-to-pointer-to map (kind=%s)", knd.String())
-	}
-
-	// We're good :)
-	return ppMapType.Elem().Elem(), nil
-}
-
-
 func interfaceKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	ctx.Logger.Signature("interfaceKind", ty)
 	ctx.Inc()
