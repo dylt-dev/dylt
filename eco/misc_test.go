@@ -409,3 +409,107 @@ func TestSetAllocateSliceWithReflection(t *testing.T) {
 	// **pslice = slice
 	require.Equal(t, expectedVal, (*pslice)[0])
 }
+
+func TestDecodeMap(t *testing.T) {
+	// Create map
+	typMap := reflect.TypeFor[map[string]int]()
+	newmap := reflect.MakeMap(typMap)
+	require.Equal(t, reflect.Map, newmap.Kind())
+	require.False(t, newmap.IsNil())
+	typString := reflect.TypeFor[string]()
+	typInt := reflect.TypeFor[int]()
+
+	// Check assumeptions about element type
+	require.Equal(t, reflect.TypeFor[string](), typMap.Key())
+	require.Equal(t, typString, newmap.Type().Key())
+	require.Equal(t, typInt, newmap.Type().Elem())
+
+	// Create a new element for the map
+	typElem := typMap.Elem()
+	require.Equal(t, typInt, typElem)
+	pnew := reflect.New(typElem)
+
+	// Get the pointer and unmarshal a string into it
+	require.True(t, pnew.Elem().CanAddr())
+	require.Equal(t, typInt, pnew.Elem().Type())
+	i := pnew.Elem().Addr().Interface()
+	require.NotNil(t, i)
+	err := json.Unmarshal([]byte("13"), i)
+	require.NoError(t, err)
+	require.Equal(t, 13, *(i.(*int)))
+	require.Equal(t, 13, *(pnew.Interface().(*int)))
+
+	// Add the new element to the map
+	key := "newguy"
+	rkey := reflect.ValueOf(key)
+	newmap.SetMapIndex(rkey, pnew.Elem())
+
+	// Confirm the element was added
+	v := newmap.MapIndex(rkey)
+	require.Equal(t, typInt, v.Type())
+	require.Equal(t, int64(13), v.Int())
+	m := newmap.Interface().(map[string]int)
+	require.Equal(t, 13, m[key])
+
+	// Create a new map pointer object and assign our new map to it
+	pmap := reflect.New(typMap)
+	require.True(t, pmap.Elem().CanSet())
+	pmap.Elem().Set(newmap)
+
+	// Assign the map to a pointer field in a struct
+	type S struct { Map *map[string]int}
+	typS := reflect.TypeFor[S]()
+	var rps reflect.Value = reflect.New(typS)
+	var rf reflect.Value = rps.Elem().Field(0)
+	require.True(t, rf.CanSet())
+	rf.Set(pmap)
+
+	// Confirm the struct in the map is looking good
+	var ps *S = rps.Interface().(*S)
+	require.Equal(t, 13, (*(ps.Map))[key])
+}
+
+func TestUnmarshalIntoStructField(t *testing.T) {
+	type S struct{ PN *int }
+
+	// Create a new struct, and save its address for fun
+	rps := reflect.New(reflect.TypeFor[S]())
+	var ps *S = rps.Interface().(*S)
+	expectedVal := 13
+
+	f := rps.Elem().Field(0)
+	data := []byte(fmt.Sprint(expectedVal))
+	allocAndUnmarshal(f, data)
+	// Create a new int
+	// pnew := reflect.New(reflect.TypeFor[int]())
+	// require.True(t, pnew.Elem().CanAddr())
+	// err := json.Unmarshal([]byte("13"), pnew.Elem().Addr().Interface())
+	// require.NoError(t, err)
+	// pnew.Elem().Set(reflect.ValueOf(13))
+
+	// // Assign the address of the new int to the struct field
+	// rs := rps.Elem()
+	// require.True(t, rs.CanSet())
+	// rs.Field(0).Set(pnew)
+	// require.Equal(t, 13, *(rs.Field(0).Interface().(*int)))
+	require.Equal(t, 13, *ps.PN)
+	// require.NoError(t, err)
+}
+
+func allocAndUnmarshal (f reflect.Value, data []byte) error {
+	// create a new pointer of v's type
+	pnew := reflect.New(f.Type().Elem())
+
+	// unmarhsal v to the new pointer
+	i := pnew.Elem().Addr().Interface()
+	err := json.Unmarshal(data, i)
+	if err != nil {
+		return err
+	}
+
+	// Assign new pointer to field
+	f.Set(pnew)
+
+	// done :)
+	return nil
+}
