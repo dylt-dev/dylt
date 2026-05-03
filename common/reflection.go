@@ -64,6 +64,11 @@ func CreateOrGetMap(ctx *EcoContext, rv reflect.Value) (any, bool) {
 	return i, true
 }
 
+
+func CreateOrGetSlice (ctx *EcoContext, rv reflect.Value) (any, bool) {
+	return nil, true
+}
+
 // Create a new struct or return a reference to an allocated struct
 //
 // rv    A pointer to an allocated struct, or a pointer to a struct pointer
