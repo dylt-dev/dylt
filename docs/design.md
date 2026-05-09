@@ -1,0 +1,199 @@
+### Assumptions
+
+Decoders need to work with `reflect.Value`s, not simple pointers
+Parameters should be Go types where possible, not reflect.Values. Reflection is an implementation choice.
+
+### Data Structures
+
+Name+Value
+KV
+KVSlice
+KVChildMap
+ValueTree
+
+
+### Algorithms
+
+MainDecoder.decode()
+--------------------
+Lookup the kind of value
+Get the appropriate decoder for the kind
+Invoke the decoder
+
+MapDecoder.decode()
+-------------------
+dim := len(valueNode.Children)
+ptr := CreateOrGetMapPointer(rv, dim)
+for name, childNode := range valueNode.Children) {
+    i := strconv.Atoi(name)
+    rvKeyPtr := GetMapKeyPointer()
+    rvValPtr := GetMapValuePointer()
+    MainDecoder(childNode, rvValPtr)
+    ptr.SetMapIndex(rvKeyPtr, rvRvValPtr)
+}
+
+ScalarDecoder.decode()
+----------------------
+ptr := CreateOrGetPointer(rv)
+json.Unmarshal(valueNode.value, ptr)
+
+SliceDecoder.decode()
+---------------------
+dim := MaxIndex(valueNode.Children) // @note this might be a good operation on the ValueNodeChildMap
+ptr := CreateOrGetSlicePointer(rv, dim)
+for name, childNode := range valueNode.Children) {
+    i := strconv.Atoi(name)
+    rvPtr := GetSliceElPointer(ptr, i) // @note this might be a good operation on an reflect.Value-based type
+    MainDecoder(childNode)
+}
+
+StructDecoder.decode()
+----------------------
+pre := CreateOrGetStructPointer(rv)
+for name, childNode := range valueNode.Children) {
+for structField := range structType.Fields()
+    i := strconv.Atoi(name)
+    rvPtr := GetStructFieldPointer(ptr, structField) // @note this might be a good operation on an reflect.Value-based type
+    childNode := valueNode.Children[structField.Name]
+    MainDecoder(childNode, rvPtr)
+}
+
+ - Walk the incoming non-nil pointer, and either get the address of the underlying object or allocate a new object that will accommodate the number of children, whatever it takes
+  - (ScalarDecoder only) Unmarshal into the pointer the value
+  - (Every other decoder) Iterate over the Children collection, looking up the Decoder for each child and invoking it recursively
+
+### Operations
+
+CreateOrGetScalarPointer()
+--------------------------
+p := WalkPointer()
+if p is a pointer-to-a-pointer
+    get the underlying type
+    allocate the underlying type
+    set *p to the new address
+else
+   p is the pointer we need so we're all set
+@note this might be unnecessary because json.Unmarshal() might handle it.
+ but maybe I can just handle it myself too
+
+
+CreateOrGetMapPointer()
+-----------------------
+p := WalkPointer()
+if p.IsNil()
+    allocate a new map
+    *p = new map
+return p
+
+
+CreateOrGetSlicePointer(n)
+-------------------------
+p := WalkPointer()
+if p.IsNil() or p is a slice that is too small
+    allocate a new slice
+    *p = new slice
+return p
+
+
+CreateOrGetStructPointer()
+--------------------------
+p := WalkPointer()
+if p is a pointer-to-a-pointer
+    get the underlying type
+    allocate the underlying type
+    set *p to the new address
+else
+   p is the pointer we need so we're all set
+
+
+
+MapDecoder.decode()
+-------------------
+dim := len(valueNode.Children)
+ptr := CreateOrGetMapPointer(rv, dim)
+for name, childNode := range valueNode.Children) {
+    i := strconv.Atoi(name)
+    rvKeyPtr := GetMapKeyPointer()
+    rvValPtr := GetMapValuePointer()
+    MainDecoder(childNode, rvValPtr)
+    ptr.SetMapIndex(rvKeyPtr, rvRvValPtr)
+}
+
+StructDecoder.decode()
+----------------------
+pre := CreateOrGetStructPointer(rv)
+for name, childNode := range valueNode.Children) {
+for structField := range structType.Fields()
+    i := strconv.Atoi(name)
+    rvPtr := GetStructFieldPointer(ptr, structField) // @note this might be a good operation on an reflect.Value-based type
+    childNode := valueNode.Children[structField.Name]
+    MainDecoder(childNode, rvPtr)
+}
+
+ - Walk the incoming non-nil pointer, and either get the address of the underlying object or allocate a new object that will accommodate the number of children, whatever it takes
+  - (ScalarDecoder only) Unmarshal into the pointer the value
+  - (Every other decoder) Iterate over the Children collection, looking up the Decoder for each child and invoking it recursively
+
+
+### CreateValueTree([]*mvccpb)
+
+kvMap := createKvMap()
+
+
+### Operations
+
+GetSliceElPointer(ptr, i)
+-------------------------
+
+GetMapKeyPointer()
+------------------
+
+GetMapValuePointer()
+--------------------
+
+GetStructFieldPointer(ptr, structField)
+---------------------------------------
+
+WalkPointer (i any) (any, error)
+--------------------------------
+// Confirm we are starting with a non-nil pointer
+rv :=Reflect(i)
+if !rv.IsValid() { return Error }
+if rv.IsNil() { return Error }
+if rv.Type(p) != reflect.Pointer { return Error }
+
+// We definitely have a non-nil pointer
+// Now, we care about 3 conditions
+// - rv is a pointer to a Reference type (slice or map) - return
+// - rv is a non-nil pointer to a Value type (scalar struct) - return
+// - rv is a pointer to a non-pointer - return Error
+// - rv is a pointer to a nil value pointer - return
+// - rv := rv.Elem()
+
+
+for {
+    rv = rv.Elem()
+    if rv.Kind() 
+    if !rv.IsValid() { return Error }
+    if rv.IsNil() { return Error }
+    if rv.Type(p) != reflect.Pointer { return Error }
+}
+
+IsReference()
+-------------
+// A 'reference' is basically a variable whose value might be nil, and might
+// require allocation. Some functions are responsible for allocating a 
+// variable to assign to a nil reference. In these cases, the reference cannot
+// be passed as an argument, because that would pass the reference by value and
+// then the new value could not be assigned argument. Instead, a pointer to
+// the reference must be passed as an argument. Then a new object can be allocated,
+// and the address of the new object can be assigned to the pointer.
+// This is a cricial part of the Decoding process. A Decoder might be asked to Decode
+// into an allocated object, or to decode into a nil pointer.
+
+func IsReference(a any) bool {
+    rv := Reflect(a)
+    knd := rv.Kind()
+    flag := knd == reflect.Slice || reflect.Map || reflect.Pointer
+    return flag
+}

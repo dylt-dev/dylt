@@ -103,7 +103,7 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key st
 	// populate the new map with the data
 	for keyString, childTree := range kvTree.Children {
 		ctx.Logger.Infof("Decoding %s ...", keyString)
-		ctx.Logger.Infof("childTree.Name=%s childTree.Value=%#v", childTree.Name, childTree.Value)
+		ctx.Logger.Infof("childTree.Value=%#v", childTree.Value)
 		// // create a new map item
 		pnew := reflect.New(typValue)
 		decoder := decoderMap[typValue.Kind()]
@@ -146,7 +146,7 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key st
 }
 
 func (d *ScalarDecoder[U]) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
-	ctx.Logger.Signature("ScalarDecoder.Decode()", kvTree.Name, key, rv.Kind().String())
+	ctx.Logger.Signature("ScalarDecoder.Decode()", key, rv.Kind().String())
 	ctx.Inc()
 	defer ctx.Dec()
 
@@ -161,7 +161,7 @@ func (d *ScalarDecoder[U]) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, 
 }
 
 func (d *SliceDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
-	ctx.Logger.Signature("SliceDecoder.Decode()", kvTree.Name, key, rv.Kind().String())
+	ctx.Logger.Signature("SliceDecoder.Decode()", key, rv.Kind().String())
 	ctx.Inc()
 	defer ctx.Dec()
 

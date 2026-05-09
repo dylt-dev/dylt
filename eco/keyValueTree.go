@@ -27,7 +27,6 @@ func (m KeyValueChildMap) MaxIndex() uint64 {
 }
 
 type KeyValueTree struct {
-	Name     string
 	Value    []byte
 	Children KeyValueChildMap
 }
@@ -43,7 +42,6 @@ func treeToString (ctx *common.EcoContext, kvTree *KeyValueTree) string{
 	defer ctx.Dec()
 
 	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("%sName: %s\n", ctx.Logger.Indent(), kvTree.Name))
 	buf, err := json.Marshal(kvTree.Value)
 	if err != nil {
 		buf = []byte{}
@@ -88,33 +86,32 @@ func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue, rootKey s
 	}
 	ctx.Logger.Infof("Key found. kv=(%v, %v)", kv.Key, string(kv.Value))
 
-	// Create a new tree + set its simp`le fields
+	// Create a new tree + set its simple fields
 	tree := new(KeyValueTree)
 	ctx.Logger.Commentf("Getting element name of %s under rootKey=%s", key, rootKey)
-	name := KeyString(key).ElementName(rootKey)
-	ctx.Logger.Infof("element name=%s", name)
 	var value []byte
 	value = kv.Value
-	ctx.Logger.Comment("name + value of element determined.")
-	ctx.Logger.Infof("name=%v value=%v", name, value)
-	tree.Name = name
+	ctx.Logger.Comment("value of element determined.")
+	ctx.Logger.Infof("value=%v", value)
 	tree.Value = value
 
-	// Recursively create child nodes
 	ctx.Logger.Comment("creating child nodes, if present")
 	tree.Children = KeyValueChildMap{}
 	// Remove the current node from the collection of nodes to process
 	kvs = deleteKeyFromSlice(ctx, kvs, string(key))
 	// Create KeyValueMap + KeyValueTree Children from child keys, if any
-	if len(kvs) > 0 {
-		kvMap := createKvMap(ctx, key, kvs)
-		ctx.Logger.Infof("%d children found", len(kvMap))
-		for k, v := range kvMap {
-			childKey := fmt.Sprintf("%s/%s", key, k)
-			childKvs := v
-			tree.Children[KeyString(childKey)] = createKvTree(ctx, childKey, childKvs, rootKey)
-		}
+	if len(kvs) == 0 {
+		return tree
 	}
 
+	// Recursively create child nodes
+	kvMap := createKvMap(ctx, key, kvs)
+	ctx.Logger.Infof("%d children found", len(kvMap))
+	for k, v := range kvMap {
+		childKey := fmt.Sprintf("%s/%s", key, k)
+		childKvs := v
+		tree.Children[KeyString(childKey)] = createKvTree(ctx, childKey, childKvs, rootKey)
+	}
+	
 	return tree
 }
