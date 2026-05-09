@@ -40,7 +40,7 @@ func TestKvTreeMap (t *testing.T) {
 		newKv(keyName, expectedName),
 		newKv(keyWeight, expectedWeight),
 	}
-	tree := createKvTree(ctx, key, kvs, key)
+	tree := createKvTree(ctx, key, kvs)
 	var child *KeyValueTree
 	// Born
 	child = tree.Children[KeyString(keyBorn)]
@@ -80,7 +80,7 @@ func TestKvTreeSimple(t *testing.T) {
 	}
 
 	key := "/team"
-	tree := createKvTree(ctx, key, kvs, key)
+	tree := createKvTree(ctx, key, kvs)
 	t.Log("\n" + fmt.Sprint(tree))
 	require.NotNil(t, tree)
 	require.Nil(t, nil, tree.Value)
@@ -98,7 +98,7 @@ func TestKvTreeScalar(t *testing.T) {
 	}
 
 	key := "/team/1/name"
-	tree := createKvTree(ctx, key, kvs, key)
+	tree := createKvTree(ctx, key, kvs)
 	t.Log("\n" + fmt.Sprint(tree))
 	require.NotNil(t, tree)
 	require.Equal(t, "bum", string(tree.Value))
@@ -131,7 +131,7 @@ func TestKvTreeStruct(t *testing.T) {
 		{Key: keyNoTag, Value: bufNoTag},
 	}
 
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 	logTree(ctx, kvTree)
 }
 

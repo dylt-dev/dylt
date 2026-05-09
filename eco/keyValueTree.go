@@ -73,8 +73,8 @@ the list of kvs is just child keys
 the key of a child map is the childMap key appended to the prefix. It's a full key
 */
 
-func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue, rootKey string) *KeyValueTree {
-	ctx.Logger.Signature("createKvTree", key, len(kvs), rootKey)
+func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue) *KeyValueTree {
+	ctx.Logger.Signature("createKvTree", key, len(kvs))
 	ctx.Inc()
 	defer ctx.Dec()
 
@@ -88,7 +88,7 @@ func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue, rootKey s
 
 	// Create a new tree + set its simple fields
 	tree := new(KeyValueTree)
-	ctx.Logger.Commentf("Getting element name of %s under rootKey=%s", key, rootKey)
+	ctx.Logger.Commentf("Getting element name of %s", key)
 	var value []byte
 	value = kv.Value
 	ctx.Logger.Comment("value of element determined.")
@@ -110,7 +110,7 @@ func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue, rootKey s
 	for k, v := range kvMap {
 		childKey := fmt.Sprintf("%s/%s", key, k)
 		childKvs := v
-		tree.Children[KeyString(childKey)] = createKvTree(ctx, childKey, childKvs, rootKey)
+		tree.Children[KeyString(childKey)] = createKvTree(ctx, childKey, childKvs)
 	}
 	
 	return tree

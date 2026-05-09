@@ -596,7 +596,7 @@ func TestGetMap(t *testing.T) {
 	kvs := createKvSlice(etcdKvs)
 
 	// Create a KeyValueTree from the KVs
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 
 	// Decode the map
 	var pmap *map[string]string
@@ -644,7 +644,7 @@ func TestGetMapOfMaps(t *testing.T) {
 	kvs := createKvSlice(etcdKvs)
 
 	// Create a KeyValueTree from the KVs
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 
 	// Decode the map
 	ctx.Logger.Comment("decoding data ...")
@@ -881,7 +881,7 @@ func TestStructEcoTest(t *testing.T) {
 		{Key: []byte(keyNoTag), Value: bufNoTag},
 	}
 	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 	// putAndTestStruct(t, ctx, cli, key, kvs)
 
 	data := common.TestStruct{}
@@ -1016,7 +1016,7 @@ func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData [
 	decoder := SliceDecoder{}
 
 	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 	ctx.Logger.Debugf("kvTree.Children=%#v", kvTree.Children)
 
 	err := decoder.Decode(ctx, kvTree, key, rv)
@@ -1135,7 +1135,7 @@ func testGetScalar[U any](t *testing.T, key string, expectedVal U) {
 	ctx.Logger.Comment()
 	ctx.Logger.Comment("Decoding data ...")
 	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}
@@ -1167,7 +1167,7 @@ func testGetScalar2[U any](t *testing.T, key string, expectedVal U) {
 	etcdKvs := rangeResp.Kvs
 
 	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}

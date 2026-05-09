@@ -300,7 +300,7 @@ func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
 	// Create kvTree
 	ctx.Logger.Comment("Creating KV slice and KV tree ...")
 	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, key, kvs, key)
+	kvTree := createKvTree(ctx, key, kvs)
 	ctx.Logger.Info("Done")
 	ctx.Logger.Info()
 

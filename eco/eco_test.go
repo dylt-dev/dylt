@@ -381,7 +381,7 @@ func TestGetSliceKeysAndMaxIndex(t *testing.T) {
 	}
 
 	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, sliceKey, kvs, sliceKey)
+	kvTree := createKvTree(ctx, sliceKey, kvs)
 
 	// sliceData := getSliceData(kvs, sliceKey)
 	require.Equal(t, expectedKeyCount, len(kvTree.Children))
