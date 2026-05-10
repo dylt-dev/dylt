@@ -7,6 +7,11 @@ import (
 
 type RvPointer reflect.Value
 
+
+func (this RvPointer) CreateOrGet (any, error) {
+	
+}
+
 func (this RvPointer) Walk() (any, error) {
 	rv := reflect.Value(this)
 	if !rv.IsValid() { return nil, fmt.Errorf("Invalid value") }
@@ -37,7 +42,8 @@ func (this RvPointer) Walk() (any, error) {
 				 reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
 				 reflect.Float32,
 				 reflect.Float64,
-				 reflect.String: {
+				 reflect.String,
+				 reflect.Struct: {
 					return rv.Interface(), nil
 			}
 			case reflect.Pointer: {
