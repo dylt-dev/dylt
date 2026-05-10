@@ -135,15 +135,46 @@ for structField := range structType.Fields()
   - (Every other decoder) Iterate over the Children collection, looking up the Decoder for each child and invoking it recursively
 
 
-### CreateValueTree([]*mvccpb)
+### CreateValueTree(key, []*mvccpb)
+kv = popKv(kv, kvs)
 
-kvMap := createKvMap()
+// Terminal case 1: the specified key does not exist in the collection at all
+if kv == nil { return nil }
+
+tree := new(ValueTree)
+this.Value  kv.Value
+children := kvs.ChildrenOf(key)
+
+// Terminal case 2: the specified key exists but has no children
+if len(children) == 0 {
+    this.Children = nil
+    return tree
+}
+
+// Recursive case: for each child, create a subtree of the child's children
+// @note it's a little unsatisfying to gather children and child descendants
+//       in a single step. it feels like a clean recursive algorithm would
+//       gather children once, and leave the gathering of descendants to 
+//       subsequent recursive calls. And maybe this is exactly what I can do,
+//       and gathering descendants is merely an optimization, that isn't really
+//       much of an optimization, since subsequent recursive calls are just going
+//       to gather childen anyway. Or maybe it's such an obvious optimization that
+//       it makes sense in the algorithm and maybe just needs more clarity
+for each child in children {
+    name := child.Name()
+    descendants := children.ChildrenOf(name)
+    this.ChildName[name] = CreateValueTree(name, descendants)
+}
+
 
 
 ### Operations
-
-GetSliceElPointer(ptr, i)
--------------------------
+type RvSlice reflect.Value
+func (this RvSlice) GetElPointer(i) any {
+    // If we're going to unmarshal into a slice element we need its pointer
+    rv = reflect.Value(this)
+    return rv.Index(i).Interface()
+}
 
 GetMapKeyPointer()
 ------------------
@@ -151,8 +182,12 @@ GetMapKeyPointer()
 GetMapValuePointer()
 --------------------
 
-GetStructFieldPointer(ptr, structField)
----------------------------------------
+type RvStruct reflect.Value
+func (this RvStruct) GetFieldPointer(fieldName) {
+    // If we're going to unmarshal into a slice element we need its pointer
+    rv = reflect.Value(this)
+    return rv.FieldByName(fieldName).Interface()
+}
 
 WalkPointer (i any) (any, error)
 --------------------------------

@@ -81,7 +81,7 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key st
 
 	pMap, is := common.CreateOrGetMap(ctx, rv)
 	if !is {
-		return fmt.Errorf("Unable to create or get map for ... reasons")	
+		return fmt.Errorf("Unable to create or get map for ... reasons")
 	}
 	if pMap == nil {
 		return fmt.Errorf("nil map -- this shouldn't happen")
@@ -223,7 +223,7 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 
 	pStruct, is := common.CreateOrGetStruct(ctx, rv)
 	if !is {
-		return fmt.Errorf("Unable to create or get struct for ... reasons")	
+		return fmt.Errorf("Unable to create or get struct for ... reasons")
 	}
 
 	// get the reflect.Type for the underlying struct to iterate over
@@ -238,9 +238,9 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 	for childKey, _ := range kvTree.Children {
 		ctx.Logger.Infof("childKey=%s", childKey)
 	}
-	
+
 	ctx.Logger.Comment("Iterating over struct fields")
-	rvpStruct := common.ToRv(pStruct)
+	rvpStruct := common.Reflect(pStruct)
 	for field := range typStruct.Fields() {
 		if field.Tag != "" {
 			ctx.Logger.Infof("%-20s %-20s", field.Name, field.Type)
@@ -258,7 +258,7 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 		decoder := decoderMap[field.Type.Kind()]
 		structField := rvpStruct.Elem().FieldByName(field.Name)
 		addr := structField.Addr()
-		decoder.Decode(ctx, kvChildTree, childKeyName, addr) 
+		decoder.Decode(ctx, kvChildTree, childKeyName, addr)
 		// common.UnmarshalStructField(pStruct, field.Name, kv.Value)
 		// else {
 		// 	addr := rvStruct.FieldByName(string(childKey)).Addr()
@@ -267,7 +267,6 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 		// }
 	}
 
-
 	// populate the new map with the data
 	// for k, childTree := range kvTree.Children {
 	// 	ctx.Logger.Infof("Decoding %s ...", k)
@@ -275,7 +274,6 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 
 	return nil
 }
-
 
 func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
 	ctx.Logger.Signature("decode", key, reflect.TypeOf(i))
@@ -305,8 +303,8 @@ func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
 	ctx.Logger.Info()
 
 	// Create reflect.Value for i
-	rv := common.ToRv(i)
-	
+	rv := common.Reflect(i)
+
 	// Decode using the top-level Decoder
 	ctx.Logger.Comment("Decoding ...")
 	decoder := MainDecoder{}
@@ -350,9 +348,8 @@ func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
 	// }
 }
 
-
-func GetStructFieldKey (fld reflect.StructField) string {
-	var key  string
+func GetStructFieldKey(fld reflect.StructField) string {
+	var key string
 	tag, is := fld.Tag.Lookup("eco")
 	if is {
 		key = tag

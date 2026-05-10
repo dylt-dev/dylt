@@ -105,6 +105,9 @@ func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue) *KeyValue
 	}
 
 	// Recursively create child nodes
+	// @note whoopsie - the whole point of kvMap was to collect every key's
+	// child nodes in a single pass, yet here I am calling it once per recursive
+	// call. That's not how that's supposed to work.
 	kvMap := createKvMap(ctx, key, kvs)
 	ctx.Logger.Infof("%d children found", len(kvMap))
 	for k, v := range kvMap {

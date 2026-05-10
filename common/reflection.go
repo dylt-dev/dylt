@@ -64,8 +64,7 @@ func CreateOrGetMap(ctx *EcoContext, rv reflect.Value) (any, bool) {
 	return i, true
 }
 
-
-func CreateOrGetSlice (ctx *EcoContext, rv reflect.Value) (any, bool) {
+func CreateOrGetSlice(ctx *EcoContext, rv reflect.Value) (any, bool) {
 	return nil, true
 }
 
@@ -105,7 +104,7 @@ func CreateOrGetStruct(ctx *EcoContext, rv reflect.Value) (any, bool) {
 
 func GetUnderlyingMapType(ctx *EcoContext, i any) (reflect.Type, error) {
 	// Check if i is a reflect.Value and if so use i's Interface() as i
-	i = ToInterface(i)
+	i = Unreflect(i)
 
 	// Get i's type and kind
 	var typ reflect.Type = reflect.TypeOf(i)
@@ -172,7 +171,7 @@ func GetUnderlyingMapType(ctx *EcoContext, i any) (reflect.Type, error) {
 // doing cycle detection. I have an exmaple of that somewhere.
 func GetUnderlyingStructType(ctx *EcoContext, i any) (reflect.Type, error) {
 	// Check if i is a reflect.Value and if so use i's Interface() as i
-	i = ToInterface(i)
+	i = Unreflect(i)
 
 	// Get i's type and kind
 	var typ reflect.Type = reflect.TypeOf(i)
@@ -215,9 +214,18 @@ func IsZero(rv reflect.Value) bool {
 	return rv == reflect.Zero(reflect.TypeFor[reflect.Value]())
 }
 
+func Reflect(val any) reflect.Value {
+	rvVal, is := val.(reflect.Value)
+	if !is {
+		rvVal = reflect.ValueOf(val)
+	}
+
+	return rvVal
+}
+
 func SetStructField(pStruct any, fieldName string, val any) error {
-	rvStruct := ToRv(pStruct)
-	rvVal := ToRv(val)
+	rvStruct := Reflect(pStruct)
+	rvVal := Reflect(val)
 	field := rvStruct.Elem().FieldByName(fieldName)
 	if IsZero(field) {
 		return fmt.Errorf("Unable to lookup field (%s)", fieldName)
@@ -228,27 +236,6 @@ func SetStructField(pStruct any, fieldName string, val any) error {
 	rvStruct.Elem().FieldByName(fieldName).Set(rvVal)
 
 	return nil
-}
-
-func ToInterface(val any) any {
-	rv, is := val.(reflect.Value)
-	var i any
-	if is {
-		i = rv.Interface()
-	} else {
-		i = val
-	}
-
-	return i
-}
-
-func ToRv(val any) reflect.Value {
-	rvVal, is := val.(reflect.Value)
-	if !is {
-		rvVal = reflect.ValueOf(val)
-	}
-
-	return rvVal
 }
 
 func UnmarshalMapKey(s string, p any) error {
@@ -266,7 +253,7 @@ func UnmarshalMapKey(s string, p any) error {
 }
 
 func UnmarshalStructField(pStruct any, fieldName string, buf []byte) error {
-	rvStruct := ToRv(pStruct)
+	rvStruct := Reflect(pStruct)
 	field := rvStruct.Elem().FieldByName(fieldName)
 	if IsZero(field) {
 		return fmt.Errorf("Unable to lookup field (%s)", fieldName)
@@ -281,4 +268,16 @@ func UnmarshalStructField(pStruct any, fieldName string, buf []byte) error {
 	}
 
 	return nil
+}
+
+func Unreflect(val any) any {
+	rv, is := val.(reflect.Value)
+	var i any
+	if is {
+		i = rv.Interface()
+	} else {
+		i = val
+	}
+
+	return i
 }
