@@ -14,11 +14,21 @@ ValueTree
 
 ### Algorithms
 
-MainDecoder.decode()
---------------------
-Lookup the kind of value
+Decode(ctx, cli, rootKey, a any) error
+------------------------------------
+Confirm `a` is a non-nil pointer
+Get the underlying Type for a
+Lookup KVs
+Convert to KvSlice
+MainDecoder.Decode(ctx, kvSlice, a)
+
+MainDecoder.decode(ctx, kvSlice, a)
+-----------------------------------
+Walk the pointer
+CreateOrGet(ptr, kvSlice)
+Get the underlying Type for a
 Get the appropriate decoder for the kind
-Invoke the decoder
+decoder.Decode(ctx, kvSlice, a)
 
 MapDecoder.decode()
 -------------------
@@ -47,8 +57,13 @@ for name, childNode := range valueNode.Children) {
     MainDecoder(childNode)
 }
 
-StructDecoder.decode()
-----------------------
+StructDecoder.decode(ctx, kvSlice, a any)
+-----------------------------------------
+// a is either a pointer to an allocated struct, or a pointer to a nil pointer
+// @note - it might be nice if the pointer games were resolved before we got here
+//         like, in MainDecoder
+
+
 pre := CreateOrGetStructPointer(rv)
 for name, childNode := range valueNode.Children) {
 for structField := range structType.Fields()
@@ -231,4 +246,36 @@ func IsReference(a any) bool {
     knd := rv.Kind()
     flag := knd == reflect.Slice || reflect.Map || reflect.Pointer
     return flag
+}
+
+
+func (this RvPointer) CreateOrGet(kvs) (any, error) {
+    /*
+        // Walk the pointer
+        ptr, err := this.Walk()
+        if err ! nil {
+            return nil, err
+        }
+        
+        // If the pointer is non-nil our work is done - except for slices
+        // For slices we need to check if the existing slice can hold the
+        //    required # of elements
+        If non-nil,
+            If non-slice,
+                return
+            n = Get child count, or maybe max child
+            if n >= this.Cap()
+                make a new slice
+            return slice
+        var ptr any
+        Get underlying type
+        switch kind {
+            case Scalar:
+            case Map:
+            case Struct:
+            case Slice:
+            default: return nil, fmt.Errorf("unexpected type (%s)", knd.String())
+        }
+        return ptr, nil
+    */
 }

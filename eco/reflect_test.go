@@ -8,6 +8,116 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+
+func TestRvPointerElemTypeInt1 (t *testing.T) {
+	expectedData := reflect.TypeFor[int]()
+	var pn *int = nil
+	var ppn **int = &pn
+	rv := reflect.ValueOf(ppn)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+
+func TestRvPointerElemTypeInt2 (t *testing.T) {
+	expectedData := reflect.TypeFor[int]()
+	var n int = 13
+	var pn *int = &n
+	rv := reflect.ValueOf(pn)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+
+// RvPointer.ElemType() - pointer chain to nil pointer
+func TestRvPointerElemTypeInt3(t *testing.T) {
+	expectedData := reflect.TypeFor[int]()
+	var pn *int = nil
+	var ppn **int = &pn
+	var pppn ***int = &ppn
+	var ppppn ****int = &pppn
+	var pppppn *****int = &ppppn
+	rv := reflect.ValueOf(pppppn)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+// RvPointer.ElemType() - pointer chain to non-nil pointer
+func TestRvPointerElemTypeInt4(t *testing.T) {
+	expectedData := reflect.TypeFor[int]()
+	var n int = 13
+	var pn *int = &n
+	var ppn **int = &pn
+	var pppn ***int = &ppn
+	var ppppn ****int = &pppn
+	var pppppn *****int = &ppppn
+	rv := reflect.ValueOf(pppppn)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+// pointer to nil map
+func TestRvPointerElemTypeMap1(t *testing.T) {
+	expectedData := reflect.TypeFor[map[int]string]()
+	var m map[int]string = nil
+	var pm = &m
+	rv := reflect.ValueOf(pm)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+// pointer to non-nil map
+func TestRvPointerElemTypeMap2(t *testing.T) {
+	expectedData := reflect.TypeFor[map[int]string]()
+	var m map[int]string = map[int]string{13: "meat"}
+	var pm = &m
+	rv := reflect.ValueOf(pm)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+// pointer chain to nil map
+func TestRvPointerElemTypeMap3(t *testing.T) {
+	expectedData := reflect.TypeFor[map[int]string]()
+	var m map[int]string = nil
+	var pm = &m
+	var ppm = &pm
+	var pppm = &ppm
+	var ppppm = &pppm
+	rv := reflect.ValueOf(ppppm)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
+// pointer chain to non-nil map
+func TestRvPointerElemTypeMap4(t *testing.T) {
+	expectedData := reflect.TypeFor[map[int]string]()
+	var m map[int]string = map[int]string{13: "meat"}
+	var pm = &m
+	var ppm = &pm
+	var pppm = &ppm
+	var ppppm = &pppm
+	rv := reflect.ValueOf(ppppm)
+
+	typ, err := RvPointer(rv).ElemType()
+	require.NoError(t, err)
+	require.Equal(t, expectedData, typ)
+}
+
 // RvPointer.Walk() - pointer to nil pointer
 func TestRvPointerWalkInt1(t *testing.T) {
 	var pn *int = nil

@@ -5,12 +5,69 @@ import (
 	"reflect"
 )
 
+type Flavor reflect.Kind
+const (
+	InvalidFlavor Flavor = iota
+	Map
+	Pointer
+	Scalar
+	Slice
+	Struct
+)
+
+func NewFlavor (knd reflect.Kind) Flavor {
+	switch knd {
+	// simple case for simple types
+	case reflect.Bool,
+	     reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+	     reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+	     reflect.Float32,
+	     reflect.Float64,
+	     reflect.String:
+		return Scalar
+
+	case reflect.Pointer:
+		return Pointer
+
+	case reflect.Slice:
+		return Slice
+
+	case reflect.Map:
+		return Map
+
+	case reflect.Struct:
+		return Struct
+
+	default:
+		return InvalidFlavor
+	}
+}
+
+
 type RvPointer reflect.Value
 
-
-func (this RvPointer) CreateOrGet (any, error) {
-	
+func (this RvPointer) CreateOrGet (kvSlice KvSlice) (any, error) {
+	return nil, nil
 }
+
+
+func (this RvPointer) ElemType() (reflect.Type, error) {
+	// Walk the pointer
+	ptr, err := this.Walk()
+	if err != nil {
+		return nil, err
+	}
+	
+	// If non-pointer, return element type
+	// Otherwise return pointer element type
+	rv := reflect.ValueOf(ptr)
+	rvElemType := rv.Type().Elem()
+	if rvElemType.Kind() != reflect.Pointer {
+		return rvElemType, nil
+	} 
+	return rvElemType.Elem(), nil
+}
+
 
 func (this RvPointer) Walk() (any, error) {
 	rv := reflect.Value(this)
