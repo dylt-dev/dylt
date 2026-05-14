@@ -9,7 +9,7 @@ import (
 )
 
 type KeyValue struct {
-	Key string
+	Key KeyString
 	Value []byte
 }
 
@@ -31,7 +31,7 @@ func deleteKeyFromSlice (ctx *common.EcoContext, kvs []*KeyValue, key string) []
 
 	ctx.Logger.Infof("Before: len(kvs)=%d", len(kvs))
 	ctx.Logger.Commentf("Getting index of %s ...", key)
-	iKv := slices.IndexFunc(kvs, func (kv *KeyValue) bool { return key == kv.Key  })
+	iKv := slices.IndexFunc(kvs, func (kv *KeyValue) bool { return key == string(kv.Key)  })
 	ctx.Logger.Infof("iKv=%d", iKv)
 	if iKv != -1 {
 		ctx.Logger.Comment("Deleting element from slice")
@@ -44,7 +44,7 @@ func deleteKeyFromSlice (ctx *common.EcoContext, kvs []*KeyValue, key string) []
 
 func newKv (k string, v string) *KeyValue{
 	kv := new(KeyValue)
-	kv.Key = k
+	kv.Key = KeyString(k)
 	kv.Value = []byte(v)
 
 	return kv
@@ -53,7 +53,7 @@ func newKv (k string, v string) *KeyValue{
 
 func newKvFromEtcd (etcdKv *mvccpb.KeyValue) *KeyValue{
 	kv := new(KeyValue)
-	kv.Key = string(etcdKv.Key)
+	kv.Key = KeyString(string(etcdKv.Key))
 	kv.Value = etcdKv.Value
 
 	return kv
@@ -98,11 +98,11 @@ func findKv (key string, kvs []*KeyValue) *KeyValue {
 	}
 
 	if isPhysical {
-		return &KeyValue{Key: key, Value: kv.Value}
+		return &KeyValue{Key: KeyString(key), Value: kv.Value}
 	}
 
 	if isLogical {
-		return &KeyValue{Key: key, Value: nil}
+		return &KeyValue{Key: KeyString(key), Value: nil}
 	}
 	
 	return nil

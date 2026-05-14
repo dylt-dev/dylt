@@ -23,6 +23,17 @@ func TestChildName2(t *testing.T) {
 	require.Equal(t, expectedData, data)
 }
 
+
+func TestCutPrefix3(t *testing.T) {
+	expectedData := "/1313"
+	prefix := "/prefix"
+	keyString := KeyString(expectedData)
+	s, is := keyString.CutPrefix(prefix)
+	require.False(t, is)
+	require.Equal(t, expectedData, string(s))
+}
+
+
 func TestIndex(t *testing.T) {
 	expectedData := uint64(13)
 	keyString := KeyString("/foo/bar/13")

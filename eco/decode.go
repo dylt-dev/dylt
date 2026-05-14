@@ -235,7 +235,7 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 	ctx.Logger.Infof("struct type=%s", typStruct.Name())
 
 	ctx.Logger.Comment("Dumping child keys ...")
-	for childKey, _ := range kvTree.Children {
+	for childKey := range kvTree.Children {
 		ctx.Logger.Infof("childKey=%s", childKey)
 	}
 

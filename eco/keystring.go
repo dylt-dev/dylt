@@ -7,11 +7,6 @@ import (
 
 type KeyString string
 
-func (s KeyString) CutPrefix(prefix string) (string, bool) {
-	snew, is := strings.CutPrefix(string(s), prefix)
-	return snew, is
-}
-
 
 func (s KeyString) ChildName(prefix string) string {
 	afterPrefix, is := s.CutPrefix(prefix)
@@ -27,6 +22,13 @@ func (s KeyString) ChildName(prefix string) string {
 	return segments[0]
 }
 
+
+func (s KeyString) CutPrefix(prefix string) (KeyString, bool) {
+	snew, is := strings.CutPrefix(string(s), prefix)
+	return KeyString(snew), is
+}
+
+
 func (s KeyString) ElementName(prefix string) string {
 	afterPrefix, is := s.CutPrefix(prefix)
 	if !is {
@@ -39,13 +41,13 @@ func (s KeyString) ElementName(prefix string) string {
 	return segments[len(segments)-1]
 }
 
-func (s KeyString) Index() (uint64, bool) {
+func (s KeyString) Index() (int, bool) {
 	if string(s) == "" {
 		return 0, false
 	}
 	segments := s.Segments()
 	lastSeg := segments[len(segments)-1]
-	index, err := strconv.ParseUint(lastSeg, 10, 64)
+	index, err := strconv.Atoi(lastSeg)
 	if err != nil {
 		return 0, false
 	}

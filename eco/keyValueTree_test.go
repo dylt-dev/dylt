@@ -116,9 +116,9 @@ func TestKvTreeStruct(t *testing.T) {
 	expectedName := "Me"
 	expectedLuckyNumber := 13
 	expectedNoTag := "no-tag-value"
-	keyName := fmt.Sprintf("%s/%s", key, "name")
-	keyLuckyNumber := fmt.Sprintf("%s/%s", key, "lucky_number")
-	keyNoTag := fmt.Sprintf("%s/%s", key, "NoTag")
+	keyName := KeyString(fmt.Sprintf("%s/%s", key, "name"))
+	keyLuckyNumber := KeyString(fmt.Sprintf("%s/%s", key, "lucky_number"))
+	keyNoTag := KeyString(fmt.Sprintf("%s/%s", key, "NoTag"))
 
 	// Encode []byte values for struct fields
 	bufName := []byte(expectedName)

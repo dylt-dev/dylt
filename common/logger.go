@@ -107,7 +107,12 @@ func (l *cliLogger) Signature(name string, args ...any) {
 
 func CreateSignature(name string, args ...any) string {
 	// highlight, concat, all that good stuff
-	sFmt := fmt.Sprintf("%%s(%s)", strings.Repeat("%v, ", len(args)-1)+"%v")
+	var sFmt string
+	if len(args) == 0 {
+		sFmt = "%s()"
+	} else {
+		sFmt = fmt.Sprintf("%%s(%s)", strings.Repeat("%v, ", len(args)-1)+"%v")
+	}
 	args2 := make([]any, len(args)+1)
 	args2[0] = Highlight(name)
 	for i, arg := range args {

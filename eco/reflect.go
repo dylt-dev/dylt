@@ -3,6 +3,8 @@ package eco
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/dylt-dev/dylt/common"
 )
 
 type Flavor reflect.Kind
@@ -44,77 +46,45 @@ func NewFlavor (knd reflect.Kind) Flavor {
 }
 
 
-type RvPointer reflect.Value
 
-func (this RvPointer) CreateOrGet (kvSlice KvSlice) (any, error) {
-	return nil, nil
+// Check if the argument refers to a pointer to an allocated variable, or
+// if it is a pointer to a nil pointer, or a pointer to a Slice or Map
+// If the argument is none of these, return an error
+func IsPointerAllocated (ctx *common.EcoContext, a any) (bool, error) {
+	ctx.Logger.Signature("IsPointerAllocated")
+	ctx.Inc()
+	defer ctx.Dec()
+
+	rv := reflect.ValueOf(a)
+	if !rv.IsValid() { return false, fmt.Errorf("Invalid value") }
+	if rv.Kind() != reflect.Pointer { return false, fmt.Errorf("expected pointer, got %s", rv.Kind().String()) }
+	if rv.IsNil() {
+		if RvPointer(rv).IsReferencePointer(ctx) {
+			return false, nil
+		} else {
+			return false, fmt.Errorf("Expecting non-nil value")
+		}
+	}
+
+	rvElem := rv.Elem()
+	if rvElem.Kind() == reflect.Pointer {
+		if !rvElem.IsNil() {
+			return false, fmt.Errorf("pointer to a non-nil pointer")
+		} else {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 
-func (this RvPointer) ElemType() (reflect.Type, error) {
-	// Walk the pointer
-	ptr, err := this.Walk()
-	if err != nil {
-		return nil, err
-	}
-	
-	// If non-pointer, return element type
-	// Otherwise return pointer element type
-	rv := reflect.ValueOf(ptr)
-	rvElemType := rv.Type().Elem()
-	if rvElemType.Kind() != reflect.Pointer {
-		return rvElemType, nil
-	} 
-	return rvElemType.Elem(), nil
-}
-
-
-func (this RvPointer) Walk() (any, error) {
-	rv := reflect.Value(this)
-	if !rv.IsValid() { return nil, fmt.Errorf("Invalid value") }
-	if rv.IsNil() { return nil, fmt.Errorf("Expecting non-nilt value") }
-	if rv.Kind() != reflect.Pointer { return nil, fmt.Errorf("expected pointer, got %s", rv.Kind().String()) }
-
-	// We definitely have a non-nil pointer
-	// Now, we care about 3 success conditions and one error condition
-	// - rv is a pointer to a Reference type (slice or map) - return
-	// - rv is a non-nil pointer to a Value type (scalar struct) - return
-	// - rv is a pointer to a non-pointer - return Error
-	// - rv is a pointer to a nil value pointer - return
-	
-	for {
-		rvElem := rv.Elem()
-		
-		// check rv is a pointer to a Reference type (slice or map)
-		if rvElem.Kind() == reflect.Map || rvElem.Kind() == reflect.Slice {
-			return rv.Interface(), nil
-		}
-
-		// check rv is a non-nil pointer to a Value type (scalar struct) - return
-		// - rv is a pointer to a nil value pointer - return
-		// check rv is a pointer to a non-pointer - return Error
-		switch rvElem.Kind() {
-			case reflect.Bool,
-				 reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-				 reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
-				 reflect.Float32,
-				 reflect.Float64,
-				 reflect.String,
-				 reflect.Struct: {
-					return rv.Interface(), nil
-			}
-			case reflect.Pointer: {
-				if rvElem.IsNil() {
-					return rv.Interface(), nil
-				}			
-			}
-
-			default: {
-				return nil, fmt.Errorf("pointer to unsupported kind (%s)", rvElem.Kind().String())
-			}
-		}
-
-		// If we've gotten this far, we have a pointer to a non-nil pointer, so we keep looking
-		rv = rvElem
-	}
+func MakeSlice (typ reflect.Type, n int) any {
+	rvSlice := reflect.MakeSlice(typ, n, n)
+	// Slices are not addressable. We need to allocate a pointer
+	// to a slice, assign our new slice to the pointer's Elem,
+	// and then return the Interface() of the new pointer
+	rvSlicePtr := reflect.New(typ)
+	rvSlicePtr.Elem().Set(rvSlice)
+	return rvSlicePtr.Interface()
 }

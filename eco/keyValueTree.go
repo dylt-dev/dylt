@@ -11,8 +11,8 @@ import (
 
 type KeyValueChildMap map[KeyString]*KeyValueTree
 
-func (m KeyValueChildMap) MaxIndex() uint64 {
-	var maxIndex uint64 = 0
+func (m KeyValueChildMap) MaxIndex() int {
+	var maxIndex int = 0
 	for key := range m {
 		keyString := KeyString(key)
 		index, is := keyString.Index()

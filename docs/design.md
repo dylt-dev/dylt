@@ -256,26 +256,75 @@ func (this RvPointer) CreateOrGet(kvs) (any, error) {
         if err ! nil {
             return nil, err
         }
+        isAllocated, err := IsPointerAllocated(ptr, err)
+        if err ! nil {
+            return nil, err
+        }
+        rvPtr := reflect.ValueOf(ptr)
+
+        // Handle slices differently
+        if rvPtr.Type().Elem() == reflect.Slice {
+            return CreateOrGetSlice(kvs)
+        }
         
+        // *** extract all the slice specific stuff into its own mmethod. Then
+        //     pull the non-slice stuff together here, possible generalizing it
+        // ***
+
         // If the pointer is non-nil our work is done - except for slices
         // For slices we need to check if the existing slice can hold the
         //    required # of elements
-        If non-nil,
-            If non-slice,
-                return
-            n = Get child count, or maybe max child
+        if isAllocated {
+            rv := reflect.ValueOf(ptr)
+            rvElem := rv.Elem()
+            typElem := rvElem.Type()
+            If typElem.Kind() != reflect.Slice,
+                return ptr, nil
+            n = kvs.MaxSliceIndex()
             if n >= this.Cap()
-                make a new slice
-            return slice
+                typ := rv.Type().Elem()
+                ptr := MakeSlice(typ, n)
+            return ptr, nil
+
         var ptr any
         Get underlying type
         switch kind {
             case Scalar:
+                ptr := rv.Interface()
             case Map:
+                map := reflect.MakeMap(typUnderlying)
+                ptr := reflect.New(typUnderlying)
+                ptr.Elem().Set(map) 
             case Struct:
+                ptr := reflect.New(typUnderlying)
             case Slice:
+                n = kvs.MaxSliceIndex()
+                ptr := MakeSlice(typUnderlying, n))
             default: return nil, fmt.Errorf("unexpected type (%s)", knd.String())
         }
+        rv.Elem().Set(ptr)
         return ptr, nil
     */
 }
+
+func (this RvPointer) CreateOrGetSlice(kvs) (ptr any, error) {
+    ptr := this.Interface()
+    isAllocated, err := IsPointerAllocated(ptr, err)
+    rv := reflect.ValueOf(ptr)
+    n := kvs.MaxIndex()+1
+    
+    var ptr any
+    if !sAllocated && rv.Elem().Cap() >= n  {
+        ptr := 
+        typ := rv.Type().Elem()
+        ptr := MakeSlice(typ, n)
+        this.Elem().Set(ptr)
+    }
+    
+    return ptr, nil
+}
+
+I need to figure out the difference between how to handle a pointer to a nil ref,
+and how to handle a nil pointer to a ref.
+- How does Walk() handle each?
+- How does CreateOrGet() handle each?
