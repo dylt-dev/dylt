@@ -6,9 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-func TestKvSliceMaxIndex (t *testing.T) {
-	expectedData := uint64(99)
+func TestKvSliceMaxIndex(t *testing.T) {
+	expectedData := int(99)
 	kvs := []KeyValue{
 		{"/slice/0", nil},
 		{"/slice/1", nil},
@@ -19,7 +18,7 @@ func TestKvSliceMaxIndex (t *testing.T) {
 		{"/fakeslice/169", nil},
 		{"/1313", nil},
 	}
-	kvSlice := KvSlice{kvs, "/slice"}
+	kvSlice := KvSeries{kvs, "/slice"}
 	n := kvSlice.MaxIndex()
 	require.Equal(t, expectedData, n)
 }

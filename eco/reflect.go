@@ -59,7 +59,7 @@ func IsPointerAllocated (ctx *common.EcoContext, a any) (bool, error) {
 	if !rv.IsValid() { return false, fmt.Errorf("Invalid value") }
 	if rv.Kind() != reflect.Pointer { return false, fmt.Errorf("expected pointer, got %s", rv.Kind().String()) }
 	if rv.IsNil() {
-		if RvPointer(rv).IsReferencePointer(ctx) {
+		if RvPointer(rv).IsReference(ctx) {
 			return false, nil
 		} else {
 			return false, fmt.Errorf("Expecting non-nil value")

@@ -307,6 +307,17 @@ func (this RvPointer) CreateOrGet(kvs) (any, error) {
     */
 }
 
+
+func (this RvPointer) CreateOrGetMap() (ptr any, error) {
+    return nil, nil
+}
+
+
+func (this RvPointer) CreateOrGetScalar() (ptr any, error) {
+    return nil, nil
+}
+
+
 func (this RvPointer) CreateOrGetSlice(kvs) (ptr any, error) {
     ptr := this.Interface()
     isAllocated, err := IsPointerAllocated(ptr, err)
@@ -323,6 +334,11 @@ func (this RvPointer) CreateOrGetSlice(kvs) (ptr any, error) {
     
     return ptr, nil
 }
+
+func (this RvPointer) CreateOrGetStruct() (ptr any, error) {
+    return nil, nil
+}
+
 
 I need to figure out the difference between how to handle a pointer to a nil ref,
 and how to handle a nil pointer to a ref.

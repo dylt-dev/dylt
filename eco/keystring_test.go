@@ -35,7 +35,7 @@ func TestCutPrefix3(t *testing.T) {
 
 
 func TestIndex(t *testing.T) {
-	expectedData := uint64(13)
+	expectedData := int(13)
 	keyString := KeyString("/foo/bar/13")
 	index, is := keyString.Index()
 	require.True(t, is)
@@ -43,7 +43,7 @@ func TestIndex(t *testing.T) {
 }
 
 func TestIndexBad (t *testing.T) {
-	expectedData := uint64(2)
+	expectedData := int(2)
 	keyString := KeyString("/test/boolSlice/2")
 	index, is := keyString.Index()
 	require.True(t, is)
@@ -52,7 +52,7 @@ func TestIndexBad (t *testing.T) {
 
 
 func TestIndexEmpty(t *testing.T) {
-	expectedData := uint64(0)
+	expectedData := int(0)
 	keyString := KeyString("")
 	index, is := keyString.Index()
 	require.False(t, is)
@@ -60,7 +60,7 @@ func TestIndexEmpty(t *testing.T) {
 }
 
 func TestIndexNoInt(t *testing.T) {
-	expectedData := uint64(0)
+	expectedData := int(0)
 	keyString := KeyString("/foo/bar/bum")
 	index, is := keyString.Index()
 	require.False(t, is)
@@ -68,7 +68,7 @@ func TestIndexNoInt(t *testing.T) {
 }
 
 func TestIndexNoPrefix(t *testing.T) {
-	expectedData := uint64(13)
+	expectedData := int(13)
 	keyString := KeyString("/13")
 	index, is := keyString.Index()
 	require.True(t, is)
@@ -76,7 +76,7 @@ func TestIndexNoPrefix(t *testing.T) {
 }
 
 func TestIndexNoSlash(t *testing.T) {
-	expectedData := uint64(13)
+	expectedData := int(13)
 	keyString := KeyString("13")
 	index, is := keyString.Index()
 	require.True(t, is)

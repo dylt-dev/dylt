@@ -1,12 +1,20 @@
 package eco
 
-type KvSlice struct {
-	Kvs []KeyValue
+type KvSeries struct {
+	Kvs     []KeyValue
 	RootKey KeyString
 }
 
 
-func (this KvSlice) MaxIndex () int {
+func (this KvSeries) Len() int {
+	if this.Kvs == nil {
+		return 0
+	}
+
+	return len(this.Kvs)
+}
+
+func (this KvSeries) MaxIndex() int {
 	var maxIndex int = 0
 	for _, kv := range this.Kvs {
 		keyString, is := kv.Key.CutPrefix(string(this.RootKey))

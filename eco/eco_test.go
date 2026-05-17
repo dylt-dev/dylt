@@ -370,7 +370,7 @@ func TestGetSliceKeysAndMaxIndex(t *testing.T) {
 	defer common.Teardown(t)
 	ctx, _ := initAndTest(t)
 
-	expectedMaxIndex := uint64(2)
+	expectedMaxIndex := int(2)
 	expectedKeyCount := 3
 	expectedValue := []byte("13")
 	sliceKey := "/test/slice"
