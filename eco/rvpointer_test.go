@@ -12,7 +12,7 @@ import (
 func TestRvpCreateOrGetMap1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/map"}
+	kvSeries := KvSeries{"/map", kvs}
 
 	x := map[string]int{}
 	p := &x
@@ -32,7 +32,7 @@ func TestRvpCreateOrGetMap1(t *testing.T) {
 func TestRvpCreateOrGetMap2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/map"}
+	kvSeries := KvSeries{"/map", kvs}
 
 	var p *map[string]int = nil
 	pp := &p
@@ -53,7 +53,7 @@ func TestRvpCreateOrGetMap2(t *testing.T) {
 func TestRvpCreateOrGetMap3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/map"}
+	kvSeries := KvSeries{"/map", kvs}
 
 	var x map[string]int = nil
 	p := &x
@@ -74,7 +74,7 @@ func TestRvpCreateOrGetMap3(t *testing.T) {
 func TestRvpCreateOrGetMap4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/map"}
+	kvSeries := KvSeries{"/map", kvs}
 
 	x := map[string]int{}
 	p := &x
@@ -98,7 +98,7 @@ func TestRvpCreateOrGetMap4(t *testing.T) {
 func TestRvpCreateOrGetMap5(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/map"}
+	kvSeries := KvSeries{"/map", kvs}
 
 	var p *map[string]int = nil
 	pp := &p
@@ -120,7 +120,7 @@ func TestRvpCreateOrGetMap5(t *testing.T) {
 func TestRvpCreateOrGetMap6(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/map"}
+	kvSeries := KvSeries{"/map", kvs}
 
 	var x map[string]int = nil
 	p := &x
@@ -146,7 +146,7 @@ func TestRvpCreateOrGetScalar1(t *testing.T) {
 	kvs := []KeyValue{
 		{"/scalar/n", []byte("13")},
 	}
-	kvSeries := KvSeries{kvs, "/scalar"}
+	kvSeries := KvSeries{"/scalar", kvs}
 
 	var x int
 	p := &x
@@ -166,7 +166,7 @@ func TestRvpCreateOrGetScalar2(t *testing.T) {
 	kvs := []KeyValue{
 		{"/scalar/n", []byte("13")},
 	}
-	kvSeries := KvSeries{kvs, "/scalar"}
+	kvSeries := KvSeries{"/scalar", kvs}
 
 	var p *int = nil
 	pp := &p
@@ -186,7 +186,7 @@ func TestRvpCreateOrGetScalar3(t *testing.T) {
 	kvs := []KeyValue{
 		{"/scalar/n", []byte("13")},
 	}
-	kvSeries := KvSeries{kvs, "/scalar"}
+	kvSeries := KvSeries{"/scalar", kvs}
 
 	var x int
 	p := &x
@@ -209,7 +209,7 @@ func TestRvpCreateOrGetScalar4(t *testing.T) {
 	kvs := []KeyValue{
 		{"/scalar/n", []byte("13")},
 	}
-	kvSeries := KvSeries{kvs, "/scalar"}
+	kvSeries := KvSeries{"/scalar", kvs}
 
 	var p *int = nil
 	pp := &p
@@ -229,7 +229,7 @@ func TestRvpCreateOrGetScalar4(t *testing.T) {
 func TestRvpCreateOrGetStruct1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/struct"}
+	kvSeries := KvSeries{"/struct", kvs}
 
 	x := struct{}{}
 	p := &x
@@ -247,7 +247,7 @@ func TestRvpCreateOrGetStruct1(t *testing.T) {
 func TestRvpCreateOrGetStruct2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/scalar"}
+	kvSeries := KvSeries{"/scalar", kvs}
 
 	var p *struct{} = nil
 	pp := &p
@@ -265,7 +265,7 @@ func TestRvpCreateOrGetStruct2(t *testing.T) {
 func TestRvpCreateOrGetStruct3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/struct"}
+	kvSeries := KvSeries{"/struct", kvs}
 
 	x := struct{}{}
 	p := &x
@@ -286,7 +286,7 @@ func TestRvpCreateOrGetStruct3(t *testing.T) {
 func TestRvpCreateOrGetStruct4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	kvs := []KeyValue{}
-	kvSeries := KvSeries{kvs, "/struct"}
+	kvSeries := KvSeries{"/struct", kvs}
 
 	var p *struct{} = nil
 	pp := &p
@@ -310,7 +310,7 @@ func TestRvpCreateOrGetSlice1(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/3", []byte("3")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	rv := reflect.ValueOf(&slice)
@@ -332,7 +332,7 @@ func TestRvpCreateOrGetSlice2(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	rv := reflect.ValueOf(&slice)
@@ -355,7 +355,7 @@ func TestRvpCreateOrGetSlice3(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	var p *[]int = nil
 	pp := &p
@@ -378,7 +378,7 @@ func TestRvpCreateOrGetSlice4(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/3", []byte("3")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	pslice := &slice
@@ -404,7 +404,7 @@ func TestRvpCreateOrGetSlice5(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	pslice := &slice
@@ -431,7 +431,7 @@ func TestRvpCreateOrGetSlice6(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	var pslice *[]int = nil
 	ppslice := &pslice
@@ -457,7 +457,7 @@ func TestRvpCreateOrGet_Slice1(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/3", []byte("3")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	rv := reflect.ValueOf(&slice)
@@ -479,7 +479,7 @@ func TestRvpCreateOrGet_Slice2(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	rv := reflect.ValueOf(&slice)
@@ -502,7 +502,7 @@ func TestRvpCreateOrGet_Slice3(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	var p *[]int = nil
 	pp := &p
@@ -525,7 +525,7 @@ func TestRvpCreateOrGet_Slice4(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/3", []byte("3")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	pslice := &slice
@@ -551,7 +551,7 @@ func TestRvpCreateOrGet_Slice5(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	slice := make([]int, 5)
 	pslice := &slice
@@ -578,7 +578,7 @@ func TestRvpCreateOrGet_Slice6(t *testing.T) {
 		{"/slice/2", []byte("2")},
 		{"/slice/13", []byte("13")},
 	}
-	kvSlice := KvSeries{kvs, "/slice"}
+	kvSlice := KvSeries{"/slice", kvs}
 
 	var pslice *[]int = nil
 	ppslice := &pslice

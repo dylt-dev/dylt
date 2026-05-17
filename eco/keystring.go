@@ -54,6 +54,15 @@ func (s KeyString) Index() (int, bool) {
 	return index, true
 }
 
+
+func (ks KeyString) IsParent(keyString KeyString) bool {
+	s := string(ks.WithoutEndSlash())
+	sKeyString := string(keyString.WithoutEndSlash())
+	return strings.HasPrefix(sKeyString, s) && s != sKeyString
+}
+
+
+
 func (s KeyString) Segments() []string {
 	var segments []string = []string{}
 	var iSlashes []int = []int{}

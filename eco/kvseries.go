@@ -1,12 +1,22 @@
 package eco
 
 type KvSeries struct {
-	Kvs     []KeyValue
 	RootKey KeyString
+	Kvs     []KeyValue
 }
 
 
-func (this KvSeries) Len() int {
+func (this *KvSeries) Add (kv KeyValue) bool {
+	if !this.IsOwner(kv.Key) {
+		return false
+	}
+	this.Kvs = append(this.Kvs, kv)
+	return true
+}
+
+
+
+func (this *KvSeries) Len() int {
 	if this.Kvs == nil {
 		return 0
 	}
@@ -14,7 +24,7 @@ func (this KvSeries) Len() int {
 	return len(this.Kvs)
 }
 
-func (this KvSeries) MaxIndex() int {
+func (this *KvSeries) MaxIndex() int {
 	var maxIndex int = 0
 	for _, kv := range this.Kvs {
 		keyString, is := kv.Key.CutPrefix(string(this.RootKey))
@@ -27,4 +37,8 @@ func (this KvSeries) MaxIndex() int {
 	}
 
 	return maxIndex
+}
+
+func (this *KvSeries) IsOwner (keyString KeyString) bool {
+	return this.RootKey.IsParent(keyString)
 }

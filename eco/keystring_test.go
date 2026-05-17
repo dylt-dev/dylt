@@ -84,6 +84,55 @@ func TestIndexNoSlash(t *testing.T) {
 }
 
 
+func TestIsParent1(t *testing.T) {
+	ksParent := KeyString("/foo")
+	ks := KeyString("/foo/bar")
+	require.True(t, ksParent.IsParent(ks))
+}
+
+
+func TestIsParent2(t *testing.T) {
+	ksParent := KeyString("/foo")
+	ks := KeyString("/foo/bar/bum")
+	require.True(t, ksParent.IsParent(ks))
+}
+
+
+func TestIsParent3(t *testing.T) {
+	ksParent := KeyString("/foo")
+	ks := KeyString("/bar")
+	require.False(t, ksParent.IsParent(ks))
+}
+
+
+func TestIsParent4(t *testing.T) {
+	ksParent := KeyString("/foo")
+	ks := KeyString("/foo")
+	require.False(t, ksParent.IsParent(ks))
+}
+
+
+func TestIsParent5(t *testing.T) {
+	ksParent := KeyString("/foo/")
+	ks := KeyString("/foo")
+	require.False(t, ksParent.IsParent(ks))
+}
+
+
+func TestIsParent6(t *testing.T) {
+	ksParent := KeyString("/foo")
+	ks := KeyString("/foo/")
+	require.False(t, ksParent.IsParent(ks))
+}
+
+
+func TestIsParent7(t *testing.T) {
+	ksParent := KeyString("/foo/")
+	ks := KeyString("/foo/")
+	require.False(t, ksParent.IsParent(ks))
+}
+
+
 func TestSegments1(t *testing.T) {
 	var s KeyString = "/foo/bar/bum/"
 	segments := s.Segments()
