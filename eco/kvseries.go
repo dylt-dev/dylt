@@ -15,7 +15,6 @@ func (this *KvSeries) Add (kv KeyValue) bool {
 }
 
 
-
 func (this *KvSeries) Len() int {
 	if this.Kvs == nil {
 		return 0

@@ -10,16 +10,18 @@ import (
 func TestChildName1(t *testing.T) {
 	expectedData := "bum"
 	keyString := KeyString("/foo/bar/bum")
-	prefix := "/foo/bar"
-	data := keyString.ChildName(prefix)
+	prefix := KeyString("/foo/bar")
+	data, is := keyString.ChildName(prefix)
+	require.True(t, is)
 	require.Equal(t, expectedData, data)
 }
 
 func TestChildName2(t *testing.T) {
 	expectedData := ""
 	keyString := KeyString("/foo/bar")
-	prefix := "/foo/bar"
-	data := keyString.ChildName(prefix)
+	prefix := KeyString("/foo/bar")
+	data, is := keyString.ChildName(prefix)
+	require.False(t, is)
 	require.Equal(t, expectedData, data)
 }
 
@@ -133,9 +135,115 @@ func TestIsParent7(t *testing.T) {
 }
 
 
+func TestKeyStringChild1(t *testing.T) {
+	expectedChild := KeyString("/foo")
+	ksParent := KeyString("/foo/bar/bum")
+	ksPrefix := KeyString("/")
+	ksChild, is := ksParent.Child(ksPrefix)
+	require.True(t, is)
+	require.Equal(t, expectedChild, ksChild)
+}
+
+
+func TestKeyStringChild2(t *testing.T) {
+	expectedChild := KeyString("/foo/bar")
+	ksParent := KeyString("/foo/bar/bum")
+	ksPrefix := KeyString("/foo")
+	ksChild, is := ksParent.Child(ksPrefix)
+	require.True(t, is)
+	require.Equal(t, expectedChild, ksChild)
+}
+
+
+func TestKeyStringChild3(t *testing.T) {
+	expectedChild := KeyString("/foo/bar/bum")
+	ksParent := KeyString("/foo/bar/bum")
+	ksPrefix := KeyString("/foo/bar")
+	ksChild, is := ksParent.Child(ksPrefix)
+	require.True(t, is)
+	require.Equal(t, expectedChild, ksChild)
+}
+
+
+func TestKeyStringChild4(t *testing.T) {
+	expectedChild := KeyString("")
+	ksParent := KeyString("/foo/bar/bum")
+	ksPrefix := KeyString("/foo/bar/bum")
+	ksChild, is := ksParent.Child(ksPrefix)
+	require.False(t, is)
+	require.Equal(t, expectedChild, ksChild)
+}
+
+func TestKeyStringIsLeaf1 (t *testing.T) {
+	var ks KeyString = "/foo"
+	is := ks.IsLeaf()
+	require.True(t, is)
+}
+
+func TestKeyStringIsLeaf2 (t *testing.T) {
+	var ks KeyString = "/foo/bar"
+	is := ks.IsLeaf()
+	require.False(t, is)
+}
+
+
+func TestKeyStringIsLeaf3 (t *testing.T) {
+	var ks KeyString = ""
+	is := ks.IsLeaf()
+	require.False(t, is)
+}
+
+func TestKeyStringPopHead1(t *testing.T) {
+	var expectedHead string = "foo"
+	var expectedBody KeyString = "/bar/bum"
+	var ks KeyString = "/foo/bar/bum/"
+	head, body := ks.PopHead()
+	require.Equal(t, expectedHead, head)
+	require.Equal(t, expectedBody, body)
+}
+
+func TestKeyStringPopHead2(t *testing.T) {
+	var expectedHead string = "foo"
+	var expectedBody KeyString = ""
+	var ks KeyString = "/foo"
+	head, body := ks.PopHead()
+	require.Equal(t, expectedHead, head)
+	require.Equal(t, expectedBody, body)
+}
+
+func TestKeyStringPopHead3(t *testing.T) {
+	var expectedHead string = ""
+	var expectedBody KeyString = ""
+	var ks KeyString = ""
+	head, body := ks.PopHead()
+	require.Equal(t, expectedHead, head)
+	require.Equal(t, expectedBody, body)
+}
+
+func TestKeyStringTrimHead1(t *testing.T) {
+	var expected string = "/bar/bum"
+	var ks KeyString = "/foo/bar/bum/"
+	ks2 := ks.TrimHead()
+	require.Equal(t, expected, string(ks2))
+}
+
+func TestKeyStringTrimHead2(t *testing.T) {
+	var expected string = ""
+	var ks KeyString = "/foo"
+	ks2 := ks.TrimHead()
+	require.Equal(t, expected, string(ks2))		
+}
+
+func TestKeyStringTrimHead3(t *testing.T) {
+	var expected string = ""
+	var ks KeyString = ""
+	ks2 := ks.TrimHead()
+	require.Equal(t, expected, string(ks2))		
+}
+
 func TestSegments1(t *testing.T) {
-	var s KeyString = "/foo/bar/bum/"
-	segments := s.Segments()
+	var ks KeyString = "/foo/bar/bum/"
+	segments := ks.Segments()
 	require.Equal(t, 3, len(segments))
 	require.Equal(t, "foo", segments[0])
 	require.Equal(t, "bar", segments[1])
