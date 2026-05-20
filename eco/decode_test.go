@@ -461,26 +461,90 @@ func TestDecodeBoolSlice(t *testing.T) {
 	require.False(t, x[2])
 }
 
-func TestDecodeFloat(t *testing.T) {
-	decodeAndTestScalar(t, "/test/float", float32(42.0))
+func TestDecodeFloat1(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := float64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setFloat(expected)
+	var x float64
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeFloat2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/float2", float32(42.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := float64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setFloat(expected)
+	var p *float64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeFloatSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/float32slice",
-		[]float32{42.0, 1764.0, 6.54321})
+	ctx := common.NewEcoContext(os.Stdout)
+	expected0 := 42.0
+	expected1 := 1764.0
+	expected9 := 6.54321
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	tree.addFloat(ctx, "/0", expected0)
+	tree.addFloat(ctx, "/1", expected1)
+	tree.addFloat(ctx, "/9", expected9)
+	var p *[]float64 = nil
+	pp := &p
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
+
 }
 
 func TestDecodeInt(t *testing.T) {
-	decodeAndTestScalar(t, "/test/int", int(-13.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := int64(13)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setInt(expected)
+	var x int64
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeInt2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/int2", int(-13.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := int64(13)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setInt(expected)
+	var p *int64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeIntSlice(t *testing.T) {
@@ -500,39 +564,119 @@ func TestDecodeIntSlice(t *testing.T) {
 }
 
 func TestDecodeString(t *testing.T) {
-	decodeAndTestScalar(t, "/test/string", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := "meat"
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setString(expected)
+	var x string
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeString2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/string2", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := "meat"
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setString(expected)
+	var p *string = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeStringSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/stringslice",
-		[]string{"foo", "bar", "bum"})
+	ctx := common.NewEcoContext(os.Stdout)
+	expected0 := "foo"
+	expected1 := "bar"
+	expected9 := "bum"
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	tree.addString(ctx, "/0", expected0)
+	tree.addString(ctx, "/1", expected1)
+	tree.addString(ctx, "/9", expected9)
+	var p *[]string = nil
+	pp := &p
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
 }
 
-func TestDecodeUint(t *testing.T) {
-	decodeAndTestScalar(t, "/test/uint", uint(13.0))
+func TestDecodeUint1(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := uint64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setUint(expected)
+	var x uint64
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeUint2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/uint2", uint(13.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := uint64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setUint(expected)
+	var p *uint64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeUintSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/uintslice",
-		[]uint{5, 12, 13})
+	ctx := common.NewEcoContext(os.Stdout)
+	expected0 := int64(13)
+	expected1 := int64(169)
+	expected9 := int64(1997)
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	tree.addInt(ctx, "/0", expected0)
+	tree.addInt(ctx, "/1", expected1)
+	tree.addInt(ctx, "/9", expected9)
+	var p *[]int64 = nil
+	pp := &p
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
 }
 
-func TestGetBool(t *testing.T) {
-	testGetScalar(t, "test/bool", true)
+func TestGetBool1(t *testing.T) {
+	testGetScalar(t, "/test/scalar/bool", true)
 }
 
 func TestGetBool2(t *testing.T) {
-	testGetScalar2(t, "test/bool2", true)
+	testGetScalar2(t, "test/scalar/bool2", true)
 }
 
 func TestGetBoolSlice(t *testing.T) {
@@ -1181,14 +1325,20 @@ func testGetScalar[U any](t *testing.T, key KeyString, expectedVal U) {
 	pp := &p
 	rangeResp := resp.Responses[0].GetResponseRange()
 	etcdKvs := rangeResp.Kvs
-
+	require.Equal(t, 1, len(etcdKvs))
 	ctx.Logger.Comment("Done with etcd")
 	ctx.Logger.Comment()
 	ctx.Logger.Comment("Decoding data ...")
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
+	require.Equal(t, kvSeries.RootKey, key)
+	require.Equal(t, 1, len(kvSeries.Kvs))
 	tree, err := NewValueTree(ctx, kvSeries)
 	require.NoError(t, err)
+	require.Equal(t, 0, len(tree.ChildMap))
+	buf, err := json.Marshal(expectedVal)
+	require.NoError(t, err)
+	require.Equal(t, buf, tree.Value)
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}
 	err = decoder.Decode(ctx, tree, pp)
