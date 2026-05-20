@@ -18,7 +18,7 @@ func NewKvSeries (rootKey KeyString, kvs []*mvccpb.KeyValue) (*KvSeries, error) 
 }
 
 func (this *KvSeries) Add (kv KeyValue) bool {
-	if !this.IsOwner(kv.Key) {
+	if !this.IsOwner(kv.Key) && kv.Key != this.RootKey{
 		return false
 	}
 	this.Kvs = append(this.Kvs, kv)

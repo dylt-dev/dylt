@@ -619,12 +619,12 @@ func TestDecodeUintSlice(t *testing.T) {
 		[]uint{5, 12, 13})
 }
 
-func TestGetBool(t *testing.T) {
-	testGetScalar(t, "test/bool", true)
+func TestGetBool1(t *testing.T) {
+	testGetScalar(t, "/test/scalar/bool", true)
 }
 
 func TestGetBool2(t *testing.T) {
-	testGetScalar2(t, "test/bool2", true)
+	testGetScalar2(t, "test/scalar/bool2", true)
 }
 
 func TestGetBoolSlice(t *testing.T) {
@@ -1273,14 +1273,20 @@ func testGetScalar[U any](t *testing.T, key KeyString, expectedVal U) {
 	pp := &p
 	rangeResp := resp.Responses[0].GetResponseRange()
 	etcdKvs := rangeResp.Kvs
-
+	require.Equal(t, 1, len(etcdKvs))
 	ctx.Logger.Comment("Done with etcd")
 	ctx.Logger.Comment()
 	ctx.Logger.Comment("Decoding data ...")
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
+	require.Equal(t, kvSeries.RootKey, key)
+	require.Equal(t, 1, len(kvSeries.Kvs))
 	tree, err := NewValueTree(ctx, kvSeries)
 	require.NoError(t, err)
+	require.Equal(t, 0, len(tree.ChildMap))
+	buf, err := json.Marshal(expectedVal)
+	require.NoError(t, err)
+	require.Equal(t, buf, tree.Value)
 	// Get the decoder from the DecoderMap and decode
 	decoder := &ScalarDecoder[U]{}
 	err = decoder.Decode(ctx, tree, pp)

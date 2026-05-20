@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
 func TestKvSeriesAdd(t *testing.T) {
@@ -18,6 +19,17 @@ func TestKvSeriesAdd(t *testing.T) {
 	is = kvSeries.Add(KeyValue{"XXX", []byte{}})
 	require.False(t, is)
 	require.Equal(t, 3, kvSeries.Len())
+}
+
+
+func TestKvSeriesNew1(t *testing.T) {
+	etcdKvs := []*mvccpb.KeyValue{
+		{Key: []byte("/test/scalar/string"), Value: []byte("meat")},
+	}
+	rootKey := KeyString("/test/scalar/string")
+	kvSeries, err := NewKvSeries(rootKey, etcdKvs)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(kvSeries.Kvs))
 }
 
 func TestKvSeriesIsOwner1(t *testing.T) {
