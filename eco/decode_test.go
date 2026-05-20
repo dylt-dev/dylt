@@ -608,7 +608,7 @@ func TestGetMap(t *testing.T) {
 	op := etcd.OpGet(string(key), etcd.WithPrefix())
 
 	// Get the response from etcd
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
 
@@ -646,7 +646,7 @@ func TestGetMapOfMaps(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx.Logger.Comment("writing keys ...")
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -657,7 +657,7 @@ func TestGetMapOfMaps(t *testing.T) {
 	op := etcd.OpGet(string(key), etcd.WithPrefix())
 
 	// Get the response from etcd
-	txn = createTxn(t, cli)
+	txn = createTxn(t, ctx, cli)
 	resp, err = txn.Then(op).Commit()
 	require.NoError(t, err)
 
@@ -991,7 +991,7 @@ func deleteObjectFromCluster(t *testing.T, ctx *common.EcoContext, cli *EtcdClie
 
 	// Delete all keys recursively whose prefix matches the object key
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
-	txn = createTxn(t, cli)
+	txn = createTxn(t, ctx, cli)
 	require.NotNil(t, txn)
 	txn.Then(opDelete).Commit()
 }
@@ -1010,7 +1010,7 @@ func putAndTestMap[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClient,
 		op := etcd.OpPut(subkey, string(bufVal))
 		ops = append(ops, op)
 	}
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	require.NotNil(t, txn)
 	txn.Then(ops...).Commit()
 }
@@ -1045,7 +1045,7 @@ func putAndTestStruct(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key
 		op := etcd.OpPut(subkey, string(kv.Value))
 		ops = append(ops, op)
 	}
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	require.NotNil(t, txn)
 	txn.Then(ops...).Commit()
 }
@@ -1062,7 +1062,7 @@ func testGetScalar[U any](t *testing.T, key KeyString, expectedVal U) {
 
 	// Get the response from etcd
 	ctx.Logger.Comment("Getting scalar value from the cluster ...")
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
 
@@ -1103,7 +1103,7 @@ func testGetScalar2[U any](t *testing.T, key KeyString, expectedVal U) {
 	op := etcd.OpGet(string(key))
 
 	// Get the response from etcd
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
 

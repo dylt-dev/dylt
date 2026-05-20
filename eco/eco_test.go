@@ -1036,7 +1036,7 @@ func testEncodeScalar(t *testing.T, ctx *common.EcoContext, key string, val any)
 func testPutScalar(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key string, val any) {
 	ops := testEncodeScalar(t, ctx, key, val)
 
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	require.NotNil(t, txn)
 	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)
@@ -1049,7 +1049,7 @@ func testPutScalar(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key st
 func testPutString(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key string, val string) {
 	ops := testEncodeScalar(t, ctx, key, val)
 
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	require.NotNil(t, txn)
 	resp, err := txn.Then(ops...).Commit()
 	require.NoError(t, err)

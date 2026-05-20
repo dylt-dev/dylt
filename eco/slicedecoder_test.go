@@ -307,7 +307,7 @@ func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData [
 
 func getAndTestSliceKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString) []*mvccpb.KeyValue {
 	op := etcd.OpGet(string(key), etcd.WithPrefix())
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	resp, err := txn.Then(op).Commit()
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -331,7 +331,7 @@ func putAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClien
 		ops = append(ops, op)
 		ctx.Dec()
 	}
-	txn := createTxn(t, cli)
+	txn := createTxn(t, ctx, cli)
 	require.NotNil(t, txn)
 	txn.Then(ops...).Commit()
 }
