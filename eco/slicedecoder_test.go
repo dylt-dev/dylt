@@ -63,19 +63,52 @@ func TestDecodeFloatSlice(t *testing.T) {
 
 
 func TestDecodeIntSlice(t *testing.T) {
-	ctx, cli := initAndTest(t)
+	ctx := common.NewEcoContext(os.Stdout)
+	var expected0 int64 = 13
+	var expected1 int64 = 169
+	var expected9 int64 = -1997
+	decoder := MainDecoder{}
 
-	key := KeyString("/test/intSlice")
-	expectedData := []int{5, 8, 13}
-	putAndTestSlice(t, ctx, cli, key, expectedData)
-
-	var p *[]int = nil
+	tree := &ValueTree{}
+	tree.addInt(ctx, "/0", expected0)
+	tree.addInt(ctx, "/1", expected1)
+	tree.addInt(ctx, "/9", expected9)
+	var p *[]int64 = nil
 	pp := &p
-	err := Decode(ctx, cli, string(key), pp)
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
 	require.NoError(t, err)
-	require.NotNil(t, p)
-	require.Equal(t, expectedData, *p)
-	t.Log(*p)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
+}
+
+
+func TestDecodeIntSlice1000(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	n := 1000
+	expected := make([]int64, n)
+	for i := range expected {
+		expected[i] = int64(i*10)
+	}
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	for i, val := range expected {
+		key := fmt.Sprintf("/%d", i)
+		tree.addInt(ctx, key, val)
+	}
+	var p *[]int64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	for i, val := range x {
+		require.Equal(t, expected[i], val)
+	}
 }
 
 
