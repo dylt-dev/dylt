@@ -1,6 +1,7 @@
 package eco
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/dylt-dev/dylt/common"
@@ -77,9 +78,31 @@ func (tree *ValueTree) addBool(ctx *common.EcoContext, key string, val bool) {
 	tree.Add(ctx, ks, buf)
 }
 
-
 func (tree *ValueTree) setBool (val bool) {
 	buf := strconv.AppendBool([]byte{}, val)
+	tree.Value = buf
+	
+}
+
+func (tree *ValueTree) setFloat (val float64) {
+	buf := strconv.AppendFloat([]byte{}, val, 'f', -1, 64)
+	tree.Value = buf
+	
+}
+
+func (tree *ValueTree) setInt (val int64) {
+	buf := strconv.AppendInt([]byte{}, val, 10)
+	tree.Value = buf
+	
+}
+
+func (tree *ValueTree) setString (val string) {
+	s := fmt.Sprintf(`"%s"`, val)
+	tree.Value = []byte(s)
+}
+
+func (tree *ValueTree) setUint (val uint64) {
+	buf := strconv.AppendUint([]byte{}, val, 10)
 	tree.Value = buf
 	
 }

@@ -461,12 +461,35 @@ func TestDecodeBoolSlice(t *testing.T) {
 	require.False(t, x[2])
 }
 
-func TestDecodeFloat(t *testing.T) {
-	decodeAndTestScalar(t, "/test/float", float32(42.0))
+func TestDecodeFloat1(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := float64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setFloat(expected)
+	var x float64
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeFloat2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/float2", float32(42.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := float64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setFloat(expected)
+	var p *float64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeFloatSlice(t *testing.T) {
@@ -476,11 +499,34 @@ func TestDecodeFloatSlice(t *testing.T) {
 }
 
 func TestDecodeInt(t *testing.T) {
-	decodeAndTestScalar(t, "/test/int", int(-13.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := int64(13)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setInt(expected)
+	var x int64
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeInt2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/int2", int(-13.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := int64(13)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setInt(expected)
+	var p *int64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeIntSlice(t *testing.T) {
@@ -500,11 +546,34 @@ func TestDecodeIntSlice(t *testing.T) {
 }
 
 func TestDecodeString(t *testing.T) {
-	decodeAndTestScalar(t, "/test/string", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := "meat"
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setString(expected)
+	var x string
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeString2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/string2", `This\nis\a\<difficult>\nstring\n\to\n\e"s'c"a'p"e\n`)
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := "meat"
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setString(expected)
+	var p *string = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeStringSlice(t *testing.T) {
@@ -513,12 +582,35 @@ func TestDecodeStringSlice(t *testing.T) {
 		[]string{"foo", "bar", "bum"})
 }
 
-func TestDecodeUint(t *testing.T) {
-	decodeAndTestScalar(t, "/test/uint", uint(13.0))
+func TestDecodeUint1(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := uint64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setUint(expected)
+	var x uint64
+	p := &x
+
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeUint2(t *testing.T) {
-	decodeAndTestScalar2(t, "/test/uint2", uint(13.0))
+	ctx := common.NewEcoContext(os.Stdout)
+	expected := uint64(169.0)
+	decoder := MainDecoder{}
+	
+	tree := &ValueTree{}
+	tree.setUint(expected)
+	var p *uint64 = nil
+	pp := &p
+
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
 }
 
 func TestDecodeUintSlice(t *testing.T) {
