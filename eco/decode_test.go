@@ -493,9 +493,27 @@ func TestDecodeFloat2(t *testing.T) {
 }
 
 func TestDecodeFloatSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/float32slice",
-		[]float32{42.0, 1764.0, 6.54321})
+	ctx := common.NewEcoContext(os.Stdout)
+	expected0 := 42.0
+	expected1 := 1764.0
+	expected9 := 6.54321
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	tree.addFloat(ctx, "/0", expected0)
+	tree.addFloat(ctx, "/1", expected1)
+	tree.addFloat(ctx, "/9", expected9)
+	var p *[]float64 = nil
+	pp := &p
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
+
 }
 
 func TestDecodeInt(t *testing.T) {
@@ -577,9 +595,26 @@ func TestDecodeString2(t *testing.T) {
 }
 
 func TestDecodeStringSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/stringslice",
-		[]string{"foo", "bar", "bum"})
+	ctx := common.NewEcoContext(os.Stdout)
+	expected0 := "foo"
+	expected1 := "bar"
+	expected9 := "bum"
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	tree.addString(ctx, "/0", expected0)
+	tree.addString(ctx, "/1", expected1)
+	tree.addString(ctx, "/9", expected9)
+	var p *[]string = nil
+	pp := &p
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
 }
 
 func TestDecodeUint1(t *testing.T) {
@@ -614,9 +649,26 @@ func TestDecodeUint2(t *testing.T) {
 }
 
 func TestDecodeUintSlice(t *testing.T) {
-	decodeAndTestSlice(t,
-		"/test/uintslice",
-		[]uint{5, 12, 13})
+	ctx := common.NewEcoContext(os.Stdout)
+	expected0 := int64(13)
+	expected1 := int64(169)
+	expected9 := int64(1997)
+	decoder := MainDecoder{}
+
+	tree := &ValueTree{}
+	tree.addInt(ctx, "/0", expected0)
+	tree.addInt(ctx, "/1", expected1)
+	tree.addInt(ctx, "/9", expected9)
+	var p *[]int64 = nil
+	pp := &p
+	
+	err := decoder.Decode(ctx, tree, pp)
+	x := *p
+	require.NoError(t, err)
+	require.Equal(t, expected0, x[0])
+	require.Equal(t, expected1, x[1])
+	require.Equal(t, expected9, x[9])
+	require.Zero(t, x[2])
 }
 
 func TestGetBool1(t *testing.T) {

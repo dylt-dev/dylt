@@ -78,6 +78,25 @@ func (tree *ValueTree) addBool(ctx *common.EcoContext, key string, val bool) {
 	tree.Add(ctx, ks, buf)
 }
 
+func (tree *ValueTree) addFloat(ctx *common.EcoContext, key string, val float64) {
+	ks := KeyString(key)
+	buf := strconv.AppendFloat([]byte{}, val, 'f', -1, 64)
+	tree.Add(ctx, ks, buf)
+}
+
+func (tree *ValueTree) addInt(ctx *common.EcoContext, key string, val int64) {
+	ks := KeyString(key)
+	buf := strconv.AppendInt([]byte{}, val, 10)
+	tree.Add(ctx, ks, buf)
+}
+
+func (tree *ValueTree) addString(ctx *common.EcoContext, key string, val string) {
+	ks := KeyString(key)
+	s := fmt.Sprintf(`"%s"`, val)
+	buf := []byte(s)
+	tree.Add(ctx, ks, buf)
+}
+
 func (tree *ValueTree) setBool (val bool) {
 	buf := strconv.AppendBool([]byte{}, val)
 	tree.Value = buf
