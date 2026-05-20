@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/dylt-dev/dylt/common"
 )
 
 type Decoder interface {
-	Decode(*common.EcoContext, *KeyValueTree, string, reflect.Value) error
+	Decode(*common.EcoContext, *ValueTree, any) error
 }
 type MapDecoder struct{}
 type MainDecoder struct{}
@@ -42,18 +43,28 @@ var decoderMap DecoderMap = DecoderMap{
 	reflect.Struct:  &StructDecoder{},
 }
 
-func (d *MainDecoder) Decode(ctx *common.EcoContext, kvs *KeyValueTree, key string, rv reflect.Value) error {
+func (d *MainDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) error {
 	// Get the decoder from the decoder map, if it exists
-	pKind, err := getUnderlyingPointerKind(rv)
+	ctx.Logger.Comment("Creating new rvp ...")
+	rvp, err := NewRvPointer(a)
 	if err != nil {
 		return err
 	}
-	decoder, is := decoderMap[pKind]
-	if !is {
-		return fmt.Errorf("Unsupported pointer type (kind=%s)", pKind.String())
-	}
 
-	return decoder.Decode(ctx, kvs, key, rv)
+	ctx.Logger.Comment("Getting element type ...")
+	elemType := rvp.ElemType(ctx)
+	ctx.Logger.Infof("elemType=%s", elemType.Kind().String())
+	
+
+	ctx.Logger.Comment("Getting decoder ...")
+	decoder, is := decoderMap[elemType.Kind()]
+	if !is {
+		ctx.Logger.Error("No decoder found.")
+		return fmt.Errorf("Unsupported pointer type (%s)", elemType.Kind().String())
+	}
+	ctx.Logger.Infof("decoder.Type()=%s", reflect.TypeOf(decoder))
+
+	return decoder.Decode(ctx, tree, a)
 }
 
 // Decode the kvs at the key into a map
@@ -74,11 +85,46 @@ func (d *MainDecoder) Decode(ctx *common.EcoContext, kvs *KeyValueTree, key stri
 // kvs  key-value pairs which comprise the data
 // key  key that prefixes all map keys
 // rv   reflection pointer-to-pointer-to-map
-func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
-	ctx.Logger.Signature("MapDecoder.Decode()", key, reflect.TypeOf(rv))
+func (d *MapDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) error {
+	ctx.Logger.Signature("MapDecoder.Decode()", reflect.ValueOf(a).Kind().String())
 	ctx.Inc()
 	defer ctx.Dec()
 
+	elemType := NormPtr{a}.ElemType(ctx)
+	keyType := elemType.Key()
+	valType := elemType.Elem()
+	ctx.Logger.Infof("elemType=%s keyType=%s valType=%s", elemType, keyType, valType) 
+
+	normPtr, err := CreateOrGetMap(ctx, &NormPtr{a}, len(tree.ChildMap))
+	if err != nil {
+		return err
+	}
+	rvMap := reflect.ValueOf(normPtr.Value)
+
+	for childKey, childTree := range tree.ChildMap {
+		ctx.Logger.Infof("key=%v val=%v", childKey, string(childTree.Value))
+
+		// Create key
+		rvKeyPtr := reflect.New(keyType)
+		pKey := rvKeyPtr.Interface()
+		err := common.UnmarshalMapKey(childKey, pKey)
+		if err != nil {
+			return err
+		}
+		ctx.Logger.Infof("rvKeyPtr.Elem.Interface=%#v", rvKeyPtr.Elem().Interface())
+
+		// Create value
+		decoder := MainDecoder{}
+		rvValPtr := reflect.New(valType)
+		err = decoder.Decode(ctx, childTree, rvValPtr.Interface())
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger.Infof("rvMap.Type()=%v", rvMap.Type())
+		rvMap.Elem().SetMapIndex(rvKeyPtr.Elem(), rvValPtr.Elem())
+	}
+/*
 	pMap, is := common.CreateOrGetMap(ctx, rv)
 	if !is {
 		return fmt.Errorf("Unable to create or get map for ... reasons")
@@ -108,7 +154,7 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key st
 		pnew := reflect.New(typValue)
 		decoder := decoderMap[typValue.Kind()]
 		ctx.Logger.Infof("decoder type=%v\n", reflect.TypeOf(decoder))
-		elemName := keyString.ElementName(key)
+		elemName := keyString.ElementName(KeyString(key))
 		subkey := fmt.Sprintf("%s/%s", key, elemName)
 		ctx.Logger.Infof("subkey=%v\n", subkey)
 		err := decoder.Decode(ctx, childTree, subkey, pnew)
@@ -142,15 +188,38 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key st
 	// ppMap.Elem().Set(pMap)
 
 	// done :)
+*/	
 	return nil
 }
 
-func (d *ScalarDecoder[U]) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
-	ctx.Logger.Signature("ScalarDecoder.Decode()", key, rv.Kind().String())
+func (d *ScalarDecoder[U]) Decode(ctx *common.EcoContext, tree *ValueTree, a any) error {
+	ctx.Logger.Signature("ScalarDecoder.Decode()", reflect.ValueOf(a).Kind().String())
 	ctx.Inc()
 	defer ctx.Dec()
 
-	if kvTree == nil {
+	if tree == nil {
+		return nil
+	}
+
+	rvp, err := NewRvPointer(a)
+	if err != nil {
+		return err
+	}
+
+	data := tree.Value
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
+	if err != nil {
+		return err
+	}
+	
+	ctx.Logger.Commentf("Unmarshalling %v", data)
+	err = json.Unmarshal(data, normPtr.Value)
+	if err != nil {
+		return err
+	}
+	ctx.Logger.Infof("normPtr.Value=%#v", reflect.ValueOf(normPtr.Value).Elem().Interface())	
+  	
+/*	if kvTree == nil {
 		return fmt.Errorf("no data to decode")
 	}
 	data := kvTree.Value
@@ -158,13 +227,55 @@ func (d *ScalarDecoder[U]) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, 
 	i := rv.Interface()
 	err := json.Unmarshal(data, i)
 	return err
+*/
+	return nil
 }
 
-func (d *SliceDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
-	ctx.Logger.Signature("SliceDecoder.Decode()", key, rv.Kind().String())
+func (d *SliceDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) error {
+	ctx.Logger.Signature("SliceDecoder.Decode()", reflect.ValueOf(a).Kind().String())
 	ctx.Inc()
 	defer ctx.Dec()
 
+	n := tree.ChildMap.MaxIndex(ctx)+1
+	ctx.Logger.Infof("n=%d", n)
+	ctx.Logger.Infof("a=%p", a)
+	normPtr, err := CreateOrGetSlice(ctx, &NormPtr{a}, n)
+	if err != nil {
+		return err
+	}
+	typ := normPtr.ElemType(ctx)
+	elemType := typ.Elem()
+	rvSlice := reflect.ValueOf(normPtr.Value).Elem()
+	ctx.Logger.Infof("a=%p normPtr.Value=%p", a, normPtr.Value) 
+
+	ctx.Logger.Infof("rvSlice.Len()=%d rvSlice.Cap()=%d", rvSlice.Len(), rvSlice.Cap())
+	decoder := MainDecoder{}
+	for childKey, childTree := range tree.ChildMap {
+		ctx.Logger.Infof("childKey=%s childTree.Value=%v", childKey, childTree.Value)
+
+		// Get index
+		ctx.Logger.Commentf("Converting index (childKey=%s) ...", childKey)
+		i, err := strconv.Atoi(childKey)
+		if err != nil {
+			ctx.Logger.Infof("%s not numeric; skipping", childKey)
+			continue
+		}
+
+		// Get value
+		ctx.Logger.Comment("Decoding value ...")
+		rvEl := reflect.New(elemType)
+		err = decoder.Decode(ctx, childTree, rvEl.Interface())
+		if err != nil {
+			ctx.Logger.Error(err.Error())
+			return err
+		}
+		ctx.Logger.Infof("rvEl=%v", rvEl.Elem().Interface())
+
+		// Set index
+		rvSlice.Index(i).Set(rvEl.Elem())
+		// ctx.Logger.Infof("a[%d]=%s", i, a[i])
+	}
+/*
 	// sliceData := getSliceData(kvs, key)
 	maxIndex := kvTree.Children.MaxIndex()
 	ctx.Logger.Infof("%#v", kvTree)
@@ -212,15 +323,43 @@ func (d *SliceDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key 
 
 	// Assign the new slice pointer to the incoming rv
 	rv.Elem().Set(rvNew)
-
+*/
 	return nil
 }
 
-func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key string, rv reflect.Value) error {
-	ctx.Logger.Signature("StructDecoder.Decode()", key, reflect.TypeOf(rv))
+func (d *StructDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) error {
+	ctx.Logger.Signature("StructDecoder.Decode()", reflect.ValueOf(a).Kind().String())
 	ctx.Inc()
 	defer ctx.Dec()
 
+	mainDecoder := MainDecoder{}
+	newNormPtr, err := CreateOrGetStruct(ctx, &NormPtr{a})
+	if err != nil {
+		return err
+	}
+	typ := newNormPtr.ElemType(ctx)
+	ctx.Logger.Infof("typ=%s", typ)
+	
+	rvStructPtr := reflect.ValueOf(newNormPtr.Value)
+	for structField := range rvStructPtr.Elem().Fields() {
+		fieldKey := GetStructFieldKey(structField)
+		ctx.Logger.Commentf("Checking child map for %s", fieldKey)
+		val, is := tree.ChildMap[fieldKey]
+		ctx.Logger.Infof("is=%v", is)
+		if is {
+			fieldName := structField.Name
+			fieldType := structField.Type
+			ctx.Logger.Infof("key=%s name=%s type=%v val=%s", fieldKey, fieldName, fieldType, val.Value)
+			field := rvStructPtr.Elem().FieldByName(fieldName)
+			ctx.Logger.Infof("field.IsZero()=%v", field.IsZero())
+			addr := field.Addr().Interface()
+			err := mainDecoder.Decode(ctx, val, addr)
+			if err != nil {
+				return err
+			}
+		}
+	}
+/*
 	pStruct, is := common.CreateOrGetStruct(ctx, rv)
 	if !is {
 		return fmt.Errorf("Unable to create or get struct for ... reasons")
@@ -271,19 +410,19 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, kvTree *KeyValueTree, key
 	// for k, childTree := range kvTree.Children {
 	// 	ctx.Logger.Infof("Decoding %s ...", k)
 	// }
-
+*/
 	return nil
 }
 
-func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
-	ctx.Logger.Signature("decode", key, reflect.TypeOf(i))
+func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, a any) error {
+	ctx.Logger.Signature("decode", key, reflect.TypeOf(a))
 	ctx.Inc()
 	defer ctx.Dec()
 
 	// Confirm p is a valid pointer
-	if !isValidPointer(i) {
+	if !isValidPointer(a) {
 		return fmt.Errorf("p must be a non-nil pointer, not %s",
-			reflect.TypeOf(i).Kind().String())
+			reflect.TypeOf(a).Kind().String())
 	}
 
 	// Get etcd KVs from cluster
@@ -292,23 +431,23 @@ func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, i any) error {
 	if err != nil {
 		return err
 	}
-	ctx.Logger.Info("Done")
+	ctx.Logger.Infof("Done. # keys = %d", len(etcdKvs))
 	ctx.Logger.Info()
 
 	// Create kvTree
 	ctx.Logger.Comment("Creating KV slice and KV tree ...")
-	kvs := createKvSlice(etcdKvs)
-	kvTree := createKvTree(ctx, key, kvs)
+	kvSeries, err := NewKvSeries(KeyString(key), etcdKvs)
+	if err != nil {
+		return nil
+	}
+	tree, err := NewValueTree(ctx, kvSeries)
 	ctx.Logger.Info("Done")
 	ctx.Logger.Info()
-
-	// Create reflect.Value for i
-	rv := common.Reflect(i)
 
 	// Decode using the top-level Decoder
 	ctx.Logger.Comment("Decoding ...")
 	decoder := MainDecoder{}
-	err = decoder.Decode(ctx, kvTree, key, rv)
+	err = decoder.Decode(ctx, tree, a)
 	return err
 
 	// // Simple objects are easy to deal with. Just use json.Unmarhsal()

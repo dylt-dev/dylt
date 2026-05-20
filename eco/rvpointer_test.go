@@ -11,14 +11,12 @@ import (
 
 func TestRvpCreateOrGetMap1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/map", kvs}
 
 	x := map[string]int{}
 	p := &x
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, len(x))
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*map[string]int)
@@ -31,50 +29,43 @@ func TestRvpCreateOrGetMap1(t *testing.T) {
 
 func TestRvpCreateOrGetMap2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/map", kvs}
 
 	var p *map[string]int = nil
 	pp := &p
 	rvp, err := NewRvPointer(pp)
 	require.NoError(t, err)
 	require.NotNil(t, rvp)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*map[string]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
 	require.NotNil(t, *ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
 	require.Equal(t, 0, len(*ptr))
 }
 
 func TestRvpCreateOrGetMap3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/map", kvs}
 
 	var x map[string]int = nil
 	p := &x
-	pp := &p
-	rvPtr, err := NewRvPointer(pp)
+	rvPtr, err := NewRvPointer(p)
 	require.NoError(t, err)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvPtr.CreateOrGet(ctx, 5)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*map[string]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
 	require.NotNil(t, *ptr)
-	require.NotEqual(t, p, ptr)
-	require.Equal(t, 0, len(*ptr))
+	require.Equal(t, p, ptr)
+	require.Equal(t, 0, len(x))
 }
 
 func TestRvpCreateOrGetMap4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/map", kvs}
 
 	x := map[string]int{}
 	p := &x
@@ -84,7 +75,7 @@ func TestRvpCreateOrGetMap4(t *testing.T) {
 	rv := reflect.ValueOf(pppp)
 	t.Logf("rv.Kind()=%s", rv.Kind().String())
 	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvPtr.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*map[string]int)
@@ -97,8 +88,6 @@ func TestRvpCreateOrGetMap4(t *testing.T) {
 
 func TestRvpCreateOrGetMap5(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/map", kvs}
 
 	var p *map[string]int = nil
 	pp := &p
@@ -106,21 +95,19 @@ func TestRvpCreateOrGetMap5(t *testing.T) {
 	pppp := &ppp
 	rv := reflect.ValueOf(pppp)
 	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvPtr.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*map[string]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
 	require.NotNil(t, *ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
 	require.Equal(t, 0, len(*ptr))
 }
 
 func TestRvpCreateOrGetMap6(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/map", kvs}
 
 	var x map[string]int = nil
 	p := &x
@@ -130,29 +117,25 @@ func TestRvpCreateOrGetMap6(t *testing.T) {
 	rv := reflect.ValueOf(pppp)
 	t.Logf("rv.Kind()=%s", rv.Kind().String())
 	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvPtr.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*map[string]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
 	require.NotNil(t, *ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
 	require.Equal(t, 0, len(*ptr))
 }
 
 func TestRvpCreateOrGetScalar1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/scalar/n", []byte("13")},
-	}
-	kvSeries := KvSeries{"/scalar", kvs}
 
 	var x int
 	p := &x
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*int)
@@ -163,30 +146,23 @@ func TestRvpCreateOrGetScalar1(t *testing.T) {
 
 func TestRvpCreateOrGetScalar2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/scalar/n", []byte("13")},
-	}
-	kvSeries := KvSeries{"/scalar", kvs}
 
 	var p *int = nil
 	pp := &p
 	rvp, err := NewRvPointer(pp)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
+	require.NotNil(t, p)
 }
 
 func TestRvpCreateOrGetScalar3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/scalar/n", []byte("13")},
-	}
-	kvSeries := KvSeries{"/scalar", kvs}
 
 	var x int
 	p := &x
@@ -195,7 +171,7 @@ func TestRvpCreateOrGetScalar3(t *testing.T) {
 	pppp := &ppp
 	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*int)
@@ -206,36 +182,31 @@ func TestRvpCreateOrGetScalar3(t *testing.T) {
 
 func TestRvpCreateOrGetScalar4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/scalar/n", []byte("13")},
-	}
-	kvSeries := KvSeries{"/scalar", kvs}
 
 	var p *int = nil
 	pp := &p
 	ppp := &pp
 	pppp := &ppp
+
 	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
 }
 
 func TestRvpCreateOrGetStruct1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/struct", kvs}
 
 	x := struct{}{}
 	p := &x
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*struct{})
@@ -246,26 +217,22 @@ func TestRvpCreateOrGetStruct1(t *testing.T) {
 
 func TestRvpCreateOrGetStruct2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/scalar", kvs}
 
 	var p *struct{} = nil
 	pp := &p
 	rvp, err := NewRvPointer(pp)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*struct{})
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
 }
 
 func TestRvpCreateOrGetStruct3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/struct", kvs}
 
 	x := struct{}{}
 	p := &x
@@ -274,7 +241,7 @@ func TestRvpCreateOrGetStruct3(t *testing.T) {
 	pppp := &ppp
 	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*struct{})
@@ -285,8 +252,6 @@ func TestRvpCreateOrGetStruct3(t *testing.T) {
 
 func TestRvpCreateOrGetStruct4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{}
-	kvSeries := KvSeries{"/struct", kvs}
 
 	var p *struct{} = nil
 	pp := &p
@@ -294,307 +259,288 @@ func TestRvpCreateOrGetStruct4(t *testing.T) {
 	pppp := &ppp
 	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	normPtr, err := rvp.CreateOrGet(ctx, kvSeries)
+	normPtr, err := rvp.CreateOrGet(ctx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, normPtr)
 	ptr, is := normPtr.Value.(*struct{})
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, p, ptr)
+	require.Equal(t, p, ptr)
 }
 
 func TestRvpCreateOrGetSlice1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/3", []byte("3")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
-
-	slice := make([]int, 5)
-	rv := reflect.ValueOf(&slice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGetSlice(ctx, kvSlice)
+	n := 3
+	x := make([]int, 5)
+	p := &x
+	normPtr, err := NewNormPtr(ctx, p)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.Equal(t, &slice, ptr)
+	require.Equal(t, &x, ptr)
 }
 
 func TestRvpCreateOrGetSlice2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 15
 
-	slice := make([]int, 5)
-	rv := reflect.ValueOf(&slice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGetSlice(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+
+	normPtr, err := NewNormPtr(ctx, p)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
+
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, &slice, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, &x, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpCreateOrGetSlice3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
-
+	n := 10
 	var p *[]int = nil
 	pp := &p
-	rvPtr, err := NewRvPointer(pp)
+	normPtr, err := NewNormPtr(ctx, pp)
 	require.NoError(t, err)
-	normPtr, err := rvPtr.CreateOrGetSlice(ctx, kvSlice)
+
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, p, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, p, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpCreateOrGetSlice4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/3", []byte("3")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 3
 
-	slice := make([]int, 5)
-	pslice := &slice
-	ppslice := &pslice
-	pppslice := &ppslice
-	ppppslice := &pppslice
-	rv := reflect.ValueOf(ppppslice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGetSlice(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+	pp := &p
+	ppp := &pp
+	pppp := &ppp
+
+	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.Equal(t, &slice, ptr)
+	require.Equal(t, &x, ptr)
 }
 
 func TestRvpCreateOrGetSlice5(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 15
 
-	slice := make([]int, 5)
-	pslice := &slice
-	ppslice := &pslice
-	pppslice := &ppslice
-	ppppslice := &pppslice
-	rv := reflect.ValueOf(ppppslice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGetSlice(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+	pp := &p
+	ppp := &pp
+	pppp := &ppp
+
+	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, &slice, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, &x, ptr)
+	require.Equal(t, n, len(x))
 }
 
 func TestRvpCreateOrGetSlice6(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 10
 
-	var pslice *[]int = nil
-	ppslice := &pslice
-	pppslice := &ppslice
-	ppppslice := &pppslice
-	rv := reflect.ValueOf(ppppslice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGetSlice(ctx, kvSlice)
+	var p *[]int = nil
+	pp := &p
+	ppp := &pp
+	pppp := &ppp
+
+	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, pslice, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, p, ptr)
+	require.Equal(t, n, len(*ptr))
+}
+
+func TestRvpCreateOrGetSlice7(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	n := 10
+
+	var x []int = nil
+	p := &x
+
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	require.True(t, slicePtr.IsAllocated(ctx))
+	ptr, is := slicePtr.Value.(*[]int)
+	require.True(t, is)
+	require.NotNil(t, ptr)
+	require.Equal(t, p, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpCreateOrGet_Slice1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/3", []byte("3")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 3
 
-	slice := make([]int, 5)
-	rv := reflect.ValueOf(&slice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+
+	normPtr, err := NewNormPtr(ctx, p)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.Equal(t, &slice, ptr)
+	require.Equal(t, &x, ptr)
 }
 
 func TestRvpCreateOrGet_Slice2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 15
 
-	slice := make([]int, 5)
-	rv := reflect.ValueOf(&slice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+
+	normPtr, err := NewNormPtr(ctx, p)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, &slice, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, &x, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpCreateOrGet_Slice3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 10
 
 	var p *[]int = nil
 	pp := &p
-	rvPtr, err := NewRvPointer(pp)
+
+	normPtr, err := NewNormPtr(ctx, pp)
 	require.NoError(t, err)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSlice)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
+
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, p, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, p, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpCreateOrGet_Slice4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/3", []byte("3")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 3
 
-	slice := make([]int, 5)
-	pslice := &slice
-	ppslice := &pslice
-	pppslice := &ppslice
-	ppppslice := &pppslice
-	rv := reflect.ValueOf(ppppslice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+	pp := &p
+	ppp := &pp
+	pppp := &ppp
+
+	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.Equal(t, &slice, ptr)
+	require.Equal(t, &x, ptr)
 }
 
 func TestRvpCreateOrGet_Slice5(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 15
 
-	slice := make([]int, 5)
-	pslice := &slice
-	ppslice := &pslice
-	pppslice := &ppslice
-	ppppslice := &pppslice
-	rv := reflect.ValueOf(ppppslice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSlice)
+	x := make([]int, 5)
+	p := &x
+	pp := &p
+	ppp := &pp
+	pppp := &ppp
+
+	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
+
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, &slice, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, &x, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpCreateOrGet_Slice6(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	kvs := []KeyValue{
-		{"/slice/1", []byte("1")},
-		{"/slice/2", []byte("2")},
-		{"/slice/13", []byte("13")},
-	}
-	kvSlice := KvSeries{"/slice", kvs}
+	n := 10
 
-	var pslice *[]int = nil
-	ppslice := &pslice
-	pppslice := &ppslice
-	ppppslice := &pppslice
-	rv := reflect.ValueOf(ppppslice)
-	t.Logf("rv.Kind()=%s", rv.Kind().String())
-	rvPtr := RvPointer(rv)
-	normPtr, err := rvPtr.CreateOrGet(ctx, kvSlice)
+	var p *[]int = nil
+	pp := &p
+	ppp := &pp
+	pppp := &ppp
+
+	rvp, err := NewRvPointer(pppp)
 	require.NoError(t, err)
-	require.NotNil(t, normPtr)
-	ptr, is := normPtr.Value.(*[]int)
+	normPtr, err := rvp.Walk(ctx)
+	require.NoError(t, err)
+	slicePtr, err := CreateOrGetSlice(ctx, normPtr, n)
+	require.NoError(t, err)
+	require.NotNil(t, slicePtr)
+	ptr, is := slicePtr.Value.(*[]int)
+
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	require.NotEqual(t, pslice, ptr)
-	require.Equal(t, 14, len(*ptr))
+	require.Equal(t, p, ptr)
+	require.Equal(t, n, len(*ptr))
 }
 
 func TestRvpElemTypeInt1(t *testing.T) {
@@ -604,8 +550,7 @@ func TestRvpElemTypeInt1(t *testing.T) {
 	var ppn **int = &pn
 	rv := reflect.ValueOf(ppn)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -616,8 +561,7 @@ func TestRvpElemTypeInt2(t *testing.T) {
 	var pn *int = &n
 	rv := reflect.ValueOf(pn)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -632,8 +576,7 @@ func TestRvpElemTypeInt3(t *testing.T) {
 	var pppppn *****int = &ppppn
 	rv := reflect.ValueOf(pppppn)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -649,8 +592,7 @@ func TestRvpElemTypeInt4(t *testing.T) {
 	var pppppn *****int = &ppppn
 	rv := reflect.ValueOf(pppppn)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -663,8 +605,7 @@ func TestRvpElemTypeMap1(t *testing.T) {
 	var pp = &p
 	rv := reflect.ValueOf(pp)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -676,8 +617,7 @@ func TestRvpElemTypeMap2(t *testing.T) {
 	var pm = &m
 	rv := reflect.ValueOf(pm)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -692,8 +632,7 @@ func TestRvpElemTypeMap3(t *testing.T) {
 	var ppppm = &pppm
 	rv := reflect.ValueOf(ppppm)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
 }
 
@@ -708,9 +647,53 @@ func TestRvpElemTypeMap4(t *testing.T) {
 	var ppppm = &pppm
 	rv := reflect.ValueOf(ppppm)
 
-	typ, err := RvPointer(rv).ElemType(ctx)
-	require.NoError(t, err)
+	typ := RvPointer(rv).ElemType(ctx)
 	require.Equal(t, expectedData, typ)
+}
+
+func TestRvpFlavor1(t *testing.T) {
+	expected := Scalar
+	var p *int
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	flavor := rvp.Flavor()
+	require.Equal(t, expected, flavor)
+}
+
+func TestRvpFlavor2(t *testing.T) {
+	expected := Map
+	var p *map[string]int
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	flavor := rvp.Flavor()
+	require.Equal(t, expected, flavor)
+}
+
+func TestRvpFlavor3(t *testing.T) {
+	expected := Slice
+	var p *[]int
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	flavor := rvp.Flavor()
+	require.Equal(t, expected, flavor)
+}
+
+func TestRvpFlavor4(t *testing.T) {
+	expected := Struct
+	var p *struct{}
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	flavor := rvp.Flavor()
+	require.Equal(t, expected, flavor)
+}
+
+func TestRvpFlavor5(t *testing.T) {
+	expected := Pointer
+	var p **int
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	flavor := rvp.Flavor()
+	require.Equal(t, expected, flavor)
 }
 
 func TestRvpIsNil1(t *testing.T) {
@@ -735,7 +718,7 @@ func TestRvpIsNil3(t *testing.T) {
 	a := &x
 	rvp, err := NewRvPointer(a)
 	require.NoError(t, err)
-	require.True(t, rvp.IsNil(ctx))
+	require.False(t, rvp.IsNil(ctx))
 }
 
 func TestRvpIsNil4(t *testing.T) {
@@ -771,6 +754,15 @@ func TestRvpIsNil7(t *testing.T) {
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
 	require.True(t, rvp.IsNil(ctx))
+}
+
+func TestRvpIsNil8(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	var x map[string]int = nil
+	p := &x
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	require.False(t, rvp.IsNil(ctx))
 }
 
 func TestRvpIsReference1(t *testing.T) {
@@ -903,6 +895,26 @@ func TestRvpNew4(t *testing.T) {
 	require.Nil(t, rvp)
 }
 
+func TestRvpNew5(t *testing.T) {
+	var p *bool = nil
+	pp := &p
+	_, err := NewRvPointer(pp)
+	require.NoError(t, err)
+}
+
+
+func TestRvpSet1(t *testing.T) {
+	expected := 13
+	var x int
+	p := &x
+
+	rvp, err := NewRvPointer(p)
+	require.NoError(t, err)
+	rvp.Set(expected)
+	require.Equal(t, expected, x)
+}
+
+
 // RvPointer.Walk() - pointer to nil pointer
 func TestRvpWalkInt1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -913,8 +925,7 @@ func TestRvpWalkInt1(t *testing.T) {
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
 	require.Equal(t, pp, normPtr.Value)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	pptr, is := normPtr.Value.(**int)
 	require.NotNil(t, pptr)
@@ -931,8 +942,7 @@ func TestRvpWalkInt2(t *testing.T) {
 	rv := reflect.ValueOf(pn)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*int)
 	require.NotNil(t, ptr)
@@ -952,8 +962,7 @@ func TestRvpWalkInt3(t *testing.T) {
 	rv := reflect.ValueOf(pppppn)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	pptr, is := normPtr.Value.(**int)
 	require.NotNil(t, pptr)
@@ -975,8 +984,7 @@ func TestRvpWalkInt4(t *testing.T) {
 	rv := reflect.ValueOf(pppppn)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*int)
 	require.NotNil(t, ptr)
@@ -990,18 +998,18 @@ func TestRvpWalkMap1(t *testing.T) {
 	var x map[int]string = nil
 	p := &x
 	pp := &p
-	rv := reflect.ValueOf(pp)
-	normPtr, err := RvPointer(rv).Walk(ctx)
+
+	rvp, err := NewRvPointer(pp)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
+	normPtr, err := rvp.Walk(ctx)
 	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	ctx.Logger.Infof("normPtr.Value type=%v", reflect.TypeOf(normPtr.Value))
-	ptr, is := normPtr.Value.(**map[int]string)
+	ptr, is := normPtr.Value.(*map[int]string)
 	require.NotNil(t, ptr)
 	require.True(t, is)
-	require.NotNil(t, *ptr)
-	require.Nil(t, **ptr)
+	require.Nil(t, *ptr)
 }
 
 // pointer to non-nil map
@@ -1013,8 +1021,7 @@ func TestRvpWalkMap2(t *testing.T) {
 	rv := reflect.ValueOf(p)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*map[int]string)
 	require.NotNil(t, ptr)
@@ -1034,15 +1041,13 @@ func TestRvpWalkMap3(t *testing.T) {
 	rv := reflect.ValueOf(pppp)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
-	ptr, is := normPtr.Value.(**map[int]string)
-	require.NotNil(t, ptr)
+	ptr, is := normPtr.Value.(*map[int]string)
 	require.True(t, is)
-	require.Equal(t, pp, ptr)
-	require.NotNil(t, *ptr)
-	require.Nil(t, **ptr)
+	require.NotNil(t, ptr)
+	require.Equal(t, p, ptr)
+	require.Nil(t, *ptr)
 }
 
 // pointer chain to non-nil map
@@ -1057,8 +1062,7 @@ func TestRvpWalkMap4(t *testing.T) {
 	rv := reflect.ValueOf(ppppm)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*map[int]string)
 	require.NotNil(t, ptr)
@@ -1066,7 +1070,6 @@ func TestRvpWalkMap4(t *testing.T) {
 	require.Equal(t, pm, ptr)
 	require.Equal(t, "meat", (*ptr)[13])
 }
-
 
 // pointer chain to nil map pointer
 func TestRvpWalkMap5(t *testing.T) {
@@ -1079,18 +1082,15 @@ func TestRvpWalkMap5(t *testing.T) {
 	require.NotNil(t, rvp)
 	normPtr, err := rvp.Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
-	elemType, err := normPtr.ElemType(ctx)
-	require.NoError(t, err)
+	elemType := normPtr.ElemType(ctx)
 	require.Equal(t, reflect.Map, elemType.Kind())
 	ptr, is := normPtr.Value.(**map[int]string)
 	require.NotNil(t, ptr)
 	require.True(t, is)
 	require.Equal(t, pp, ptr)
 }
-
 
 // pointer chain to nil map pointer
 func TestRvpWalkMap6(t *testing.T) {
@@ -1103,15 +1103,13 @@ func TestRvpWalkMap6(t *testing.T) {
 	rv := reflect.ValueOf(pppp)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	ptr, is := normPtr.Value.(**map[int]string)
 	require.NotNil(t, ptr)
 	require.True(t, is)
 	require.Equal(t, pp, ptr)
 }
-
 
 // pointer to nil slice
 func TestRvpWalkSlice1(t *testing.T) {
@@ -1123,15 +1121,13 @@ func TestRvpWalkSlice1(t *testing.T) {
 	rv := reflect.ValueOf(pp)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
-	ptr, is := normPtr.Value.(**[]int)
-	require.NotNil(t, ptr)
+	ptr, is := normPtr.Value.(*[]int)
 	require.True(t, is)
-	require.Equal(t, pp, ptr)
-	require.NotNil(t, *ptr)
-	require.Nil(t, **ptr)
+	require.NotNil(t, ptr)
+	require.Equal(t, p, ptr)
+	require.Nil(t, *ptr)
 }
 
 // pointer to non-nil slice
@@ -1143,8 +1139,7 @@ func TestRvpWalkSlice2(t *testing.T) {
 	rv := reflect.ValueOf(p)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*[]int)
 	require.NotNil(t, ptr)
@@ -1165,15 +1160,13 @@ func TestRvpWalkSlice3(t *testing.T) {
 	rv := reflect.ValueOf(pppp)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	ptr, is := normPtr.Value.(**[]int)
-	require.NotNil(t, ptr)
+	ptr, is := normPtr.Value.(*[]int)
 	require.True(t, is)
-	require.Equal(t, pp, ptr)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	require.NotNil(t, ptr)
+	require.Equal(t, p, ptr)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
-	require.NotNil(t, *ptr)
-	require.Nil(t, **ptr)
+	require.Nil(t, *ptr)
 }
 
 // pointer chain to non-nil slice
@@ -1188,8 +1181,7 @@ func TestRvpWalkSlice4(t *testing.T) {
 	rv := reflect.ValueOf(ppppslice)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*[]int)
 	require.NotNil(t, ptr)
@@ -1211,8 +1203,7 @@ func TestRvpWalkSlice5(t *testing.T) {
 	ptr, is := normPtr.Value.(**[]int)
 	require.True(t, is)
 	require.NotNil(t, ptr)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	require.Nil(t, *ptr)
 
@@ -1227,8 +1218,7 @@ func TestRvpWalkStruct1(t *testing.T) {
 	rv := reflect.ValueOf(ppst)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	pptr, is := normPtr.Value.(**common.TestStruct)
 	require.NotNil(t, pptr)
@@ -1246,8 +1236,7 @@ func TestRvpWalkStruct2(t *testing.T) {
 	rv := reflect.ValueOf(pst)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*common.TestStruct)
 	require.NotNil(t, ptr)
@@ -1267,8 +1256,7 @@ func TestRvpWalkStruct3(t *testing.T) {
 	rv := reflect.ValueOf(ppppst)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.False(t, isAllocated)
 	pptr, is := normPtr.Value.(**common.TestStruct)
 	require.NotNil(t, pptr)
@@ -1289,8 +1277,7 @@ func TestRvpWalkStruct4(t *testing.T) {
 	rv := reflect.ValueOf(ppppst)
 	normPtr, err := RvPointer(rv).Walk(ctx)
 	require.NoError(t, err)
-	isAllocated, err := normPtr.IsAllocated(ctx)
-	require.NoError(t, err)
+	isAllocated := normPtr.IsAllocated(ctx)
 	require.True(t, isAllocated)
 	ptr, is := normPtr.Value.(*common.TestStruct)
 	require.NotNil(t, ptr)

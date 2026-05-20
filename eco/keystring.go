@@ -25,8 +25,8 @@ func (ks KeyString) Child(prefix KeyString) (KeyString, bool) {
 }
 
 
-func (s KeyString) ChildName(prefix KeyString) (string, bool) {
-	afterPrefix, is := s.CutPrefix(string(prefix))
+func (ks KeyString) ChildName(prefix KeyString) (string, bool) {
+	afterPrefix, is := ks.CutPrefix(prefix)
 	if !is {
 		return "", false
 	}
@@ -40,14 +40,14 @@ func (s KeyString) ChildName(prefix KeyString) (string, bool) {
 }
 
 
-func (s KeyString) CutPrefix(prefix string) (KeyString, bool) {
-	snew, is := strings.CutPrefix(string(s), prefix)
+func (ks KeyString) CutPrefix(prefix KeyString) (KeyString, bool) {
+	snew, is := strings.CutPrefix(string(ks), string(prefix))
 	return KeyString(snew), is
 }
 
 
-func (s KeyString) ElementName(prefix string) string {
-	afterPrefix, is := s.CutPrefix(prefix)
+func (ks KeyString) ElementName(prefix KeyString) string {
+	afterPrefix, is := ks.CutPrefix(prefix)
 	if !is {
 		return ""
 	}
@@ -58,11 +58,16 @@ func (s KeyString) ElementName(prefix string) string {
 	return segments[len(segments)-1]
 }
 
-func (s KeyString) Index() (int, bool) {
-	if string(s) == "" {
+
+func (ks KeyString) HasPrefix (prefix KeyString) bool {
+	return strings.HasPrefix(string(ks), string(prefix))
+}
+
+func (ks KeyString) Index() (int, bool) {
+	if string(ks) == "" {
 		return 0, false
 	}
-	segments := s.Segments()
+	segments := ks.Segments()
 	lastSeg := segments[len(segments)-1]
 	index, err := strconv.Atoi(lastSeg)
 	if err != nil {
@@ -109,12 +114,12 @@ func (ks KeyString) TrimHead () KeyString {
 }
 
 
-func (s KeyString) Segments() []string {
+func (ks KeyString) Segments() []string {
 	var segments []string = []string{}
 	var iSlashes []int = []int{}
 
 	// Make an array of all slash locations
-	s2 := s.WithStartSlash().WithEndSlash()
+	s2 := ks.WithStartSlash().WithEndSlash()
 	for i, c := range s2 {
 		if c == '/' {
 			iSlashes = append(iSlashes, i)
@@ -131,57 +136,57 @@ func (s KeyString) Segments() []string {
 	return segments
 }
 
-func (s KeyString) WithEndSlash() KeyString {
-	if s == "" {
+func (ks KeyString) WithEndSlash() KeyString {
+	if ks == "" {
 		return "/"
 	}
 
 	var sb strings.Builder
-	sb.WriteString(string(s))
-	if s[len(s)-1] != '/' {
+	sb.WriteString(string(ks))
+	if ks[len(ks)-1] != '/' {
 		sb.WriteRune('/')
 	}
 
 	return KeyString(sb.String())
 }
 
-func (s KeyString) WithoutEndSlash() KeyString {
-	if len(s) == 0 {
-		return s
+func (ks KeyString) WithoutEndSlash() KeyString {
+	if len(ks) == 0 {
+		return ks
 	}
 
-	if s[len(s)-1] == '/' {
-		return s[:len(s)-1]
+	if ks[len(ks)-1] == '/' {
+		return ks[:len(ks)-1]
 	}
 
-	return s
+	return ks
 }
 
 
-func (s KeyString) WithStartSlash() KeyString {
-	if s == "" {
+func (ks KeyString) WithStartSlash() KeyString {
+	if ks == "" {
 		return "/"
 	}
 
 	var sb strings.Builder
-	if s[0] != '/' {
+	if ks[0] != '/' {
 		sb.WriteRune('/')
 	}
-	sb.WriteString(string(s))
+	sb.WriteString(string(ks))
 
 	return KeyString(sb.String())
 }
 
-func (s KeyString) WithoutStartSlash() KeyString {
-	if len(s) == 0 {
-		return s
+func (ks KeyString) WithoutStartSlash() KeyString {
+	if len(ks) == 0 {
+		return ks
 	}
 
-	if s[0] == '/' {
-		return s[1:]
+	if ks[0] == '/' {
+		return ks[1:]
 	}
 
-	return s
+	return ks
 }
 
 

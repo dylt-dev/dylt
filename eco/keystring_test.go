@@ -28,7 +28,7 @@ func TestChildName2(t *testing.T) {
 
 func TestCutPrefix3(t *testing.T) {
 	expectedData := "/1313"
-	prefix := "/prefix"
+	prefix := KeyString("/prefix")
 	keyString := KeyString(expectedData)
 	s, is := keyString.CutPrefix(prefix)
 	require.False(t, is)

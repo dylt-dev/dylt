@@ -31,7 +31,16 @@ func NewNormPtr (ctx *common.EcoContext, a any) (*NormPtr, error) {
 }
 
 
-func (this NormPtr) ElemType(ctx *common.EcoContext) (reflect.Type, error) {
+func (this NormPtr) Elem () RvPointer {
+	rv := reflect.ValueOf(this.Value)
+	rvElem := rv.Elem()
+	rvpElem := RvPointer(rvElem)
+
+	return rvpElem
+}
+
+
+func (this NormPtr) ElemType(ctx *common.EcoContext) reflect.Type {
 	ctx.Logger.Signature("RvPointer.ElemType")
 	ctx.Inc()
 	defer ctx.Dec()
@@ -40,22 +49,22 @@ func (this NormPtr) ElemType(ctx *common.EcoContext) (reflect.Type, error) {
 }
 
 
-func (this NormPtr) IsAllocated (ctx *common.EcoContext) (bool, error) {
+func (this NormPtr) IsAllocated (ctx *common.EcoContext) bool {
 	rv := reflect.ValueOf(this.Value)
 	rvElemType := rv.Type().Elem()
 
 	if rvElemType.Kind() != reflect.Pointer {
-		if this.IsReference(ctx) && reflect.ValueOf(this.Value).Elem().IsNil() {
-			return false, nil
+		if this.IsReference(ctx) && this.Elem().IsNil(ctx) {
+			return false
 		}
-		return true, nil
+		return true
 	}
 
-	return false, nil
+	return false
 }
 
 
-func (this NormPtr) IsBigEnough (ctx *common.EcoContext, n int) (bool, error) {
+func (this NormPtr) IsBigEnough (ctx *common.EcoContext, n int) bool {
 	ctx.Logger.Signature("NormPtr.IsBigEnough")
 	ctx.Inc()
 	defer ctx.Dec()
@@ -63,22 +72,18 @@ func (this NormPtr) IsBigEnough (ctx *common.EcoContext, n int) (bool, error) {
 	ctx.Logger.Infof("this.Value.Type()=%v", reflect.ValueOf(this.Value).Type())
 	
 	// Confirm that this is ultimately a slice ptr
-	rvp, err := NewRvPointer(this.Value)
-	elemType, err := rvp.ElemType(ctx)
+	rvp := RvPointer(reflect.ValueOf(this.Value))
+	elemType := rvp.ElemType(ctx)
 	ctx.Logger.Infof("elemType=%v", elemType)
-	if err != nil {
-		ctx.Logger.Errorf("Error w rvp.ElemType(): %s", err.Error())
-		return false, err
-	}
 	if elemType.Kind() != reflect.Slice {
 		ctx.Logger.Infof("type is not slice (%s) - returning true", elemType.Kind())
-		return true, nil
+		return true
 	}
 
 	// nil pointers always return false
 	if rvp.IsNil(ctx) {
 		ctx.Logger.Info("pointer is nil - returning false")
-		return false, nil
+		return false
 	}
 
 	// ptr to slice
@@ -87,17 +92,17 @@ func (this NormPtr) IsBigEnough (ctx *common.EcoContext, n int) (bool, error) {
 		ctx.Logger.Comment("pointer to slice")
 		cap := rv.Elem().Cap()
 		ctx.Logger.Infof("cap=%v", cap)
-		return cap >= n, nil
+		return cap >= n
 	}
 
 	// ptr to ptr - by NormPtr rules these are always nil so return false
 	if rvp.IsPointer(ctx) {
 		ctx.Logger.Comment("pointer to pointer")
-		return false, nil
+		return false
 	}
 
 	// Non-slice and non-pointer, so return true
-	return true, nil 
+	return true
 }
 
 
@@ -111,7 +116,35 @@ func (this NormPtr) IsReference(ctx *common.EcoContext) bool {
 }
 
 
+func (this NormPtr) Set(a any) {
+	reflect.ValueOf(this.Value).Elem().Set(common.Reflect(a))
+}
+
+
 func IsNormPointer (ctx *common.EcoContext, a any) bool {
+	ctx.Logger.Signature("IsNormPointer", reflect.ValueOf(a).Type())
+	ctx.Inc()
+	defer ctx.Dec()
+
+	rvp := RvPointer(reflect.ValueOf(a))
+	flavor := rvp.Flavor()
+	switch flavor {
+	case Map, Scalar, Slice, Struct:
+		if rvp.IsNil(ctx) {
+			return false
+		}
+		return true
+	case Pointer:
+		if rvp.Elem().IsNil(ctx) {
+			return true
+		} else {
+			return false
+		}
+	default:
+		return false
+	}
+	
+/*
 	rv := common.Reflect(a)
 	if rv.Kind() != reflect.Pointer {
 		ctx.Logger.Infof("expected pointer, got %s instead", rv.Kind())
@@ -153,4 +186,5 @@ func IsNormPointer (ctx *common.EcoContext, a any) bool {
 		return false
 	}
 	}
+*/
 }

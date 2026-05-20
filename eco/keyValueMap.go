@@ -43,7 +43,7 @@ func (m KeyValueMap) add(ctx *common.EcoContext, prefix string, kv *KeyValue) bo
 	ctx.Logger.Comment("checking if key is a child of the prefix ...")
 	fullKey := KeyString(kv.Key)
 	ksPrefix := KeyString(prefix).WithoutEndSlash()
-	afterPrefix, is := fullKey.CutPrefix(string(ksPrefix))
+	afterPrefix, is := fullKey.CutPrefix(ksPrefix)
 	if !is {
 		ctx.Logger.Info("Not a child. Returning.")
 		return false
