@@ -176,7 +176,7 @@ func TestPut_BoolSlice(t *testing.T) {
 
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)
-	putSlice(t, ctx, cli, ops)
+	putOps(t, ctx, cli, ops)
 
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
@@ -195,7 +195,7 @@ func TestPut_FloatSlice(t *testing.T) {
 	ops := createSliceOps(t, ctx, slice, key)
 	testSliceOps(t, slice, key, ops)
 
-	putSlice(t, ctx, cli, ops)
+	putOps(t, ctx, cli, ops)
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
 
@@ -214,7 +214,7 @@ func TestPut_IntSlice(t *testing.T) {
 
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)
-	putSlice(t, ctx, cli, ops)
+	putOps(t, ctx, cli, ops)
 
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
@@ -234,7 +234,7 @@ func TestPut_StringSlice(t *testing.T) {
 
 	cli, err := CreateEtcdClientFromConfig()
 	require.NoError(t, err)
-	putSlice(t, ctx, cli, ops)
+	putOps(t, ctx, cli, ops)
 
 	testSliceValuesInEtcd(t, slice, cli, key)
 }
@@ -247,7 +247,7 @@ func createSliceOps[U any](t *testing.T, ctx *common.EcoContext, slice []U, key 
 	return ops
 }
 
-func putSlice(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, ops []etcd.Op) {
+func putOps(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, ops []etcd.Op) {
 	resp, err := cli.Txn(ctx).Then(ops...).Commit()
 	require.NoError(t, err)
 	ctx.Logger.Infof("%#v", resp)

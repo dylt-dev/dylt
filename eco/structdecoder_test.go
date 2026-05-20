@@ -2,7 +2,6 @@ package eco
 
 import (
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/dylt-dev/dylt/common"
@@ -14,9 +13,9 @@ func TestStructDecoder1 (t *testing.T) {
 	
 	decoder := StructDecoder{}
 	tree := &ValueTree{}
-	tree.Add(ctx, KeyString("/name"), []byte("\"Smitty\""))
-	tree.Add(ctx, KeyString("/lucky_number"), strconv.AppendInt([]byte{}, 13, 10))
-	tree.Add(ctx, KeyString("/NoTag"), []byte("\"tagless\""))
+	tree.addString(ctx, "/name", "Smitty")
+	tree.addInt(ctx, "/lucky_number", 13)
+	tree.addString(ctx, "/NoTag", "tagless")
 	
 	var x common.TestStruct
 	p := &x
@@ -34,9 +33,9 @@ func TestStructDecoder2 (t *testing.T) {
 	
 	decoder := StructDecoder{}
 	tree := &ValueTree{}
-	tree.Add(ctx, KeyString("/name"), []byte("\"Smitty\""))
-	tree.Add(ctx, KeyString("/lucky_number"), strconv.AppendInt([]byte{}, 13, 10))
-	tree.Add(ctx, KeyString("/NoTag"), []byte("\"tagless\""))
+	tree.addString(ctx, "/name", "Smitty")
+	tree.addInt(ctx, "/lucky_number", 13)
+	tree.addString(ctx, "/NoTag", "tagless")
 	
 	var p *common.TestStruct = nil
 	pp := &p

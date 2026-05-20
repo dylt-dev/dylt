@@ -12,7 +12,6 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-
 func TestDecodeBoolSlice(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected0 := true
@@ -26,7 +25,7 @@ func TestDecodeBoolSlice(t *testing.T) {
 	tree.addBool(ctx, "/9", expected9)
 	var p *[]bool = nil
 	pp := &p
-	
+
 	err := decoder.Decode(ctx, tree, pp)
 	x := *p
 	require.NoError(t, err)
@@ -35,7 +34,6 @@ func TestDecodeBoolSlice(t *testing.T) {
 	require.Equal(t, expected9, x[9])
 	require.False(t, x[2])
 }
-
 
 func TestDecodeFloatSlice(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -50,7 +48,7 @@ func TestDecodeFloatSlice(t *testing.T) {
 	tree.addFloat(ctx, "/9", expected9)
 	var p *[]float64 = nil
 	pp := &p
-	
+
 	err := decoder.Decode(ctx, tree, pp)
 	x := *p
 	require.NoError(t, err)
@@ -60,7 +58,6 @@ func TestDecodeFloatSlice(t *testing.T) {
 	require.Zero(t, x[2])
 
 }
-
 
 func TestDecodeIntSlice(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -75,7 +72,7 @@ func TestDecodeIntSlice(t *testing.T) {
 	tree.addInt(ctx, "/9", expected9)
 	var p *[]int64 = nil
 	pp := &p
-	
+
 	err := decoder.Decode(ctx, tree, pp)
 	x := *p
 	require.NoError(t, err)
@@ -85,13 +82,12 @@ func TestDecodeIntSlice(t *testing.T) {
 	require.Zero(t, x[2])
 }
 
-
 func TestDecodeIntSlice1000(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	n := 1000
 	expected := make([]int64, n)
 	for i := range expected {
-		expected[i] = int64(i*10)
+		expected[i] = int64(i * 10)
 	}
 	decoder := MainDecoder{}
 
@@ -111,7 +107,6 @@ func TestDecodeIntSlice1000(t *testing.T) {
 	}
 }
 
-
 func TestDecodeStringSlice(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected0 := "foo"
@@ -125,7 +120,7 @@ func TestDecodeStringSlice(t *testing.T) {
 	tree.addString(ctx, "/9", expected9)
 	var p *[]string = nil
 	pp := &p
-	
+
 	err := decoder.Decode(ctx, tree, pp)
 	x := *p
 	require.NoError(t, err)
@@ -134,7 +129,6 @@ func TestDecodeStringSlice(t *testing.T) {
 	require.Equal(t, expected9, x[9])
 	require.Zero(t, x[2])
 }
-
 
 func TestDecodeUintSlice(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -149,7 +143,7 @@ func TestDecodeUintSlice(t *testing.T) {
 	tree.addInt(ctx, "/9", expected9)
 	var p *[]int64 = nil
 	pp := &p
-	
+
 	err := decoder.Decode(ctx, tree, pp)
 	x := *p
 	require.NoError(t, err)
@@ -159,7 +153,6 @@ func TestDecodeUintSlice(t *testing.T) {
 	require.Zero(t, x[2])
 }
 
-
 func TestGetBoolSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
@@ -167,7 +160,7 @@ func TestGetBoolSlice(t *testing.T) {
 	ctx.Logger.Comment("Write test data to cluster ...")
 	key := KeyString("/test/boolSlice")
 	expectedData := []bool{true, false, true, true}
-	putAndTestSlice(t, ctx, cli, key, expectedData)
+	putSlice(t, ctx, cli, key, expectedData)
 
 	// Get kvs for seeded data
 	ctx.Logger.Comment("Read test data from cluster ...")
@@ -183,79 +176,43 @@ func TestGetBoolSlice(t *testing.T) {
 
 func TestGetFloatSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
-
-	// Seed etcd with test data
 	key := KeyString("/test/floatSlice")
-	expectedData := []float32{42.0, 1764.0, 6.54321}
-
-	putAndTestSlice(t, ctx, cli, key, expectedData)
-
-	// Get kvs for seeded data
-	kvs := getAndTestSliceKVs(t, ctx, cli, key)
-
-	// Decode the slice and test expected values
-	getAndTestSlice(t, ctx, expectedData, kvs, key)
+	expected := []float32{42.0, 1764.0, 6.54321}
+	testSlice(t, ctx, cli, key, expected)
 }
 
 
 func TestGetIntSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
-
-	// Seed etcd with test data
 	key := KeyString("/test/intSlice")
-	expectedData := []int{5, 8, 13}
-
-	putAndTestSlice(t, ctx, cli, key, expectedData)
-
-	// Get kvs for seeded data
-	kvs := getAndTestSliceKVs(t, ctx, cli, key)
-
-	// Decode the slice and test expected values
-	getAndTestSlice(t, ctx, expectedData, kvs, key)
+	expected := []int{5, 8, 13}
+	testSlice(t, ctx, cli, key, expected)
 }
 
 
 func TestGetStringSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
-
-	// Seed etcd with test data
 	key := KeyString("/test/stringSlice")
-	expectedData := []string{"foo", "bar", "bum"}
-	putAndTestSlice(t, ctx, cli, key, expectedData)
-
-	// Get kvs for seeded data
-	kvs := getAndTestSliceKVs(t, ctx, cli, key)
-
-	// Decode the slice and test expected values
-	getAndTestSlice(t, ctx, expectedData, kvs, key)
+	expected := []string{"foo", "bar", "bum"}
+	testSlice(t, ctx, cli, key, expected)
 }
 
 
 func TestGetUintSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
-
-	// Seed etcd with test data
 	key := KeyString("/test/uintSlice")
 	expectedData := []uint{5, 12, 13}
-
-	putAndTestSlice(t, ctx, cli, key, expectedData)
-
-	// Get kvs for seeded data
-	kvs := getAndTestSliceKVs(t, ctx, cli, key)
-
-	// Decode the slice and test expected values
-	getAndTestSlice(t, ctx, expectedData, kvs, key)
+	testSlice(t, ctx, cli, key, expectedData)
 }
 
 
-func TestSliceDecoder1 (t *testing.T) {
+func TestSliceDecoder1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := SliceDecoder{}
 	tree := &ValueTree{}
 	tree.Add(ctx, KeyString("/0"), []byte("\"foo\""))
 	tree.Add(ctx, KeyString("/1"), []byte("\"bar\""))
 	tree.Add(ctx, KeyString("/9"), []byte("\"bum\""))
-	require.Equal(t, 3, len(tree.ChildMap))
 
 	var x []string = nil
 	p := &x
@@ -265,7 +222,7 @@ func TestSliceDecoder1 (t *testing.T) {
 	require.Equal(t, 10, len(x))
 	require.Equal(t, "foo", x[0])
 	require.Equal(t, "bar", x[1])
-	require.Equal(t, "", x[2])
+	require.Zero(t, x[2])
 	require.Equal(t, "bum", x[9])
 }
 
@@ -273,9 +230,9 @@ func TestSliceDecoder1 (t *testing.T) {
 func decodeAndTestSlice[U any](t *testing.T, key KeyString, expectedData []U) {
 	ctx, cli := initAndTest(t)
 
-	putAndTestSlice(t, ctx, cli, key, expectedData)
+	putSlice(t, ctx, cli, key, expectedData)
 
-	var p*[]U = nil
+	var p *[]U = nil
 	pp := &p
 	err := Decode(ctx, cli, string(key), pp)
 	require.NoError(t, err)
@@ -286,6 +243,7 @@ func decodeAndTestSlice[U any](t *testing.T, key KeyString, expectedData []U) {
 }
 
 
+// Convert KVs into a tree, decode, and compare against expected data
 func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData []U, etcdKvs []*mvccpb.KeyValue, key KeyString) {
 	decoder := SliceDecoder{}
 
@@ -305,6 +263,7 @@ func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData [
 }
 
 
+// Confirm that kvs written to etcd (eg by `putSlice()`) were successfully written
 func getAndTestSliceKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString) []*mvccpb.KeyValue {
 	op := etcd.OpGet(string(key), etcd.WithPrefix())
 	txn := createTxn(t, ctx, cli)
@@ -318,7 +277,8 @@ func getAndTestSliceKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, k
 }
 
 
-func putAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, data []U) {
+// Convert slices to etcd Ops and write them
+func putSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, data []U) {
 	ctx.Logger.Infof("Writing slice at %s ...", key)
 	ops := []etcd.Op{}
 	for i, val := range data {
@@ -331,7 +291,21 @@ func putAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClien
 		ops = append(ops, op)
 		ctx.Dec()
 	}
-	txn := createTxn(t, ctx, cli)
-	require.NotNil(t, txn)
-	txn.Then(ops...).Commit()
+	putOps(t, ctx, cli, ops)
+}
+
+func testSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, expected []U) {
+	// Write slice data to etcd
+	ctx.Logger.Commentf("Writing test data to cluster (%s) ...", key)
+	putSlice(t, ctx, cli, key, expected)
+
+	// Retrieve slice data
+	ctx.Logger.Commentf("Reading test data from cluster (%s) ...", key)
+	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+
+	// Decode slice data and confirm it matches original
+	ctx.Logger.Comment("Done with etcd")
+	ctx.Logger.Comment()
+	ctx.Logger.Comment("Decoding data ...")
+	getAndTestSlice(t, ctx, expected, kvs, key)
 }
