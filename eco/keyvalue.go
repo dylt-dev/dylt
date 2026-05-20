@@ -13,6 +13,10 @@ type KeyValue struct {
 	Value []byte
 }
 
+func NewKeyValue (etcdKv *mvccpb.KeyValue) KeyValue {
+	kv := KeyValue{Key: KeyString(etcdKv.Key), Value: etcdKv.Value}
+	return kv
+}
 
 func createKvSlice (etcdKvs []*mvccpb.KeyValue) []*KeyValue {
 	kvSlice := make([]*KeyValue, len(etcdKvs))

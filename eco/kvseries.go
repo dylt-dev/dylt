@@ -1,10 +1,21 @@
 package eco
 
+import "go.etcd.io/etcd/api/v3/mvccpb"
+
 type KvSeries struct {
 	RootKey KeyString
 	Kvs     []KeyValue
 }
 
+
+func NewKvSeries (rootKey KeyString, kvs []*mvccpb.KeyValue) (*KvSeries, error) {
+	kvSeries := KvSeries{rootKey, nil}
+	for _, kv := range kvs {
+		kvSeries.Add(NewKeyValue(kv))	
+	}
+
+	return &kvSeries, nil
+}
 
 func (this *KvSeries) Add (kv KeyValue) bool {
 	if !this.IsOwner(kv.Key) {
@@ -26,7 +37,7 @@ func (this *KvSeries) Len() int {
 func (this *KvSeries) MaxIndex() int {
 	var maxIndex int = 0
 	for _, kv := range this.Kvs {
-		keyString, is := kv.Key.CutPrefix(string(this.RootKey))
+		keyString, is := kv.Key.CutPrefix(this.RootKey)
 		if is {
 			index, is := keyString.Index()
 			if is && index > maxIndex {
