@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
@@ -302,191 +300,6 @@ func TestCreateOrGetStructAlloc(t *testing.T) {
 	require.Equal(t, expectedNoTag, (**ppst).NoTag)
 }
 
-func TestDecodeBool(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := true
-	decoder := MainDecoder{}
-	
-	buf := strconv.AppendBool([]byte{}, expected)
-	tree := &ValueTree{Value: buf}
-	var x bool
-	p := &x
-
-	err := decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeBool2(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := true
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setBool(expected)
-	var p *bool = nil
-	pp := &p
-
-	err := decoder.Decode(ctx, tree, pp)
-	require.NoError(t, err)
-	require.Equal(t, expected, *p)
-}
-
-func TestDecodeFloat1(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := float64(169.0)
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setFloat(expected)
-	var x float64
-	p := &x
-
-	err := decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeFloat2(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := float64(169.0)
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setFloat(expected)
-	var p *float64 = nil
-	pp := &p
-
-	err := decoder.Decode(ctx, tree, pp)
-	x := *p
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeInt(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := int64(13)
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setInt(expected)
-	var x int64
-	p := &x
-
-	err := decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeInt2(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := int64(13)
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setInt(expected)
-	var p *int64 = nil
-	pp := &p
-
-	err := decoder.Decode(ctx, tree, pp)
-	x := *p
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeString(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := "meat"
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setString(expected)
-	var x string
-	p := &x
-
-	err := decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeString2(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := "meat"
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setString(expected)
-	var p *string = nil
-	pp := &p
-
-	err := decoder.Decode(ctx, tree, pp)
-	x := *p
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeUint1(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := uint64(169.0)
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setUint(expected)
-	var x uint64
-	p := &x
-
-	err := decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestDecodeUint2(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	expected := uint64(169.0)
-	decoder := MainDecoder{}
-	
-	tree := &ValueTree{}
-	tree.setUint(expected)
-	var p *uint64 = nil
-	pp := &p
-
-	err := decoder.Decode(ctx, tree, pp)
-	x := *p
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-}
-
-func TestGetBool1(t *testing.T) {
-	testGetScalar(t, "/test/scalar/bool", true)
-}
-
-func TestGetBool2(t *testing.T) {
-	testGetScalar2(t, "test/scalar/bool2", true)
-}
-
-func TestGetFloat(t *testing.T) {
-	testGetScalar(t, "/test/float", float32(42.0))
-}
-
-func TestGetFloat2(t *testing.T) {
-	testGetScalar2(t, "/test/float2", float32(42.0))
-}
-
-func TestGetInt(t *testing.T) {
-	testGetScalar(t, "/test/int", int(-13))
-}
-
-func TestGetInt2(t *testing.T) {
-	testGetScalar2(t, "/test/int2", int(-13))
-}
-
-func TestGetString(t *testing.T) {
-	testGetScalar(t, "/test/string", "hello world")
-}
-
-func TestGetString2(t *testing.T) {
-	testGetScalar2(t, "/test/string2", "hello world")
-}
 
 func TestGetStructAndUnmarshalField(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -532,14 +345,6 @@ func TestGetStructFieldKey3(t *testing.T) {
 	require.True(t, is)
 	key := GetStructFieldKey(fld)
 	require.Equal(t, expectedData, key)
-}
-
-func TestGetUint(t *testing.T) {
-	testGetScalar(t, "/test/uint", uint(13))
-}
-
-func TestGetUint2(t *testing.T) {
-	testGetScalar2(t, "/test/uint2", uint(13))
 }
 
 func TestFieldNameMap(t *testing.T) {
@@ -594,59 +399,6 @@ func TestNilPointer(t *testing.T) {
 	t.Logf("reflect.ValueOf(pm).Elem().IsNil()=%v", reflect.ValueOf(pm).Elem().IsNil())
 }
 
-func TestStructEcoTest(t *testing.T) {
-	ctx, _ := initAndTest(t)
-
-	// Setup keys and values
-	key := KeyString("/test/struct/ecotest")
-	expectedData := common.TestStruct{
-		Name:        "Me",
-		LuckyNumber: 169.0,
-		NoTag:       "tagless",
-	}
-	// expectedName := ex
-	// expectedLuckyNumber := 13
-	// expectedNoTag := "no-tag-value"
-	keyName := fmt.Sprintf("%s/%s", key, "name")
-	keyLuckyNumber := fmt.Sprintf("%s/%s", key, "lucky_number")
-	keyNoTag := fmt.Sprintf("%s/%s", key, "NoTag")
-
-	// Encode []byte values for struct fields
-	bufName, err := json.Marshal(expectedData.Name)
-	require.NoError(t, err)
-	bufLuckyNumber, err := json.Marshal(expectedData.LuckyNumber)
-	require.NoError(t, err)
-	bufNoTag, err := json.Marshal(expectedData.NoTag)
-	require.NoError(t, err)
-	etcdKvs := []*mvccpb.KeyValue{
-		{Key: []byte(keyName), Value: bufName},
-		{Key: []byte(keyLuckyNumber), Value: bufLuckyNumber},
-		{Key: []byte(keyNoTag), Value: bufNoTag},
-	}
-	kvSeries, err := NewKvSeries(key, etcdKvs)
-	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
-	require.NoError(t, err)
-
-	x := common.TestStruct{}
-	p := &x
-	decoder := StructDecoder{}
-	decoder.Decode(ctx, tree, p)
-	t.Logf("%#v", x)
-
-	// expectedData := EcoTest{
-	// 	Name:        expectedName,
-	// 	LuckyNumber: float64(expectedLuckyNumber),
-	// 	NoTag:       expectedNoTag,
-	// }
-	// var data *EcoTest
-	// err = Decode(ctx, cli, key, &expectedData)
-	// require.NoError(t, err)
-	// // require.Equal(t, expectedData, *data)
-	// require.Nil(t, data)
-	// t.Log(*decodedVal)
-}
-
 func TestStructSetField0(t *testing.T) {
 	defer func() {
 		pa := recover()
@@ -687,36 +439,6 @@ func TestStructSetField1(t *testing.T) {
 	t.Logf("%#v", st)
 }
 
-func decodeAndTestScalar[U any](t *testing.T, key KeyString, expectedVal U) {
-	ctx, cli := initAndTest(t)
-
-	// Seed test data
-	putAndTestScalar(t, ctx, cli, key, expectedVal)
-
-	var p *U = nil
-	var pp = &p
-	err := Decode(ctx, cli, string(key), pp)
-	require.NoError(t, err)
-	require.NotNil(t, p)
-	require.Equal(t, expectedVal, *p)
-	t.Log(p)
-}
-
-func decodeAndTestScalar2[U any](t *testing.T, key KeyString, expectedVal U) {
-	ctx, cli := initAndTest(t)
-
-	// Seed test data
-	putAndTestScalar(t, ctx, cli, key, expectedVal)
-
-	var v U
-	var p *U = &v
-	err := Decode(ctx, cli, string(key), p)
-	require.NoError(t, err)
-	require.Equal(t, expectedVal, *p)
-	t.Log(p)
-}
-
-
 // func getAndTestMap[U any](t *testing.T, ctx *common.EcoContext, expectedData map[string]U, kvs []*mvccpb.KeyValue, key string) {
 // 	var pData *map[string]U
 // 	rv := reflect.ValueOf(&pData)
@@ -743,119 +465,8 @@ func deleteObjectFromCluster(t *testing.T, ctx *common.EcoContext, cli *EtcdClie
 	txn.Then(opDelete).Commit()
 }
 
-func putAndTestScalar(t *testing.T, ctx *common.EcoContext, etcdClient *EtcdClient, key KeyString, i any) {
-	// resp, err := etcdClient.Put(context.Background(), key, val)
-	ctx.Inc()
-	defer ctx.Dec()
-
-	ctx.Logger.Infof("Writing to %s... ", key)
-	j, err := json.Marshal(i)
-	require.NoError(t, err)
-	resp, err := etcdClient.Put(ctx, string(key), string(j))
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-
-	ctx.Logger.Infof("Reading %s... ", key)
-	buf, err := etcdClient.Get(string(key))
-	require.NoError(t, err)
-	require.Equal(t, j, buf)
-	require.Equal(t, string(j), string(buf))
-	ctx.Logger.Infof("%#v", resp)
-}
-
-func putAndTestStruct(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, kvs []*mvccpb.KeyValue) {
-	deleteObjectFromCluster(t, ctx, cli, key, "/test/struct")
-
-	ctx.Logger.Infof("Writing struct at %s ...", key)
-	ops := []etcd.Op{}
-	for _, kv := range kvs {
-		subkey := fmt.Sprintf("%s/%s", key, kv.Key)
-		op := etcd.OpPut(subkey, string(kv.Value))
-		ops = append(ops, op)
-	}
-	txn := createTxn(t, ctx, cli)
-	require.NotNil(t, txn)
-	txn.Then(ops...).Commit()
-}
-
-func testGetScalar[U any](t *testing.T, key KeyString, expectedVal U) {
-	ctx, cli := initAndTest(t)
-
-	// Seed etcd with test data
-	ctx.Logger.Comment("Writing scalar seed data to cluster ...")
-	putAndTestScalar(t, ctx, cli, key, expectedVal)
-
-	// Create the GET Op
-	op := etcd.OpGet(string(key))
-
-	// Get the response from etcd
-	ctx.Logger.Comment("Getting scalar value from the cluster ...")
-	txn := createTxn(t, ctx, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-
-	// Get the KVs from the response
-	p := new(U)
-	pp := &p
-	rangeResp := resp.Responses[0].GetResponseRange()
-	etcdKvs := rangeResp.Kvs
-	require.Equal(t, 1, len(etcdKvs))
-	ctx.Logger.Comment("Done with etcd")
-	ctx.Logger.Comment()
-	ctx.Logger.Comment("Decoding data ...")
-	kvSeries, err := NewKvSeries(key, etcdKvs)
-	require.NoError(t, err)
-	require.Equal(t, kvSeries.RootKey, key)
-	require.Equal(t, 1, len(kvSeries.Kvs))
-	tree, err := NewValueTree(ctx, kvSeries)
-	require.NoError(t, err)
-	require.Equal(t, 0, len(tree.ChildMap))
-	buf, err := json.Marshal(expectedVal)
-	require.NoError(t, err)
-	require.Equal(t, buf, tree.Value)
-	// Get the decoder from the DecoderMap and decode
-	decoder := &ScalarDecoder[U]{}
-	err = decoder.Decode(ctx, tree, pp)
-	require.NoError(t, err)
-	require.NotNil(t, p)
-	require.Equal(t, expectedVal, *p)
-}
-
-func testGetScalar2[U any](t *testing.T, key KeyString, expectedVal U) {
-	ctx, cli := initAndTest(t)
-
-	// Seed etcd with test data
-	putAndTestScalar(t, ctx, cli, key, expectedVal)
-
-	// Create the GET Op
-	op := etcd.OpGet(string(key))
-
-	// Get the response from etcd
-	txn := createTxn(t, ctx, cli)
-	resp, err := txn.Then(op).Commit()
-	require.NoError(t, err)
-
-	// Get the KVs from the response
-	var v U
-	p := &v
-	rangeResp := resp.Responses[0].GetResponseRange()
-	etcdKvs := rangeResp.Kvs
-
-	kvSeries, err := NewKvSeries(key, etcdKvs)
-	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
-	require.NoError(t, err)
-
-	// Get the decoder from the DecoderMap and decode
-	decoder := &ScalarDecoder[U]{}
-	err = decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.NotNil(t, p)
-	require.Equal(t, expectedVal, *p)
-}
-
 /*
-ap[string]reflect.Value
+map[string]reflect.Value
 {
 	"Anon":reflect.Value{
 		typ_:(*abi.Type)(0x1014f6460),
