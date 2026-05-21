@@ -10,7 +10,6 @@ import (
 
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
@@ -594,59 +593,6 @@ func TestNilPointer(t *testing.T) {
 	t.Logf("reflect.ValueOf(pm).Elem().IsNil()=%v", reflect.ValueOf(pm).Elem().IsNil())
 }
 
-func TestStructEcoTest(t *testing.T) {
-	ctx, _ := initAndTest(t)
-
-	// Setup keys and values
-	key := KeyString("/test/struct/ecotest")
-	expectedData := common.TestStruct{
-		Name:        "Me",
-		LuckyNumber: 169.0,
-		NoTag:       "tagless",
-	}
-	// expectedName := ex
-	// expectedLuckyNumber := 13
-	// expectedNoTag := "no-tag-value"
-	keyName := fmt.Sprintf("%s/%s", key, "name")
-	keyLuckyNumber := fmt.Sprintf("%s/%s", key, "lucky_number")
-	keyNoTag := fmt.Sprintf("%s/%s", key, "NoTag")
-
-	// Encode []byte values for struct fields
-	bufName, err := json.Marshal(expectedData.Name)
-	require.NoError(t, err)
-	bufLuckyNumber, err := json.Marshal(expectedData.LuckyNumber)
-	require.NoError(t, err)
-	bufNoTag, err := json.Marshal(expectedData.NoTag)
-	require.NoError(t, err)
-	etcdKvs := []*mvccpb.KeyValue{
-		{Key: []byte(keyName), Value: bufName},
-		{Key: []byte(keyLuckyNumber), Value: bufLuckyNumber},
-		{Key: []byte(keyNoTag), Value: bufNoTag},
-	}
-	kvSeries, err := NewKvSeries(key, etcdKvs)
-	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
-	require.NoError(t, err)
-
-	x := common.TestStruct{}
-	p := &x
-	decoder := StructDecoder{}
-	decoder.Decode(ctx, tree, p)
-	t.Logf("%#v", x)
-
-	// expectedData := EcoTest{
-	// 	Name:        expectedName,
-	// 	LuckyNumber: float64(expectedLuckyNumber),
-	// 	NoTag:       expectedNoTag,
-	// }
-	// var data *EcoTest
-	// err = Decode(ctx, cli, key, &expectedData)
-	// require.NoError(t, err)
-	// // require.Equal(t, expectedData, *data)
-	// require.Nil(t, data)
-	// t.Log(*decodedVal)
-}
-
 func TestStructSetField0(t *testing.T) {
 	defer func() {
 		pa := recover()
@@ -761,21 +707,6 @@ func putAndTestScalar(t *testing.T, ctx *common.EcoContext, etcdClient *EtcdClie
 	require.Equal(t, j, buf)
 	require.Equal(t, string(j), string(buf))
 	ctx.Logger.Infof("%#v", resp)
-}
-
-func putAndTestStruct(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, kvs []*mvccpb.KeyValue) {
-	deleteObjectFromCluster(t, ctx, cli, key, "/test/struct")
-
-	ctx.Logger.Infof("Writing struct at %s ...", key)
-	ops := []etcd.Op{}
-	for _, kv := range kvs {
-		subkey := fmt.Sprintf("%s/%s", key, kv.Key)
-		op := etcd.OpPut(subkey, string(kv.Value))
-		ops = append(ops, op)
-	}
-	txn := createTxn(t, ctx, cli)
-	require.NotNil(t, txn)
-	txn.Then(ops...).Commit()
 }
 
 func testGetScalar[U any](t *testing.T, key KeyString, expectedVal U) {

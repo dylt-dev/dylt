@@ -164,7 +164,7 @@ func TestGetBoolSlice(t *testing.T) {
 
 	// Get kvs for seeded data
 	ctx.Logger.Comment("Read test data from cluster ...")
-	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+	kvs := getAndTestKVs(t, ctx, cli, key)
 
 	// Decode the slice and test expected values
 	ctx.Logger.Comment("Done with etcd")
@@ -264,7 +264,7 @@ func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData [
 
 
 // Confirm that kvs written to etcd (eg by `putSlice()`) were successfully written
-func getAndTestSliceKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString) []*mvccpb.KeyValue {
+func getAndTestKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString) []*mvccpb.KeyValue {
 	op := etcd.OpGet(string(key), etcd.WithPrefix())
 	txn := createTxn(t, ctx, cli)
 	resp, err := txn.Then(op).Commit()
@@ -301,7 +301,7 @@ func testSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key
 
 	// Retrieve slice data
 	ctx.Logger.Commentf("Reading test data from cluster (%s) ...", key)
-	kvs := getAndTestSliceKVs(t, ctx, cli, key)
+	kvs := getAndTestKVs(t, ctx, cli, key)
 
 	// Decode slice data and confirm it matches original
 	ctx.Logger.Comment("Done with etcd")
