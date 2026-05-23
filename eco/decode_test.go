@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/dylt-dev/dylt/common"
@@ -298,6 +299,171 @@ func TestCreateOrGetStructAlloc(t *testing.T) {
 	require.Equal(t, expectedName, (**ppst).Name)
 	require.Equal(t, expectedLuckyNumber, (**ppst).LuckyNumber)
 	require.Equal(t, expectedNoTag, (**ppst).NoTag)
+}
+
+
+// { k => v }
+func newMapTree(ctx *common.EcoContext, k string, v int64) *ValueTree{
+	tree := NewValueTree(ctx, k, v)
+	return tree
+}
+
+
+func TestNewMapTree(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	tree := newMapTree(ctx, "foo", 13)
+	require.NotNil(t, tree)
+	require.Nil(t, tree.Value)
+	require.Equal(t, 1, len(tree.ChildMap))
+	treeVal, is := tree.ChildMap["foo"]
+	require.True(t, is)
+	require.NotNil(t, treeVal.Value)
+	require.Nil(t, treeVal.ChildMap)
+	require.Equal(t, "13", string(treeVal.Value))
+	val, err := strconv.Atoi(string(treeVal.Value))
+	require.NoError(t, err)
+	require.Equal(t, 13, val)
+}
+
+
+// {Name: name}
+func newStructTree (ctx *common.EcoContext, name string) *ValueTree {
+	tree := NewValueTree(ctx, "Name", name) 
+
+	return tree
+}
+
+func TestNewStructTree (t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	name := "meat"
+	tree := newStructTree(ctx, name)
+	require.NotNil(t, tree)
+	require.Nil(t, tree.Value)
+	require.Equal(t, 1, len(tree.ChildMap))
+	treeMapVal, is := tree.ChildMap["Name"]
+	require.True(t, is)
+	require.NotNil(t, treeMapVal)
+	require.NotNil(t, treeMapVal.Value)
+	var treeMapValName string
+	err := json.Unmarshal(treeMapVal.Value, &treeMapValName)
+	require.NoError(t, err)
+	require.Equal(t, name, treeMapValName)
+	require.Nil(t, treeMapVal.ChildMap)
+}
+
+
+// {key: {Name: name} }
+func newMapOfStructTree (ctx *common.EcoContext, key string, name string) *ValueTree {
+	structTree := newStructTree(ctx, name)
+	tree := NewValueTree(ctx, key, structTree)
+	return tree
+}
+
+func TestMapOfStructs(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	
+	type simpleStruct struct { Name string }
+	type mapOfStructs map[string]simpleStruct
+	key := "foo"
+	name := "meat"
+	expected := mapOfStructs{key: simpleStruct{Name: name}}
+	tree := newMapOfStructTree(ctx, key, name)
+	decoder := MainDecoder{}
+
+	var x mapOfStructs
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
+}
+
+
+
+func TestDecodeSliceOfMaps(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	type sliceOfMaps []map[string]int
+	expected := sliceOfMaps{{"foo": 13}}
+		
+	decoder := MainDecoder{}
+
+	treeMap := newMapTree(ctx, "foo", 13)
+	tree := &ValueTree{}
+	tree.ChildMap = ValueTreeChildMap{"0": treeMap}
+
+	var x sliceOfMaps
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, expected, x)
+}
+
+
+
+func TestDecodeStructWithSlice(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	type structWithSlice struct { Names []string }
+	decoder := MainDecoder{}
+
+	names := []string{"\"foo\"", "\"bar\"", "\"bum\""}
+	treeSlice := &ValueTree{}
+	treeSlice.ChildMap = ValueTreeChildMap{
+		"0": &ValueTree{Value: []byte(names[0])},
+		"1": &ValueTree{Value: []byte(names[1])},
+		"9": &ValueTree{Value: []byte(names[2])},
+	}
+	tree := &ValueTree{ChildMap: ValueTreeChildMap{"Names": treeSlice}}
+
+	x := structWithSlice{}
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+
+	ctx.Logger.Info(x)
+	require.Equal(t, 10, len(x.Names))
+	require.Equal(t, "foo", x.Names[0])
+	require.Equal(t, "bar", x.Names[1])
+	require.Equal(t, "bum", x.Names[9])
+}
+
+
+func TestDecodeStructOfSliceOfMaps (t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	decoder := MainDecoder{}
+	type deepType struct{Data []map[string]struct{Slice []map[string]struct{ Val []struct{N int}}}}
+
+	tree0 := NewValueTree(ctx, "N", 13)
+	tree1 := NewValueTree(ctx, "0", tree0)
+	tree2 := NewValueTree(ctx, "Val", tree1)
+	tree3 := NewValueTree(ctx, "", tree2)
+	tree4 := NewValueTree(ctx, "0", tree3)
+	tree5 := NewValueTree(ctx, "Slice", tree4)
+	tree6 := NewValueTree(ctx, "", tree5)
+	tree7 := NewValueTree(ctx, "0", tree6)
+	tree8 := NewValueTree(ctx, "Data", tree7)
+	tree := tree8
+
+/*
+	mapTree := NewValueTree(ctx, "foo", valTree)
+	structTree1 := NewValueTree(ctx, "N", 13)
+	sliceTree1 := NewValueTree(ctx, 3, structTree1)
+	valTree := NewValueTree(ctx, "Val", sliceTree1)
+	mapTree := NewValueTree(ctx, "foo", valTree)
+	sliceTree2 := NewValueTree(ctx, 0, mapTree)
+	structTree2 := NewValueTree(ctx, "Slice", sliceTree2)
+	mapTree2 := NewValueTree(ctx, "bar", structTree2)
+	sliceTree3 := NewValueTree(ctx, 2, mapTree2)
+	structTree3 := NewValueTree(ctx, "Data", sliceTree3)
+	tree := structTree3
+*/
+	var x deepType
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, 13, x.Data[0][""].Slice[0][""].Val[0].N)
+	t.Log(x)
+	buf, err := json.MarshalIndent(x, "", "\t")
+	require.NoError(t, err)
+	t.Log(string(buf))
 }
 
 

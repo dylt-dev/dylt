@@ -20,9 +20,9 @@ func TestDecodeBoolSlice(t *testing.T) {
 	decoder := MainDecoder{}
 
 	tree := &ValueTree{}
-	tree.addBool(ctx, "/0", expected0)
-	tree.addBool(ctx, "/1", expected1)
-	tree.addBool(ctx, "/9", expected9)
+	tree.add(ctx, "/0", expected0)
+	tree.add(ctx, "/1", expected1)
+	tree.add(ctx, "/9", expected9)
 	var p *[]bool = nil
 	pp := &p
 
@@ -43,9 +43,9 @@ func TestDecodeFloatSlice(t *testing.T) {
 	decoder := MainDecoder{}
 
 	tree := &ValueTree{}
-	tree.addFloat(ctx, "/0", expected0)
-	tree.addFloat(ctx, "/1", expected1)
-	tree.addFloat(ctx, "/9", expected9)
+	tree.add(ctx, "/0", expected0)
+	tree.add(ctx, "/1", expected1)
+	tree.add(ctx, "/9", expected9)
 	var p *[]float64 = nil
 	pp := &p
 
@@ -67,9 +67,9 @@ func TestDecodeIntSlice(t *testing.T) {
 	decoder := MainDecoder{}
 
 	tree := &ValueTree{}
-	tree.addInt(ctx, "/0", expected0)
-	tree.addInt(ctx, "/1", expected1)
-	tree.addInt(ctx, "/9", expected9)
+	tree.add(ctx, "/0", expected0)
+	tree.add(ctx, "/1", expected1)
+	tree.add(ctx, "/9", expected9)
 	var p *[]int64 = nil
 	pp := &p
 
@@ -94,7 +94,7 @@ func TestDecodeIntSlice1000(t *testing.T) {
 	tree := &ValueTree{}
 	for i, val := range expected {
 		key := fmt.Sprintf("/%d", i)
-		tree.addInt(ctx, key, val)
+		tree.add(ctx, key, val)
 	}
 	var p *[]int64 = nil
 	pp := &p
@@ -115,9 +115,9 @@ func TestDecodeStringSlice(t *testing.T) {
 	decoder := MainDecoder{}
 
 	tree := &ValueTree{}
-	tree.addString(ctx, "/0", expected0)
-	tree.addString(ctx, "/1", expected1)
-	tree.addString(ctx, "/9", expected9)
+	tree.add(ctx, "/0", expected0)
+	tree.add(ctx, "/1", expected1)
+	tree.add(ctx, "/9", expected9)
 	var p *[]string = nil
 	pp := &p
 
@@ -138,9 +138,9 @@ func TestDecodeUintSlice(t *testing.T) {
 	decoder := MainDecoder{}
 
 	tree := &ValueTree{}
-	tree.addInt(ctx, "/0", expected0)
-	tree.addInt(ctx, "/1", expected1)
-	tree.addInt(ctx, "/9", expected9)
+	tree.add(ctx, "/0", expected0)
+	tree.add(ctx, "/1", expected1)
+	tree.add(ctx, "/9", expected9)
 	var p *[]int64 = nil
 	pp := &p
 
@@ -173,14 +173,12 @@ func TestGetBoolSlice(t *testing.T) {
 	getAndTestSlice(t, ctx, expectedData, kvs, key)
 }
 
-
 func TestGetFloatSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	key := KeyString("/test/floatSlice")
 	expected := []float32{42.0, 1764.0, 6.54321}
 	testSlice(t, ctx, cli, key, expected)
 }
-
 
 func TestGetIntSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
@@ -189,7 +187,6 @@ func TestGetIntSlice(t *testing.T) {
 	testSlice(t, ctx, cli, key, expected)
 }
 
-
 func TestGetStringSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	key := KeyString("/test/stringSlice")
@@ -197,14 +194,12 @@ func TestGetStringSlice(t *testing.T) {
 	testSlice(t, ctx, cli, key, expected)
 }
 
-
 func TestGetUintSlice(t *testing.T) {
 	ctx, cli := initAndTest(t)
 	key := KeyString("/test/uintSlice")
 	expectedData := []uint{5, 12, 13}
 	testSlice(t, ctx, cli, key, expectedData)
 }
-
 
 func TestSliceDecoder1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -226,22 +221,19 @@ func TestSliceDecoder1(t *testing.T) {
 	require.Equal(t, "bum", x[9])
 }
 
+// func decodeAndTestSlice[U any](t *testing.T, key KeyString, expectedData []U) {
+// 	ctx, cli := initAndTest(t)
 
-func decodeAndTestSlice[U any](t *testing.T, key KeyString, expectedData []U) {
-	ctx, cli := initAndTest(t)
+// 	putSlice(t, ctx, cli, key, expectedData)
 
-	putSlice(t, ctx, cli, key, expectedData)
-
-	var p *[]U = nil
-	pp := &p
-	err := Decode(ctx, cli, string(key), pp)
-	require.NoError(t, err)
-	require.NotNil(t, p)
-	require.Equal(t, expectedData, pp)
-	t.Log(p)
-
-}
-
+// 	var p *[]U = nil
+// 	pp := &p
+// 	err := Decode(ctx, cli, string(key), pp)
+// 	require.NoError(t, err)
+// 	require.NotNil(t, p)
+// 	require.Equal(t, expectedData, pp)
+// 	t.Log(p)
+// }
 
 // Convert KVs into a tree, decode, and compare against expected data
 func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData []U, etcdKvs []*mvccpb.KeyValue, key KeyString) {
@@ -249,7 +241,7 @@ func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData [
 
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
 	ctx.Logger.Debugf("tree.ChildMap=%#v", tree.ChildMap)
 
@@ -261,7 +253,6 @@ func getAndTestSlice[U any](t *testing.T, ctx *common.EcoContext, expectedData [
 	require.NoError(t, err)
 	require.Equal(t, expectedData, *p)
 }
-
 
 // Confirm that kvs written to etcd (eg by `putSlice()`) were successfully written
 func getAndTestKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString) []*mvccpb.KeyValue {
@@ -275,7 +266,6 @@ func getAndTestKVs(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key Ke
 	kvs := respRange.Kvs
 	return kvs
 }
-
 
 // Convert slices to etcd Ops and write them
 func putSlice[U any](t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, data []U) {

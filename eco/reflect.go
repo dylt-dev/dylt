@@ -7,45 +7,6 @@ import (
 	"github.com/dylt-dev/dylt/common"
 )
 
-type Flavor reflect.Kind
-
-const (
-	InvalidFlavor Flavor = iota
-	Map
-	Pointer
-	Scalar
-	Slice
-	Struct
-)
-
-func NewFlavor(knd reflect.Kind) Flavor {
-	switch knd {
-	// simple case for simple types
-	case reflect.Bool,
-		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Float32,
-		reflect.Float64,
-		reflect.String:
-		return Scalar
-
-	case reflect.Pointer:
-		return Pointer
-
-	case reflect.Slice:
-		return Slice
-
-	case reflect.Map:
-		return Map
-
-	case reflect.Struct:
-		return Struct
-
-	default:
-		return InvalidFlavor
-	}
-}
-
 // Check if the argument refers to a pointer to an allocated variable, or
 // if it is a pointer to a nil pointer, or a pointer to a Slice or Map
 // If the argument is none of these, return an error

@@ -6,6 +6,58 @@ import (
 	"reflect"
 )
 
+type Flavor reflect.Kind
+
+const (
+	InvalidFlavor Flavor = iota
+	Map
+	Pointer
+	Scalar
+	Slice
+	Struct
+)
+
+func NewFlavor(knd reflect.Kind) Flavor {
+	switch knd {
+	// simple case for simple types
+	case reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32,
+		reflect.Float64,
+		reflect.String:
+		return Scalar
+
+	case reflect.Pointer:
+		return Pointer
+
+	case reflect.Slice:
+		return Slice
+
+	case reflect.Map:
+		return Map
+
+	case reflect.Struct:
+		return Struct
+
+	default:
+		return InvalidFlavor
+	}
+}
+
+
+func (fl Flavor) String () string {
+	switch fl {
+	case InvalidFlavor: return "Invalid"
+	case Map: return "Map"
+	case Pointer: return "Pointer"
+	case Scalar: return "Scalar"
+	case Slice: return "Slice"
+	case Struct: return "Struct"
+	default: return "Unknown"
+	}
+}
+
 type TestMap map[string]string
 type TestStruct struct {
 	Name        string  `eco:"name"`

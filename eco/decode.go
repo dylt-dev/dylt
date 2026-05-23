@@ -54,7 +54,6 @@ func (d *MainDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) err
 	ctx.Logger.Comment("Getting element type ...")
 	elemType := rvp.ElemType(ctx)
 	ctx.Logger.Infof("elemType=%s", elemType.Kind().String())
-	
 
 	ctx.Logger.Comment("Getting decoder ...")
 	decoder, is := decoderMap[elemType.Kind()]
@@ -93,7 +92,7 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) erro
 	elemType := NormPtr{a}.ElemType(ctx)
 	keyType := elemType.Key()
 	valType := elemType.Elem()
-	ctx.Logger.Infof("elemType=%s keyType=%s valType=%s", elemType, keyType, valType) 
+	ctx.Logger.Infof("elemType=%s keyType=%s valType=%s", elemType, keyType, valType)
 
 	normPtr, err := CreateOrGetMap(ctx, &NormPtr{a}, len(tree.ChildMap))
 	if err != nil {
@@ -124,71 +123,71 @@ func (d *MapDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) erro
 		ctx.Logger.Infof("rvMap.Type()=%v", rvMap.Type())
 		rvMap.Elem().SetMapIndex(rvKeyPtr.Elem(), rvValPtr.Elem())
 	}
-/*
-	pMap, is := common.CreateOrGetMap(ctx, rv)
-	if !is {
-		return fmt.Errorf("Unable to create or get map for ... reasons")
-	}
-	if pMap == nil {
-		return fmt.Errorf("nil map -- this shouldn't happen")
-	}
-	rvpMap := reflect.ValueOf(pMap)
-	if rvpMap.IsNil() {
-		return fmt.Errorf("rvpMap.IsNil() == true")
-	}
+	/*
+		pMap, is := common.CreateOrGetMap(ctx, rv)
+		if !is {
+			return fmt.Errorf("Unable to create or get map for ... reasons")
+		}
+		if pMap == nil {
+			return fmt.Errorf("nil map -- this shouldn't happen")
+		}
+		rvpMap := reflect.ValueOf(pMap)
+		if rvpMap.IsNil() {
+			return fmt.Errorf("rvpMap.IsNil() == true")
+		}
 
-	// get the reflect.Type for the underlying map
-	typMap, err := common.GetUnderlyingMapType(ctx, rv)
-	if err != nil {
-		return err
-	}
-	ctx.Logger.Infof("map type=map[%s]%s", typMap.Key(), typMap.Elem())
-
-	typKey := typMap.Key()
-	typValue := typMap.Elem()
-	// populate the new map with the data
-	for keyString, childTree := range kvTree.Children {
-		ctx.Logger.Infof("Decoding %s ...", keyString)
-		ctx.Logger.Infof("childTree.Value=%#v", childTree.Value)
-		// // create a new map item
-		pnew := reflect.New(typValue)
-		decoder := decoderMap[typValue.Kind()]
-		ctx.Logger.Infof("decoder type=%v\n", reflect.TypeOf(decoder))
-		elemName := keyString.ElementName(KeyString(key))
-		subkey := fmt.Sprintf("%s/%s", key, elemName)
-		ctx.Logger.Infof("subkey=%v\n", subkey)
-		err := decoder.Decode(ctx, childTree, subkey, pnew)
+		// get the reflect.Type for the underlying map
+		typMap, err := common.GetUnderlyingMapType(ctx, rv)
 		if err != nil {
 			return err
 		}
-		// // get the address of the new element and unmarshal the mapData value
-		// addr := pnew.Elem().Addr()
-		// i := addr.Interface()
-		// err := json.Unmarshal(v, i)
-		// if err != nil {
-		// 	return err
-		// // }
+		ctx.Logger.Infof("map type=map[%s]%s", typMap.Key(), typMap.Elem())
 
-		// // Create reflect.Value for mapData key and add key+val to new map
-		prvKey := reflect.New(typKey)
-		pKey := prvKey.Interface()
-		err = common.UnmarshalMapKey(elemName, pKey)
-		if err != nil {
-			return err
+		typKey := typMap.Key()
+		typValue := typMap.Elem()
+		// populate the new map with the data
+		for keyString, childTree := range kvTree.Children {
+			ctx.Logger.Infof("Decoding %s ...", keyString)
+			ctx.Logger.Infof("childTree.Value=%#v", childTree.Value)
+			// // create a new map item
+			pnew := reflect.New(typValue)
+			decoder := decoderMap[typValue.Kind()]
+			ctx.Logger.Infof("decoder type=%v\n", reflect.TypeOf(decoder))
+			elemName := keyString.ElementName(KeyString(key))
+			subkey := fmt.Sprintf("%s/%s", key, elemName)
+			ctx.Logger.Infof("subkey=%v\n", subkey)
+			err := decoder.Decode(ctx, childTree, subkey, pnew)
+			if err != nil {
+				return err
+			}
+			// // get the address of the new element and unmarshal the mapData value
+			// addr := pnew.Elem().Addr()
+			// i := addr.Interface()
+			// err := json.Unmarshal(v, i)
+			// if err != nil {
+			// 	return err
+			// // }
+
+			// // Create reflect.Value for mapData key and add key+val to new map
+			prvKey := reflect.New(typKey)
+			pKey := prvKey.Interface()
+			err = common.UnmarshalMapKey(elemName, pKey)
+			if err != nil {
+				return err
+			}
+			ctx.Logger.Infof("rvpMap type=map[%s]%s", rvpMap.Elem().Type().Key(), rvpMap.Elem().Type().Elem())
+			rvpMap.Elem().SetMapIndex(prvKey.Elem(), pnew.Elem())
 		}
-		ctx.Logger.Infof("rvpMap type=map[%s]%s", rvpMap.Elem().Type().Key(), rvpMap.Elem().Type().Elem())
-		rvpMap.Elem().SetMapIndex(prvKey.Elem(), pnew.Elem())
-	}
 
-	// Create a new map pointer and assign the new map to it
-	// pMap := reflect.New(typ)
-	// pMap.Elem().Set(rMap)
+		// Create a new map pointer and assign the new map to it
+		// pMap := reflect.New(typ)
+		// pMap.Elem().Set(rMap)
 
-	// assign the new map to the rv
-	// ppMap.Elem().Set(pMap)
+		// assign the new map to the rv
+		// ppMap.Elem().Set(pMap)
 
-	// done :)
-*/	
+		// done :)
+	*/
 	return nil
 }
 
@@ -211,23 +210,23 @@ func (d *ScalarDecoder[U]) Decode(ctx *common.EcoContext, tree *ValueTree, a any
 	if err != nil {
 		return err
 	}
-	
+
 	ctx.Logger.Commentf("Unmarshalling %v", data)
 	err = json.Unmarshal(data, normPtr.Value)
 	if err != nil {
 		return err
 	}
-	ctx.Logger.Infof("normPtr.Value=%#v", reflect.ValueOf(normPtr.Value).Elem().Interface())	
-  	
-/*	if kvTree == nil {
-		return fmt.Errorf("no data to decode")
-	}
-	data := kvTree.Value
-	ctx.Logger.Infof("data=%#v", data)
-	i := rv.Interface()
-	err := json.Unmarshal(data, i)
-	return err
-*/
+	ctx.Logger.Infof("normPtr.Value=%#v", reflect.ValueOf(normPtr.Value).Elem().Interface())
+
+	/*	if kvTree == nil {
+			return fmt.Errorf("no data to decode")
+		}
+		data := kvTree.Value
+		ctx.Logger.Infof("data=%#v", data)
+		i := rv.Interface()
+		err := json.Unmarshal(data, i)
+		return err
+	*/
 	return nil
 }
 
@@ -236,7 +235,7 @@ func (d *SliceDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) er
 	ctx.Inc()
 	defer ctx.Dec()
 
-	n := tree.ChildMap.MaxIndex(ctx)+1
+	n := tree.ChildMap.MaxIndex(ctx) + 1
 	ctx.Logger.Infof("n=%d", n)
 	ctx.Logger.Infof("a=%p", a)
 	normPtr, err := CreateOrGetSlice(ctx, &NormPtr{a}, n)
@@ -246,7 +245,7 @@ func (d *SliceDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) er
 	typ := normPtr.ElemType(ctx)
 	elemType := typ.Elem()
 	rvSlice := reflect.ValueOf(normPtr.Value).Elem()
-	ctx.Logger.Infof("a=%p normPtr.Value=%p", a, normPtr.Value) 
+	ctx.Logger.Infof("a=%p normPtr.Value=%p", a, normPtr.Value)
 
 	ctx.Logger.Infof("rvSlice.Len()=%d rvSlice.Cap()=%d", rvSlice.Len(), rvSlice.Cap())
 	decoder := MainDecoder{}
@@ -275,55 +274,55 @@ func (d *SliceDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) er
 		rvSlice.Index(i).Set(rvEl.Elem())
 		// ctx.Logger.Infof("a[%d]=%s", i, a[i])
 	}
-/*
-	// sliceData := getSliceData(kvs, key)
-	maxIndex := kvTree.Children.MaxIndex()
-	ctx.Logger.Infof("%#v", kvTree)
-	ctx.Logger.Infof("maxIndex=%d", maxIndex)
-	typSlice, err := getUnderlyingSliceType(rv)
-	if err != nil {
-		return err
-	}
-	len := maxIndex + 1
-	cap := maxIndex + 1
-	ctx.Logger.Infof("Making slice: len=%d cap=%d", len, cap)
-	rvSlice := reflect.MakeSlice(typSlice, int(len), int(cap))
-
-	// Unmarshal all the elements
-	for childKey, childTree := range kvTree.Children {
-		ctx.Logger.Infof("Decoding %s ...", childKey)
-		// Check if the childKey is a uint
-		keyString := KeyString(childKey)
-		i, is := keyString.Index()
-		if !is {
-			ctx.Logger.Infof("Key not a uint - skipping key (%s)", childKey)
-			continue
+	/*
+		// sliceData := getSliceData(kvs, key)
+		maxIndex := kvTree.Children.MaxIndex()
+		ctx.Logger.Infof("%#v", kvTree)
+		ctx.Logger.Infof("maxIndex=%d", maxIndex)
+		typSlice, err := getUnderlyingSliceType(rv)
+		if err != nil {
+			return err
 		}
-		// Get a pointer to the slice element at the specified index
-		el := rvSlice.Index(int(i))
-		addr := el.Addr()
-		subkey := fmt.Sprintf("%s/%d", key, i)
-		ctx.Logger.Infof("subkey=%s ...", subkey)
-		decoder := decoderMap[el.Kind()]
-		ctx.Logger.Infof("delgating to decoder: type=%s", reflect.TypeOf(decoder))
-		decoder.Decode(ctx, childTree, subkey, addr)
-		ctx.Logger.Commentf("subkey (%s) decoded", subkey)
-		// pEl := addr.Interface()
+		len := maxIndex + 1
+		cap := maxIndex + 1
+		ctx.Logger.Infof("Making slice: len=%d cap=%d", len, cap)
+		rvSlice := reflect.MakeSlice(typSlice, int(len), int(cap))
 
-		// // Unmarshal the specified data into the element pointer
-		// err := json.Unmarshal(data, pEl)
-		// if err != nil {
-		// 	return err
-		// }
-	}
+		// Unmarshal all the elements
+		for childKey, childTree := range kvTree.Children {
+			ctx.Logger.Infof("Decoding %s ...", childKey)
+			// Check if the childKey is a uint
+			keyString := KeyString(childKey)
+			i, is := keyString.Index()
+			if !is {
+				ctx.Logger.Infof("Key not a uint - skipping key (%s)", childKey)
+				continue
+			}
+			// Get a pointer to the slice element at the specified index
+			el := rvSlice.Index(int(i))
+			addr := el.Addr()
+			subkey := fmt.Sprintf("%s/%d", key, i)
+			ctx.Logger.Infof("subkey=%s ...", subkey)
+			decoder := decoderMap[el.Kind()]
+			ctx.Logger.Infof("delgating to decoder: type=%s", reflect.TypeOf(decoder))
+			decoder.Decode(ctx, childTree, subkey, addr)
+			ctx.Logger.Commentf("subkey (%s) decoded", subkey)
+			// pEl := addr.Interface()
 
-	// Make a slice pointer + assign the new slice to the pointer's Elem()
-	rvNew := reflect.New(typSlice)
-	rvNew.Elem().Set(rvSlice)
+			// // Unmarshal the specified data into the element pointer
+			// err := json.Unmarshal(data, pEl)
+			// if err != nil {
+			// 	return err
+			// }
+		}
 
-	// Assign the new slice pointer to the incoming rv
-	rv.Elem().Set(rvNew)
-*/
+		// Make a slice pointer + assign the new slice to the pointer's Elem()
+		rvNew := reflect.New(typSlice)
+		rvNew.Elem().Set(rvSlice)
+
+		// Assign the new slice pointer to the incoming rv
+		rv.Elem().Set(rvNew)
+	*/
 	return nil
 }
 
@@ -339,7 +338,7 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) e
 	}
 	typ := newNormPtr.ElemType(ctx)
 	ctx.Logger.Infof("typ=%s", typ)
-	
+
 	rvStructPtr := reflect.ValueOf(newNormPtr.Value)
 	for structField := range rvStructPtr.Elem().Fields() {
 		fieldKey := GetStructFieldKey(structField)
@@ -359,58 +358,58 @@ func (d *StructDecoder) Decode(ctx *common.EcoContext, tree *ValueTree, a any) e
 			}
 		}
 	}
-/*
-	pStruct, is := common.CreateOrGetStruct(ctx, rv)
-	if !is {
-		return fmt.Errorf("Unable to create or get struct for ... reasons")
-	}
-
-	// get the reflect.Type for the underlying struct to iterate over
-	ctx.Logger.Comment("Getting underlying struct type ...")
-	typStruct, err := common.GetUnderlyingStructType(ctx, rv)
-	if err != nil {
-		return err
-	}
-	ctx.Logger.Infof("struct type=%s", typStruct.Name())
-
-	ctx.Logger.Comment("Dumping child keys ...")
-	for childKey := range kvTree.Children {
-		ctx.Logger.Infof("childKey=%s", childKey)
-	}
-
-	ctx.Logger.Comment("Iterating over struct fields")
-	rvpStruct := common.Reflect(pStruct)
-	for field := range typStruct.Fields() {
-		if field.Tag != "" {
-			ctx.Logger.Infof("%-20s %-20s", field.Name, field.Type)
-		} else {
-			ctx.Logger.Infof("%-20s %-20s (%s)", field.Name, field.Type, field.Tag)
-		}
-		childKeyName := getFieldKey(field)
-		childKey := createKeyString(key, childKeyName)
-		ctx.Logger.Infof("childKey=%s", childKey)
-		kvChildTree, is := kvTree.Children[childKey]
+	/*
+		pStruct, is := common.CreateOrGetStruct(ctx, rv)
 		if !is {
-			ctx.Logger.Infof("Field not found in KVs: %s", childKey)
+			return fmt.Errorf("Unable to create or get struct for ... reasons")
 		}
-		// Decode LV value into struct field
-		decoder := decoderMap[field.Type.Kind()]
-		structField := rvpStruct.Elem().FieldByName(field.Name)
-		addr := structField.Addr()
-		decoder.Decode(ctx, kvChildTree, childKeyName, addr)
-		// common.UnmarshalStructField(pStruct, field.Name, kv.Value)
-		// else {
-		// 	addr := rvStruct.FieldByName(string(childKey)).Addr()
-		// 	decoder := decoderMap[field.Type.Kind()]
-		// 	decoder.Decode(ctx, kvTree, kv.Name, addr)
-		// }
-	}
 
-	// populate the new map with the data
-	// for k, childTree := range kvTree.Children {
-	// 	ctx.Logger.Infof("Decoding %s ...", k)
-	// }
-*/
+		// get the reflect.Type for the underlying struct to iterate over
+		ctx.Logger.Comment("Getting underlying struct type ...")
+		typStruct, err := common.GetUnderlyingStructType(ctx, rv)
+		if err != nil {
+			return err
+		}
+		ctx.Logger.Infof("struct type=%s", typStruct.Name())
+
+		ctx.Logger.Comment("Dumping child keys ...")
+		for childKey := range kvTree.Children {
+			ctx.Logger.Infof("childKey=%s", childKey)
+		}
+
+		ctx.Logger.Comment("Iterating over struct fields")
+		rvpStruct := common.Reflect(pStruct)
+		for field := range typStruct.Fields() {
+			if field.Tag != "" {
+				ctx.Logger.Infof("%-20s %-20s", field.Name, field.Type)
+			} else {
+				ctx.Logger.Infof("%-20s %-20s (%s)", field.Name, field.Type, field.Tag)
+			}
+			childKeyName := getFieldKey(field)
+			childKey := createKeyString(key, childKeyName)
+			ctx.Logger.Infof("childKey=%s", childKey)
+			kvChildTree, is := kvTree.Children[childKey]
+			if !is {
+				ctx.Logger.Infof("Field not found in KVs: %s", childKey)
+			}
+			// Decode LV value into struct field
+			decoder := decoderMap[field.Type.Kind()]
+			structField := rvpStruct.Elem().FieldByName(field.Name)
+			addr := structField.Addr()
+			decoder.Decode(ctx, kvChildTree, childKeyName, addr)
+			// common.UnmarshalStructField(pStruct, field.Name, kv.Value)
+			// else {
+			// 	addr := rvStruct.FieldByName(string(childKey)).Addr()
+			// 	decoder := decoderMap[field.Type.Kind()]
+			// 	decoder.Decode(ctx, kvTree, kv.Name, addr)
+			// }
+		}
+
+		// populate the new map with the data
+		// for k, childTree := range kvTree.Children {
+		// 	ctx.Logger.Infof("Decoding %s ...", k)
+		// }
+	*/
 	return nil
 }
 
@@ -440,7 +439,7 @@ func Decode(ctx *common.EcoContext, cli *EtcdClient, key string, a any) error {
 	if err != nil {
 		return nil
 	}
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	ctx.Logger.Info("Done")
 	ctx.Logger.Info()
 

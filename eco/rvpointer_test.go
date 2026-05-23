@@ -652,7 +652,7 @@ func TestRvpElemTypeMap4(t *testing.T) {
 }
 
 func TestRvpFlavor1(t *testing.T) {
-	expected := Scalar
+	expected := common.Scalar
 	var p *int
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
@@ -661,7 +661,7 @@ func TestRvpFlavor1(t *testing.T) {
 }
 
 func TestRvpFlavor2(t *testing.T) {
-	expected := Map
+	expected := common.Map
 	var p *map[string]int
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
@@ -670,7 +670,7 @@ func TestRvpFlavor2(t *testing.T) {
 }
 
 func TestRvpFlavor3(t *testing.T) {
-	expected := Slice
+	expected := common.Slice
 	var p *[]int
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
@@ -679,7 +679,7 @@ func TestRvpFlavor3(t *testing.T) {
 }
 
 func TestRvpFlavor4(t *testing.T) {
-	expected := Struct
+	expected := common.Struct
 	var p *struct{}
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)
@@ -688,7 +688,7 @@ func TestRvpFlavor4(t *testing.T) {
 }
 
 func TestRvpFlavor5(t *testing.T) {
-	expected := Pointer
+	expected := common.Pointer
 	var p **int
 	rvp, err := NewRvPointer(p)
 	require.NoError(t, err)

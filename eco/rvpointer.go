@@ -35,13 +35,13 @@ func (rvp RvPointer) CreateOrGet(ctx *common.EcoContext, n int) (*NormPtr, error
 	elemType := normPtr.ElemType(ctx)
 	ctx.Logger.Infof("elemType.Kind()=%v", elemType.Kind())
 
-	flavor := NewFlavor(elemType.Kind())
+	flavor := common.NewFlavor(elemType.Kind())
 	ctx.Logger.Infof("flavor=%v", flavor)
 	switch flavor {
-	case Map: return CreateOrGetMap(ctx, normPtr, n)
-	case Scalar: return CreateOrGetScalar(ctx, normPtr)
-	case Slice: return CreateOrGetSlice(ctx, normPtr, n)
-	case Struct: return CreateOrGetStruct(ctx, normPtr)
+	case common.Map: return CreateOrGetMap(ctx, normPtr, n)
+	case common.Scalar: return CreateOrGetScalar(ctx, normPtr)
+	case common.Slice: return CreateOrGetSlice(ctx, normPtr, n)
+	case common.Struct: return CreateOrGetStruct(ctx, normPtr)
 	default: return nil, fmt.Errorf("unsupported type (%s)", elemType.Kind().String())
 	}
 }
@@ -79,9 +79,9 @@ func (rvp RvPointer) ElemType(ctx *common.EcoContext) reflect.Type {
 }
 
 
-func (rvp RvPointer) Flavor () Flavor {
+func (rvp RvPointer) Flavor () common.Flavor {
 	rv := reflect.Value(rvp)
-	return NewFlavor(rv.Type().Elem().Kind())
+	return common.NewFlavor(rv.Type().Elem().Kind())
 }
 
 
@@ -166,9 +166,9 @@ func (rvp RvPointer) IsValue(ctx *common.EcoContext) bool {
 	}
 	elemKind := rv.Type().Elem().Kind()
 	ctx.Logger.Infof("elemKind=%v\n", elemKind)
-	flavor := NewFlavor(elemKind)
+	flavor := common.NewFlavor(elemKind)
 	ctx.Logger.Infof("flavor=%v\n", flavor)
-	if flavor == Scalar || flavor == Struct {
+	if flavor == common.Scalar || flavor == common.Struct {
 		ctx.Logger.Comment("scalar or struct pointer - returning true")
 		return true
 	}
@@ -205,9 +205,9 @@ func (rvp RvPointer) Walk(ctx *common.EcoContext) (*NormPtr, error) {
 	for {
 		flavor := rvp.Flavor()
 		switch flavor {
-		case Map, Scalar, Slice, Struct:
+		case common.Map, common.Scalar, common.Slice, common.Struct:
 			return NewNormPtr(ctx, reflect.Value(rvp).Interface())
-		case Pointer:
+		case common.Pointer:
 			if rvp.Elem().IsNil(ctx) {
 				return NewNormPtr(ctx, reflect.Value(rvp).Interface())
 			}
