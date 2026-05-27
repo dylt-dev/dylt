@@ -426,7 +426,7 @@ func TestDecodeStructWithSlice(t *testing.T) {
 }
 
 
-func TestDecodeStructOfSliceOfMaps (t *testing.T) {
+func TestDecodeDeepType10 (t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := MainDecoder{}
 	type deepType struct{Data []map[string]struct{Slice []map[string]struct{ Val []struct{N int}}}}
@@ -464,6 +464,155 @@ func TestDecodeStructOfSliceOfMaps (t *testing.T) {
 	buf, err := json.MarshalIndent(x, "", "\t")
 	require.NoError(t, err)
 	t.Log(string(buf))
+}
+
+
+func TestDecodeDeepType10Genned(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	decoder := MainDecoder{}
+	type deepType struct{Data []map[string]struct{Slice []map[string]struct{ Val []struct{N int}}}}
+
+	tree0 := NewValueTree(ctx, "N", 168)
+	tree1 := NewValueTree(ctx, 0, tree0)
+	tree2 := NewValueTree(ctx, "Val", tree1)
+	tree3 := NewValueTree(ctx, "mollitia", tree2)
+	tree4 := NewValueTree(ctx, 0, tree3)
+	tree5 := NewValueTree(ctx, "Slice", tree4)
+	tree6 := NewValueTree(ctx, "consequatur", tree5)
+	tree7 := NewValueTree(ctx, 0, tree6)
+	tree8 := NewValueTree(ctx, "Data", tree7)
+	tree := tree8
+
+	var x deepType
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	require.Equal(t, 168, x.Data[0]["consequatur"].Slice[0]["mollitia"].Val[0].N)
+	t.Log(x)
+	buf, err := json.MarshalIndent(x, "", "\t")
+	require.NoError(t, err)
+	t.Log(string(buf))
+	
+}
+
+
+func TestDecodeDeepType100Genned(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	decoder := MainDecoder{}
+	type deepType struct{Nemo struct{Eligendi struct{Illum map[bool]map[bool]map[bool]struct{Est struct{Tempore struct{Magnam struct{Fugiat struct{Sed struct{Et [][][]map[int]map[string]struct{Quis []map[bool]map[bool][]struct{Ullam []map[int]struct{Assumenda struct{Rerum struct{Possimus [][][]map[int]struct{Harum map[bool]map[int]struct{Aperiam struct{Incidunt struct{Beatae []struct{Nam struct{Sunt []map[string]struct{Dolore [][]map[bool][]struct{Assumenda []struct{Consequatur struct{Iste []map[bool]struct{Et [][]map[bool][][][]struct{Est map[bool]struct{Ut [][]map[string]struct{Facere struct{Velit struct{Ut map[int]map[string]struct{Quidem struct{Ipsa map[int]struct{Molestiae map[bool][]map[int]struct{Repellat [][][]struct{Reprehenderit struct{Eaque struct{Beatae map[string]struct{Unde struct{Perspiciatis [][]struct{Possimus map[bool]map[bool]struct{Eligendi struct{Modi struct{Vel []struct{Possimus []int}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+	tree0 := NewValueTree(ctx, 0, 459)
+	tree1 := NewValueTree(ctx, "Possimus", tree0)
+	tree2 := NewValueTree(ctx, 0, tree1)
+	tree3 := NewValueTree(ctx, "Vel", tree2)
+	tree4 := NewValueTree(ctx, "Modi", tree3)
+	tree5 := NewValueTree(ctx, "Eligendi", tree4)
+	tree6 := NewValueTree(ctx, true, tree5)
+	tree7 := NewValueTree(ctx, true, tree6)
+	tree8 := NewValueTree(ctx, "Possimus", tree7)
+	tree9 := NewValueTree(ctx, 0, tree8)
+	tree10 := NewValueTree(ctx, 0, tree9)
+	tree11 := NewValueTree(ctx, "Perspiciatis", tree10)
+	tree12 := NewValueTree(ctx, "Unde", tree11)
+	tree13 := NewValueTree(ctx, "est", tree12)
+	tree14 := NewValueTree(ctx, "Beatae", tree13)
+	tree15 := NewValueTree(ctx, "Eaque", tree14)
+	tree16 := NewValueTree(ctx, "Reprehenderit", tree15)
+	tree17 := NewValueTree(ctx, 0, tree16)
+	tree18 := NewValueTree(ctx, 0, tree17)
+	tree19 := NewValueTree(ctx, 0, tree18)
+	tree20 := NewValueTree(ctx, "Repellat", tree19)
+	tree21 := NewValueTree(ctx, 852, tree20)
+	tree22 := NewValueTree(ctx, 0, tree21)
+	tree23 := NewValueTree(ctx, false, tree22)
+	tree24 := NewValueTree(ctx, "Molestiae", tree23)
+	tree25 := NewValueTree(ctx, 456, tree24)
+	tree26 := NewValueTree(ctx, "Ipsa", tree25)
+	tree27 := NewValueTree(ctx, "Quidem", tree26)
+	tree28 := NewValueTree(ctx, "commodi", tree27)
+	tree29 := NewValueTree(ctx, 522, tree28)
+	tree30 := NewValueTree(ctx, "Ut", tree29)
+	tree31 := NewValueTree(ctx, "Velit", tree30)
+	tree32 := NewValueTree(ctx, "Facere", tree31)
+	tree33 := NewValueTree(ctx, "et", tree32)
+	tree34 := NewValueTree(ctx, 0, tree33)
+	tree35 := NewValueTree(ctx, 0, tree34)
+	tree36 := NewValueTree(ctx, "Ut", tree35)
+	tree37 := NewValueTree(ctx, true, tree36)
+	tree38 := NewValueTree(ctx, "Est", tree37)
+	tree39 := NewValueTree(ctx, 0, tree38)
+	tree40 := NewValueTree(ctx, 0, tree39)
+	tree41 := NewValueTree(ctx, 0, tree40)
+	tree42 := NewValueTree(ctx, false, tree41)
+	tree43 := NewValueTree(ctx, 0, tree42)
+	tree44 := NewValueTree(ctx, 0, tree43)
+	tree45 := NewValueTree(ctx, "Et", tree44)
+	tree46 := NewValueTree(ctx, true, tree45)
+	tree47 := NewValueTree(ctx, 0, tree46)
+	tree48 := NewValueTree(ctx, "Iste", tree47)
+	tree49 := NewValueTree(ctx, "Consequatur", tree48)
+	tree50 := NewValueTree(ctx, 0, tree49)
+	tree51 := NewValueTree(ctx, "Assumenda", tree50)
+	tree52 := NewValueTree(ctx, 0, tree51)
+	tree53 := NewValueTree(ctx, false, tree52)
+	tree54 := NewValueTree(ctx, 0, tree53)
+	tree55 := NewValueTree(ctx, 0, tree54)
+	tree56 := NewValueTree(ctx, "Dolore", tree55)
+	tree57 := NewValueTree(ctx, "aut", tree56)
+	tree58 := NewValueTree(ctx, 0, tree57)
+	tree59 := NewValueTree(ctx, "Sunt", tree58)
+	tree60 := NewValueTree(ctx, "Nam", tree59)
+	tree61 := NewValueTree(ctx, 0, tree60)
+	tree62 := NewValueTree(ctx, "Beatae", tree61)
+	tree63 := NewValueTree(ctx, "Incidunt", tree62)
+	tree64 := NewValueTree(ctx, "Aperiam", tree63)
+	tree65 := NewValueTree(ctx, 113, tree64)
+	tree66 := NewValueTree(ctx, true, tree65)
+	tree67 := NewValueTree(ctx, "Harum", tree66)
+	tree68 := NewValueTree(ctx, 900, tree67)
+	tree69 := NewValueTree(ctx, 0, tree68)
+	tree70 := NewValueTree(ctx, 0, tree69)
+	tree71 := NewValueTree(ctx, 0, tree70)
+	tree72 := NewValueTree(ctx, "Possimus", tree71)
+	tree73 := NewValueTree(ctx, "Rerum", tree72)
+	tree74 := NewValueTree(ctx, "Assumenda", tree73)
+	tree75 := NewValueTree(ctx, 881, tree74)
+	tree76 := NewValueTree(ctx, 0, tree75)
+	tree77 := NewValueTree(ctx, "Ullam", tree76)
+	tree78 := NewValueTree(ctx, 0, tree77)
+	tree79 := NewValueTree(ctx, true, tree78)
+	tree80 := NewValueTree(ctx, false, tree79)
+	tree81 := NewValueTree(ctx, 0, tree80)
+	tree82 := NewValueTree(ctx, "Quis", tree81)
+	tree83 := NewValueTree(ctx, "quaerat", tree82)
+	tree84 := NewValueTree(ctx, 730, tree83)
+	tree85 := NewValueTree(ctx, 0, tree84)
+	tree86 := NewValueTree(ctx, 0, tree85)
+	tree87 := NewValueTree(ctx, 0, tree86)
+	tree88 := NewValueTree(ctx, "Et", tree87)
+	tree89 := NewValueTree(ctx, "Sed", tree88)
+	tree90 := NewValueTree(ctx, "Fugiat", tree89)
+	tree91 := NewValueTree(ctx, "Magnam", tree90)
+	tree92 := NewValueTree(ctx, "Tempore", tree91)
+	tree93 := NewValueTree(ctx, "Est", tree92)
+	tree94 := NewValueTree(ctx, false, tree93)
+	tree95 := NewValueTree(ctx, false, tree94)
+	tree96 := NewValueTree(ctx, true, tree95)
+	tree97 := NewValueTree(ctx, "Illum", tree96)
+	tree98 := NewValueTree(ctx, "Eligendi", tree97)
+	tree99 := NewValueTree(ctx, "Nemo", tree98)
+	tree := tree99
+
+	var x deepType
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+	val := x.Nemo.Eligendi.Illum[true][false][false].Est.Tempore.Magnam.Fugiat.Sed.Et[0][0][0][730]["quaerat"].Quis[0][false][true][0].Ullam[0][881].Assumenda.Rerum.Possimus[0][0][0][900].Harum[true][113].Aperiam.Incidunt.Beatae[0].Nam.Sunt[0]["aut"].Dolore[0][0][false][0].Assumenda[0].Consequatur.Iste[0][true].Et[0][0][false][0][0][0].Est[true].Ut[0][0]["et"].Facere.Velit.Ut[522]["commodi"].Quidem.Ipsa[456].Molestiae[false][0][852].Repellat[0][0][0].Reprehenderit.Eaque.Beatae["est"].Unde.Perspiciatis[0][0].Possimus[true][true].Eligendi.Modi.Vel[0].Possimus[0]
+	require.Equal(t, 459, val)
+	t.Log(x)
+	// buf, err := json.MarshalIndent(x, "", "\t")
+	// require.NoError(t, err)
+	// t.Log(string(buf))
+	
 }
 
 
