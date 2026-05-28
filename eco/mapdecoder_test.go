@@ -118,20 +118,17 @@ func TestCreateOrGetMapNil(t *testing.T) {
 	require.Equal(t, expectedVal, value)
 }
 
-
-func TestDecodeMap1 (t *testing.T) {
-	expected := map[string]int64 { "foo": 13, "bar": 169 }
+func TestDecodeMap1(t *testing.T) {
+	expected := map[string]int64{"foo": 13, "bar": 169}
 
 	decodeAndTestMap(t, expected)
 }
 
-
-func TestDecodeMap2 (t *testing.T) {
-	expected := map[string]int64 { "foo": 13, "bar": 169 }
+func TestDecodeMap2(t *testing.T) {
+	expected := map[string]int64{"foo": 13, "bar": 169}
 
 	decodeAndTestNilMap(t, expected)
 }
-
 
 func TestGetMap(t *testing.T) {
 	ctx, cli := initAndTest(t)
@@ -165,7 +162,7 @@ func TestGetMap(t *testing.T) {
 
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
 
 	// Decode the map
@@ -215,13 +212,13 @@ func TestGetMapOfMaps(t *testing.T) {
 	// Create a ValueTree
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
 
 	// Decode the map
 	ctx.Logger.Comment("decoding data ...")
 	var p *map[int]map[string]string = nil
-	pp := &p 
+	pp := &p
 	decoder := MapDecoder{}
 	err = decoder.Decode(ctx, tree, pp)
 	ctx.Logger.Info("done - decoding data")
@@ -242,7 +239,6 @@ func TestGetMapOfMaps(t *testing.T) {
 	require.Equal(t, "Javier", mapJavier["Name"])
 	require.Equal(t, "P", mapJavier["Position"])
 }
-
 
 func TestNilMap(t *testing.T) {
 	defer func() {
@@ -281,15 +277,14 @@ func TestNilMapPointer(t *testing.T) {
 	t.Logf("pmValue.IsNil()=%v", pmValue.IsNil())
 }
 
-
-func decodeAndTestMap (t *testing.T, expected map[string]int64) {
+func decodeAndTestMap(t *testing.T, expected map[string]int64) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := MapDecoder{}
-	
+
 	tree := &ValueTree{}
 	for k, v := range expected {
 		key := fmt.Sprintf("/%s", k)
-		tree.addInt(ctx, key, v)
+		tree.add(ctx, key, v)
 	}
 	require.Equal(t, len(expected), len(tree.ChildMap))
 
@@ -302,15 +297,14 @@ func decodeAndTestMap (t *testing.T, expected map[string]int64) {
 	require.Equal(t, expected, x)
 }
 
-
-func decodeAndTestNilMap (t *testing.T, expected map[string]int64) {
+func decodeAndTestNilMap(t *testing.T, expected map[string]int64) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := MapDecoder{}
-	
+
 	tree := &ValueTree{}
 	for k, v := range expected {
 		key := fmt.Sprintf("/%s", k)
-		tree.addInt(ctx, key, v)
+		tree.add(ctx, key, v)
 	}
 	require.Equal(t, len(expected), len(tree.ChildMap))
 
@@ -323,7 +317,6 @@ func decodeAndTestNilMap (t *testing.T, expected map[string]int64) {
 	require.Equal(t, expected, x)
 
 }
-
 
 // With the EtcdClient, Put a value to etcd, then Get it back to confirm the
 // Put succeeded

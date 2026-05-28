@@ -13,89 +13,84 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-
 func TestGetStruct1(t *testing.T) {
 	// test data
 	rootKey := KeyString("/test/struct")
 	expected := common.TestStruct{
-		Name: fmt.Sprintf("%s", "meat"),
+		Name:        fmt.Sprintf("%s", "meat"),
 		LuckyNumber: 13,
-		NoTag: fmt.Sprintf("%s", "tagless"),
+		NoTag:       fmt.Sprintf("%s", "tagless"),
 	}
 	getAndTestStruct(t, expected, rootKey)
-	
 
-/*
-	// create OpPuts for struct
-	rootKey := KeyString("/test/struct")
-	rvs := rvStruct(reflect.ValueOf(expected))
-	ops := rvs.Ops(t, ctx, rootKey)
-	
-	// Write OpPuts to etcd
-	putOps(t, ctx, cli, ops)
+	/*
+	   // create OpPuts for struct
+	   rootKey := KeyString("/test/struct")
+	   rvs := rvStruct(reflect.ValueOf(expected))
+	   ops := rvs.Ops(t, ctx, rootKey)
 
-	// Read back OpPuts as etcd.KVs
-	etcdKvs := getAndTestKVs(t, ctx, cli, rootKey)
+	   // Write OpPuts to etcd
+	   putOps(t, ctx, cli, ops)
 
-	// Convert etcd.KVs into KvSeries
-	kvSeries, err := NewKvSeries(rootKey, etcdKvs)
-	require.NoError(t, err)
+	   // Read back OpPuts as etcd.KVs
+	   etcdKvs := getAndTestKVs(t, ctx, cli, rootKey)
 
-	// Convert KvSeries into ValueTree
-	tree, err := NewValueTree(ctx, kvSeries)
-	require.NoError(t, err)
-	
-	// Decode
-	decoder := StructDecoder{}
-	var x common.TestStruct
-	p := &x
-	err = decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, expected, x)
-*/
+	   // Convert etcd.KVs into KvSeries
+	   kvSeries, err := NewKvSeries(rootKey, etcdKvs)
+	   require.NoError(t, err)
+
+	   // Convert KvSeries into ValueTree
+	   tree, err := NewValueTree(ctx, kvSeries)
+	   require.NoError(t, err)
+
+	   // Decode
+	   decoder := StructDecoder{}
+	   var x common.TestStruct
+	   p := &x
+	   err = decoder.Decode(ctx, tree, p)
+	   require.NoError(t, err)
+	   require.Equal(t, expected, x)
+	*/
 }
 
-
-func TestStructDecoder1 (t *testing.T) {
+func TestStructDecoder1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	
+
 	decoder := StructDecoder{}
 	tree := &ValueTree{}
-	tree.addString(ctx, "/name", "Smitty")
-	tree.addInt(ctx, "/lucky_number", 13)
-	tree.addString(ctx, "/NoTag", "tagless")
-	
+	tree.add(ctx, "/name", "Smitty")
+	tree.add(ctx, "/lucky_number", 13)
+	tree.add(ctx, "/NoTag", "tagless")
+
 	var x common.TestStruct
 	p := &x
 	err := decoder.Decode(ctx, tree, p)
-	
+
 	require.NoError(t, err)
 	require.Equal(t, "Smitty", x.Name)
 	require.Equal(t, float64(13), x.LuckyNumber)
 	require.Equal(t, "tagless", x.NoTag)
 }
 
-
-func TestStructDecoder2 (t *testing.T) {
+func TestStructDecoder2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	
+
 	decoder := StructDecoder{}
 	tree := &ValueTree{}
-	tree.addString(ctx, "/name", "Smitty")
-	tree.addInt(ctx, "/lucky_number", 13)
-	tree.addString(ctx, "/NoTag", "tagless")
-	
+	tree.add(ctx, "/name", "Smitty")
+	tree.add(ctx, "/lucky_number", 13)
+	tree.add(ctx, "/NoTag", "tagless")
+
 	var p *common.TestStruct = nil
 	pp := &p
 	err := decoder.Decode(ctx, tree, pp)
 	x := *p
-		
+
 	require.NoError(t, err)
 	require.Equal(t, "Smitty", x.Name)
 	require.Equal(t, float64(13), x.LuckyNumber)
 	require.Equal(t, "tagless", x.NoTag)
 }
-
 
 func TestStructEcoTest(t *testing.T) {
 	ctx, _ := initAndTest(t)
@@ -128,7 +123,7 @@ func TestStructEcoTest(t *testing.T) {
 	}
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
 
 	x := common.TestStruct{}
@@ -138,14 +133,13 @@ func TestStructEcoTest(t *testing.T) {
 	t.Logf("%#v", x)
 }
 
-
-func getAndTestStruct (t *testing.T, expected any, rootKey KeyString) {
+func getAndTestStruct(t *testing.T, expected any, rootKey KeyString) {
 	ctx, cli := initAndTest(t)
 
 	// create OpPuts for struct
 	rvs, err := NewRvStruct(expected)
 	ops := rvs.Ops(t, ctx, rootKey)
-	
+
 	// Write OpPuts to etcd
 	putOps(t, ctx, cli, ops)
 
@@ -157,46 +151,44 @@ func getAndTestStruct (t *testing.T, expected any, rootKey KeyString) {
 	require.NoError(t, err)
 
 	// Convert KvSeries into ValueTree
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
-	
+
 	// Decode
 	decoder := StructDecoder{}
-	
+
 	// allocate a pointer to a struct of the same type as expected
 	typStruct := reflect.ValueOf(expected).Type()
 	rvPtr := reflect.New(typStruct)
-	
+
 	// decode into the newly allocated pointer
 	p := rvPtr.Interface()
 	err = decoder.Decode(ctx, tree, p)
 	require.NoError(t, err)
-	
+
 	// Get the new struct via the allocated pointer + test
 	x := rvPtr.Elem().Interface()
 	require.Equal(t, expected, x)
 }
 
+// func putAndTestStruct(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, kvs []*mvccpb.KeyValue) {
+// 	deleteObjectFromCluster(t, ctx, cli, key, "/test/struct")
 
-func putAndTestStruct(t *testing.T, ctx *common.EcoContext, cli *EtcdClient, key KeyString, kvs []*mvccpb.KeyValue) {
-	deleteObjectFromCluster(t, ctx, cli, key, "/test/struct")
-
-	ctx.Logger.Infof("Writing struct at %s ...", key)
-	ops := []etcd.Op{}
-	for _, kv := range kvs {
-		subkey := fmt.Sprintf("%s/%s", key, kv.Key)
-		op := etcd.OpPut(subkey, string(kv.Value))
-		ops = append(ops, op)
-	}
-	txn := createTxn(t, ctx, cli)
-	require.NotNil(t, txn)
-	txn.Then(ops...).Commit()
-}
-
+// 	ctx.Logger.Infof("Writing struct at %s ...", key)
+// 	ops := []etcd.Op{}
+// 	for _, kv := range kvs {
+// 		subkey := fmt.Sprintf("%s/%s", key, kv.Key)
+// 		op := etcd.OpPut(subkey, string(kv.Value))
+// 		ops = append(ops, op)
+// 	}
+// 	txn := createTxn(t, ctx, cli)
+// 	require.NotNil(t, txn)
+// 	txn.Then(ops...).Commit()
+// }
 
 type RvStruct reflect.Value
 
-func NewRvStruct (a any) (*RvStruct, error) {
+func NewRvStruct(a any) (*RvStruct, error) {
 	rv := common.Reflect(a)
 	if rv.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("expecting struct, got %s", rv.Kind().String())
@@ -205,7 +197,7 @@ func NewRvStruct (a any) (*RvStruct, error) {
 	return &rvs, nil
 }
 
-func (rvs RvStruct) Ops (t *testing.T, ctx *common.EcoContext, rootKey KeyString) []etcd.Op {
+func (rvs RvStruct) Ops(t *testing.T, ctx *common.EcoContext, rootKey KeyString) []etcd.Op {
 	ops := []etcd.Op{}
 	rv := reflect.Value(rvs)
 	ctx.Logger.Infof("rv.Type()=%s", rv.Type())

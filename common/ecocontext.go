@@ -21,6 +21,16 @@ func NewEcoContext(w io.Writer) *EcoContext {
 	return ctx
 }
 
+func (ctx* EcoContext) Comment (args ...any) {
+	ctx.Logger.Comment(args...)
+}
+
+
+func (ctx* EcoContext) Commentf (sfmt string, args ...any) {
+	ctx.Logger.Commentf(sfmt, args...)
+}
+
+
 func (ctx *EcoContext) Dec() *EcoContext {
 	ctx.depth--
 	return ctx
@@ -34,6 +44,16 @@ func (ctx *EcoContext) Inc() *EcoContext {
 	ctx.depth++
 	return ctx
 }
+
+func (ctx* EcoContext) Infof (sfmt string, args ...any) {
+	ctx.Logger.Infof(sfmt, args...)
+}
+
+func (ctx* EcoContext) Signature (name string, args ...any) {
+	ctx.Logger.Signature(name, args...)
+}
+
+
 
 // func (ctx *ecoContext) indent() string {
 // 	const tab = "  "

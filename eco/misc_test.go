@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"runtime/debug"
 	"testing"
-	"unsafe"
 
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
@@ -291,23 +290,23 @@ func TestReflectionSlice(t *testing.T) {
 // }
 
 //go:nosplit
-func noescape(p unsafe.Pointer) unsafe.Pointer {
-	x := uintptr(p)
-	return unsafe.Pointer(x ^ 0)
-}
+// func noescape(p unsafe.Pointer) unsafe.Pointer {
+// 	x := uintptr(p)
+// 	return unsafe.Pointer(x ^ 0)
+// }
 
-func TestNoEscape(t *testing.T) {
-	var n int8 = 13
-	uptr := unsafe.Pointer(&n)
-	t.Logf("%-12s: %p", "uptr", uptr)
-	nuptr := noescape(uptr)
-	t.Logf("%-12s: %p", "nuptr", nuptr)
-}
+// func TestNoEscape(t *testing.T) {
+// 	var n int8 = 13
+// 	uptr := unsafe.Pointer(&n)
+// 	t.Logf("%-12s: %p", "uptr", uptr)
+// 	nuptr := noescape(uptr)
+// 	t.Logf("%-12s: %p", "nuptr", nuptr)
+// }
 
-func TestXor(t *testing.T) {
-	n := 13
-	t.Logf("%d %d", n, n^0)
-}
+// func TestXor(t *testing.T) {
+// 	n := 13
+// 	t.Logf("%d %d", n, n^0)
+// }
 
 func TestPrints(t *testing.T) {
 	var ns int16 = 13

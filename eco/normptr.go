@@ -129,12 +129,12 @@ func IsNormPointer (ctx *common.EcoContext, a any) bool {
 	rvp := RvPointer(reflect.ValueOf(a))
 	flavor := rvp.Flavor()
 	switch flavor {
-	case Map, Scalar, Slice, Struct:
+	case common.Map, common.Scalar, common.Slice, common.Struct:
 		if rvp.IsNil(ctx) {
 			return false
 		}
 		return true
-	case Pointer:
+	case common.Pointer:
 		if rvp.Elem().IsNil(ctx) {
 			return true
 		} else {

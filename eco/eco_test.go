@@ -19,6 +19,7 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
+/*
 var astroKeys = []string{
 	"/test/team/astros/Players/altuve/Id",
 	"/test/team/astros/Players/altuve/IsActive",
@@ -46,6 +47,7 @@ var astroKeys = []string{
 	"/test/team/astros/Players/pena/Stats/0/Value",
 	"/test/team/astros/Players/pena/Weight",
 }
+*/
 
 // Sample types for tests (named types look better in a log file than anonymous types)
 type emptyStruct struct{}

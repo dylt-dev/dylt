@@ -15,7 +15,7 @@ func TestDecodeBool(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := true
 	decoder := MainDecoder{}
-	
+
 	buf := strconv.AppendBool([]byte{}, expected)
 	tree := &ValueTree{Value: buf}
 	var x bool
@@ -30,9 +30,9 @@ func TestDecodeBool2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := true
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setBool(expected)
+	tree.set(expected)
 	var p *bool = nil
 	pp := &p
 
@@ -45,9 +45,9 @@ func TestDecodeFloat1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := float64(169.0)
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setFloat(expected)
+	tree.set(expected)
 	var x float64
 	p := &x
 
@@ -60,9 +60,9 @@ func TestDecodeFloat2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := float64(169.0)
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setFloat(expected)
+	tree.set(expected)
 	var p *float64 = nil
 	pp := &p
 
@@ -76,9 +76,9 @@ func TestDecodeInt(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := int64(13)
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setInt(expected)
+	tree.set(expected)
 	var x int64
 	p := &x
 
@@ -91,9 +91,9 @@ func TestDecodeInt2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := int64(13)
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setInt(expected)
+	tree.set(expected)
 	var p *int64 = nil
 	pp := &p
 
@@ -107,9 +107,9 @@ func TestDecodeString(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := "meat"
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setString(expected)
+	tree.set(expected)
 	var x string
 	p := &x
 
@@ -122,9 +122,9 @@ func TestDecodeString2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := "meat"
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setString(expected)
+	tree.set(expected)
 	var p *string = nil
 	pp := &p
 
@@ -138,9 +138,9 @@ func TestDecodeUint1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := uint64(169.0)
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setUint(expected)
+	tree.set(expected)
 	var x uint64
 	p := &x
 
@@ -153,9 +153,9 @@ func TestDecodeUint2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expected := uint64(169.0)
 	decoder := MainDecoder{}
-	
+
 	tree := &ValueTree{}
-	tree.setUint(expected)
+	tree.set(expected)
 	var p *uint64 = nil
 	pp := &p
 
@@ -205,7 +205,6 @@ func TestGetUint2(t *testing.T) {
 	testGetScalar2(t, "/test/uint2", uint(13))
 }
 
-
 func TestScalarDecoderBool(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := ScalarDecoder[bool]{}
@@ -218,7 +217,6 @@ func TestScalarDecoderBool(t *testing.T) {
 	require.Equal(t, true, x)
 }
 
-
 func TestScalarDecoderBoolNil(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := ScalarDecoder[bool]{}
@@ -230,7 +228,6 @@ func TestScalarDecoderBoolNil(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, true, **pp)
 }
-
 
 func TestUnmarshalPp(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -249,36 +246,34 @@ func TestUnmarshalPp(t *testing.T) {
 	require.Equal(t, true, *p)
 }
 
+// func decodeAndTestScalar[U any](t *testing.T, key KeyString, expectedVal U) {
+// 	ctx, cli := initAndTest(t)
 
-func decodeAndTestScalar[U any](t *testing.T, key KeyString, expectedVal U) {
-	ctx, cli := initAndTest(t)
+// 	// Seed test data
+// 	putAndTestScalar(t, ctx, cli, key, expectedVal)
 
-	// Seed test data
-	putAndTestScalar(t, ctx, cli, key, expectedVal)
+// 	var p *U = nil
+// 	var pp = &p
+// 	err := Decode(ctx, cli, string(key), pp)
+// 	require.NoError(t, err)
+// 	require.NotNil(t, p)
+// 	require.Equal(t, expectedVal, *p)
+// 	t.Log(p)
+// }
 
-	var p *U = nil
-	var pp = &p
-	err := Decode(ctx, cli, string(key), pp)
-	require.NoError(t, err)
-	require.NotNil(t, p)
-	require.Equal(t, expectedVal, *p)
-	t.Log(p)
-}
+// func decodeAndTestScalar2[U any](t *testing.T, key KeyString, expectedVal U) {
+// 	ctx, cli := initAndTest(t)
 
-func decodeAndTestScalar2[U any](t *testing.T, key KeyString, expectedVal U) {
-	ctx, cli := initAndTest(t)
+// 	// Seed test data
+// 	putAndTestScalar(t, ctx, cli, key, expectedVal)
 
-	// Seed test data
-	putAndTestScalar(t, ctx, cli, key, expectedVal)
-
-	var v U
-	var p *U = &v
-	err := Decode(ctx, cli, string(key), p)
-	require.NoError(t, err)
-	require.Equal(t, expectedVal, *p)
-	t.Log(p)
-}
-
+// 	var v U
+// 	var p *U = &v
+// 	err := Decode(ctx, cli, string(key), p)
+// 	require.NoError(t, err)
+// 	require.Equal(t, expectedVal, *p)
+// 	t.Log(p)
+// }
 
 func putAndTestScalar(t *testing.T, ctx *common.EcoContext, etcdClient *EtcdClient, key KeyString, i any) {
 	// resp, err := etcdClient.Put(context.Background(), key, val)
@@ -329,7 +324,7 @@ func testGetScalar[U any](t *testing.T, key KeyString, expectedVal U) {
 	require.NoError(t, err)
 	require.Equal(t, kvSeries.RootKey, key)
 	require.Equal(t, 1, len(kvSeries.Kvs))
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(tree.ChildMap))
 	buf, err := json.Marshal(expectedVal)
@@ -365,7 +360,7 @@ func testGetScalar2[U any](t *testing.T, key KeyString, expectedVal U) {
 
 	kvSeries, err := NewKvSeries(key, etcdKvs)
 	require.NoError(t, err)
-	tree, err := NewValueTree(ctx, kvSeries)
+	tree, err := NewValueTreeFromKvSeries(ctx, kvSeries)
 	require.NoError(t, err)
 
 	// Get the decoder from the DecoderMap and decode

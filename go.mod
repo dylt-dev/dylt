@@ -5,6 +5,7 @@ go 1.26.1
 require (
 	github.com/dylt-dev/seq v0.0.8
 	github.com/go-sql-driver/mysql v1.9.0
+	github.com/jaswdr/faker v1.19.1
 	github.com/justincormack/go-memfd v0.0.0-20170219213707-6e4af0518993
 	github.com/stretchr/testify v1.11.1
 	go.etcd.io/etcd/api/v3 v3.5.21
