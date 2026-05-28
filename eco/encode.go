@@ -9,11 +9,12 @@ import (
 )
 
 
-type Encodeable interface {
+type Encodable interface {
 	Data () map[string]any
 }
 
 
+type RvEncodable reflect.Value
 type RvMap reflect.Value
 type RvSlice reflect.Value
 type RvStruct reflect.Value
@@ -82,6 +83,39 @@ func (rvs RvStruct) Data () map[string]any {
 	return data
 }
 
+
+func (rve RvEncodable) Data () map[string]any {
+	return rve.subType().Data()
+}
+
+
+func (rve RvEncodable) Flavor () common.Flavor {
+	return common.NewFlavor(rve.Kind())
+}
+
+
+func (rve RvEncodable) Kind () reflect.Kind {
+	return rve.Type().Kind()
+}
+
+
+func (rve RvEncodable) Type () reflect.Type {
+	return reflect.Value(rve).Type()
+}
+
+
+func (rve RvEncodable) subType() Encodable {
+	switch rve.Flavor() {
+	case common.Map:
+		return RvMap(rve)
+	case common.Slice:
+		return RvSlice(rve)
+	case common.Struct:
+		return RvStruct(rve)
+	default:
+		panic(fmt.Errorf("unsupported type (%s)", rve.Type()))
+	}
+}
 
 
 func Encode (ctx *common.EcoContext, a any) []KeyValue {
