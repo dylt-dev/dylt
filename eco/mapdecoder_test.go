@@ -186,7 +186,7 @@ func TestGetMapOfMaps(t *testing.T) {
 	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
 	map2 := map[string]string{"Name": "Javier", "Position": "P"}
 	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
-	ops, err := Encode(common.NewEcoContext(os.Stdout), string(key), mapStros)
+	ops, err := Encode_Legacy(common.NewEcoContext(os.Stdout), string(key), mapStros)
 	require.NoError(t, err)
 
 	ctx.Logger.Comment("writing keys ...")

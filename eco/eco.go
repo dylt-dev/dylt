@@ -16,7 +16,7 @@ import (
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-func Encode(ctx *common.EcoContext, key string, i any) ([]etcd.Op, error) {
+func Encode_Legacy(ctx *common.EcoContext, key string, i any) ([]etcd.Op, error) {
 	ctx.Logger.Signature("Encode", key, reflect.TypeOf(i))
 	ctx.Inc()
 	defer ctx.Dec()
@@ -178,7 +178,7 @@ func encodeMap(ctx *common.EcoContext, key string, val reflect.Value) ([]etcd.Op
 		miKey := fmt.Sprintf("%v", mapIter.Key().Interface())
 		elKey := filepath.Join(key, string(miKey))
 		elVal := mapIter.Value()
-		elOps, err := Encode(ctx, elKey, elVal.Interface())
+		elOps, err := Encode_Legacy(ctx, elKey, elVal.Interface())
 		if err != nil {
 			return nil, err
 		}
@@ -218,7 +218,7 @@ func encodeSlice(ctx *common.EcoContext, key string, val reflect.Value) ([]etcd.
 	for i := range n {
 		el := val.Index(i)
 		elKey := path.Join(key, strconv.Itoa(i))
-		op, err := Encode(ctx, elKey, el.Interface())
+		op, err := Encode_Legacy(ctx, elKey, el.Interface())
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +264,7 @@ func encodeStruct(ctx *common.EcoContext, key string, val reflect.Value) ([]etcd
 		sfName := getFieldKey(sf)
 		sfVal := val.Field(i)
 		sfKey := filepath.Join(key, sfName)
-		sfOps, err := Encode(ctx, sfKey, sfVal.Interface())
+		sfOps, err := Encode_Legacy(ctx, sfKey, sfVal.Interface())
 		if err != nil {
 			return nil, err
 		}
@@ -460,7 +460,6 @@ func (m DecoderSliceData) MaxIndex() int {
 	return maxIndex
 }
 
-
 func getEtcdKvs(ctx *common.EcoContext, cli *EtcdClient, rootKey string) ([]*mvccpb.KeyValue, error) {
 	// Create an Op to get all keys by prefix
 	op := etcd.OpGet(rootKey, etcd.WithPrefix())
@@ -487,7 +486,6 @@ func getEtcdKvs(ctx *common.EcoContext, cli *EtcdClient, rootKey string) ([]*mvc
 
 	return rangeResp.Kvs, nil
 }
-
 
 func getTypeKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	reflectKind := ty.Kind()
@@ -784,7 +782,6 @@ func pointerKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	ctx.Logger.Info("conditions were not met; returning Invalid")
 	return Invalid
 }
-
 
 func sliceKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	ctx.Logger.Signature("sliceKind", ty)

@@ -186,7 +186,7 @@ func getAndTestStruct(t *testing.T, expected any, rootKey KeyString) {
 // 	txn.Then(ops...).Commit()
 // }
 
-type RvStruct reflect.Value
+// type RvStruct reflect.Value
 
 func NewRvStruct(a any) (*RvStruct, error) {
 	rv := common.Reflect(a)

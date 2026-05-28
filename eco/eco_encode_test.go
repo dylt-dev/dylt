@@ -16,7 +16,7 @@ import (
 
 func TestEncodeAstros(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	ops, err := Encode(ctx, "/test/astros", VAL_Astros)
+	ops, err := Encode_Legacy(ctx, "/test/astros", VAL_Astros)
 	require.NoError(t, err)
 	fmt.Println()
 	dumpOps(t, ops)
@@ -44,7 +44,7 @@ func TestEncode_EcoTest(t *testing.T) {
 	i := common.TestStruct{Name: "MEAT", LuckyNumber: 13}
 	ctx := common.NewEcoContext(os.Stdout)
 
-	ops, err := Encode(ctx, key, i)
+	ops, err := Encode_Legacy(ctx, key, i)
 	assert.NoError(t, err)
 	dumpOps(t, ops)
 }
@@ -75,7 +75,7 @@ func TestEncode_Int(t *testing.T) {
 func TestEncode_Interface(t *testing.T) {
 	type inf interface{}
 	var infy = new(inf)
-	_, err := Encode(common.NewEcoContext(os.Stdout), "key", infy)
+	_, err := Encode_Legacy(common.NewEcoContext(os.Stdout), "key", infy)
 	assert.Error(t, err)
 }
 
@@ -95,7 +95,7 @@ func TestEncode_MapOfMaps(t *testing.T) {
 	map1 := map[string]string{"Name": "Pena", "Position": "SS"}
 	map2 := map[string]string{"Name": "Javier", "Position": "P"}
 	mapStros := map[int]map[string]string{27: map0, 3: map1, 53: map2}
-	ops, err := Encode(common.NewEcoContext(os.Stdout), key, mapStros)
+	ops, err := Encode_Legacy(common.NewEcoContext(os.Stdout), key, mapStros)
 	assert.NoError(t, err)
 	dumpOps(t, ops)
 }
@@ -105,7 +105,7 @@ func TestEncode_MapWithIntKeys(t *testing.T) {
 	i := map[int]string{10: "print 'daylight is great'", 20: "print 'say it again'", 30: "goto 10"}
 	ctx := common.NewEcoContext(os.Stdout)
 
-	ops, err := Encode(ctx, key, i)
+	ops, err := Encode_Legacy(ctx, key, i)
 	assert.NoError(t, err)
 	dumpOps(t, ops)
 }
@@ -114,14 +114,14 @@ func TestEncode_SimpleMap(t *testing.T) {
 	i := map[string]string{"foo": "13", "bar": "thirteen", "bum": "th1rt33n"}
 	ctx := common.NewEcoContext(os.Stdout)
 
-	ops, err := Encode(ctx, key, i)
+	ops, err := Encode_Legacy(ctx, key, i)
 	assert.NoError(t, err)
 	dumpOps(t, ops)
 }
 
 func TestEncode_Map_String_Struct(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	ops, err := Encode(ctx, "/test/map_string_struct", VAL_Map_String_Struct)
+	ops, err := Encode_Legacy(ctx, "/test/map_string_struct", VAL_Map_String_Struct)
 	require.NoError(t, err)
 	fmt.Println()
 	dumpOps(t, ops)

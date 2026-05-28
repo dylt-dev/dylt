@@ -1003,7 +1003,7 @@ func dumpStruct(t *testing.T, ty reflect.Type, val reflect.Value) {
 // }
 
 func testEncodeScalar(t *testing.T, ctx *common.EcoContext, key string, val any) []etcd.Op {
-	ops, err := Encode(ctx, key, val)
+	ops, err := Encode_Legacy(ctx, key, val)
 	require.NoError(t, err)
 	require.NotNil(t, ops)
 	require.Equal(t, 1, len(ops))
