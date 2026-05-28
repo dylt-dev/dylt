@@ -37,7 +37,7 @@ type SliceType DeepType
 type StructType DeepType
 
 type DeepSubType interface {
-	emitKeyRef([]any)
+	emitKeyRef([]any, io.Writer)
 	keyName() string
 	keyType() DeepType
 	nextType() DeepType
@@ -81,27 +81,27 @@ func NewStructType(dt DeepType) StructType {
 }
 
 
-func (dt DeepType) EmitTreeDecl(plevel *int, values []any) {
+func (dt DeepType) EmitTreeDecl(plevel *int, values []any, w io.Writer) {
 	// If scalar, emit the current tree
 	// Else, recurse on the element type, skipping the first value,
 	//       then bump the level and emit the current tree
 	if dt.isScalar() {
 		key := dt.createValueTreeKey(values[0])
 		val := values[1]
-		fmt.Printf("tree%d := NewValueTree(ctx, %v, %v)\n", *plevel, key, val)
+		fmt.Fprintf(w, "tree%d := NewValueTree(ctx, %v, %v)\n", *plevel, key, val)
 	} else {
 		key := dt.createValueTreeKey(values[0])
-		dt.nextType().EmitTreeDecl(plevel, values[1:])
+		dt.nextType().EmitTreeDecl(plevel, values[1:], w)
 		*plevel++
-		fmt.Printf("tree%d := NewValueTree(ctx, %v, tree%d)\n", *plevel, key, *plevel-1)
+		fmt.Fprintf(w, "tree%d := NewValueTree(ctx, %v, tree%d)\n", *plevel, key, *plevel-1)
 	}
 }
 
-func (dt DeepType) EmitValueRef(values []any) {
-	dt.emitKeyRef(values)
+func (dt DeepType) EmitValueRef(values []any, w io.Writer) {
+	dt.emitKeyRef(values, w)
 	// if not scalar, recurse
 	if !dt.isScalar() {
-		dt.nextType().EmitValueRef(values[1:])
+		dt.nextType().EmitValueRef(values[1:], w)
 	}
 }
 
@@ -109,8 +109,8 @@ func (dt DeepType) Flavor() Flavor {
 	return NewFlavor(dt.typ.Kind())
 }
 
-func (dt DeepType) emitKeyRef(values []any) {
-	dt.subType().emitKeyRef(values)
+func (dt DeepType) emitKeyRef(values []any, w io.Writer) {
+	dt.subType().emitKeyRef(values, w)
 }
 
 func (dt DeepType) isScalar() bool {
@@ -159,12 +159,12 @@ func (dt DeepType) zeroValue() string {
 	return dt.subType().zeroValue()
 }
 
-func (t MapType) emitKeyRef(values []any) {
+func (t MapType) emitKeyRef(values []any, w io.Writer) {
 	// x.Data[2]["bar"].Slice[0]["foo"].Val[3].N
 	if t.typ.Key().Kind() == reflect.String {
-		fmt.Printf("[%q]", values[0])
+		fmt.Fprintf(w, "[%q]", values[0])
 	} else {
-		fmt.Printf("[%v]", values[0])
+		fmt.Fprintf(w, "[%v]", values[0])
 	}
 }
 
@@ -184,11 +184,11 @@ func (t MapType) zeroValue() string {
 	return fmt.Sprintf("%v", reflect.Zero(t.nextType().typ))
 }
 
-func (t SliceType) emitKeyRef(values []any) {
+func (t SliceType) emitKeyRef(values []any, w io.Writer) {
 	if t.typ.Elem().Kind() == reflect.String {
-		fmt.Printf("[%q]", values[0])
+		fmt.Fprintf(w, "[%q]", values[0])
 	} else {
-		fmt.Printf("[%v]", values[0])
+		fmt.Fprintf(w, "[%v]", values[0])
 	}
 }
 
@@ -209,8 +209,8 @@ func (t SliceType) zeroValue() string {
 }
 
 // .keyName
-func (t StructType) emitKeyRef(values []any) {
-	fmt.Printf(".%s", values[0])
+func (t StructType) emitKeyRef(values []any, w io.Writer) {
+	fmt.Fprintf(w, ".%s", values[0])
 }
 
 // name of first field
@@ -424,10 +424,8 @@ func genSliceDeclaration(ctx *EcoContext, n int, r rand.Source, w io.Writer) {
 		return
 	}
 
-	sb := strings.Builder{}
 	w.Write([]byte("[]"))
 	writeScalarOrRecurse(ctx, n, r, w)
-	fmt.Println(sb.String())
 }
 
 func genStructDeclaration(ctx *EcoContext, n int, r rand.Source, w io.Writer) {
@@ -440,11 +438,10 @@ func genStructDeclaration(ctx *EcoContext, n int, r rand.Source, w io.Writer) {
 	}
 
 	fieldName := genStructFieldName(ctx, r)
-	sb := strings.Builder{}
-	w.Write([]byte(fmt.Sprintf("struct{%s ", fieldName)))
+	// sb := strings.Builder{}
+	fmt.Fprintf(w, "struct{%s ", fieldName)
 	writeScalarOrRecurse(ctx, n, r, w)
 	w.Write([]byte("}"))
-	fmt.Println(sb.String())
 }
 
 func getRandFlavor(ctx *EcoContext) Flavor {
@@ -503,4 +500,16 @@ func writeScalarOrRecurse(ctx *EcoContext, n int, r rand.Source, w io.Writer) {
 	} else {
 		genDeclaration(ctx, n-1, r, w)
 	}
+}
+
+
+func getDeclFromType(rt reflect.Type) string {
+	sb := strings.Builder{}
+
+	switch rt.Kind() {
+	case reflect.Slice: 
+	sb.WriteString("[].")
+	sb.WriteString(rt.Elem().String())
+	}
+	return sb.String()
 }

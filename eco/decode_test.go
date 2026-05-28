@@ -467,34 +467,6 @@ func TestDecodeDeepType10 (t *testing.T) {
 }
 
 
-func TestDecodeDeepType10Genned(t *testing.T) {
-	ctx := common.NewEcoContext(os.Stdout)
-	decoder := MainDecoder{}
-	type deepType struct{Data []map[string]struct{Slice []map[string]struct{ Val []struct{N int}}}}
-
-	tree0 := NewValueTree(ctx, "N", 168)
-	tree1 := NewValueTree(ctx, 0, tree0)
-	tree2 := NewValueTree(ctx, "Val", tree1)
-	tree3 := NewValueTree(ctx, "mollitia", tree2)
-	tree4 := NewValueTree(ctx, 0, tree3)
-	tree5 := NewValueTree(ctx, "Slice", tree4)
-	tree6 := NewValueTree(ctx, "consequatur", tree5)
-	tree7 := NewValueTree(ctx, 0, tree6)
-	tree8 := NewValueTree(ctx, "Data", tree7)
-	tree := tree8
-
-	var x deepType
-	p := &x
-	err := decoder.Decode(ctx, tree, p)
-	require.NoError(t, err)
-	require.Equal(t, 168, x.Data[0]["consequatur"].Slice[0]["mollitia"].Val[0].N)
-	t.Log(x)
-	buf, err := json.MarshalIndent(x, "", "\t")
-	require.NoError(t, err)
-	t.Log(string(buf))
-	
-}
-
 
 func TestDecodeDeepType100Genned(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -959,3 +931,35 @@ func allocOrDont[U any, V *U | **U](t *testing.T, buf []byte, v V) error {
 	err := json.Unmarshal(buf, pp)
 	return err
 }
+    func TestDecodeDeepType10Genned(t *testing.T) {
+        ctx := common.NewEcoContext(os.Stdout)
+        decoder := MainDecoder{}
+
+        // type declaration
+        type deepType struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}
+
+        // value tree construction
+        tree0 := NewValueTree(ctx, "Animi", 78)
+    tree1 := NewValueTree(ctx, false, tree0)
+    tree2 := NewValueTree(ctx, 432, tree1)
+    tree3 := NewValueTree(ctx, "Maiores", tree2)
+    tree4 := NewValueTree(ctx, "Omnis", tree3)
+    tree5 := NewValueTree(ctx, 550, tree4)
+    tree6 := NewValueTree(ctx, "Repudiandae", tree5)
+    tree7 := NewValueTree(ctx, "Perspiciatis", tree6)
+    tree8 := NewValueTree(ctx, 295, tree7)
+    tree9 := NewValueTree(ctx, "Aut", tree8)
+
+        tree := tree9
+
+        // decode object
+        var x deepType
+        p := &x
+        err := decoder.Decode(ctx, tree, p)
+        require.NoError(t, err)
+
+        // check leaf value
+        expectedVal := 78
+        val := x.Aut[295].Perspiciatis.Repudiandae[550].Omnis.Maiores[432][false].Animi
+        require.Equal(t, expectedVal, val)
+    }

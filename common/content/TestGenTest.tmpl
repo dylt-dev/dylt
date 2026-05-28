@@ -1,0 +1,43 @@
+func TestGenDecodeDeepTestGenned(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	// type declaration
+	type typ {{ .typeDeclaration }}
+	rt := reflect.TypeFor[typ]()
+	dt := NewDeepType(rt)
+	var n int = 0
+	depth := {{ .depth }} 
+	
+	// generate scalar values
+	values := []any{}
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+	genScalarValues(ctx, rt, r, &values)
+
+	// generate value tree
+	bbValueTree := bytes.NewBuffer([]byte{})
+	dt.EmitTreeDecl(&n, values, bbValueTree)
+	sValueTree := bbValueTree.String()
+
+	// generate value ref
+	bbValueRef := bytes.NewBuffer([]byte{})
+	dt.EmitValueRef(values, bbValueRef)
+	sValueRef := bbValueRef.String()
+
+	// load template
+	buf, err := content.ReadFile("content/deeptest.tmpl")
+	require.NoError(t, err)
+	require.NotNil(t, buf)
+	tmpl, err := template.New("deeptest").Parse(string(buf))
+	require.NoError(t, err)
+
+	data := map[string]any{
+		"depth": depth,
+		"expectedVal": values[len(values)-1],
+		"lastIndex": depth-1,
+		"typeDeclaration": "{{ .typeDeclaration }}",
+		"valueRef": sValueRef,
+		"valueTree": sValueTree,
+	}
+
+	tmpl.Execute(t.Output(), data)
+}

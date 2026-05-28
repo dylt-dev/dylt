@@ -1,17 +1,142 @@
 package common
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"math/rand"
 	"os"
 	"reflect"
 	"testing"
+	"text/template"
 	"time"
 	"unicode"
 
 	"github.com/stretchr/testify/require"
 )
 
+//go:embed content/*
+var content embed.FS
+
+
+func TestGenGenGen (t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	depth := 10
+	r := rand.NewSource(time.Now().UTC().UnixNano())	
+	
+	// generate type declaration
+	bbTypeDecl := bytes.NewBuffer([]byte{})
+	genDeclaration(ctx, depth, r, bbTypeDecl)
+	typeDecl := bbTypeDecl.String()
+
+	// load template
+	buf, err := content.ReadFile("content/TestGenTest.tmpl")
+	require.NoError(t, err)
+	require.NotNil(t, buf)
+	tmpl, err := template.New("gengengen").Parse(string(buf))
+	require.NoError(t, err)
+
+	data := map[string]any{
+		"depth": depth,
+		"typeDeclaration": typeDecl,
+	}
+
+	tmpl.Execute(t.Output(), data)
+}
+
+
+func TestGenDecodeDeepTest(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	// type declaration
+	type typ struct { Data []map[string]struct { Slice []map[string]struct{ Val []struct{ N int } } } }
+	rt := reflect.TypeFor[typ]()
+	dt := NewDeepType(rt)
+	var n int = 0
+	
+	// generate scalar values
+	values := []any{}
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+	genScalarValues(ctx, rt, r, &values)
+
+	// generate value tree
+	bbValueTree := bytes.NewBuffer([]byte{})
+	dt.EmitTreeDecl(&n, values, bbValueTree)
+	sValueTree := bbValueTree.String()
+
+	// generate value ref
+	dt.EmitValueRef(values, t.Output())
+	// dt.EmitValueRef(values, t.Output())
+	// dt.EmitValueRef(values, t.Output())
+	bbValueRef := bytes.NewBuffer([]byte{})
+	dt.EmitValueRef(values, bbValueRef)
+	sValueRef := bbValueRef.String()
+	t.Logf("sValueRef=%s", sValueRef)
+
+	// load template
+	buf, err := content.ReadFile("content/deeptest.tmpl")
+	require.NoError(t, err)
+	require.NotNil(t, buf)
+	tmpl, err := template.New("deeptest").Parse(string(buf))
+	require.NoError(t, err)
+
+	depth := 10
+	data := map[string]any{
+		"depth": depth,
+		"expectedVal": values[len(values)-1],
+		"lastIndex": depth-1,
+		"typeDeclaration": "{ Data []map[string]struct { Slice []map[string]struct{ Val []struct{ N int } } } }",
+		"valueRef": sValueRef,
+		"valueTree": sValueTree,
+	}
+
+	tmpl.Execute(t.Output(), data)
+}
+
+    func TestGenDecodeDeepTestGenned(t *testing.T) {
+        ctx := NewEcoContext(os.Stdout)
+
+        // type declaration
+        type typ struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}
+        rt := reflect.TypeFor[typ]()
+        dt := NewDeepType(rt)
+        var n int = 0
+        depth := 10
+
+        // generate scalar values
+        values := []any{}
+        r := rand.NewSource(time.Now().UTC().UnixNano())
+        genScalarValues(ctx, rt, r, &values)
+
+        // generate value tree
+        bbValueTree := bytes.NewBuffer([]byte{})
+        dt.EmitTreeDecl(&n, values, bbValueTree)
+        sValueTree := bbValueTree.String()
+
+        // generate value ref
+        bbValueRef := bytes.NewBuffer([]byte{})
+        dt.EmitValueRef(values, bbValueRef)
+        sValueRef := bbValueRef.String()
+
+        // load template
+        buf, err := content.ReadFile("content/deeptest.tmpl")
+        require.NoError(t, err)
+        require.NotNil(t, buf)
+        tmpl, err := template.New("deeptest").Parse(string(buf))
+        require.NoError(t, err)
+
+        data := map[string]any{
+                "depth": depth,
+                "expectedVal": values[len(values)-1],
+                "lastIndex": depth-1,
+                "typeDeclaration": "struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}",
+                "valueRef": sValueRef,
+                "valueTree": sValueTree,
+        }
+
+        tmpl.Execute(t.Output(), data)
+    }
 
 func TestEmitTree3(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -25,7 +150,7 @@ func TestEmitTree3(t *testing.T) {
 	genScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
 	t.Log(values)
 	level := 0
-	DeepType{typ}.EmitTreeDecl(&level, values)
+	DeepType{typ}.EmitTreeDecl(&level, values, t.Output())
 }
 
 
@@ -45,7 +170,7 @@ func TestEmitTree10(t *testing.T) {
 	genScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
 	t.Log(values)
 	level := 0
-	DeepType{typ}.EmitTreeDecl(&level, values)
+	DeepType{typ}.EmitTreeDecl(&level, values, t.Output())
 }
 
 
@@ -64,7 +189,7 @@ func TestEmitValueRef10(t *testing.T) {
 	t.Log(values)
 
 	fmt.Print("x")
-	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values)
+	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values, t.Output())
 	fmt.Println()
 
 }
@@ -283,13 +408,12 @@ func TestGenTest10(t *testing.T) {
 
 	// emit tree
 	n := 0
-	DeepType{reflect.TypeFor[typ]()}.EmitTreeDecl(&n, values)
+	DeepType{reflect.TypeFor[typ]()}.EmitTreeDecl(&n, values, t.Output())
 	
 	// emit value ref
 	fmt.Print("x")
-	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values)
+	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values, t.Output())
 	fmt.Println()
-
 }
 
 
@@ -304,11 +428,11 @@ func TestGenTest100(t *testing.T) {
 
 	// emit tree
 	n := 0
-	DeepType{reflect.TypeFor[typ]()}.EmitTreeDecl(&n, values)
+	DeepType{reflect.TypeFor[typ]()}.EmitTreeDecl(&n, values, t.Output())
 	
 	// emit value ref
 	fmt.Print("x")
-	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values)
+	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values, t.Output())
 	fmt.Println()
 
 }
@@ -327,7 +451,7 @@ func TestMapTypeEmitValueRef1a(t *testing.T) {
 	t.Log(values)
 
 	mapType := NewDeepType(reflect.TypeFor[typ]())
-	mapType.EmitValueRef(values)
+	mapType.EmitValueRef(values, t.Output())
 }
 
 func TestSliceTypeIsScalar1(t *testing.T) {
