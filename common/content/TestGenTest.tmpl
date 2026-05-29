@@ -1,8 +1,25 @@
-func TestGenDecodeDeepTestGenned(t *testing.T) {
+package eco
+
+import (
+	"bytes"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/dylt-dev/dylt/common"
+	"github.com/stretchr/testify/require"
+)
+
+{{$depth := .depth }}
+{{/* range $i := .typeDeclarations */}}
+func TestGenDecodeDeepTest(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
 	// type declaration
-	type typ {{ .typeDeclaration }}
+	type typ {{ . }}
 	rt := reflect.TypeFor[typ]()
 	dt := NewDeepType(rt)
 	var n int = 0
@@ -20,6 +37,7 @@ func TestGenDecodeDeepTestGenned(t *testing.T) {
 
 	// generate value ref
 	bbValueRef := bytes.NewBuffer([]byte{})
+
 	dt.EmitValueRef(values, bbValueRef)
 	sValueRef := bbValueRef.String()
 
@@ -41,3 +59,4 @@ func TestGenDecodeDeepTestGenned(t *testing.T) {
 
 	tmpl.Execute(t.Output(), data)
 }
+{{/* end */}}

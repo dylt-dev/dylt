@@ -9,6 +9,7 @@ type EcoContext struct {
 	context.Context
 	depth  int
 	Logger *ecoLogger
+	Mute   bool
 }
 
 func NewEcoContext(w io.Writer) *EcoContext {
@@ -22,12 +23,16 @@ func NewEcoContext(w io.Writer) *EcoContext {
 }
 
 func (ctx* EcoContext) Comment (args ...any) {
-	ctx.Logger.Comment(args...)
+	if (!ctx.Mute) {
+		ctx.Logger.Comment(args...)
+	}
 }
 
 
 func (ctx* EcoContext) Commentf (sfmt string, args ...any) {
-	ctx.Logger.Commentf(sfmt, args...)
+	if (!ctx.Mute) {
+		ctx.Logger.Commentf(sfmt, args...)
+	}
 }
 
 
@@ -46,14 +51,16 @@ func (ctx *EcoContext) Inc() *EcoContext {
 }
 
 func (ctx* EcoContext) Infof (sfmt string, args ...any) {
-	ctx.Logger.Infof(sfmt, args...)
+	if (!ctx.Mute) {
+		ctx.Logger.Infof(sfmt, args...)
+	}
 }
 
 func (ctx* EcoContext) Signature (name string, args ...any) {
-	ctx.Logger.Signature(name, args...)
+	if (!ctx.Mute) {
+		ctx.Logger.Signature(name, args...)
+	}
 }
-
-
 
 // func (ctx *ecoContext) indent() string {
 // 	const tab = "  "

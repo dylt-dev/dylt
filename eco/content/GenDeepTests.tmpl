@@ -1,0 +1,35 @@
+package eco
+
+import (
+	"os"
+	"testing"
+
+	"github.com/dylt-dev/dylt/common"
+	"github.com/stretchr/testify/require"
+)
+
+
+{{ range $i, $testInfo := . }}
+func TestDecodeDeepType{{ .Depth }}_{{ $i }}(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	decoder := MainDecoder{}
+
+	// type declaration
+	type deepType {{ .TypeDeclaration }}
+
+	// value tree construction
+	{{ .ValueTree }}
+	tree := tree{{ .LastIndex }}
+
+	// decode object
+	var x deepType
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
+
+	// check leaf value
+	expectedVal := {{ .ExpectedVal }}
+	val := x{{ .ValueRef }}
+	require.Equal(t, expectedVal, val)
+}
+{{ end }}

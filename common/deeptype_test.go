@@ -18,16 +18,15 @@ import (
 //go:embed content/*
 var content embed.FS
 
-
-func TestGenGenGen (t *testing.T) {
+func TestGenGenGen(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
 	depth := 10
-	r := rand.NewSource(time.Now().UTC().UnixNano())	
-	
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+
 	// generate type declaration
 	bbTypeDecl := bytes.NewBuffer([]byte{})
-	genDeclaration(ctx, depth, r, bbTypeDecl)
+	GenDeclaration(ctx, depth, r, bbTypeDecl)
 	typeDecl := bbTypeDecl.String()
 
 	// load template
@@ -38,27 +37,30 @@ func TestGenGenGen (t *testing.T) {
 	require.NoError(t, err)
 
 	data := map[string]any{
-		"depth": depth,
+		"depth":           depth,
 		"typeDeclaration": typeDecl,
 	}
 
 	tmpl.Execute(t.Output(), data)
 }
 
-
 func TestGenDecodeDeepTest(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
 	// type declaration
-	type typ struct { Data []map[string]struct { Slice []map[string]struct{ Val []struct{ N int } } } }
+	type typ struct {
+		Data []map[string]struct {
+			Slice []map[string]struct{ Val []struct{ N int } }
+		}
+	}
 	rt := reflect.TypeFor[typ]()
 	dt := NewDeepType(rt)
 	var n int = 0
-	
+
 	// generate scalar values
 	values := []any{}
 	r := rand.NewSource(time.Now().UTC().UnixNano())
-	genScalarValues(ctx, rt, r, &values)
+	GenScalarValues(ctx, rt, r, &values)
 
 	// generate value tree
 	bbValueTree := bytes.NewBuffer([]byte{})
@@ -83,76 +85,101 @@ func TestGenDecodeDeepTest(t *testing.T) {
 
 	depth := 10
 	data := map[string]any{
-		"depth": depth,
-		"expectedVal": values[len(values)-1],
-		"lastIndex": depth-1,
+		"depth":           depth,
+		"expectedVal":     values[len(values)-1],
+		"lastIndex":       depth - 1,
 		"typeDeclaration": "{ Data []map[string]struct { Slice []map[string]struct{ Val []struct{ N int } } } }",
-		"valueRef": sValueRef,
-		"valueTree": sValueTree,
+		"valueRef":        sValueRef,
+		"valueTree":       sValueTree,
 	}
 
 	tmpl.Execute(t.Output(), data)
 }
 
-    func TestGenDecodeDeepTestGenned(t *testing.T) {
-        ctx := NewEcoContext(os.Stdout)
+func TestGenDecodeDeepTestGenned(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
 
-        // type declaration
-        type typ struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}
-        rt := reflect.TypeFor[typ]()
-        dt := NewDeepType(rt)
-        var n int = 0
-        depth := 10
+	// type declaration
+	type typ struct {
+		Aut map[int]struct {
+			Perspiciatis struct {
+				Repudiandae map[int]struct {
+					Omnis struct {
+						Maiores map[int]map[bool]struct{ Animi int }
+					}
+				}
+			}
+		}
+	}
+	rt := reflect.TypeFor[typ]()
+	dt := NewDeepType(rt)
+	var n int = 0
+	depth := 10
 
-        // generate scalar values
-        values := []any{}
-        r := rand.NewSource(time.Now().UTC().UnixNano())
-        genScalarValues(ctx, rt, r, &values)
+	// generate scalar values
+	values := []any{}
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+	GenScalarValues(ctx, rt, r, &values)
 
-        // generate value tree
-        bbValueTree := bytes.NewBuffer([]byte{})
-        dt.EmitTreeDecl(&n, values, bbValueTree)
-        sValueTree := bbValueTree.String()
+	// generate value tree
+	bbValueTree := bytes.NewBuffer([]byte{})
+	dt.EmitTreeDecl(&n, values, bbValueTree)
+	sValueTree := bbValueTree.String()
 
-        // generate value ref
-        bbValueRef := bytes.NewBuffer([]byte{})
-        dt.EmitValueRef(values, bbValueRef)
-        sValueRef := bbValueRef.String()
+	// generate value ref
+	bbValueRef := bytes.NewBuffer([]byte{})
+	dt.EmitValueRef(values, bbValueRef)
+	sValueRef := bbValueRef.String()
 
-        // load template
-        buf, err := content.ReadFile("content/deeptest.tmpl")
-        require.NoError(t, err)
-        require.NotNil(t, buf)
-        tmpl, err := template.New("deeptest").Parse(string(buf))
-        require.NoError(t, err)
+	// load template
+	buf, err := content.ReadFile("content/deeptest.tmpl")
+	require.NoError(t, err)
+	require.NotNil(t, buf)
+	tmpl, err := template.New("deeptest").Parse(string(buf))
+	require.NoError(t, err)
 
-        data := map[string]any{
-                "depth": depth,
-                "expectedVal": values[len(values)-1],
-                "lastIndex": depth-1,
-                "typeDeclaration": "struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}",
-                "valueRef": sValueRef,
-                "valueTree": sValueTree,
-        }
+	data := map[string]any{
+		"depth":           depth,
+		"expectedVal":     values[len(values)-1],
+		"lastIndex":       depth - 1,
+		"typeDeclaration": "struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}",
+		"valueRef":        sValueRef,
+		"valueTree":       sValueTree,
+	}
 
-        tmpl.Execute(t.Output(), data)
-    }
+	tmpl.Execute(t.Output(), data)
+}
 
 func TestEmitTree3(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
-	type deepType map[string]struct{Values []int}
+	type deepType map[string]struct{ Values []int }
 
 	typ := reflect.TypeFor[deepType]()
 
 	values := []any{}
 	r := rand.NewSource(time.Now().UTC().UnixNano())
-	genScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
 	t.Log(values)
 	level := 0
 	DeepType{typ}.EmitTreeDecl(&level, values, t.Output())
 }
 
+
+func TestEmitTree4(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	type deepType map[int][]string
+	
+	typ := reflect.TypeFor[deepType]()
+
+	values := []any{}
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+	GenScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
+	t.Log(values)
+	level := 0
+	DeepType{typ}.EmitTreeDecl(&level, values, t.Output())
+}
 
 func TestEmitTree10(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -167,12 +194,11 @@ func TestEmitTree10(t *testing.T) {
 
 	values := []any{}
 	r := rand.NewSource(time.Now().UTC().UnixNano())
-	genScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
 	t.Log(values)
 	level := 0
 	DeepType{typ}.EmitTreeDecl(&level, values, t.Output())
 }
-
 
 // x.Data[2]["bar"].Slice[0]["foo"].Val[3].N
 func TestEmitValueRef10(t *testing.T) {
@@ -185,7 +211,7 @@ func TestEmitValueRef10(t *testing.T) {
 	}
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 	values := []any{}
-	genScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
 	t.Log(values)
 
 	fmt.Print("x")
@@ -194,13 +220,64 @@ func TestEmitValueRef10(t *testing.T) {
 
 }
 
+func TestGetDeclFromType1(t *testing.T) {
+	type typ []int
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+}
+
+func TestGetDeclFromType2(t *testing.T) {
+	type typ [][][][][][]int
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+}
+
+func TestGetDeclFromType3(t *testing.T) {
+	type typ map[string]int
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+}
+
+func TestGetDeclFromType4(t *testing.T) {
+	type typ map[string]map[int]map[bool]string
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+}
+
+func TestGetDeclFromType5(t *testing.T) {
+	type typ map[string][]int
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+}
+
+func TestGetDeclFromType6(t *testing.T) {
+	type typ struct {
+		Val      int
+		Name     string
+		RedFlags []bool
+	}
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+	require.Equal(t, "struct{Val int;Name string;RedFlags []bool;}", s)
+}
+
+func TestGetDeclFromType10(t *testing.T) {
+	type typ struct {
+		Data []map[string]struct {
+			Slice []map[string]struct{ Val []struct{ N int } }
+		}
+	}
+	s := GetDeclFromType(reflect.TypeFor[typ]())
+	t.Log(s)
+	require.Equal(t, "struct{Data []map[string]struct{Slice []map[string]struct{Val []struct{N int;};};};}", s)
+}
 
 func TestGenDeclaration1(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 	r := rand.NewSource(time.Now().UTC().UnixNano())
-	
+
 	for range 10 {
-		genDeclaration(ctx, 1, r, t.Output())
+		GenDeclaration(ctx, 1, r, t.Output())
 		t.Output().Write([]byte("\n"))
 	}
 }
@@ -208,9 +285,9 @@ func TestGenDeclaration1(t *testing.T) {
 func TestGenDeclaration2(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 	r := rand.NewSource(time.Now().UTC().UnixNano())
-	
+
 	for range 10 {
-		genDeclaration(ctx, 2, r, t.Output())
+		GenDeclaration(ctx, 2, r, t.Output())
 		t.Output().Write([]byte("\n"))
 	}
 }
@@ -219,10 +296,9 @@ func TestGenDeclaration100(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 
-	genDeclaration(ctx, 100, r, t.Output())
+	GenDeclaration(ctx, 100, r, t.Output())
 	t.Output().Write([]byte("\n"))
 }
-
 
 func TestGenMapScalars(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -238,11 +314,10 @@ func TestGenMapScalars(t *testing.T) {
 	for _, p := range types {
 		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		genScalarValues(ctx, typ, r, &values)
+		GenScalarValues(ctx, typ, r, &values)
 		t.Logf("%s => %v", typ, values)
 	}
 }
-
 
 func TestGetRandomFlavor(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -294,7 +369,7 @@ func TestGenScalars1(t *testing.T) {
 	for _, p := range types {
 		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		genScalarValues(ctx, typ, r, &values)
+		GenScalarValues(ctx, typ, r, &values)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -319,11 +394,10 @@ func TestGenScalars2(t *testing.T) {
 	for _, p := range types {
 		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		genScalarValues(ctx, typ, r, &values)
+		GenScalarValues(ctx, typ, r, &values)
 		t.Logf("%s => %v", typ, values)
 	}
 }
-
 
 func TestGenScalars10(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -338,7 +412,7 @@ func TestGenScalars10(t *testing.T) {
 	values := []any{}
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 	typ := reflect.TypeFor[deepType]()
-	genScalarValues(ctx, typ, r, &values)
+	GenScalarValues(ctx, typ, r, &values)
 	t.Logf("%s => %v", typ, values)
 }
 
@@ -346,17 +420,100 @@ func TestGenScalars100(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 
-	type deepType struct{Nemo struct{Eligendi struct{Illum map[bool]map[bool]map[bool]struct{Est struct{Tempore struct{Magnam struct{Fugiat struct{Sed struct{Et [][][]map[int]map[string]struct{Quis []map[bool]map[bool][]struct{Ullam []map[int]struct{Assumenda struct{Rerum struct{Possimus [][][]map[int]struct{Harum map[bool]map[int]struct{Aperiam struct{Incidunt struct{Beatae []struct{Nam struct{Sunt []map[string]struct{Dolore [][]map[bool][]struct{Assumenda []struct{Consequatur struct{Iste []map[bool]struct{Et [][]map[bool][][][]struct{Est map[bool]struct{Ut [][]map[string]struct{Facere struct{Velit struct{Ut map[int]map[string]struct{Quidem struct{Ipsa map[int]struct{Molestiae map[bool][]map[int]struct{Repellat [][][]struct{Reprehenderit struct{Eaque struct{Beatae map[string]struct{Unde struct{Perspiciatis [][]struct{Possimus map[bool]map[bool]struct{Eligendi struct{Modi struct{Vel []struct{Possimus []int}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}	
+	type deepType struct {
+		Nemo struct {
+			Eligendi struct {
+				Illum map[bool]map[bool]map[bool]struct {
+					Est struct {
+						Tempore struct {
+							Magnam struct {
+								Fugiat struct {
+									Sed struct {
+										Et [][][]map[int]map[string]struct {
+											Quis []map[bool]map[bool][]struct {
+												Ullam []map[int]struct {
+													Assumenda struct {
+														Rerum struct {
+															Possimus [][][]map[int]struct {
+																Harum map[bool]map[int]struct {
+																	Aperiam struct {
+																		Incidunt struct {
+																			Beatae []struct {
+																				Nam struct {
+																					Sunt []map[string]struct {
+																						Dolore [][]map[bool][]struct {
+																							Assumenda []struct {
+																								Consequatur struct {
+																									Iste []map[bool]struct {
+																										Et [][]map[bool][][][]struct {
+																											Est map[bool]struct {
+																												Ut [][]map[string]struct {
+																													Facere struct {
+																														Velit struct {
+																															Ut map[int]map[string]struct {
+																																Quidem struct {
+																																	Ipsa map[int]struct {
+																																		Molestiae map[bool][]map[int]struct {
+																																			Repellat [][][]struct {
+																																				Reprehenderit struct {
+																																					Eaque struct {
+																																						Beatae map[string]struct {
+																																							Unde struct {
+																																								Perspiciatis [][]struct {
+																																									Possimus map[bool]map[bool]struct {
+																																										Eligendi struct {
+																																											Modi struct{ Vel []struct{ Possimus []int } }
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	values := []any{}
 	typ := reflect.TypeFor[deepType]()
-	genScalarValues(ctx, typ, r, &values)
+	GenScalarValues(ctx, typ, r, &values)
 	t.Logf("%s => %v", typ, values)
 }
 
-
-func TestGenMapKeyString (t *testing.T) {
+func TestGenMapKeyString(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	
+
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for range 1000 {
 		mapKey := genMapKeyString(ctx, r)
@@ -365,10 +522,9 @@ func TestGenMapKeyString (t *testing.T) {
 	}
 }
 
-
-func TestGenStructFieldName (t *testing.T) {
+func TestGenStructFieldName(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	
+
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for range 1000 {
 		fieldName := genStructFieldName(ctx, r)
@@ -377,21 +533,21 @@ func TestGenStructFieldName (t *testing.T) {
 	}
 }
 
-
-
 /*
-	Object creation     structTree1 := NewValueTree(ctx, "N", 13)
-						sliceTree1  := NewValueTree(ctx, 3, structTree1)
-						valTree     := NewValueTree(ctx, "Val", sliceTree1)
-						mapTree     := NewValueTree(ctx, "foo", valTree)
-						sliceTree2  := NewValueTree(ctx, 0, mapTree)
-						structTree2 := NewValueTree(ctx, "Slice", sliceTree2)
-						mapTree2    := NewValueTree(ctx, "bar", structTree2)
-						sliceTree3  := NewValueTree(ctx, 2, mapTree2)
-						structTree3 := NewValueTree(ctx, "Data", sliceTree3)
+Object creation     structTree1 := NewValueTree(ctx, "N", 13)
 
-	Field access        x.Data[2]["bar"].Slice[0]["foo"].Val[3].N
-						x.Data[0][""].Slice[0][""].Val[0].N
+	sliceTree1  := NewValueTree(ctx, 3, structTree1)
+	valTree     := NewValueTree(ctx, "Val", sliceTree1)
+	mapTree     := NewValueTree(ctx, "foo", valTree)
+	sliceTree2  := NewValueTree(ctx, 0, mapTree)
+	structTree2 := NewValueTree(ctx, "Slice", sliceTree2)
+	mapTree2    := NewValueTree(ctx, "bar", structTree2)
+	sliceTree3  := NewValueTree(ctx, 2, mapTree2)
+	structTree3 := NewValueTree(ctx, "Data", sliceTree3)
+
+Field access        x.Data[2]["bar"].Slice[0]["foo"].Val[3].N
+
+	x.Data[0][""].Slice[0][""].Val[0].N
 */
 func TestGenTest10(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -403,42 +559,122 @@ func TestGenTest10(t *testing.T) {
 	}
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 	values := []any{}
-	genScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
 	t.Log(values)
 
 	// emit tree
 	n := 0
 	DeepType{reflect.TypeFor[typ]()}.EmitTreeDecl(&n, values, t.Output())
-	
+
 	// emit value ref
 	fmt.Print("x")
 	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values, t.Output())
 	fmt.Println()
 }
-
 
 func TestGenTest100(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 	r := rand.NewSource(time.Now().UTC().UnixNano())
-	
-	type typ struct{Nemo struct{Eligendi struct{Illum map[bool]map[bool]map[bool]struct{Est struct{Tempore struct{Magnam struct{Fugiat struct{Sed struct{Et [][][]map[int]map[string]struct{Quis []map[bool]map[bool][]struct{Ullam []map[int]struct{Assumenda struct{Rerum struct{Possimus [][][]map[int]struct{Harum map[bool]map[int]struct{Aperiam struct{Incidunt struct{Beatae []struct{Nam struct{Sunt []map[string]struct{Dolore [][]map[bool][]struct{Assumenda []struct{Consequatur struct{Iste []map[bool]struct{Et [][]map[bool][][][]struct{Est map[bool]struct{Ut [][]map[string]struct{Facere struct{Velit struct{Ut map[int]map[string]struct{Quidem struct{Ipsa map[int]struct{Molestiae map[bool][]map[int]struct{Repellat [][][]struct{Reprehenderit struct{Eaque struct{Beatae map[string]struct{Unde struct{Perspiciatis [][]struct{Possimus map[bool]map[bool]struct{Eligendi struct{Modi struct{Vel []struct{Possimus []int}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}	
+
+	type typ struct {
+		Nemo struct {
+			Eligendi struct {
+				Illum map[bool]map[bool]map[bool]struct {
+					Est struct {
+						Tempore struct {
+							Magnam struct {
+								Fugiat struct {
+									Sed struct {
+										Et [][][]map[int]map[string]struct {
+											Quis []map[bool]map[bool][]struct {
+												Ullam []map[int]struct {
+													Assumenda struct {
+														Rerum struct {
+															Possimus [][][]map[int]struct {
+																Harum map[bool]map[int]struct {
+																	Aperiam struct {
+																		Incidunt struct {
+																			Beatae []struct {
+																				Nam struct {
+																					Sunt []map[string]struct {
+																						Dolore [][]map[bool][]struct {
+																							Assumenda []struct {
+																								Consequatur struct {
+																									Iste []map[bool]struct {
+																										Et [][]map[bool][][][]struct {
+																											Est map[bool]struct {
+																												Ut [][]map[string]struct {
+																													Facere struct {
+																														Velit struct {
+																															Ut map[int]map[string]struct {
+																																Quidem struct {
+																																	Ipsa map[int]struct {
+																																		Molestiae map[bool][]map[int]struct {
+																																			Repellat [][][]struct {
+																																				Reprehenderit struct {
+																																					Eaque struct {
+																																						Beatae map[string]struct {
+																																							Unde struct {
+																																								Perspiciatis [][]struct {
+																																									Possimus map[bool]map[bool]struct {
+																																										Eligendi struct {
+																																											Modi struct{ Vel []struct{ Possimus []int } }
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	values := []any{}
-	genScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
 	t.Log(values)
 
 	// emit tree
 	n := 0
 	DeepType{reflect.TypeFor[typ]()}.EmitTreeDecl(&n, values, t.Output())
-	
+
 	// emit value ref
 	fmt.Print("x")
 	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values, t.Output())
 	fmt.Println()
 
 }
-
-
-
 
 func TestMapTypeEmitValueRef1a(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
@@ -447,7 +683,7 @@ func TestMapTypeEmitValueRef1a(t *testing.T) {
 	// mapType := NewDeepType(reflect.TypeFor[m]())
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 	values := []any{}
-	genScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
 	t.Log(values)
 
 	mapType := NewDeepType(reflect.TypeFor[typ]())

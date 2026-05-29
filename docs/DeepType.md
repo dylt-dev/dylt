@@ -284,6 +284,43 @@ func TestDecodeDeepType10Genned(t *testing.T) {
 
 ```
 
-### Next steps
+### Generating Tests
 
-Go  Templates to generate full tests, and test files containing multiple tests.
+In addition to generating snippets, generating full tests and test files is 
+supported. Generating tests is tricky. Often it is not possible to generate
+tests in a single pass, and it is necessary to generate intermediate tests
+that can eventually generate the final test.
+
+The biggest snag is regarding type declaration. It is straightforward in go
+to generate a string that compiles to a type declaration. But there's no way
+to actually generate a reflect.Type from a string. That requires generating
+a file of Go code that includes the type declaration as a statement, along
+with other statements that generate test pieces like the Value Tree and
+Value Reference. Then, this newly generated Go code can be executed to generate
+an actual file of tests.
+
+Stage 1: Generate one or more deep type declarations
+Stage 2: For each deep type declaration,
+           Gen decl
+           Gen values
+		   Gen tree
+		   Gen ref
+		   Execute a template to geneate a test that contains type decl, the
+		      value tree, and the 
+Stage 3: Run the actual test(s)
+
+It's very clumsy to run multiple test generation stages and copy/paste from a 
+console window into an editor, plus hand-editing to change test generation
+parameters like type depth and # of tests. There are techniques that can make
+this less clumsy
+	
+	- Parameterize desired behavior through environment variables
+	- Write output to new files through output redirection
+	- Script tests to run in sequence from the command line
+
+All tests will be generated except a single bootstrap test. This test will have
+no domain-specific logic in it whatsoever. All it will do is retrieve parameters
+from environment variables, and execute templates to generate code.
+
+@note perhaps an uber-bootstrap test would be desirable, that takes a template
+name as a parameter. Something to think about.
