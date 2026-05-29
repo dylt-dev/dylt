@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime/debug"
 	"testing"
+	"text/template"
 
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/assert"
@@ -467,6 +468,17 @@ func TestDecodeMap(t *testing.T) {
 	var ps *S = rps.Interface().(*S)
 	require.Equal(t, 13, (*(ps.Map))[key])
 }
+
+
+
+func TestSimpleTemplate(t *testing.T) {
+	buf, err := content.ReadFile("content/smpl.tmpl")
+	require.NoError(t, err)
+	tmpl, err := template.New("smpl").Parse(string(buf))
+	data := []string{"foo", "bar", "bum"}
+	tmpl.Execute(t.Output(), data)
+}
+
 
 func TestUnmarshalIntoStructField(t *testing.T) {
 	type S struct{ PN *int }

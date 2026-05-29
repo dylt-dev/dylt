@@ -15,11 +15,17 @@ import (
 )
 
 func TestGenDecodeDeepTest(t *testing.T) {
+	// Confirm ECO_OUTPUT_FILE2 is properly set
+	envOutputFile, is := os.LookupEnv("ECO_OUTPUT_FILE2")
+	require.True(t, is)
+	w, err := os.Create(envOutputFile)
+	require.NoError(t, err)
+
 	ctx := common.NewEcoContext(os.Stdout)
 	types := []reflect.Type {
 		{{ range .typeDeclarations }}
 		reflect.TypeFor[{{.}}](),
-		{{ end }}
+		{{- end }}
 	}
 	
 	r := rand.NewSource(time.Now().UTC().UnixNano())
@@ -74,13 +80,13 @@ func TestGenDecodeDeepTest(t *testing.T) {
 		data = append(data, testInfo)
 	}
 
-	w, err := os.Create("./decode_genned_test.go")
 	require.NoError(t, err)
 	buf, err := content.ReadFile("content/GenDeepTests.tmpl")
 	require.NoError(t, err)
 	require.NotNil(t, buf)
 	tmpl, err := template.New("deeptest").Parse(string(buf))
 	require.NoError(t, err)
+
 	tmpl.Execute(w, data)
 	err = w.Close ()
 	require.NoError(t, err)

@@ -45,7 +45,7 @@ func TestGenBootstrap (t *testing.T) {
 	// Confirm ECO_OUTPUT_FILE is properly set
 	envOutputFile, is := os.LookupEnv("ECO_OUTPUT_FILE")
 	require.True(t, is)
-	w, err := os.OpenFile(envOutputFile, os.O_CREATE | os.O_WRONLY, os.ModePerm)
+	w, err := os.Create(envOutputFile)
 	require.NoError(t, err)
 
 	r := rand.NewSource(time.Now().UTC().UnixNano())
