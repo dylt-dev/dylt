@@ -1,0 +1,103 @@
+package eco
+
+import (
+	"bytes"
+	"fmt"
+	"math/rand"
+	"os"
+	"reflect"
+	"strings"
+	"testing"
+	"text/template"
+	"time"
+
+	"github.com/dylt-dev/dylt/common"
+	"github.com/stretchr/testify/require"
+)
+
+func {{ .testName }}(t *testing.T) {
+	// Confirm ECO_GEN_TESTS is set
+	envGenTests, is := os.LookupEnv("ECO_GEN_TESTS")
+	if !is || (envGenTests != "1" && strings.ToLower(envGenTests) != "y") {
+		t.Skipf("%s not set or not set to 1 or Y/y", "ECO_GEN_TESTS")
+	}
+
+	// Confirm ECO_TEST_FILENAME_PREFIX is properly set
+	envTestFilenamePrefix, is := os.LookupEnv("ECO_TEST_FILENAME_PREFIX")
+	require.True(t, is)
+
+	// Confirm ECO_TEST_TESTNAME_PREFIX is properly set
+	envTestTestNamePrefix, is := os.LookupEnv("ECO_TEST_TESTNAME_PREFIX")
+	require.True(t, is)
+
+	ctx := common.NewEcoContext(os.Stdout)
+	ctx.Mute = true
+
+	type deepType {{ .typeDecl }}
+	rt := reflect.TypeFor[deepType]()
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+
+	type TestInfo struct {
+		ExpectedVal     any
+		LastIndex       int
+		TestName        string
+		TestNumber      int
+		TypeDecl        string
+		ValueRef        string
+		ValueTree       string
+	}
+
+	depth := {{ .depth }} 
+
+	buf, err := content.ReadFile("content/DeepTest.tmpl")
+	require.NoError(t, err)
+	require.NotNil(t, buf)
+	tmpl, err := template.New("deeptest").Parse(string(buf))
+	require.NoError(t, err)
+	
+	values := []any{}
+		
+	// type declaration
+	decl := common.GetDeclFromType(rt)
+	
+	dt := common.NewDeepType(rt)
+	var n int
+	common.GenScalarValues(ctx, rt, r, &values)	
+
+	// value tree
+	bbTree := bytes.Buffer{}
+	dt.EmitTreeDecl(&n, values, &bbTree)
+	sValueTree := bbTree.String()
+
+	// value ref
+	bbRef := bytes.Buffer{}
+	dt.EmitValueRef(values, &bbRef)
+	sValueRef := bbRef.String()
+
+	lastVal := values[len(values)-1]
+	var sExpectedVal string
+	if reflect.ValueOf(lastVal).Kind() == reflect.String {
+		sExpectedVal = fmt.Sprintf("%q", lastVal)
+	} else {
+		sExpectedVal = fmt.Sprintf("%v", lastVal)
+	}
+
+	testName := fmt.Sprintf("%s%d", envTestTestNamePrefix, {{ .testNumber }})
+	testInfo := TestInfo{
+		ExpectedVal: sExpectedVal,
+		LastIndex: depth-1,
+		TestName: testName,
+		TestNumber: {{ .testNumber }},
+		TypeDecl: decl,
+		ValueRef: sValueRef,
+		ValueTree: sValueTree,
+	}
+	data := testInfo
+
+	filename := fmt.Sprintf("%s%d_test.go", envTestFilenamePrefix, {{ .testNumber }})
+	t.Logf("filename=%s", filename)
+	w, err := os.Create(filename)
+	require.NoError(t, err)
+	tmpl.Execute(w, data)
+	err = w.Close()
+}

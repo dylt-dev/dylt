@@ -181,6 +181,23 @@ func TestEmitTree4(t *testing.T) {
 	DeepType{typ}.EmitTreeDecl(&level, values, t.Output())
 }
 
+
+func TestEmitValueRef1(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	type typ map[int]string
+
+	r := rand.NewSource(time.Now().UTC().UnixNano())
+	values := []any{}
+	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	t.Log(values)
+
+	fmt.Print("x")
+	DeepType{reflect.TypeFor[typ]()}.EmitValueRef(values, t.Output())
+	fmt.Println()
+}
+
+
 func TestEmitTree10(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
@@ -219,6 +236,7 @@ func TestEmitValueRef10(t *testing.T) {
 	fmt.Println()
 
 }
+
 
 func TestGetDeclFromType1(t *testing.T) {
 	type typ []int

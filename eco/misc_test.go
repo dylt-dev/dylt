@@ -456,7 +456,7 @@ func TestDecodeMap(t *testing.T) {
 	pmap.Elem().Set(newmap)
 
 	// Assign the map to a pointer field in a struct
-	type S struct { Map *map[string]int}
+	type S struct{ Map *map[string]int }
 	typS := reflect.TypeFor[S]()
 	var rps reflect.Value = reflect.New(typS)
 	var rf reflect.Value = rps.Elem().Field(0)
@@ -467,6 +467,18 @@ func TestDecodeMap(t *testing.T) {
 	var ps *S = rps.Interface().(*S)
 	require.Equal(t, 13, (*(ps.Map))[key])
 }
+
+// func TestSimpleTemplate(t *testing.T) {
+// 	buf, err := content.ReadFile("content/smpl.tmpl")
+// 	require.NoError(t, err)
+// 	tmpl, err := template.New("smpl").Parse(string(buf))
+// 	words := []string{"foo", "bar", "bum"}
+// 	data := map[string]any{
+// 		"title": "Hello!",
+// 		"words": words,
+// 	}
+// 	tmpl.Execute(t.Output(), data)
+// }
 
 func TestUnmarshalIntoStructField(t *testing.T) {
 	type S struct{ PN *int }
@@ -495,7 +507,7 @@ func TestUnmarshalIntoStructField(t *testing.T) {
 	// require.NoError(t, err)
 }
 
-func allocAndUnmarshal (f reflect.Value, data []byte) error {
+func allocAndUnmarshal(f reflect.Value, data []byte) error {
 	// create a new pointer of v's type
 	pnew := reflect.New(f.Type().Elem())
 

@@ -10,8 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
-func TestKvTreeMap (t *testing.T) {
+func TestKvTreeMap(t *testing.T) {
 	ctx, _ := initAndTest(t)
 
 	key := "/test/team/astros/Players/altuve"
@@ -135,11 +134,11 @@ func TestKvTreeStruct(t *testing.T) {
 	logTree(ctx, kvTree)
 }
 
-func logTree (ctx *common.EcoContext, tree *KeyValueTree) {
+func logTree(ctx *common.EcoContext, tree *KeyValueTree) {
 	ctx.Logger.Signature("logTree", string(tree.Value), len(tree.Children))
 	ctx.Inc()
 	defer ctx.Dec()
-	
+
 	for _, child := range tree.Children {
 		logTree(ctx, child)
 	}

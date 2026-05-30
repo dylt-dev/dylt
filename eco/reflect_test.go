@@ -35,7 +35,7 @@ func TestIsPointerAllocated3(t *testing.T) {
 
 func TestIsPointerAllocated4(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	var slice []int = []int{ 13 }
+	var slice []int = []int{13}
 	var p *[]int = &slice
 	is, err := IsPointerAllocated(ctx, p)
 	require.NoError(t, err)

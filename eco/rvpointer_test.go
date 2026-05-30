@@ -902,7 +902,6 @@ func TestRvpNew5(t *testing.T) {
 	require.NoError(t, err)
 }
 
-
 func TestRvpSet1(t *testing.T) {
 	expected := 13
 	var x int
@@ -913,7 +912,6 @@ func TestRvpSet1(t *testing.T) {
 	rvp.Set(expected)
 	require.Equal(t, expected, x)
 }
-
 
 // RvPointer.Walk() - pointer to nil pointer
 func TestRvpWalkInt1(t *testing.T) {

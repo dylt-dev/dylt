@@ -9,13 +9,14 @@ import (
 )
 
 
-{{ range $i, $testInfo := . }}
-func TestDecodeDeepType{{ .Depth }}_{{ $i }}(t *testing.T) {
+func {{ .TestName }}(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
+	ctx.Mute = true
+
 	decoder := MainDecoder{}
 
 	// type declaration
-	type deepType {{ .TypeDeclaration }}
+	type deepType {{ .TypeDecl }}
 
 	// value tree construction
 	{{ .ValueTree }}
@@ -32,4 +33,3 @@ func TestDecodeDeepType{{ .Depth }}_{{ $i }}(t *testing.T) {
 	val := x{{ .ValueRef }}
 	require.Equal(t, expectedVal, val)
 }
-{{ end }}

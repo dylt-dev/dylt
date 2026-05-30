@@ -3,12 +3,13 @@ package eco
 import (
 	"bytes"
 	"embed"
+	"fmt"
+	"html/template"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
-	"text/template"
 	"time"
 
 	"github.com/dylt-dev/dylt/common"
@@ -18,10 +19,10 @@ import (
 //go:embed content/*
 var content embed.FS
 
-func TestGenBootstrap (t *testing.T) {
+func TestGenBootstrap(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	ctx.Mute = true
-	
+
 	// Confirm ECO_GEN_TESTS is set
 	envGenTests, is := os.LookupEnv("ECO_GEN_TESTS")
 	if !is || (envGenTests != "1" && strings.ToLower(envGenTests) != "y") {
@@ -42,35 +43,40 @@ func TestGenBootstrap (t *testing.T) {
 	require.NoError(t, err)
 	require.Greater(t, nTests, 0)
 
-	// Confirm ECO_OUTPUT_FILE is properly set
-	envOutputFile, is := os.LookupEnv("ECO_OUTPUT_FILE")
+	// Confirm ECO_GENNER_FILENAME_PREFIX is properly set
+	envGennerFilenamePrefix, is := os.LookupEnv("ECO_GENNER_FILENAME_PREFIX")
 	require.True(t, is)
-	w, err := os.OpenFile(envOutputFile, os.O_CREATE | os.O_WRONLY, os.ModePerm)
-	require.NoError(t, err)
+
+	// Confirm ECO_GENNER_TESTNAME_PREFIX is properly set
+	envGennerTestNamePrefix, is := os.LookupEnv("ECO_GENNER_TESTNAME_PREFIX")
+	require.True(t, is)
 
 	r := rand.NewSource(time.Now().UTC().UnixNano())
 
 	// Generate tests
 	t.Logf("Generate %d test(s) of depth=%d", nTests, depth)
-	sDecls := make([]string, nTests)
 	for i := range nTests {
 		bbDecl := bytes.Buffer{}
 		common.GenDeclaration(ctx, depth, r, &bbDecl)
-		sDecls[i] = strings.TrimSpace(bbDecl.String())
-	}
+		decl := strings.TrimSpace(bbDecl.String())
+		testName := fmt.Sprintf("%s%d", envGennerTestNamePrefix, i)
+		// 	// execute template
+		data := map[string]any{
+			"depth":      depth,
+			"testName":   testName,
+			"testNumber": i,
+			"typeDecl":   decl,
+		}
+		buf, err := content.ReadFile("content/DeepTestGenner.tmpl")
+		require.NoError(t, err)
+		require.NotNil(t, buf)
+		tmpl, err := template.New("genTestStage1").Parse(string(buf))
 
-	// execute template
-	data := map[string]any {
-		"depth": depth,
-		"typeDeclarations": sDecls,
-
+		filename := fmt.Sprintf("%s%d_test.go", envGennerFilenamePrefix, i)
+		w, err := os.Create(filename)
+		require.NoError(t, err)
+		tmpl.Execute(w, data)
+		err = w.Close()
+		require.NoError(t, err)
 	}
-	buf, err := content.ReadFile("content/TestGenTest.tmpl")
-	require.NoError(t, err)
-	require.NotNil(t, buf)
-	tmpl, err := template.New("genTestStage1").Parse(string(buf))
-	tmpl.Execute(w, data)
-	err = w.Close()
-	require.NoError(t, err)
-	// t.Log(sDecls)
 }

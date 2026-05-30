@@ -7,24 +7,22 @@ type KvSeries struct {
 	Kvs     []KeyValue
 }
 
-
-func NewKvSeries (rootKey KeyString, kvs []*mvccpb.KeyValue) (*KvSeries, error) {
+func NewKvSeries(rootKey KeyString, kvs []*mvccpb.KeyValue) (*KvSeries, error) {
 	kvSeries := KvSeries{rootKey, nil}
 	for _, kv := range kvs {
-		kvSeries.Add(NewKeyValue(kv))	
+		kvSeries.Add(NewKeyValue(kv))
 	}
 
 	return &kvSeries, nil
 }
 
-func (this *KvSeries) Add (kv KeyValue) bool {
-	if !this.IsOwner(kv.Key) && kv.Key != this.RootKey{
+func (this *KvSeries) Add(kv KeyValue) bool {
+	if !this.IsOwner(kv.Key) && kv.Key != this.RootKey {
 		return false
 	}
 	this.Kvs = append(this.Kvs, kv)
 	return true
 }
-
 
 func (this *KvSeries) Len() int {
 	if this.Kvs == nil {
@@ -49,6 +47,6 @@ func (this *KvSeries) MaxIndex() int {
 	return maxIndex
 }
 
-func (this *KvSeries) IsOwner (keyString KeyString) bool {
+func (this *KvSeries) IsOwner(keyString KeyString) bool {
 	return this.RootKey.IsParent(keyString)
 }

@@ -98,7 +98,6 @@ func TestValueTreeAddMulti1(t *testing.T) {
 	testPlayer(t, tree53, "Javier", "SP")
 }
 
-
 func TestValueTreeNew(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	expectedFoo, err := json.Marshal(13)

@@ -38,14 +38,18 @@ func (rvp RvPointer) CreateOrGet(ctx *common.EcoContext, n int) (*NormPtr, error
 	flavor := common.NewFlavor(elemType.Kind())
 	ctx.Logger.Infof("flavor=%v", flavor)
 	switch flavor {
-	case common.Map: return CreateOrGetMap(ctx, normPtr, n)
-	case common.Scalar: return CreateOrGetScalar(ctx, normPtr)
-	case common.Slice: return CreateOrGetSlice(ctx, normPtr, n)
-	case common.Struct: return CreateOrGetStruct(ctx, normPtr)
-	default: return nil, fmt.Errorf("unsupported type (%s)", elemType.Kind().String())
+	case common.Map:
+		return CreateOrGetMap(ctx, normPtr, n)
+	case common.Scalar:
+		return CreateOrGetScalar(ctx, normPtr)
+	case common.Slice:
+		return CreateOrGetSlice(ctx, normPtr, n)
+	case common.Struct:
+		return CreateOrGetStruct(ctx, normPtr)
+	default:
+		return nil, fmt.Errorf("unsupported type (%s)", elemType.Kind().String())
 	}
 }
-
 
 func (rvp RvPointer) Elem() RvPointer {
 	rv := reflect.Value(rvp)
@@ -53,7 +57,6 @@ func (rvp RvPointer) Elem() RvPointer {
 	rvpElem := RvPointer(rvElem)
 	return rvpElem
 }
-
 
 func (rvp RvPointer) ElemType(ctx *common.EcoContext) reflect.Type {
 	ctx.Logger.Signature("RvPointer.ElemType")
@@ -78,12 +81,10 @@ func (rvp RvPointer) ElemType(ctx *common.EcoContext) reflect.Type {
 	return rvElemType.Elem()
 }
 
-
-func (rvp RvPointer) Flavor () common.Flavor {
+func (rvp RvPointer) Flavor() common.Flavor {
 	rv := reflect.Value(rvp)
 	return common.NewFlavor(rv.Type().Elem().Kind())
 }
-
 
 func (rvp RvPointer) IsNil(ctx *common.EcoContext) bool {
 	ctx.Logger.Signature("IsNil")
@@ -93,7 +94,6 @@ func (rvp RvPointer) IsNil(ctx *common.EcoContext) bool {
 	rv := reflect.Value(rvp)
 	return rv.IsNil()
 }
-
 
 func (rvp RvPointer) IsPointer(ctx *common.EcoContext) bool {
 	ctx.Logger.Signature("RvPointer.IsPointer")
@@ -177,11 +177,9 @@ func (rvp RvPointer) IsValue(ctx *common.EcoContext) bool {
 	return false
 }
 
-
-func (rvp RvPointer) Set (a any) {
+func (rvp RvPointer) Set(a any) {
 	reflect.Value(rvp).Elem().Set(common.Reflect(a))
 }
-
 
 func (rvp RvPointer) Walk(ctx *common.EcoContext) (*NormPtr, error) {
 	ctx.Logger.Signature("RvPointer.Walk")
@@ -214,7 +212,7 @@ func (rvp RvPointer) Walk(ctx *common.EcoContext) (*NormPtr, error) {
 		default:
 			err := fmt.Errorf("Unsupported type (%s)", reflect.Value(rvp).Type().Elem().Kind().String())
 			ctx.Logger.Error(err.Error())
-			return nil, err	
+			return nil, err
 		}
 		rvp = rvp.Elem()
 	}
@@ -265,7 +263,7 @@ func CreateOrGetMap(ctx *common.EcoContext, normPtr *NormPtr, n int) (*NormPtr, 
 	if normPtr.IsAllocated(ctx) {
 		return normPtr, nil
 	}
-	
+
 	elemType := normPtr.ElemType(ctx)
 	ctx.Logger.Infof("elemType=%s", elemType)
 	ctx.Logger.Comment("Allocating new map")
@@ -276,7 +274,7 @@ func CreateOrGetMap(ctx *common.EcoContext, normPtr *NormPtr, n int) (*NormPtr, 
 		rvMap := reflect.ValueOf(mapPtr).Elem()
 		normPtr.Set(rvMap)
 	}
-	
+
 	return &NormPtr{mapPtr}, nil
 }
 
@@ -284,7 +282,7 @@ func CreateOrGetScalar(ctx *common.EcoContext, normPtr *NormPtr) (*NormPtr, erro
 	if !normPtr.IsPointer(ctx) {
 		return normPtr, nil
 	}
-	
+
 	elemType := normPtr.ElemType(ctx)
 
 	rvNew := reflect.New(elemType)
@@ -298,7 +296,6 @@ func CreateOrGetScalar(ctx *common.EcoContext, normPtr *NormPtr) (*NormPtr, erro
 	return newNormPtr, nil
 }
 
-
 func CreateOrGetSlice(ctx *common.EcoContext, normPtr *NormPtr, n int) (*NormPtr, error) {
 	ctx.Logger.Signature("CreateOrGetSlice", reflect.TypeOf(normPtr.Value).Kind().String(), n)
 	ctx.Inc()
@@ -307,7 +304,7 @@ func CreateOrGetSlice(ctx *common.EcoContext, normPtr *NormPtr, n int) (*NormPtr
 	ctx.Logger.Infof("ptr=%#v", normPtr)
 	isAllocated := normPtr.IsAllocated(ctx)
 	ctx.Logger.Infof("isAllocated=%#v", isAllocated)
-	
+
 	isBigEnough := normPtr.IsBigEnough(ctx, n)
 	ctx.Logger.Infof("isBigEnough=%#v", isBigEnough)
 
@@ -325,33 +322,34 @@ func CreateOrGetSlice(ctx *common.EcoContext, normPtr *NormPtr, n int) (*NormPtr
 	} else {
 		reflect.ValueOf(normPtr.Value).Elem().Set(reflect.ValueOf(slicePtr).Elem())
 	}
-	
+
 	return &NormPtr{slicePtr}, nil
-/*
-	// Since we need to allocate. we need a pointer-to-a-pointer
-	if !normPtr.IsPointer(ctx) {
-		err := fmt.Errorf("Allocation requires a pointer to a pointer (%s)", reflect.ValueOf(normPtr.Value).Elem().Type())
-		ctx.Logger.Error(err.Error())
-		return nil, err
-	}
+	/*
+	   // Since we need to allocate. we need a pointer-to-a-pointer
 
-	ctx.Logger.Comment("Allocating new slice")
-	elemType := normPtr.ElemType(ctx)
-	ctx.Logger.Infof("elemType=%s", elemType)
-	slicePtr := MakeSlice(elemType, n)
-	reflect.ValueOf(normPtr.Value).Elem().Set(reflect.ValueOf(slicePtr))
-	normPtr = &NormPtr{slicePtr}
+	   	if !normPtr.IsPointer(ctx) {
+	   		err := fmt.Errorf("Allocation requires a pointer to a pointer (%s)", reflect.ValueOf(normPtr.Value).Elem().Type())
+	   		ctx.Logger.Error(err.Error())
+	   		return nil, err
+	   	}
 
-	ctx.Logger.Infof("ptr=%#v", normPtr)
-	return normPtr, nil
-*/
+	   ctx.Logger.Comment("Allocating new slice")
+	   elemType := normPtr.ElemType(ctx)
+	   ctx.Logger.Infof("elemType=%s", elemType)
+	   slicePtr := MakeSlice(elemType, n)
+	   reflect.ValueOf(normPtr.Value).Elem().Set(reflect.ValueOf(slicePtr))
+	   normPtr = &NormPtr{slicePtr}
+
+	   ctx.Logger.Infof("ptr=%#v", normPtr)
+	   return normPtr, nil
+	*/
 }
 
 func CreateOrGetStruct(ctx *common.EcoContext, normPtr *NormPtr) (*NormPtr, error) {
 	if !normPtr.IsPointer(ctx) {
 		return normPtr, nil
 	}
-	
+
 	elemType := normPtr.ElemType(ctx)
 	rv := reflect.New(elemType)
 	normPtr.Set(rv)

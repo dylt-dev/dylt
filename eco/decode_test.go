@@ -255,7 +255,6 @@ import (
 // 	return nil
 // }
 
-
 func TestCreateOrGetStruct(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	st := common.TestStruct{
@@ -301,13 +300,11 @@ func TestCreateOrGetStructAlloc(t *testing.T) {
 	require.Equal(t, expectedNoTag, (**ppst).NoTag)
 }
 
-
 // { k => v }
-func newMapTree(ctx *common.EcoContext, k string, v int64) *ValueTree{
+func newMapTree(ctx *common.EcoContext, k string, v int64) *ValueTree {
 	tree := NewValueTree(ctx, k, v)
 	return tree
 }
-
 
 func TestNewMapTree(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -325,15 +322,14 @@ func TestNewMapTree(t *testing.T) {
 	require.Equal(t, 13, val)
 }
 
-
 // {Name: name}
-func newStructTree (ctx *common.EcoContext, name string) *ValueTree {
-	tree := NewValueTree(ctx, "Name", name) 
+func newStructTree(ctx *common.EcoContext, name string) *ValueTree {
+	tree := NewValueTree(ctx, "Name", name)
 
 	return tree
 }
 
-func TestNewStructTree (t *testing.T) {
+func TestNewStructTree(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	name := "meat"
 	tree := newStructTree(ctx, name)
@@ -351,9 +347,8 @@ func TestNewStructTree (t *testing.T) {
 	require.Nil(t, treeMapVal.ChildMap)
 }
 
-
 // {key: {Name: name} }
-func newMapOfStructTree (ctx *common.EcoContext, key string, name string) *ValueTree {
+func newMapOfStructTree(ctx *common.EcoContext, key string, name string) *ValueTree {
 	structTree := newStructTree(ctx, name)
 	tree := NewValueTree(ctx, key, structTree)
 	return tree
@@ -361,8 +356,8 @@ func newMapOfStructTree (ctx *common.EcoContext, key string, name string) *Value
 
 func TestMapOfStructs(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	
-	type simpleStruct struct { Name string }
+
+	type simpleStruct struct{ Name string }
 	type mapOfStructs map[string]simpleStruct
 	key := "foo"
 	name := "meat"
@@ -377,13 +372,11 @@ func TestMapOfStructs(t *testing.T) {
 	require.Equal(t, expected, x)
 }
 
-
-
 func TestDecodeSliceOfMaps(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	type sliceOfMaps []map[string]int
 	expected := sliceOfMaps{{"foo": 13}}
-		
+
 	decoder := MainDecoder{}
 
 	treeMap := newMapTree(ctx, "foo", 13)
@@ -397,11 +390,9 @@ func TestDecodeSliceOfMaps(t *testing.T) {
 	require.Equal(t, expected, x)
 }
 
-
-
 func TestDecodeStructWithSlice(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	type structWithSlice struct { Names []string }
+	type structWithSlice struct{ Names []string }
 	decoder := MainDecoder{}
 
 	names := []string{"\"foo\"", "\"bar\"", "\"bum\""}
@@ -425,11 +416,14 @@ func TestDecodeStructWithSlice(t *testing.T) {
 	require.Equal(t, "bum", x.Names[9])
 }
 
-
-func TestDecodeDeepType10 (t *testing.T) {
+func TestDecodeDeepType10(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := MainDecoder{}
-	type deepType struct{Data []map[string]struct{Slice []map[string]struct{ Val []struct{N int}}}}
+	type deepType struct {
+		Data []map[string]struct {
+			Slice []map[string]struct{ Val []struct{ N int } }
+		}
+	}
 
 	tree0 := NewValueTree(ctx, "N", 13)
 	tree1 := NewValueTree(ctx, "0", tree0)
@@ -442,19 +436,19 @@ func TestDecodeDeepType10 (t *testing.T) {
 	tree8 := NewValueTree(ctx, "Data", tree7)
 	tree := tree8
 
-/*
-	mapTree := NewValueTree(ctx, "foo", valTree)
-	structTree1 := NewValueTree(ctx, "N", 13)
-	sliceTree1 := NewValueTree(ctx, 3, structTree1)
-	valTree := NewValueTree(ctx, "Val", sliceTree1)
-	mapTree := NewValueTree(ctx, "foo", valTree)
-	sliceTree2 := NewValueTree(ctx, 0, mapTree)
-	structTree2 := NewValueTree(ctx, "Slice", sliceTree2)
-	mapTree2 := NewValueTree(ctx, "bar", structTree2)
-	sliceTree3 := NewValueTree(ctx, 2, mapTree2)
-	structTree3 := NewValueTree(ctx, "Data", sliceTree3)
-	tree := structTree3
-*/
+	/*
+		mapTree := NewValueTree(ctx, "foo", valTree)
+		structTree1 := NewValueTree(ctx, "N", 13)
+		sliceTree1 := NewValueTree(ctx, 3, structTree1)
+		valTree := NewValueTree(ctx, "Val", sliceTree1)
+		mapTree := NewValueTree(ctx, "foo", valTree)
+		sliceTree2 := NewValueTree(ctx, 0, mapTree)
+		structTree2 := NewValueTree(ctx, "Slice", sliceTree2)
+		mapTree2 := NewValueTree(ctx, "bar", structTree2)
+		sliceTree3 := NewValueTree(ctx, 2, mapTree2)
+		structTree3 := NewValueTree(ctx, "Data", sliceTree3)
+		tree := structTree3
+	*/
 	var x deepType
 	p := &x
 	err := decoder.Decode(ctx, tree, p)
@@ -466,12 +460,94 @@ func TestDecodeDeepType10 (t *testing.T) {
 	t.Log(string(buf))
 }
 
-
-
 func TestDecodeDeepType100Genned(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	decoder := MainDecoder{}
-	type deepType struct{Nemo struct{Eligendi struct{Illum map[bool]map[bool]map[bool]struct{Est struct{Tempore struct{Magnam struct{Fugiat struct{Sed struct{Et [][][]map[int]map[string]struct{Quis []map[bool]map[bool][]struct{Ullam []map[int]struct{Assumenda struct{Rerum struct{Possimus [][][]map[int]struct{Harum map[bool]map[int]struct{Aperiam struct{Incidunt struct{Beatae []struct{Nam struct{Sunt []map[string]struct{Dolore [][]map[bool][]struct{Assumenda []struct{Consequatur struct{Iste []map[bool]struct{Et [][]map[bool][][][]struct{Est map[bool]struct{Ut [][]map[string]struct{Facere struct{Velit struct{Ut map[int]map[string]struct{Quidem struct{Ipsa map[int]struct{Molestiae map[bool][]map[int]struct{Repellat [][][]struct{Reprehenderit struct{Eaque struct{Beatae map[string]struct{Unde struct{Perspiciatis [][]struct{Possimus map[bool]map[bool]struct{Eligendi struct{Modi struct{Vel []struct{Possimus []int}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+	type deepType struct {
+		Nemo struct {
+			Eligendi struct {
+				Illum map[bool]map[bool]map[bool]struct {
+					Est struct {
+						Tempore struct {
+							Magnam struct {
+								Fugiat struct {
+									Sed struct {
+										Et [][][]map[int]map[string]struct {
+											Quis []map[bool]map[bool][]struct {
+												Ullam []map[int]struct {
+													Assumenda struct {
+														Rerum struct {
+															Possimus [][][]map[int]struct {
+																Harum map[bool]map[int]struct {
+																	Aperiam struct {
+																		Incidunt struct {
+																			Beatae []struct {
+																				Nam struct {
+																					Sunt []map[string]struct {
+																						Dolore [][]map[bool][]struct {
+																							Assumenda []struct {
+																								Consequatur struct {
+																									Iste []map[bool]struct {
+																										Et [][]map[bool][][][]struct {
+																											Est map[bool]struct {
+																												Ut [][]map[string]struct {
+																													Facere struct {
+																														Velit struct {
+																															Ut map[int]map[string]struct {
+																																Quidem struct {
+																																	Ipsa map[int]struct {
+																																		Molestiae map[bool][]map[int]struct {
+																																			Repellat [][][]struct {
+																																				Reprehenderit struct {
+																																					Eaque struct {
+																																						Beatae map[string]struct {
+																																							Unde struct {
+																																								Perspiciatis [][]struct {
+																																									Possimus map[bool]map[bool]struct {
+																																										Eligendi struct {
+																																											Modi struct{ Vel []struct{ Possimus []int } }
+																																										}
+																																									}
+																																								}
+																																							}
+																																						}
+																																					}
+																																				}
+																																			}
+																																		}
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	tree0 := NewValueTree(ctx, 0, 459)
 	tree1 := NewValueTree(ctx, "Possimus", tree0)
 	tree2 := NewValueTree(ctx, 0, tree1)
@@ -584,9 +660,8 @@ func TestDecodeDeepType100Genned(t *testing.T) {
 	// buf, err := json.MarshalIndent(x, "", "\t")
 	// require.NoError(t, err)
 	// t.Log(string(buf))
-	
-}
 
+}
 
 func TestGetStructAndUnmarshalField(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
@@ -931,35 +1006,45 @@ func allocOrDont[U any, V *U | **U](t *testing.T, buf []byte, v V) error {
 	err := json.Unmarshal(buf, pp)
 	return err
 }
-    func TestDecodeDeepType10Genned(t *testing.T) {
-        ctx := common.NewEcoContext(os.Stdout)
-        decoder := MainDecoder{}
+func TestDecodeDeepType10Genned(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	decoder := MainDecoder{}
 
-        // type declaration
-        type deepType struct{Aut map[int]struct{Perspiciatis struct{Repudiandae map[int]struct{Omnis struct{Maiores map[int]map[bool]struct{Animi int}}}}}}
+	// type declaration
+	type deepType struct {
+		Aut map[int]struct {
+			Perspiciatis struct {
+				Repudiandae map[int]struct {
+					Omnis struct {
+						Maiores map[int]map[bool]struct{ Animi int }
+					}
+				}
+			}
+		}
+	}
 
-        // value tree construction
-        tree0 := NewValueTree(ctx, "Animi", 78)
-    tree1 := NewValueTree(ctx, false, tree0)
-    tree2 := NewValueTree(ctx, 432, tree1)
-    tree3 := NewValueTree(ctx, "Maiores", tree2)
-    tree4 := NewValueTree(ctx, "Omnis", tree3)
-    tree5 := NewValueTree(ctx, 550, tree4)
-    tree6 := NewValueTree(ctx, "Repudiandae", tree5)
-    tree7 := NewValueTree(ctx, "Perspiciatis", tree6)
-    tree8 := NewValueTree(ctx, 295, tree7)
-    tree9 := NewValueTree(ctx, "Aut", tree8)
+	// value tree construction
+	tree0 := NewValueTree(ctx, "Animi", 78)
+	tree1 := NewValueTree(ctx, false, tree0)
+	tree2 := NewValueTree(ctx, 432, tree1)
+	tree3 := NewValueTree(ctx, "Maiores", tree2)
+	tree4 := NewValueTree(ctx, "Omnis", tree3)
+	tree5 := NewValueTree(ctx, 550, tree4)
+	tree6 := NewValueTree(ctx, "Repudiandae", tree5)
+	tree7 := NewValueTree(ctx, "Perspiciatis", tree6)
+	tree8 := NewValueTree(ctx, 295, tree7)
+	tree9 := NewValueTree(ctx, "Aut", tree8)
 
-        tree := tree9
+	tree := tree9
 
-        // decode object
-        var x deepType
-        p := &x
-        err := decoder.Decode(ctx, tree, p)
-        require.NoError(t, err)
+	// decode object
+	var x deepType
+	p := &x
+	err := decoder.Decode(ctx, tree, p)
+	require.NoError(t, err)
 
-        // check leaf value
-        expectedVal := 78
-        val := x.Aut[295].Perspiciatis.Repudiandae[550].Omnis.Maiores[432][false].Animi
-        require.Equal(t, expectedVal, val)
-    }
+	// check leaf value
+	expectedVal := 78
+	val := x.Aut[295].Perspiciatis.Repudiandae[550].Omnis.Maiores[432][false].Animi
+	require.Equal(t, expectedVal, val)
+}

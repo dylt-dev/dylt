@@ -7,6 +7,15 @@ import (
 
 type KeyString string
 
+func (ks KeyString) Add(anotherKs KeyString) KeyString {
+	if anotherKs == "" {
+		return ks
+	}
+	sb := strings.Builder{}
+	sb.WriteString(string(ks.WithEndSlash()))
+	sb.WriteString(string(anotherKs.WithoutStartSlash().WithoutEndSlash()))
+	return KeyString(sb.String())
+}
 
 func (ks KeyString) AddSegment(segment string) KeyString {
 	sb := strings.Builder{}
@@ -15,7 +24,6 @@ func (ks KeyString) AddSegment(segment string) KeyString {
 	return KeyString(sb.String())
 }
 
-
 func (ks KeyString) Child(prefix KeyString) (KeyString, bool) {
 	childName, is := ks.ChildName(prefix)
 	if !is {
@@ -23,7 +31,6 @@ func (ks KeyString) Child(prefix KeyString) (KeyString, bool) {
 	}
 	return prefix.AddSegment(childName), true
 }
-
 
 func (ks KeyString) ChildName(prefix KeyString) (string, bool) {
 	afterPrefix, is := ks.CutPrefix(prefix)
@@ -39,12 +46,10 @@ func (ks KeyString) ChildName(prefix KeyString) (string, bool) {
 	return segments[0], true
 }
 
-
 func (ks KeyString) CutPrefix(prefix KeyString) (KeyString, bool) {
 	snew, is := strings.CutPrefix(string(ks), string(prefix))
 	return KeyString(snew), is
 }
-
 
 func (ks KeyString) ElementName(prefix KeyString) string {
 	afterPrefix, is := ks.CutPrefix(prefix)
@@ -58,8 +63,7 @@ func (ks KeyString) ElementName(prefix KeyString) string {
 	return segments[len(segments)-1]
 }
 
-
-func (ks KeyString) HasPrefix (prefix KeyString) bool {
+func (ks KeyString) HasPrefix(prefix KeyString) bool {
 	return strings.HasPrefix(string(ks), string(prefix))
 }
 
@@ -76,12 +80,10 @@ func (ks KeyString) Index() (int, bool) {
 	return index, true
 }
 
-
-func (ks KeyString) IsLeaf () bool {
+func (ks KeyString) IsLeaf() bool {
 	segments := ks.Segments()
 	return len(segments) == 1
 }
-
 
 func (ks KeyString) IsParent(keyString KeyString) bool {
 	s := string(ks.WithoutEndSlash())
@@ -89,30 +91,27 @@ func (ks KeyString) IsParent(keyString KeyString) bool {
 	return strings.HasPrefix(sKeyString, s) && s != sKeyString
 }
 
-
-func (ks KeyString) PopHead () (string, KeyString) {
+func (ks KeyString) PopHead() (string, KeyString) {
 	s := string(ks.WithoutStartSlash().WithoutEndSlash())
-	iFirstSlash := strings.Index(s, "/") 
+	iFirstSlash := strings.Index(s, "/")
 	if iFirstSlash != -1 {
 		head := s[:iFirstSlash]
-		body := KeyString(s[iFirstSlash:]) 
+		body := KeyString(s[iFirstSlash:])
 		return head, body
 	}
-	
+
 	return string(ks.WithoutStartSlash()), KeyString("")
 }
 
-
-func (ks KeyString) TrimHead () KeyString {
+func (ks KeyString) TrimHead() KeyString {
 	s := string(ks.WithoutStartSlash().WithoutEndSlash())
-	iFirstSlash := strings.Index(s, "/") 
+	iFirstSlash := strings.Index(s, "/")
 	if iFirstSlash != -1 {
 		return KeyString(s[iFirstSlash:])
 	}
 
 	return KeyString("")
 }
-
 
 func (ks KeyString) Segments() []string {
 	var segments []string = []string{}
@@ -162,7 +161,6 @@ func (ks KeyString) WithoutEndSlash() KeyString {
 	return ks
 }
 
-
 func (ks KeyString) WithStartSlash() KeyString {
 	if ks == "" {
 		return "/"
@@ -189,7 +187,6 @@ func (ks KeyString) WithoutStartSlash() KeyString {
 	return ks
 }
 
-
 // func createKeyString (segments ...string) KeyString {
 // 	sb := strings.Builder{}
 // 	for i := range(len(segments)-1) {
@@ -197,7 +194,7 @@ func (ks KeyString) WithoutStartSlash() KeyString {
 // 		sb.WriteString(segment)
 // 		sb.WriteString("/")
 // 	}
-	
+
 // 	sb.WriteString(segments[len(segments)-1])
 // 	s := sb.String()
 // 	return KeyString(s)

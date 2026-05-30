@@ -37,7 +37,7 @@ func (m KeyValueMap) add(ctx *common.EcoContext, prefix string, kv *KeyValue) bo
 	ctx.Logger.Signature("KeyValueMap.add()", prefix, kv.Key)
 	ctx.Inc()
 	defer ctx.Dec()
-	
+
 	// Find the first segment after the prefix. This will be the map key
 	// If there is no segment after the prefix, then return false
 	ctx.Logger.Comment("checking if key is a child of the prefix ...")
@@ -70,21 +70,23 @@ func (m KeyValueMap) add(ctx *common.EcoContext, prefix string, kv *KeyValue) bo
 	return true
 }
 
-
-func (m KeyValueMap) String () string {
+func (m KeyValueMap) String() string {
 	// We don't actually want to do any string formatting here
 	// We're perfectly happy to create a similar data structure to
 	// mvccpb.KeyValue, but with strings instead of []byte, and to
 	// let the stdlib Unmarshaller handle it
 	// @note this is yet another hint at the utility of a helper data structure
 	//       or two for mvccpb.KeyValue
-	type skv struct { Key string; Value string}
+	type skv struct {
+		Key   string
+		Value string
+	}
 	type skvm map[string][]skv
 	smap := skvm{}
 	for k, v := range m {
 		skey := k
 		skvs := []skv{}
-		for _, el := range(v) {
+		for _, el := range v {
 			sel := skv{Key: string(el.Key), Value: string(el.Value)}
 			skvs = append(skvs, sel)
 		}
@@ -97,7 +99,6 @@ func (m KeyValueMap) String () string {
 	return string(buf)
 
 }
-
 
 func createKvMap(ctx *common.EcoContext, key string, kvs []*KeyValue) KeyValueMap {
 	ctx.Logger.Signature("createKvMap", key, len(kvs))

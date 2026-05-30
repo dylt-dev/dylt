@@ -1,0 +1,6 @@
+{{ .title }}
+{{ with .words }}
+{{- range .}}
+{{ . }}
+{{- end }}
+{{- end }}

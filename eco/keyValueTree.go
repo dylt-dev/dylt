@@ -37,7 +37,7 @@ func (t *KeyValueTree) String() string {
 	return treeToString(ctx, t)
 }
 
-func treeToString (ctx *common.EcoContext, kvTree *KeyValueTree) string{
+func treeToString(ctx *common.EcoContext, kvTree *KeyValueTree) string {
 	ctx.Inc()
 	defer ctx.Dec()
 
@@ -48,7 +48,7 @@ func treeToString (ctx *common.EcoContext, kvTree *KeyValueTree) string{
 	}
 	fmt.Fprintf(&sb, "%sValue: %s\n", ctx.Logger.Indent(), string(buf))
 	fmt.Fprintf(&sb, "%slen(Children): %d\n", ctx.Logger.Indent(), len(kvTree.Children))
-	for _, child := range(kvTree.Children) {
+	for _, child := range kvTree.Children {
 		sChild := treeToString(ctx, child)
 		sb.WriteString(sChild)
 	}
@@ -115,6 +115,6 @@ func createKvTree(ctx *common.EcoContext, key string, kvs []*KeyValue) *KeyValue
 		childKvs := v
 		tree.Children[KeyString(childKey)] = createKvTree(ctx, childKey, childKvs)
 	}
-	
+
 	return tree
 }
