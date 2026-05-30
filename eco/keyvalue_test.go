@@ -7,7 +7,7 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
-func TestRemoveKeyFromSlice (t *testing.T) {
+func TestRemoveKeyFromSlice(t *testing.T) {
 	ctx, _ := initAndTest(t)
 	keyToRemove := "/test/slice/1"
 	etcdKvs := []*mvccpb.KeyValue{
@@ -21,17 +21,16 @@ func TestRemoveKeyFromSlice (t *testing.T) {
 	require.Equal(t, 2, len(kvs))
 }
 
-func TestRemoveKeyFromSliceEmpty (t *testing.T) {
+func TestRemoveKeyFromSliceEmpty(t *testing.T) {
 	ctx, _ := initAndTest(t)
 	keyToRemove := "/test/slice/666"
-	etcdKvs := []*mvccpb.KeyValue{
-	}
+	etcdKvs := []*mvccpb.KeyValue{}
 
 	kvs := createKvSlice(etcdKvs)
 	kvs = deleteKeyFromSlice(ctx, kvs, keyToRemove)
 	require.Equal(t, 0, len(kvs))
 }
-func TestRemoveKeyFromSliceMissing (t *testing.T) {
+func TestRemoveKeyFromSliceMissing(t *testing.T) {
 	ctx, _ := initAndTest(t)
 	keyToRemove := "/test/slice/666"
 	etcdKvs := []*mvccpb.KeyValue{

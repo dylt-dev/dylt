@@ -9,35 +9,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init () {
-//	InitConfig()
+func init() {
+	// InitConfig()
 }
 
-
-func TestVmAdd (t *testing.T) {
+func TestVmAdd(t *testing.T) {
 	vmClient, err := CreateVmClientFromConfig()
-	if err != nil { t.Fatal(err, debug.Stack()) }
+	if err != nil {
+		t.Fatal(err, debug.Stack())
+	}
 	name := "test-vm"
 	address := "test-vm.dylt.dev"
 	vm, err := vmClient.Add(name, address)
-	if err != nil { t.Fatal(err, debug.Stack()) }
+	if err != nil {
+		t.Fatal(err, debug.Stack())
+	}
 	fmt.Printf("vm=%#v\n", vm)
 }
 
-
-func TestVmAll (t *testing.T) {
+func TestVmAll(t *testing.T) {
 	vmClient, err := CreateVmClientFromConfig()
-	if err != nil { t.Fatal(err, debug.Stack()) }
+	if err != nil {
+		t.Fatal(err, debug.Stack())
+	}
 	vmInfoMap, err := vmClient.All()
-	if err != nil { t.Fatal(err, debug.Stack()) }
+	if err != nil {
+		t.Fatal(err, debug.Stack())
+	}
 	for k, v := range vmInfoMap {
 		fmt.Printf("VM name=%s\n", k)
 		s, err := json.Marshal(v)
-		if err != nil { t.Fatal(err, debug.Stack()) }
+		if err != nil {
+			t.Fatal(err, debug.Stack())
+		}
 		fmt.Printf("VM info=%s\n", s)
 	}
 }
-
 
 func TestVmGet(t *testing.T) {
 	vmClient, err := CreateVmClientFromConfig()
@@ -69,9 +76,9 @@ func TestVmList(t *testing.T) {
 func TestVmInfoGetAddress(t *testing.T) {
 	initName := "vm-test"
 	initAddress := "vm-test.dylt.dev"
-	vm := VmInfo {
+	vm := VmInfo{
 		Address: initAddress,
-		Name: initName,
+		Name:    initName,
 	}
 	field := "Address"
 	fieldValue, err := vm.Get(field)
@@ -82,9 +89,9 @@ func TestVmInfoGetAddress(t *testing.T) {
 func TestVmInfoGetInvalid(t *testing.T) {
 	initName := "vm-test"
 	initAddress := "vm-test.dylt.dev"
-	vm := VmInfo {
+	vm := VmInfo{
 		Address: initAddress,
-		Name: initName,
+		Name:    initName,
 	}
 	field := "INVALID-FIELD-NAME"
 	fieldValue, err := vm.Get(field)
@@ -93,13 +100,12 @@ func TestVmInfoGetInvalid(t *testing.T) {
 	t.Logf("err=%s\n", err)
 }
 
-
 func TestVmInfoGetName(t *testing.T) {
 	initName := "vm-test"
 	initAddress := "vm-test.dylt.dev"
-	vm := VmInfo {
+	vm := VmInfo{
 		Address: initAddress,
-		Name: initName,
+		Name:    initName,
 	}
 	field := "Name"
 	fieldValue, err := vm.Get(field)
@@ -107,8 +113,7 @@ func TestVmInfoGetName(t *testing.T) {
 	assert.Equal(t, initName, fieldValue)
 }
 
-
-func TestVmInfoSetAddress (t *testing.T) {
+func TestVmInfoSetAddress(t *testing.T) {
 	vm := VmInfo{}
 	initAddress := "vm-test.dylt.dev"
 	err := vm.Set("Address", initAddress)
@@ -116,20 +121,17 @@ func TestVmInfoSetAddress (t *testing.T) {
 	assert.Equal(t, initAddress, vm.Address)
 }
 
-
-func TestVmInfoSetInvalid (t *testing.T) {
+func TestVmInfoSetInvalid(t *testing.T) {
 	vm := VmInfo{}
 	err := vm.Set("INVALID-FIELD-NAME", "")
 	assert.NotNil(t, err)
 	t.Logf("err=%s\n", err)
 }
 
-
-func TestVmInfoSetName (t *testing.T) {
+func TestVmInfoSetName(t *testing.T) {
 	vm := VmInfo{}
 	initName := "vm-test"
 	err := vm.Set("Name", initName)
 	assert.Nil(t, err)
 	assert.Equal(t, initName, vm.Name)
 }
-

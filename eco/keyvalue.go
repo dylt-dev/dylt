@@ -9,16 +9,16 @@ import (
 )
 
 type KeyValue struct {
-	Key KeyString
+	Key   KeyString
 	Value []byte
 }
 
-func NewKeyValue (etcdKv *mvccpb.KeyValue) KeyValue {
+func NewKeyValue(etcdKv *mvccpb.KeyValue) KeyValue {
 	kv := KeyValue{Key: KeyString(etcdKv.Key), Value: etcdKv.Value}
 	return kv
 }
 
-func createKvSlice (etcdKvs []*mvccpb.KeyValue) []*KeyValue {
+func createKvSlice(etcdKvs []*mvccpb.KeyValue) []*KeyValue {
 	kvSlice := make([]*KeyValue, len(etcdKvs))
 	for i, etcdKv := range etcdKvs {
 		kvSlice[i] = newKvFromEtcd(etcdKv)
@@ -27,15 +27,14 @@ func createKvSlice (etcdKvs []*mvccpb.KeyValue) []*KeyValue {
 	return kvSlice
 }
 
-
-func deleteKeyFromSlice (ctx *common.EcoContext, kvs []*KeyValue, key string) []*KeyValue {
-	ctx.Logger.Signature("deleteKeyFromSlice", len(kvs), key)	
+func deleteKeyFromSlice(ctx *common.EcoContext, kvs []*KeyValue, key string) []*KeyValue {
+	ctx.Logger.Signature("deleteKeyFromSlice", len(kvs), key)
 	ctx.Inc()
 	defer ctx.Dec()
 
 	ctx.Logger.Infof("Before: len(kvs)=%d", len(kvs))
 	ctx.Logger.Commentf("Getting index of %s ...", key)
-	iKv := slices.IndexFunc(kvs, func (kv *KeyValue) bool { return key == string(kv.Key)  })
+	iKv := slices.IndexFunc(kvs, func(kv *KeyValue) bool { return key == string(kv.Key) })
 	ctx.Logger.Infof("iKv=%d", iKv)
 	if iKv != -1 {
 		ctx.Logger.Comment("Deleting element from slice")
@@ -45,8 +44,7 @@ func deleteKeyFromSlice (ctx *common.EcoContext, kvs []*KeyValue, key string) []
 	return kvs
 }
 
-
-func newKv (k string, v string) *KeyValue{
+func newKv(k string, v string) *KeyValue {
 	kv := new(KeyValue)
 	kv.Key = KeyString(k)
 	kv.Value = []byte(v)
@@ -54,15 +52,13 @@ func newKv (k string, v string) *KeyValue{
 	return kv
 }
 
-
-func newKvFromEtcd (etcdKv *mvccpb.KeyValue) *KeyValue{
+func newKvFromEtcd(etcdKv *mvccpb.KeyValue) *KeyValue {
 	kv := new(KeyValue)
 	kv.Key = KeyString(string(etcdKv.Key))
 	kv.Value = etcdKv.Value
 
 	return kv
 }
-
 
 /*
 findKv() is a little tricky, because it will find logical keys that are
@@ -82,7 +78,7 @@ Keys that are missing entirely get a KV of nil
 @note 'implied key' might be more clear than 'logical key'. Or ... it might not.
 */
 
-func findKv (key string, kvs []*KeyValue) *KeyValue {
+func findKv(key string, kvs []*KeyValue) *KeyValue {
 	var kv *KeyValue
 	var isLogical bool = false
 	var isPhysical bool = false
@@ -108,7 +104,6 @@ func findKv (key string, kvs []*KeyValue) *KeyValue {
 	if isLogical {
 		return &KeyValue{Key: KeyString(key), Value: nil}
 	}
-	
+
 	return nil
 }
-

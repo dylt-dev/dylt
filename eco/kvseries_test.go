@@ -21,7 +21,6 @@ func TestKvSeriesAdd(t *testing.T) {
 	require.Equal(t, 3, kvSeries.Len())
 }
 
-
 func TestKvSeriesNew1(t *testing.T) {
 	etcdKvs := []*mvccpb.KeyValue{
 		{Key: []byte("/test/scalar/string"), Value: []byte("meat")},
@@ -38,20 +37,17 @@ func TestKvSeriesIsOwner1(t *testing.T) {
 	require.True(t, kvSeries.IsOwner("/foo/bar"))
 }
 
-
 func TestKvSeriesIsOwner2(t *testing.T) {
 	rootKey := KeyString("/foo")
 	kvSeries := KvSeries{rootKey, []KeyValue{}}
 	require.True(t, kvSeries.IsOwner("/foo/bar/bum"))
 }
 
-
 func TestKvSeriesIsOwner3(t *testing.T) {
 	rootKey := KeyString("/foo")
 	kvSeries := KvSeries{rootKey, []KeyValue{}}
 	require.False(t, kvSeries.IsOwner("/bar"))
 }
-
 
 func TestKvSeriesMaxIndex(t *testing.T) {
 	expectedData := int(99)

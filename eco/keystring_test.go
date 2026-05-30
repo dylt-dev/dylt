@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestChildName1(t *testing.T) {
 	expectedData := "bum"
 	keyString := KeyString("/foo/bar/bum")
@@ -25,7 +24,6 @@ func TestChildName2(t *testing.T) {
 	require.Equal(t, expectedData, data)
 }
 
-
 func TestCutPrefix3(t *testing.T) {
 	expectedData := "/1313"
 	prefix := KeyString("/prefix")
@@ -35,7 +33,6 @@ func TestCutPrefix3(t *testing.T) {
 	require.Equal(t, expectedData, string(s))
 }
 
-
 func TestIndex(t *testing.T) {
 	expectedData := int(13)
 	keyString := KeyString("/foo/bar/13")
@@ -44,14 +41,13 @@ func TestIndex(t *testing.T) {
 	require.Equal(t, expectedData, index)
 }
 
-func TestIndexBad (t *testing.T) {
+func TestIndexBad(t *testing.T) {
 	expectedData := int(2)
 	keyString := KeyString("/test/boolSlice/2")
 	index, is := keyString.Index()
 	require.True(t, is)
 	require.Equal(t, expectedData, index)
 }
-
 
 func TestIndexEmpty(t *testing.T) {
 	expectedData := int(0)
@@ -85,13 +81,11 @@ func TestIndexNoSlash(t *testing.T) {
 	require.Equal(t, expectedData, index)
 }
 
-
 func TestIsParent1(t *testing.T) {
 	ksParent := KeyString("/foo")
 	ks := KeyString("/foo/bar")
 	require.True(t, ksParent.IsParent(ks))
 }
-
 
 func TestIsParent2(t *testing.T) {
 	ksParent := KeyString("/foo")
@@ -99,13 +93,11 @@ func TestIsParent2(t *testing.T) {
 	require.True(t, ksParent.IsParent(ks))
 }
 
-
 func TestIsParent3(t *testing.T) {
 	ksParent := KeyString("/foo")
 	ks := KeyString("/bar")
 	require.False(t, ksParent.IsParent(ks))
 }
-
 
 func TestIsParent4(t *testing.T) {
 	ksParent := KeyString("/foo")
@@ -113,13 +105,11 @@ func TestIsParent4(t *testing.T) {
 	require.False(t, ksParent.IsParent(ks))
 }
 
-
 func TestIsParent5(t *testing.T) {
 	ksParent := KeyString("/foo/")
 	ks := KeyString("/foo")
 	require.False(t, ksParent.IsParent(ks))
 }
-
 
 func TestIsParent6(t *testing.T) {
 	ksParent := KeyString("/foo")
@@ -127,13 +117,11 @@ func TestIsParent6(t *testing.T) {
 	require.False(t, ksParent.IsParent(ks))
 }
 
-
 func TestIsParent7(t *testing.T) {
 	ksParent := KeyString("/foo/")
 	ks := KeyString("/foo/")
 	require.False(t, ksParent.IsParent(ks))
 }
-
 
 func TestKeyStringChild1(t *testing.T) {
 	expectedChild := KeyString("/foo")
@@ -144,7 +132,6 @@ func TestKeyStringChild1(t *testing.T) {
 	require.Equal(t, expectedChild, ksChild)
 }
 
-
 func TestKeyStringChild2(t *testing.T) {
 	expectedChild := KeyString("/foo/bar")
 	ksParent := KeyString("/foo/bar/bum")
@@ -153,7 +140,6 @@ func TestKeyStringChild2(t *testing.T) {
 	require.True(t, is)
 	require.Equal(t, expectedChild, ksChild)
 }
-
 
 func TestKeyStringChild3(t *testing.T) {
 	expectedChild := KeyString("/foo/bar/bum")
@@ -164,7 +150,6 @@ func TestKeyStringChild3(t *testing.T) {
 	require.Equal(t, expectedChild, ksChild)
 }
 
-
 func TestKeyStringChild4(t *testing.T) {
 	expectedChild := KeyString("")
 	ksParent := KeyString("/foo/bar/bum")
@@ -174,20 +159,19 @@ func TestKeyStringChild4(t *testing.T) {
 	require.Equal(t, expectedChild, ksChild)
 }
 
-func TestKeyStringIsLeaf1 (t *testing.T) {
+func TestKeyStringIsLeaf1(t *testing.T) {
 	var ks KeyString = "/foo"
 	is := ks.IsLeaf()
 	require.True(t, is)
 }
 
-func TestKeyStringIsLeaf2 (t *testing.T) {
+func TestKeyStringIsLeaf2(t *testing.T) {
 	var ks KeyString = "/foo/bar"
 	is := ks.IsLeaf()
 	require.False(t, is)
 }
 
-
-func TestKeyStringIsLeaf3 (t *testing.T) {
+func TestKeyStringIsLeaf3(t *testing.T) {
 	var ks KeyString = ""
 	is := ks.IsLeaf()
 	require.False(t, is)
@@ -231,14 +215,14 @@ func TestKeyStringTrimHead2(t *testing.T) {
 	var expected string = ""
 	var ks KeyString = "/foo"
 	ks2 := ks.TrimHead()
-	require.Equal(t, expected, string(ks2))		
+	require.Equal(t, expected, string(ks2))
 }
 
 func TestKeyStringTrimHead3(t *testing.T) {
 	var expected string = ""
 	var ks KeyString = ""
 	ks2 := ks.TrimHead()
-	require.Equal(t, expected, string(ks2))		
+	require.Equal(t, expected, string(ks2))
 }
 
 func TestSegments1(t *testing.T) {
