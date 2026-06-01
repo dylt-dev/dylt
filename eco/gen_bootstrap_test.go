@@ -5,12 +5,10 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
@@ -51,23 +49,28 @@ func TestGenBootstrap(t *testing.T) {
 	envGennerTestNamePrefix, is := os.LookupEnv("ECO_GENNER_TESTNAME_PREFIX")
 	require.True(t, is)
 
-	r := rand.NewSource(time.Now().UTC().UnixNano())
-
 	// Generate tests
 	t.Logf("Generate %d test(s) of depth=%d", nTests, depth)
 	for i := range nTests {
+		// gen declatation
 		bbDecl := bytes.Buffer{}
-		common.WriteDeclaration(ctx, depth, r, &bbDecl)
+		common.WriteDeclaration(ctx, depth, &bbDecl)
 		decl := strings.TrimSpace(bbDecl.String())
+
+		// set testName
 		testName := fmt.Sprintf("%s%d", envGennerTestNamePrefix, i)
-		// 	// execute template
+
+		// 	create data for temgplate 
 		data := map[string]any{
 			"depth":      depth,
 			"testName":   testName,
 			"testNumber": i,
 			"typeDecl":   decl,
 		}
-		buf, err := content.ReadFile("content/DeepTestGenner.tmpl")
+
+		//	load template
+		tmplPath := "content/DeepTestGenner.tmpl"
+		buf, err := content.ReadFile(tmplPath)
 		require.NoError(t, err)
 		require.NotNil(t, buf)
 		tmpl, err := template.New("genTestStage1").Parse(string(buf))

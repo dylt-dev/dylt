@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"math/rand"
 	"os"
 	"reflect"
 	"testing"
 	"text/template"
-	"time"
 	"unicode"
 
 	"github.com/stretchr/testify/require"
@@ -22,11 +20,10 @@ func TestGenGenGen(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
 	depth := 10
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 
 	// generate type declaration
 	bbTypeDecl := bytes.NewBuffer([]byte{})
-	WriteDeclaration(ctx, depth, r, bbTypeDecl)
+	WriteDeclaration(ctx, depth, bbTypeDecl)
 	typeDecl := bbTypeDecl.String()
 
 	// load template
@@ -59,8 +56,7 @@ func TestGenDecodeDeepTest(t *testing.T) {
 
 	// generate scalar values
 	values := []any{}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
-	GenScalarValues(ctx, rt, r, &values)
+	GenScalarValues(ctx, rt, &values)
 
 	// generate value tree
 	bbValueTree := bytes.NewBuffer([]byte{})
@@ -118,8 +114,7 @@ func TestGenDecodeDeepTestGenned(t *testing.T) {
 
 	// generate scalar values
 	values := []any{}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
-	GenScalarValues(ctx, rt, r, &values)
+	GenScalarValues(ctx, rt, &values)
 
 	// generate value tree
 	bbValueTree := bytes.NewBuffer([]byte{})
@@ -153,65 +148,58 @@ func TestGenDecodeDeepTestGenned(t *testing.T) {
 func TestEmitTree3(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
-	type deepType map[string]struct{ Values []int }
-
-	typ := reflect.TypeFor[deepType]()
+	type typ map[string]struct{ Values []int }
+	rt := reflect.TypeFor[typ]()
 
 	values := []any{}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
-	GenScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[typ](), &values)
 	t.Log(values)
 	level := 0
-	DeepType{typ}.WriteTreeDecl(&level, values, t.Output())
+	DeepType{rt}.WriteTreeDecl(&level, values, t.Output())
 }
 
 func TestEmitTree4(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
-	type deepType map[int][]string
-
-	typ := reflect.TypeFor[deepType]()
+	type typ map[int][]string
+	rt := reflect.TypeFor[typ]()
 
 	values := []any{}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
-	GenScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
+	GenScalarValues(ctx, rt, &values)
 	t.Log(values)
 	level := 0
-	DeepType{typ}.WriteTreeDecl(&level, values, t.Output())
+	DeepType{rt}.WriteTreeDecl(&level, values, t.Output())
 }
 
 func TestEmitValueRef1(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
 	type typ map[int]string
-
-	r := rand.NewSource(time.Now().UTC().UnixNano())
+	rt := reflect.TypeFor[typ]()
 	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, rt, &values)
 	t.Log(values)
 
 	fmt.Print("x")
-	DeepType{reflect.TypeFor[typ]()}.WriteValueRef(values, t.Output())
+	DeepType{rt}.WriteValueRef(values, t.Output())
 	fmt.Println()
 }
 
 func TestEmitTree10(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
-	type deepType struct {
+	type typ struct {
 		Data []map[string]struct {
 			Slice []map[string]struct{ Val []struct{ N int } }
 		}
 	}
-
-	typ := reflect.TypeFor[deepType]()
+	rt := reflect.TypeFor[typ]()
 
 	values := []any{}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
-	GenScalarValues(ctx, reflect.TypeFor[deepType](), r, &values)
+	GenScalarValues(ctx, rt, &values)
 	t.Log(values)
 	level := 0
-	DeepType{typ}.WriteTreeDecl(&level, values, t.Output())
+	DeepType{rt}.WriteTreeDecl(&level, values, t.Output())
 }
 
 // x.Data[2]["bar"].Slice[0]["foo"].Val[3].N
@@ -223,13 +211,14 @@ func TestEmitValueRef10(t *testing.T) {
 			Slice []map[string]struct{ Val []struct{ N int } }
 		}
 	}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
+	rt := reflect.TypeFor[typ]()
+
 	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, rt, &values)
 	t.Log(values)
 
 	fmt.Print("x")
-	DeepType{reflect.TypeFor[typ]()}.WriteValueRef(values, t.Output())
+	DeepType{rt}.WriteValueRef(values, t.Output())
 	fmt.Println()
 
 }
@@ -288,29 +277,26 @@ func TestGetDeclFromType10(t *testing.T) {
 
 func TestGenDeclaration1(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 
 	for range 10 {
-		WriteDeclaration(ctx, 1, r, t.Output())
+		WriteDeclaration(ctx, 1, t.Output())
 		t.Output().Write([]byte("\n"))
 	}
 }
 
 func TestGenDeclaration2(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 
 	for range 10 {
-		WriteDeclaration(ctx, 2, r, t.Output())
+		WriteDeclaration(ctx, 2, t.Output())
 		t.Output().Write([]byte("\n"))
 	}
 }
 
 func TestGenDeclaration100(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 
-	WriteDeclaration(ctx, 100, r, t.Output())
+	WriteDeclaration(ctx, 100, t.Output())
 	t.Output().Write([]byte("\n"))
 }
 
@@ -324,11 +310,10 @@ func TestGenMapScalars(t *testing.T) {
 		new(map[string]struct{}),
 	}
 
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for _, p := range types {
 		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		GenScalarValues(ctx, typ, r, &values)
+		GenScalarValues(ctx, typ, &values)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -342,7 +327,7 @@ func TestGetRandomFlavor(t *testing.T) {
 		Struct: 0,
 	}
 	for range 10000 {
-		flavorCount[getRandFlavor(ctx)]++
+		flavorCount[genRandFlavor(ctx)]++
 	}
 
 	t.Log(flavorCount)
@@ -357,7 +342,7 @@ func TestGetRandomScalarKind(t *testing.T) {
 		reflect.String: 0,
 	}
 	for range 10000 {
-		kindCount[getRandScalar(ctx)]++
+		kindCount[genRandScalar(ctx)]++
 	}
 
 	t.Log(kindCount)
@@ -379,11 +364,10 @@ func TestGenScalars1(t *testing.T) {
 		new(map[bool]string),
 	}
 
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for _, p := range types {
 		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		GenScalarValues(ctx, typ, r, &values)
+		GenScalarValues(ctx, typ, &values)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -404,11 +388,10 @@ func TestGenScalars2(t *testing.T) {
 		new(struct{ Field map[int]bool }),
 	}
 
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for _, p := range types {
 		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		GenScalarValues(ctx, typ, r, &values)
+		GenScalarValues(ctx, typ, &values)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -424,15 +407,13 @@ func TestGenScalars10(t *testing.T) {
 	}
 
 	values := []any{}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	typ := reflect.TypeFor[deepType]()
-	GenScalarValues(ctx, typ, r, &values)
+	GenScalarValues(ctx, typ, &values)
 	t.Logf("%s => %v", typ, values)
 }
 
 func TestGenScalars100(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 
 	type deepType struct {
 		Nemo struct {
@@ -521,16 +502,15 @@ func TestGenScalars100(t *testing.T) {
 	}
 	values := []any{}
 	typ := reflect.TypeFor[deepType]()
-	GenScalarValues(ctx, typ, r, &values)
+	GenScalarValues(ctx, typ, &values)
 	t.Logf("%s => %v", typ, values)
 }
 
 func TestGenMapKeyString(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for range 1000 {
-		mapKey := genMapKeyString(ctx, r)
+		mapKey := genMapKeyString(ctx)
 		require.NotNil(t, mapKey)
 		require.True(t, unicode.IsLower(rune(mapKey[0])))
 	}
@@ -539,9 +519,8 @@ func TestGenMapKeyString(t *testing.T) {
 func TestGenStructFieldName(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	for range 1000 {
-		fieldName := genStructFieldName(ctx, r)
+		fieldName := genStructFieldName(ctx)
 		require.NotNil(t, fieldName)
 		require.True(t, unicode.IsUpper(rune(fieldName[0])))
 	}
@@ -571,9 +550,10 @@ func TestGenTest10(t *testing.T) {
 			Slice []map[string]struct{ Val []struct{ N int } }
 		}
 	}
-	r := rand.NewSource(time.Now().UTC().UnixNano())
+	rt := reflect.TypeFor[typ]()
+
 	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, rt, &values)
 	t.Log(values)
 
 	// emit tree
@@ -588,7 +568,6 @@ func TestGenTest10(t *testing.T) {
 
 func TestGenTest100(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 
 	type typ struct {
 		Nemo struct {
@@ -675,8 +654,10 @@ func TestGenTest100(t *testing.T) {
 			}
 		}
 	}
+
+	rt := reflect.TypeFor[typ]()
 	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, rt, &values)
 	t.Log(values)
 
 	// emit tree
@@ -695,9 +676,8 @@ func TestMapTypeEmitValueRef1a(t *testing.T) {
 
 	type typ map[bool]int
 	// mapType := NewDeepType(reflect.TypeFor[m]())
-	r := rand.NewSource(time.Now().UTC().UnixNano())
 	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), r, &values)
+	GenScalarValues(ctx, reflect.TypeFor[typ](), &values)
 	t.Log(values)
 
 	mapType := NewDeepType(reflect.TypeFor[typ]())

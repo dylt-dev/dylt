@@ -23,7 +23,7 @@ func TestWriteDeclaration(t *testing.T) {
 	require.NoError(t, err)
 
 	bbDecl := bytes.Buffer{}
-	WriteDeclaration(ctx, int(depth), nil, &bbDecl)
+	WriteDeclaration(ctx, int(depth), &bbDecl)
 	decl := bbDecl.String()
 	t.Output().Write([]byte(decl))
 }
@@ -41,7 +41,7 @@ func TestWriteScalarValues(t *testing.T) {
 	require.NoError(t, err)
 
 	bbDecl := bytes.Buffer{}
-	WriteDeclaration(ctx, int(depth), nil, &bbDecl)
+	WriteDeclaration(ctx, int(depth), &bbDecl)
 	decl := bbDecl.String()
 	t.Output().Write([]byte(decl))
 }
