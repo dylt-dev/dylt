@@ -7,7 +7,7 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
-func TestKvSeriesAdd(t *testing.T) {
+func TestKvSeriesAdd1(t *testing.T) {
 	kvSeries := KvSeries{"/foo", []KeyValue{}}
 	var is bool
 	is = kvSeries.Add(KeyValue{"/foo/bar1", []byte{}})
@@ -19,6 +19,14 @@ func TestKvSeriesAdd(t *testing.T) {
 	is = kvSeries.Add(KeyValue{"XXX", []byte{}})
 	require.False(t, is)
 	require.Equal(t, 3, kvSeries.Len())
+}
+
+func TestKvSeriesAdd2(t *testing.T) {
+	kvSeries := KvSeries{"/foo/", []KeyValue{}}
+	var is bool
+	is = kvSeries.Add(KeyValue{"/foo", []byte("")})
+	require.True(t, is)
+	require.Equal(t, 1, kvSeries.Len())
 }
 
 func TestKvSeriesNew1(t *testing.T) {

@@ -41,7 +41,7 @@ func NewValueTreeFromKvSeries(ctx *common.EcoContext, kvSeries *KvSeries) (*Valu
 	for _, kv := range kvSeries.Kvs {
 		key, is := KeyString(kv.Key).CutPrefix(kvSeries.RootKey)
 		if is {
-			tree.Add(ctx, key, kv.Value)
+			tree.Add(ctx, key.WithoutEndSlash(), kv.Value)
 		}
 	}
 

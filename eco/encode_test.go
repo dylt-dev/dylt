@@ -2,19 +2,21 @@ package eco
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
 
+	"github.com/dylt-dev/dylt/common"
 	"github.com/stretchr/testify/require"
 	etcd "go.etcd.io/etcd/client/v3"
 )
 
-
-func TestEncode1 (t *testing.T) {
+func TestEncode1(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
 	type typ string
 	x := typ("foo")
-	
+
 	key := "/test/scalars/scalar1"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
 	txn := cli.Txn(ctx)
@@ -31,13 +33,12 @@ func TestEncode1 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode2 (t *testing.T) {
+func TestEncode2(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
 	type typ int
 	x := typ(13)
-	
+
 	key := "/test/scalars/scalar2"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
 	txn := cli.Txn(ctx)
@@ -54,13 +55,12 @@ func TestEncode2 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode3 (t *testing.T) {
+func TestEncode3(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
 	type typ bool
 	x := typ(true)
-	
+
 	key := "/test/scalars/scalar3"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
 	txn := cli.Txn(ctx)
@@ -77,12 +77,11 @@ func TestEncode3 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode4 (t *testing.T) {
+func TestEncode4(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
 	type typ map[string]int
-	x := typ {
+	x := typ{
 		"foo": 13,
 		"bar": 169,
 		"bum": 1997,
@@ -104,12 +103,11 @@ func TestEncode4 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode5 (t *testing.T) {
+func TestEncode5(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
 	type typ []string
-	x := typ { "foo", "bar", "bum" }
+	x := typ{"foo", "bar", "bum"}
 
 	key := "/test/slices/slice1"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
@@ -127,12 +125,11 @@ func TestEncode5 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode6 (t *testing.T) {
+func TestEncode6(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
-	type typ struct{Val int}
-	x := typ { Val: 13 }
+	type typ struct{ Val int }
+	x := typ{Val: 13}
 
 	key := "/test/structs/struct1"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
@@ -150,12 +147,11 @@ func TestEncode6 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode7 (t *testing.T) {
+func TestEncode7(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
-	type typ struct{Vals []int}
-	x := typ { Vals: []int{13, 169, 1997}}
+	type typ struct{ Vals []int }
+	x := typ{Vals: []int{13, 169, 1997}}
 
 	key := "/test/structs/struct2"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
@@ -173,12 +169,11 @@ func TestEncode7 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
-
-func TestEncode8 (t *testing.T) {
+func TestEncode8(t *testing.T) {
 	ctx, cli := initAndTest(t)
 
-	type typ struct{Vals []string}
-	x := typ { Vals: []string{"foo", "bar", "bum"}}
+	type typ struct{ Vals []string }
+	x := typ{Vals: []string{"foo", "bar", "bum"}}
 
 	key := "/test/structs/struct3"
 	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
@@ -196,6 +191,37 @@ func TestEncode8 (t *testing.T) {
 	require.Equal(t, x, y)
 }
 
+func TestEncode10(t *testing.T) {
+	ctx := common.NewEcoContext(os.Stdout)
+	
+	type typ [][]struct {
+		Tempora struct {
+			Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
+		}
+	}
+	
+	x0 := "meat"
+	x1 := []string{x0}
+	x2 := map[bool][]string{true: x1}
+	x3 := []map[bool][]string{x2}
+	x4 := map[int][]map[bool][]string{13: x3}
+	x5 := struct{Dolorem map[int][]map[bool][]string}{Dolorem: x4}
+	x6 := map[string]struct{Dolorem map[int][]map[bool][]string}{"foo": x5}
+	x7 := struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}{Eum: x6}
+	x8 := struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{Tempora: x7}
+	x9 := []struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{x8}
+	x10 := [][]struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{x9}
+	var x typ = x10
+
+	expected, err := json.Marshal(x0)
+	require.NoError(t, err)
+	kvs := encode(ctx, x)
+	require.NotNil(t, kvs)
+	require.Equal(t, 1, len(kvs))
+	require.Equal(t, KeyString("/0/0/Tempora/Eum/foo/Dolorem/13/0/true/0"), kvs[0].Key)
+	require.Equal(t, expected, kvs[0].Value)
+	fmt.Fprint(t.Output(), kvs)
+}
 
 func marshal(t *testing.T, a any) []byte {
 	var buf []byte

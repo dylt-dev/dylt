@@ -18,9 +18,10 @@ func Encode(ctx* common.EcoContext, cli *EtcdClient, a any, key string) error {
 	kvs := encode(ctx, a)
 
 	// convert to etcd Ops, translating the key along the way
+	rootKey := KeyString(key).WithEndSlash()
 	ops := make([]etcd.Op, len(kvs))
 	for i, kv := range kvs {
-		opKey := string(KeyString(key).Add(kv.Key))
+		opKey := string(rootKey.Add(kv.Key))
 		opVal := string(kv.Value)
 		op := etcd.OpPut(opKey, opVal)
 		ops[i] = op

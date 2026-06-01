@@ -47,7 +47,10 @@ func (ks KeyString) ChildName(prefix KeyString) (string, bool) {
 }
 
 func (ks KeyString) CutPrefix(prefix KeyString) (KeyString, bool) {
-	snew, is := strings.CutPrefix(string(ks), string(prefix))
+	snew, is := strings.CutPrefix(string(ks.WithEndSlash()), string(prefix.WithEndSlash()))
+	if !is {
+		return ks, false
+	}
 	return KeyString(snew), is
 }
 

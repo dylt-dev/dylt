@@ -21,7 +21,7 @@ var content embed.FS
 
 func TestGenBootstrap(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	ctx.Mute = true
+	ctx.Mute()
 
 	// Confirm ECO_GEN_TESTS is set
 	envGenTests, is := os.LookupEnv("ECO_GEN_TESTS")
@@ -57,7 +57,7 @@ func TestGenBootstrap(t *testing.T) {
 	t.Logf("Generate %d test(s) of depth=%d", nTests, depth)
 	for i := range nTests {
 		bbDecl := bytes.Buffer{}
-		common.GenDeclaration(ctx, depth, r, &bbDecl)
+		common.WriteDeclaration(ctx, depth, r, &bbDecl)
 		decl := strings.TrimSpace(bbDecl.String())
 		testName := fmt.Sprintf("%s%d", envGennerTestNamePrefix, i)
 		// 	// execute template
