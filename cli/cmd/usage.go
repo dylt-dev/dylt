@@ -20,7 +20,7 @@ var USG_Main = []string{
 }
 
 // dylt call
-var USG_Call_Desc = "Invoke daylight.sh with command and optional args"
+const USG_Call_Desc = "Invoke daylight.sh with command and optional args"
 var USG_Call_Short = createUsageShort("call", USG_Call_Desc)
 var USG_Call = fmt.Sprintf("call [--script-path scriptPath] cmd [arg ... arg] %s", USG_Call_Desc)
 var USG_Call_Full = []string{
@@ -31,7 +31,6 @@ var USG_Call_Full = []string{
 
 // dylt config
 const USG_Config_Desc = "get/set/show config values"
-
 var USG_Config_Short = createUsageShort("config", USG_Config_Desc)
 var USG_Config = []string{
 	USG_Config_Get_Short,
@@ -41,25 +40,21 @@ var USG_Config = []string{
 
 // dylt config get
 const USG_Config_Get_Desc = "get key from config"
-
 var USG_Config_Get_Short = createUsageShort("config get", USG_Config_Get_Desc)
 var USG_Config_Get = createUsage("config get key", USG_Config_Get_Desc)
 
 // dylt config set
 const USG_Config_Set_Desc = "set key to val in config"
-
 var USG_Config_Set_Short = createUsageShort("config set", USG_Config_Set_Desc)
 var USG_Config_Set = createUsage("config set key val", USG_Config_Set_Desc)
 
 // dylt config show
 const USG_Config_Show_Desc = "show current config contents"
-
 var USG_Config_Show_Short = createUsageShort("config show", USG_Config_Show_Desc)
 var USG_Config_Show = createUsage("config show", USG_Config_Show_Desc)
 
 // dylt get
 const USG_Get_Desc = "get value from etcd"
-
 var USG_Get_Short = createUsageShort("get", USG_Get_Desc)
 var USG_Get = createUsage("get key", USG_Get_Desc)
 
@@ -74,7 +69,6 @@ var USG_Host = []string{
 
 // dylt host init
 const USG_Host_Init_Desc = "prepare a host for daylight"
-
 var USG_Host_Init_Short = createUsageShort("host init", USG_Host_Init_Desc)
 var USG_Host_Init = createUsage("host init", USG_Host_Init_Desc)
 
@@ -90,13 +84,11 @@ var USG_Init = []string{
 
 // dylt list
 const USG_List_Desc = "list all keys in cluster"
-
 var USG_List_Short = createUsageShort("list", USG_List_Desc)
 var USG_List = createUsage("list", USG_List_Desc)
 
 // dylt misc
 const USG_Misc_Desc = "Miscellaneous collection of commands"
-
 var USG_Misc_Short = createUsageShort("misc", USG_Misc_Desc)
 
 // dylt misc create-two-node-cluster
@@ -111,19 +103,16 @@ var USG_Misc_TwoNode = createUsage("misc create-two-node-cluster", USG_Misc_TwoN
 
 // dylt misc gen-etcd-run-script
 const USG_Misc_GenScript_Desc = "Generate a script for running etcd"
-
 var USG_Misc_GenScript_Short = createUsageShort("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
 var USG_Misc_GenScript = createUsage("misc gen-etcd-run-script", USG_Misc_GenScript_Desc)
 
 // dylt misc lookup
 const USG_Misc_Lookup_Desc = "Do a DNS lookup of a hostname"
-
 var USG_Misc_Lookup_Short = createUsageShort("misc lookup", USG_Misc_GenScript_Desc)
 var USG_Misc_Lookup = createUsage("misc lookup hostname", USG_Misc_GenScript_Desc)
 
 // dylt status
 const USG_Status_Desc = "current dylt status"
-
 var USG_Status_Short = createUsageShort("status", USG_Status_Desc)
 var USG_Status = createUsage("status", USG_Status_Desc)
 
@@ -141,43 +130,36 @@ var USG_Vm = []string{
 
 // dylt vm add
 const USG_Vm_Add_Desc = "create a new VM"
-
 var USG_Vm_Add_Short = createUsageShort("vm add", USG_Vm_Add_Desc)
 var USG_Vm_Add = createUsage("vm add name fqdn", USG_Vm_Add_Desc)
 
 // dylt vm all
 const USG_Vm_All_Desc = "list all VMs"
-
 var USG_Vm_All_Short = createUsageShort("vm all", USG_Vm_All_Desc)
 var USG_Vm_All = createUsage("vm all", USG_Vm_All_Desc)
 
 // dylt vm del
 const USG_Vm_Del_Desc = "delete a VM"
-
 var USG_Vm_Del_Short = createUsageShort("vm del", USG_Vm_Del_Desc)
 var USG_Vm_Del = createUsage("vm del vmName", USG_Vm_Del_Desc)
 
 // dylt vm get
 const USG_Vm_Get_Desc = "get data for a VM"
-
 var USG_Vm_Get_Short = createUsageShort("vm get", USG_Vm_Get_Desc)
 var USG_Vm_Get = createUsage("vm get vmName", USG_Vm_Get_Desc)
 
 // dylt vm list
 const USG_Vm_List_Desc = "list all VMs"
-
 var USG_Vm_List_Short = createUsageShort("vm list", USG_Vm_List_Desc)
 var USG_Vm_List = createUsage("vm list", USG_List_Desc)
 
 // dylt vm set
 const USG_Vm_Set_Desc = "set values for a VM"
-
 var USG_Vm_Set_Short = createUsageShort("vm set", USG_Vm_Set_Desc)
 var USG_Vm_Set = createUsage("vm set vmName key val", USG_Vm_Set_Desc)
 
 // dylt watch
 const USG_Watch_Desc = "watch daylight resource for changes"
-
 var USG_Watch_Short = createUsageShort("watch", USG_Watch_Desc)
 var USG_Watch = []string{
 	USG_Watch_Script_Short,
@@ -186,13 +168,11 @@ var USG_Watch = []string{
 
 // dylt watch script
 const USG_Watch_Script_Desc = "watch script for changes"
-
 var USG_Watch_Script_Short = createUsageShort("watch script", USG_Watch_Script_Desc)
 var USG_Watch_Script = createUsage("watch script scriptKey targetPath", USG_Watch_Script_Desc)
 
 // dylt watch svc
 const USG_Watch_Svc_Desc = "watch service for changes"
-
 var USG_Watch_Svc_Short = createUsageShort("watch svc", USG_Watch_Svc_Desc)
 var USG_Watch_Svc = createUsage("watch svc name", USG_Watch_Svc_Desc)
 
@@ -211,12 +191,12 @@ func CreateUsageString[U UsageTextType](usageText U) string{
 	switch arg := any(usageText).(type) {
 	case string:
 		sb.WriteString("\n")
-		sb.WriteString(fmt.Sprintf("\t%s\n", arg))
+		fmt.Fprintf(&sb, "\t%s\n", arg)
 		sb.WriteString("\n")
 	case []string:
 		sb.WriteString("\n")
 		for _, line := range arg {
-			sb.WriteString(fmt.Sprintf("\t%s\n", line))
+			fmt.Fprintf(&sb, "\t%s\n", line)
 		}
 		sb.WriteString("\n")
 	}
