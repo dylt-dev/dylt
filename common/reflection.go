@@ -262,6 +262,17 @@ func GetUnderlyingStructType(ctx *EcoContext, i any) (reflect.Type, error) {
 	return typ, nil
 }
 
+func IsScalar(knd reflect.Kind) bool {
+	flavor := NewFlavor(knd)
+	return flavor == Scalar
+}
+
+
+func IsTypeScalar(ty reflect.Type) bool {
+	return IsScalar(ty.Kind())
+}
+
+
 func IsZero(rv reflect.Value) bool {
 	return rv == reflect.Zero(reflect.TypeFor[reflect.Value]())
 }

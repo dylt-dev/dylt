@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+
 func initAndTest(t *testing.T) (*common.EcoContext, *EtcdClient) {
 	common.InitLogging()
 	ctx := common.NewEcoContext(os.Stdout)

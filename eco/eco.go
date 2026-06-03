@@ -150,13 +150,14 @@ func arrayKind(ctx *common.EcoContext, ty reflect.Type) kind {
 
 	tyElem := ty.Elem()
 	ctx.Logger.Infof("Checking element type (%s) ... ", common.FullTypeName(tyElem))
-	if isTypeScalar(ty.Elem()) {
+	if common.IsTypeScalar(ty.Elem()) {
 		ctx.Logger.Infof("element type (%s) is scalar; returning SimpleArray", common.FullTypeName(tyElem))
 		return SimpleArray
 	}
 	ctx.Logger.Info("conditions were not met; returning Invalid")
 	return Invalid
 }
+
 
 func encodeMap(ctx *common.EcoContext, key string, val reflect.Value) ([]etcd.Op, error) {
 	ctx.Logger.Signature("encodeMap", key, val.Type())
@@ -675,23 +676,6 @@ func isPointerToPointer(p any) bool {
 	return true
 }
 
-func isScalar(kind reflect.Kind) bool {
-	switch kind {
-	case reflect.Bool,
-		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-		reflect.Float32, reflect.Float64,
-		reflect.String:
-		return true
-	default:
-		return false
-	}
-}
-
-func isTypeScalar(ty reflect.Type) bool {
-	return isScalar(ty.Kind())
-}
-
 // A valid pointer is any pointer that is not nil, but points
 // to an actual variable. This target variable might be a pointer,
 // which is perfectly valid, even if the targeted pointer is nil.
@@ -720,6 +704,25 @@ func isValidPointer(i any) bool {
 	return true
 }
 
+
+// @note testme
+func keyFromValues (values []any) KeyString {
+	if len(values) == 0 {
+		return ""
+	}
+
+	sb := strings.Builder{}
+	// Skip last element - the value is not part of the key
+	for i := 0; i < len(values)-1; i++ {
+		sb.WriteString("/")
+		sb.WriteString(fmt.Sprint(values[i]))
+	}
+	key := KeyString(sb.String())
+
+	return key
+}
+
+
 func mapKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	sig := common.FullTypeName(ty)
 	ctx.Logger.Infof("%s(%s)", common.Highlight("mapKind"), common.Lowlight(sig))
@@ -732,7 +735,7 @@ func mapKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	}
 
 	ctx.Logger.Infof("%-70s", common.Lowlight(fmt.Sprintf("checking key (%s) ...", common.FullTypeName(ty.Key()))))
-	if !isTypeScalar(ty.Key()) {
+	if !common.IsTypeScalar(ty.Key()) {
 		ctx.Logger.Infof("%-32s: %-32s; %s", "key", "non-scalar", common.Highlight("returning Invalid"))
 		return Invalid
 	}
@@ -743,7 +746,7 @@ func mapKind(ctx *common.EcoContext, ty reflect.Type) kind {
 	ctx.Inc()
 	kindElem := getTypeKind(ctx, tyElem)
 	ctx.Dec()
-	if isTypeScalar(tyElem) {
+	if common.IsTypeScalar(tyElem) {
 		ctx.Logger.Infof("%-16s %-16s; %s", "type", "scalar", common.Highlight("returning SimpleMap"))
 		return SimpleMap
 	}
@@ -774,7 +777,7 @@ func pointerKind(ctx *common.EcoContext, ty reflect.Type) kind {
 
 	tyElem := ty.Elem()
 	ctx.Logger.Infof("Checking pointer type (%s) ... ", common.FullTypeName(tyElem))
-	if isTypeScalar(tyElem) {
+	if common.IsTypeScalar(tyElem) {
 		ctx.Logger.Info("pointer type is scalar; returning SimplePointer")
 		return SimplePointer
 	}
@@ -833,7 +836,7 @@ func structKind(ctx *common.EcoContext, ty reflect.Type) kind {
 		ctx.Logger.Appendf("%-70s", common.Lowlight(fmt.Sprintf("checking field '%s' (%s) ...", sf.Name, common.FullTypeName(sfType))))
 		sfReflectKind := sfType.Kind()
 
-		if isTypeScalar(sfType) {
+		if common.IsTypeScalar(sfType) {
 			ctx.Logger.AppendfAndFlush(slog.LevelInfo, "%-16s %-16s; %s", sfType, "scalar", "continuing")
 			continue
 		}

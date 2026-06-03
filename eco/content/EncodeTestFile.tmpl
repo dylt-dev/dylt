@@ -1,0 +1,25 @@
+package eco
+
+
+func {{ .TestName }} (t *testing.T) {
+	ctx, cli := initAndTest(t)
+
+	type typ struct{ Vals []string }
+	x := typ{Vals: []string{"foo", "bar", "bum"}}
+
+	key := "/test/structs/struct3"
+	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
+	txn := cli.Txn(ctx)
+	_, err := txn.Then(opDelete).Commit()
+	require.NoError(t, err)
+	err = Encode(ctx, cli, x, key)
+	require.NoError(t, err)
+
+	// decode. cmon we can do this
+	var y typ
+	p := &y
+	err = Decode(ctx, cli, string(key), p)
+	require.NoError(t, err)
+	require.Equal(t, x, y)
+
+}

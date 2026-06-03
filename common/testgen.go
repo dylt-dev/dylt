@@ -1,5 +1,23 @@
 package common
 
+import (
+	"fmt"
+	"text/template"
+	"io"
+	"math/rand/v2"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
+	"testing"
+
+	"github.com/dylt-dev/dylt/faker"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
+
 /*
 	type typ [][]struct {
 		Tempora struct {
@@ -285,3 +303,602 @@ func genStructValues(ctx *EcoContext, typ reflect.Type, values *[]any) {
 	}
 }
 */
+
+func GenDeclaration(ctx *EcoContext, depth int) string {
+	ctx.Signature("genDeclaration", depth)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	flavor := genRandFlavor(ctx)
+	if depth < 1 {
+		return ""
+	}
+
+	var decl string
+	switch flavor {
+	case Map:
+		decl = genMapDeclaration(ctx, depth)
+	case Slice:
+		decl = genSliceDeclaration(ctx, depth)
+	case Struct:
+		decl = genStructDeclaration(ctx, depth)
+	default:
+		panic(fmt.Errorf("How'd I get a flavor of %s???", flavor))
+	}
+
+	return decl
+}
+
+func GenDeclarations(ctx *EcoContext, n int, depth int) []string {
+	ctx.Signature("GenDeclarations", n, depth)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	decls := make([]string, n)
+	for i := range n {
+		decls[i] = GenDeclaration(ctx, depth)
+	}
+
+	return decls
+}
+
+func GenScalarValues(ctx *EcoContext, typ reflect.Type) []any {
+	ctx.Signature("genScalarValues", typ)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	values := []any{}
+	flavor := NewDeepType(typ).Flavor()
+	switch flavor {
+	case Map:
+		genMapValues(ctx, typ, &values, 1)
+	case Slice:
+		genSliceValues(ctx, typ, &values, 1)
+	case Struct:
+		genStructValues(ctx, typ, &values)
+	default:
+		panic("inconthievalble!")
+	}
+
+	return values
+}
+
+func LoadTemplate(t *testing.T, tmplPath string) *template.Template {
+	//	load template
+	buf, err := os.ReadFile(tmplPath)
+	require.NoError(t, err)
+	require.NotNil(t, buf)
+	tmplName := filepath.Base(tmplPath)
+	tmpl, err := template.New(tmplName).Parse(string(buf))
+	return tmpl
+}
+
+func WriteDeclaration(ctx *EcoContext, n int, w io.Writer) {
+	ctx.Signature("genDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	flavor := genRandFlavor(ctx)
+	if n < 1 {
+		return
+	}
+
+	switch flavor {
+	case Map:
+		writeMapDeclaration(ctx, n, w)
+	case Slice:
+		writeSliceDeclaration(ctx, n, w)
+	case Struct:
+		writeStructDeclaration(ctx, n, w)
+	default:
+		panic(fmt.Errorf("How'd I get a flavor of %s???", flavor))
+	}
+}
+
+func genMapDeclaration(ctx *EcoContext, n int) string {
+	ctx.Signature("genMapDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n < 1 {
+		return ""
+	}
+
+	sb := strings.Builder{}
+	sb.WriteString("map[")
+	sb.WriteString(genRandScalar(ctx).String())
+	sb.WriteString("]")
+	sb.WriteString(genScalarOrRecurse(ctx, n))
+
+	return sb.String()
+}
+
+func genMapKeyString(ctx *EcoContext) string {
+	mapKey := genRandScalarValue(ctx, reflect.TypeFor[string]()).(string)
+	return strings.ToLower(mapKey)
+}
+
+func genMapKeyValue(ctx *EcoContext, typ reflect.Type) any {
+	ctx.Signature("genMapKeyValue", typ)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	var a any
+	keyType := typ.Key()
+	keyDeep := DeepType{keyType}
+	keyFlavor := keyDeep.Flavor()
+	if keyFlavor != Scalar {
+		panic("inconthievalble!")
+	}
+	if keyType.Kind() == reflect.String {
+		a = genMapKeyString(ctx)
+	} else {
+		a = genRandScalarValue(ctx, keyType)
+	}
+
+	return a
+}
+
+func genMapValues(ctx *EcoContext, typ reflect.Type, values *[]any, n int) {
+	ctx.Signature("genMapValues", typ, len(*values))
+	ctx.Inc()
+	defer ctx.Dec()
+
+	for range n {
+		// emit random key value
+		ctx.Commentf("generating %d value(s) ...", n)
+		a := genMapKeyValue(ctx, typ)
+		ctx.Infof("value=%v", a)
+		*values = append(*values, a)
+
+		// emit value if scalar, else recurse
+		if isElemScalar(typ) {
+			a := genRandScalarValue(ctx, typ.Elem())
+			*values = append(*values, a)
+		} else {
+			genScalarValues(ctx, typ.Elem(), values)
+		}
+	}
+}
+
+/*
+ */
+func GenObjCtorStmts(ctx *EcoContext, rt reflect.Type, values []any) []string {
+	ctx.Signature("GenObjCtorStmts", rt, values)
+	ctx.Inc()
+	defer ctx.Dec()
+	
+	
+	/*
+		type typ [][]struct { Tempora struct { Eum map[string]struct{ Dolorem map[int][]map[bool][]string } } }
+		type typ0 string
+		type typ1 []typ0
+		type typ2 map[bool]typ1
+		type typ3 []typ2
+		type typ4 map[int]typ3
+		type typ5 struct{Dolorem typ4}
+		type typ6 map[string]typ5
+		type typ7 struct{Eum typ6}
+		type typ8 struct{Tempora typ7}
+		type typ9 []typ8
+		type typ10 []typ9
+
+		x0 := typ0("meat")
+		x1 := typ1{x0}
+		x2 := typ2{true: x1}
+		x3 := typ3{x2}
+		x4 := typ4{13: x3}
+		x5 := typ5{Dolorem: x4}
+		x6 := typ6{"foo": x5}
+		x7 := typ7{Eum: x6}
+		x8 := typ8{Tempora: x7}
+		x9 := typ9{x8}
+		x10 := typ10{x9}
+		x := x10
+	*/
+
+	var n int = 0
+	typeStmts, assignStmts :=  genObjCtorStmts(ctx, rt, values, &n)
+
+	// add final type statement (eg `rt := reflect.TypeFor[typ3]())
+	rtStmt := fmt.Sprintf("rt := reflect.TypeFor[typ%d]()", n)
+	typeStmts = append(typeStmts, rtStmt)
+	
+	// add final assignment statement (eg `x := x3`)
+	xStmt := fmt.Sprintf("x := x%d", n)
+	assignStmts = append(assignStmts, xStmt)
+
+	var stmts []string
+	stmts = append(typeStmts, "\n")
+	stmts = append(stmts, assignStmts...)
+
+	return stmts
+}
+
+
+func genObjCtorStmts(ctx *EcoContext, rt reflect.Type, values []any, pn *int) ([]string, []string) {
+	ctx.Signature("genObjCtorStmts", rt, values, pn)
+	ctx.Inc()
+	defer ctx.Dec()
+	
+	
+	typeStmts := []string{}
+	assignStmts := []string{}
+	
+	if IsTypeScalar(rt) {
+		ctx.Comment("type is scalar")
+		typeStmt := createEncodeScalarTypeStatement(rt, *pn)
+		assignStmt := createEncodeScalarAssignStatement(values[0], *pn)
+		typeStmts = append(typeStmts, typeStmt)
+		assignStmts = append(assignStmts, assignStmt)
+	} else {
+		ctx.Comment("type is not scalar - recursing")
+		// get type of next in chain: slice element, map value, or struct field type
+		var rtNext reflect.Type
+		switch NewFlavor(rt.Kind()) {
+		case Map, Slice: rtNext = rt.Elem()
+		case Struct: rtNext = rt.Field(0).Type
+		default: panic("inconthievalble!") 
+		}
+		childTypeStmts, childAssignStmts := genObjCtorStmts(ctx, rtNext, values[1:], pn)
+		*pn++
+		typeStmts = append(childTypeStmts, typeStmts...)
+		assignStmts = append(childAssignStmts, assignStmts...)
+
+		// type stmt
+		switch NewFlavor(rt.Kind()) {
+		case Map: {
+			typeStmt := createEncodeMapTypeStatement(rt.Key(), *pn)
+			assignStmt := createEncodeMapAssignStatement(values[0], *pn)
+			typeStmts = append(typeStmts, typeStmt)
+			assignStmts = append(assignStmts, assignStmt)
+		}
+		case Slice : {
+			typeStmt := createEncodeSliceTypeStatement(*pn)
+			assignStmt := createEncodeSliceAssignStatement(*pn)
+			typeStmts = append(typeStmts, typeStmt)
+			assignStmts = append(assignStmts, assignStmt)
+		}
+		case Struct: {
+			typeStmt := createEncodeStructTypeStatement(rt.Field(0).Name, *pn)
+			assignStmt := createEncodeStructAssignStatement(values[0], *pn)
+			typeStmts = append(typeStmts, typeStmt)
+			assignStmts = append(assignStmts, assignStmt)
+		}
+		default: panic("inconthievalble!") 
+		}
+	}
+
+	return typeStmts, assignStmts
+}
+
+
+func genRandFlavor(ctx *EcoContext) Flavor {
+	ctx.Signature("getRandFlavor")
+	ctx.Inc()
+	defer ctx.Dec()
+
+	nMax := 3
+	switch rand.IntN(nMax) {
+	case 0:
+		return Map
+	case 1:
+		return Slice
+	case 2:
+		return Struct
+	default:
+		panic("inconthievable!")
+	}
+}
+
+func genRandScalar(ctx *EcoContext) reflect.Kind {
+	ctx.Signature("getRandScalar")
+	ctx.Inc()
+	defer ctx.Dec()
+
+	nMax := int(reflect.UnsafePointer)
+	for {
+		n := rand.IntN(nMax)
+		knd := reflect.Kind(n)
+		switch knd {
+		case reflect.Bool,
+			reflect.Int,
+			reflect.String:
+			return knd
+		default:
+			continue
+		}
+	}
+}
+
+func genRandScalarValue(ctx *EcoContext, typ reflect.Type) any {
+	ctx.Signature("genRandScalarValue", typ)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	switch typ.Kind() {
+	case reflect.Bool:
+		return faker.Bool()
+	case reflect.Int:
+		return faker.Int1000()
+	case reflect.String:
+		return faker.LoremWord()
+	default:
+		panic("inconthievalble!")
+	}
+}
+
+func genScalarOrRecurse(ctx *EcoContext, n int) string {
+	ctx.Signature("genScalarOrRecurse", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n == 1 {
+		return genRandScalar(ctx).String()
+	}
+
+	return GenDeclaration(ctx, n-1)
+}
+
+func genScalarValues(ctx *EcoContext, typ reflect.Type, values *[]any) {
+	ctx.Signature("genScalarValues", typ, len(*values))
+	ctx.Inc()
+	defer ctx.Dec()
+
+	flavor := NewDeepType(typ).Flavor()
+	switch flavor {
+	case Map:
+		genMapValues(ctx, typ, values, 1)
+	case Slice:
+		genSliceValues(ctx, typ, values, 1)
+	case Struct:
+		genStructValues(ctx, typ, values)
+	default:
+		panic("inconthievalble!")
+	}
+}
+
+func genSliceDeclaration(ctx *EcoContext, n int) string {
+	ctx.Signature("genSliceDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n < 1 {
+		return ""
+	}
+
+	sb := strings.Builder{}
+	sb.WriteString("[]")
+	sb.WriteString(genScalarOrRecurse(ctx, n))
+	
+	return sb.String()
+}
+
+func genSliceValues(ctx *EcoContext, typ reflect.Type, values *[]any, n int) {
+	ctx.Signature("genSliceValues", typ, len(*values))
+	ctx.Inc()
+	defer ctx.Dec()
+
+	// emit random slice index from [0, n)
+	*values = append(*values, rand.IntN(n))
+
+	// if slice type is scalar, emit scalar, else recurse
+	tyElem := typ.Elem()
+	flavorElem := NewFlavor(tyElem.Kind())
+	for range n {
+		if flavorElem == Scalar {
+			a := genRandScalarValue(ctx, tyElem)
+			*values = append(*values, a)
+		} else {
+			genScalarValues(ctx, tyElem, values)
+		}
+	}
+}
+
+func genStructFieldName(ctx *EcoContext) string {
+	fieldName := genRandScalarValue(ctx, reflect.TypeFor[string]()).(string)
+	bufSrc := []byte(fieldName)
+	bufDst := make([]byte, len(bufSrc))
+	caser := cases.Title(language.English)
+	nDst, nSrc, err := caser.Transform(bufDst, bufSrc, true)
+	if err != nil {
+		panic(err)
+	}
+	if nDst < len(bufDst) {
+		panic("nDst too small")
+	}
+	if nSrc < len(bufSrc) {
+		panic("nSrc too small")
+	}
+	fieldName = string(bufDst)
+
+	return fieldName
+}
+
+func genStructDeclaration(ctx *EcoContext, n int) string {
+	ctx.Signature("genStructDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n < 1 {
+		return ""
+	}
+
+	fieldName := genStructFieldName(ctx)
+	sb := strings.Builder{}
+	fmt.Fprintf(&sb, "struct{%s ", fieldName)
+	sb.WriteString(genScalarOrRecurse(ctx, n))
+	sb.WriteString("}")
+
+	return sb.String()
+}
+
+func genStructValues(ctx *EcoContext, typ reflect.Type, values *[]any) {
+	ctx.Signature("genStructValues", typ, len(*values))
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if typ.NumField() == 0 {
+		return
+	}
+
+	field := typ.Field(0)
+	fieldType := field.Type
+	fieldDeep := DeepType{fieldType}
+	fieldFlavor := fieldDeep.Flavor()
+
+	// emit first struct field name
+	*values = append(*values, field.Name)
+
+	// emit field value if scalar, else recurse
+	if fieldFlavor == Scalar {
+		a := genRandScalarValue(ctx, fieldType)
+		*values = append(*values, a)
+	} else {
+		genScalarValues(ctx, fieldType, values)
+	}
+}
+
+func writeMapDeclaration(ctx *EcoContext, n int, w io.Writer) {
+	ctx.Signature("writeMapDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n < 1 {
+		return
+	}
+
+	s := genMapDeclaration(ctx, n)
+	w.Write([]byte(s))
+}
+
+/*
+func writeScalarOrRecurse(ctx *EcoContext, n int, w io.Writer) {
+	ctx.Signature("writeScalarOrRecurse", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	s := genScalarOrRecurse(ctx, n)
+	w.Write([]byte(s))
+}
+*/
+
+func writeSliceDeclaration(ctx *EcoContext, n int, w io.Writer) {
+	ctx.Signature("writeSliceDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n < 1 {
+		return
+	}
+
+	s := genSliceDeclaration(ctx, n)
+	w.Write([]byte(s))
+}
+
+func writeStructDeclaration(ctx *EcoContext, n int, w io.Writer) {
+	ctx.Signature("writeStructDeclaration", n)
+	ctx.Inc()
+	defer ctx.Dec()
+
+	if n < 1 {
+		return
+	}
+
+	s := genStructDeclaration(ctx, n)
+	w.Write([]byte(s))
+}
+
+// Confirm envvars are set
+func EnvConfirmExists(t *testing.T, names ...string) {
+	missing := []string{}
+
+	for _, name := range names {
+		_, is := os.LookupEnv(name)
+		if !is {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) > 0 {
+		t.Skipf("Missing one or more require envvars (%s)", missing)
+	}
+}
+
+func GetEnvInt(t *testing.T, name string) int {
+	val, is := os.LookupEnv(name)
+	require.True(t, is)
+	n, err := strconv.Atoi(val)
+	require.NoError(t, err)
+	return n
+}
+
+func GetEnvString(t *testing.T, name string) string {
+	val, is := os.LookupEnv(name)
+	require.True(t, is)
+	return val
+}
+
+
+// Ex: x4 := typ4{13: x3}
+func createEncodeMapAssignStatement (a any, n int) string {
+	buf := Marshal(a)
+	key := string(buf)
+	stmt := fmt.Sprintf("x%d := typ%d{%s: x%d}", n, n, key, n-1)
+	return stmt
+}
+
+
+// Ex: type typ4 map[int]typ3
+
+func createEncodeMapTypeStatement (rtKey reflect.Type, n int) string {
+	stmt := fmt.Sprintf("type typ%d map[%s]typ%d", n, rtKey, n-1)
+	return stmt
+}
+
+
+// Ex: x0 := typ0("meat")
+func createEncodeScalarAssignStatement (a any, n int) string {
+	buf := Marshal(a)
+	val := string(buf)
+	stmt := fmt.Sprintf("x%d := typ%d(%s)", n, n, val)
+	return stmt
+}
+
+
+// Ex: type typ0 string
+func createEncodeScalarTypeStatement (rt reflect.Type, n int) string {
+	stmt := fmt.Sprintf("type typ%d %s", n, rt)
+	return stmt
+}
+
+
+// Ex: x3 := typ3{x2}
+func createEncodeSliceAssignStatement (n int) string {
+	stmt := fmt.Sprintf("x%d := typ%d{x%d}", n, n, n-1)
+	return stmt
+}
+
+
+// Ex: type typ3 []typ2
+func createEncodeSliceTypeStatement (n int) string {
+	stmt := fmt.Sprintf("type typ%d []typ%d", n, n-1)
+	return stmt
+}
+
+
+// Ex: x7 := typ7{Eum: x6}
+func createEncodeStructAssignStatement (a any, n int) string {
+	fieldName, is := a.(string)
+	if !is {
+		panic(fmt.Sprintf("fieldName is not a string (%v)", a))
+	}
+	stmt := fmt.Sprintf("x%d := typ%d{%s: x%d}", n, n, fieldName, n-1)
+	return stmt
+}
+
+
+// Ex: type typ7 struct{Eum typ6}
+func createEncodeStructTypeStatement (fieldName string, n int) string {
+	stmt := fmt.Sprintf("type typ%d struct{%s typ%d}", n, fieldName, n-1)
+	return stmt
+}
