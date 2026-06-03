@@ -12,7 +12,7 @@ func TestRveEncode1(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	x := "foo"
 	expectedKey := KeyString("/test/string")
-	expectedVal := marshal(t, x)
+	expectedVal := common.MarshalAndTest(t, x)
 
 	rve := NewRvEncodable(x)
 	kvs := rve.Encode(ctx, "/test/string")
@@ -27,7 +27,7 @@ func TestRveEncode2(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	x := 13
 	expectedKey := KeyString("/test/int")
-	expectedVal := marshal(t, x)
+	expectedVal := common.MarshalAndTest(t, x)
 
 	rve := NewRvEncodable(x)
 	kvs := rve.Encode(ctx, expectedKey)
@@ -42,7 +42,7 @@ func TestRveEncode3(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
 	x := false
 	expectedKey := KeyString("/test/bool")
-	expectedVal := marshal(t, x)
+	expectedVal := common.MarshalAndTest(t, x)
 
 	rve := NewRvEncodable(x)
 	kvs := rve.Encode(ctx, expectedKey)
@@ -58,7 +58,7 @@ func TestRveEncode4(t *testing.T) {
 	x := []string{"foo"}
 	rootKey := KeyString("/test/slice")
 	expectedKey := rootKey.AddSegment("0")
-	expectedVal := marshal(t, x[0])
+	expectedVal := common.MarshalAndTest(t, x[0])
 
 	rve := NewRvEncodable(x)
 	kvs := rve.Encode(ctx, rootKey)
@@ -73,7 +73,7 @@ func TestRveEncode5(t *testing.T) {
 	x := map[string]int{"foo": 13}
 	rootKey := KeyString("/test/map")
 	expectedKey := rootKey.AddSegment("foo")
-	expectedVal := marshal(t, x["foo"])
+	expectedVal := common.MarshalAndTest(t, x["foo"])
 
 	rve := NewRvEncodable(x)
 	kvs := rve.Encode(ctx, rootKey)
@@ -88,7 +88,7 @@ func TestRveEncode6(t *testing.T) {
 	x := struct{ Flag bool }{Flag: true}
 	rootKey := KeyString("/test/struct")
 	expectedKey := rootKey.AddSegment("Flag")
-	expectedVal := marshal(t, x.Flag)
+	expectedVal := common.MarshalAndTest(t, x.Flag)
 
 	rve := NewRvEncodable(x)
 	kvs := rve.Encode(ctx, rootKey)
@@ -349,4 +349,3 @@ func TestRvStructData1(t *testing.T) {
 	data := rvs.Data()
 	require.Equal(t, expected, data)
 }
-

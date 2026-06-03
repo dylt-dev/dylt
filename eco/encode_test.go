@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/dylt-dev/dylt/common"
@@ -170,47 +171,55 @@ func TestEncode7(t *testing.T) {
 }
 
 func TestEncode8(t *testing.T) {
-	ctx, cli := initAndTest(t)
-
-	type typ struct{ Vals []string }
-	x := typ{Vals: []string{"foo", "bar", "bum"}}
-
-	key := "/test/structs/struct3"
-	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
-	txn := cli.Txn(ctx)
-	_, err := txn.Then(opDelete).Commit()
-	require.NoError(t, err)
-	err = Encode(ctx, cli, x, key)
-	require.NoError(t, err)
-
-	// decode. cmon we can do this
-	var y typ
-	p := &y
-	err = Decode(ctx, cli, string(key), p)
-	require.NoError(t, err)
-	require.Equal(t, x, y)
+	/*
+	   ctx, cli := initAndTest(t)
+	   type typ struct{ Vals []string }
+	   type typ0 string
+	   type typ1 []typ0
+	   type typ2 struct{ Vals typ1 }
+	   x0 := "foo"
+	   x1 := typ1{"foo", "bar", "bum"}
+	   x2 := typ2{Vals: x1}
+	   x := x2
+	   key := "/test/structs/struct3"
+	   var y typ
+	*/
 }
 
 func TestEncode10(t *testing.T) {
 	ctx := common.NewEcoContext(os.Stdout)
-	
+
 	type typ [][]struct {
 		Tempora struct {
 			Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
 		}
 	}
-	
+
 	x0 := "meat"
 	x1 := []string{x0}
 	x2 := map[bool][]string{true: x1}
 	x3 := []map[bool][]string{x2}
 	x4 := map[int][]map[bool][]string{13: x3}
-	x5 := struct{Dolorem map[int][]map[bool][]string}{Dolorem: x4}
-	x6 := map[string]struct{Dolorem map[int][]map[bool][]string}{"foo": x5}
-	x7 := struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}{Eum: x6}
-	x8 := struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{Tempora: x7}
-	x9 := []struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{x8}
-	x10 := [][]struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{x9}
+	x5 := struct{ Dolorem map[int][]map[bool][]string }{Dolorem: x4}
+	x6 := map[string]struct{ Dolorem map[int][]map[bool][]string }{"foo": x5}
+	x7 := struct {
+		Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
+	}{Eum: x6}
+	x8 := struct {
+		Tempora struct {
+			Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
+		}
+	}{Tempora: x7}
+	x9 := []struct {
+		Tempora struct {
+			Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
+		}
+	}{x8}
+	x10 := [][]struct {
+		Tempora struct {
+			Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
+		}
+	}{x9}
 	var x typ = x10
 
 	expected, err := json.Marshal(x0)
@@ -223,19 +232,39 @@ func TestEncode10(t *testing.T) {
 	fmt.Fprint(t.Output(), kvs)
 }
 
-func marshal(t *testing.T, a any) []byte {
-	var buf []byte
+func testEncode(t *testing.T, rt reflect.Type, expected any, expectedKey KeyString, expectedVal any) {
+	ctx, cli := initAndTest(t)
 	var err error
+	// p := &y
 
-	_, is := a.(string)
-	if is {
-		// buf = []byte(s)
-		buf, err = json.Marshal(a)
-		require.NoError(t, err)
-	} else {
-		buf, err = json.Marshal(a)
-		require.NoError(t, err)
-	}
+	// test encode() - just verify KVs
+	expectedBuf := common.MarshalAndTest(t, expectedVal)
+	kvs := encode(ctx, expected)
+	require.Equal(t, 1, len(kvs))
+	require.Equal(t, expectedKey, kvs[0].Key)
+	require.Equal(t, expectedBuf, kvs[0].Value)
 
-	return buf
+	// delete existing cluster entries for test key
+	rootKey := KeyString("/test/testEncode")
+	key := rootKey.Add(KeyString(expectedKey))
+	ctx.Commentf("Deleting all subkeys of %s ...", key)
+	opDelete := etcd.OpDelete(string(key), etcd.WithPrefix())
+	txn := cli.Txn(ctx)
+	_, err = txn.Then(opDelete).Commit()
+	require.NoError(t, err)
+
+	// test Encode - actually to cluster
+	err = Encode(ctx, cli, expected, string(key))
+	require.NoError(t, err)
+// 
+	// Create a pointer to the reflected type
+	rtNew := reflect.New(rt)
+	p := rtNew.Interface()
+
+	// decode & see if we get the object we started with
+	err = Decode(ctx, cli, string(key), p)
+	require.NoError(t, err)
+	require.Equal(t, expected, rtNew.Elem().Interface())
+	
+
 }

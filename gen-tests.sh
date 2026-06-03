@@ -27,4 +27,4 @@ main ()
 	# gofmt -s -w eco
 }
 
-main
+(return 0 2>/dev/null) || main "$@"

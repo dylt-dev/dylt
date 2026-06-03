@@ -55,8 +55,7 @@ func TestGenDecodeDeepTest(t *testing.T) {
 	var n int = 0
 
 	// generate scalar values
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 
 	// generate value tree
 	bbValueTree := bytes.NewBuffer([]byte{})
@@ -113,8 +112,7 @@ func TestGenDecodeDeepTestGenned(t *testing.T) {
 	depth := 10
 
 	// generate scalar values
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 
 	// generate value tree
 	bbValueTree := bytes.NewBuffer([]byte{})
@@ -151,8 +149,7 @@ func TestEmitTree3(t *testing.T) {
 	type typ map[string]struct{ Values []int }
 	rt := reflect.TypeFor[typ]()
 
-	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), &values)
+	values := GenScalarValues(ctx, reflect.TypeFor[typ]())
 	t.Log(values)
 	level := 0
 	DeepType{rt}.WriteTreeDecl(&level, values, t.Output())
@@ -164,8 +161,7 @@ func TestEmitTree4(t *testing.T) {
 	type typ map[int][]string
 	rt := reflect.TypeFor[typ]()
 
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 	t.Log(values)
 	level := 0
 	DeepType{rt}.WriteTreeDecl(&level, values, t.Output())
@@ -176,8 +172,7 @@ func TestEmitValueRef1(t *testing.T) {
 
 	type typ map[int]string
 	rt := reflect.TypeFor[typ]()
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 	t.Log(values)
 
 	fmt.Print("x")
@@ -195,8 +190,7 @@ func TestEmitTree10(t *testing.T) {
 	}
 	rt := reflect.TypeFor[typ]()
 
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 	t.Log(values)
 	level := 0
 	DeepType{rt}.WriteTreeDecl(&level, values, t.Output())
@@ -213,8 +207,7 @@ func TestEmitValueRef10(t *testing.T) {
 	}
 	rt := reflect.TypeFor[typ]()
 
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 	t.Log(values)
 
 	fmt.Print("x")
@@ -311,9 +304,8 @@ func TestGenMapScalars(t *testing.T) {
 	}
 
 	for _, p := range types {
-		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		GenScalarValues(ctx, typ, &values)
+		values := GenScalarValues(ctx, typ)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -365,9 +357,8 @@ func TestGenScalars1(t *testing.T) {
 	}
 
 	for _, p := range types {
-		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		GenScalarValues(ctx, typ, &values)
+		values := GenScalarValues(ctx, typ)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -389,9 +380,8 @@ func TestGenScalars2(t *testing.T) {
 	}
 
 	for _, p := range types {
-		values := []any{}
 		typ := reflect.TypeOf(p).Elem()
-		GenScalarValues(ctx, typ, &values)
+		values := GenScalarValues(ctx, typ)
 		t.Logf("%s => %v", typ, values)
 	}
 }
@@ -406,9 +396,8 @@ func TestGenScalars10(t *testing.T) {
 		}
 	}
 
-	values := []any{}
 	typ := reflect.TypeFor[deepType]()
-	GenScalarValues(ctx, typ, &values)
+	values := GenScalarValues(ctx, typ)
 	t.Logf("%s => %v", typ, values)
 }
 
@@ -500,9 +489,8 @@ func TestGenScalars100(t *testing.T) {
 			}
 		}
 	}
-	values := []any{}
 	typ := reflect.TypeFor[deepType]()
-	GenScalarValues(ctx, typ, &values)
+	values := GenScalarValues(ctx, typ)
 	t.Logf("%s => %v", typ, values)
 }
 
@@ -552,8 +540,7 @@ func TestGenTest10(t *testing.T) {
 	}
 	rt := reflect.TypeFor[typ]()
 
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 	t.Log(values)
 
 	// emit tree
@@ -656,8 +643,7 @@ func TestGenTest100(t *testing.T) {
 	}
 
 	rt := reflect.TypeFor[typ]()
-	values := []any{}
-	GenScalarValues(ctx, rt, &values)
+	values := GenScalarValues(ctx, rt)
 	t.Log(values)
 
 	// emit tree
@@ -675,9 +661,8 @@ func TestMapTypeEmitValueRef1a(t *testing.T) {
 	ctx := NewEcoContext(os.Stdout)
 
 	type typ map[bool]int
-	// mapType := NewDeepType(reflect.TypeFor[m]())
-	values := []any{}
-	GenScalarValues(ctx, reflect.TypeFor[typ](), &values)
+	rt := reflect.TypeFor[typ]()	
+	values := GenScalarValues(ctx, rt) 
 	t.Log(values)
 
 	mapType := NewDeepType(reflect.TypeFor[typ]())

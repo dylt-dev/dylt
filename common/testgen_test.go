@@ -2,164 +2,174 @@ package common
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
-	"strconv"
+	"reflect"
 	"testing"
-	"text/template"
-
-	"github.com/stretchr/testify/require"
 )
 
-type EncodeGennerData struct {
-	Decl string
-	Depth int
-	Testname string
-	TestNumber int
-}
-
-// Create M tests of depth N
-func TestBootstrapEncode (t *testing.T) {
-	ctx := NewEcoContext(os.Stdout)
-	ctx.Mute()
-
-
-	envvars := []string{"ECOGEN", "ECOGEN_COUNT", "ECOGEN_DEPTH", "ECOGEN_FILENAME_PREFIX", "ECOGEN_TESTNAME_PREFIX"}
-	envConfirmExists(t, envvars...)	
-	count := getEnvInt(t, "ECOGEN_COUNT")
-	depth := getEnvInt(t, "ECOGEN_DEPTH")
-	filenamePrefix := getEnvString(t, "ECOGEN_FILENAME_PREFIX")
-	testnamePrefix := getEnvString(t, "ECOGEN_TESTNAME_PREFIX")
-
-	// declaration
-	decls := GenDeclarations(ctx, count, depth)
-
-	// for 0 to Count
-	for i, decl := range decls { 
-	// template data
-		testNumber := i+1
-		testname := fmt.Sprintf("%s%d_%d", testnamePrefix, depth, testNumber)
-		data := EncodeGennerData{
-			Depth: depth,
-			Decl: decl,
-			Testname: testname,
-			TestNumber: testNumber,
-		}
-		genEncodeGenner(t, data, i, count, filenamePrefix)
-	}
-}
-
-
 /*
-	type typ [][]struct {
-		Tempora struct {
-			Eum map[string]struct{ Dolorem map[int][]map[bool][]string }
-		}
-	}
-	
-	x0 := "meat"
-	x1 := []string{x0}
-	x2 := map[bool][]string{true: x1}
-	x3 := []map[bool][]string{x2}
-	x4 := map[int][]map[bool][]string{13: x3}
-	x5 := struct{Dolorem map[int][]map[bool][]string}{Dolorem: x4}
-	x6 := map[string]struct{Dolorem map[int][]map[bool][]string}{"foo": x5}
-	x7 := struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}{Eum: x6}
-	x8 := struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{Tempora: x7}
-	x9 := []struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{x8}
-	x10 := [][]struct{Tempora struct{Eum map[string]struct{Dolorem map[int][]map[bool][]string}}}{x9}
-	var x typ = x10
+type typ [][]struct { Tempora struct { Eum map[string]struct{ Dolorem map[int][]map[bool][]string } } }
+type typ0 string
+type typ1 []typ0
+type typ2 map[bool]typ1
+type typ3 []typ2
+type typ4 map[int]typ3
+type typ5 struct{Dolorem typ4}
+type typ6 map[string]typ5
+type typ7 struct{Eum typ6}
+type typ8 struct{Tempora typ7}
+type typ9 []typ8
+type typ10 []typ9
 
-	expected, err := json.Marshal(x0)
-	require.NoError(t, err)
-	kvs := encode(ctx, x)
-	require.NotNil(t, kvs)
-	require.Equal(t, 1, len(kvs))
-	require.Equal(t, KeyString("/0/0/Tempora/Eum/foo/Dolorem/13/0/true/0"), kvs[0].Key)
-	require.Equal(t, expected, kvs[0].Value)
-	fmt.Fprint(t.Output(), kvs)
+x0 := typ0("meat")
+x1 := typ1{x0}
+x2 := typ2{true: x1}
+x3 := typ3{x2}
+x4 := typ4{13: x3}
+x5 := typ5{Dolorem: x4}
+x6 := typ6{"foo": x5}
+x7 := typ7{Eum: x6}
+x8 := typ8{Tempora: x7}
+x9 := typ9{x8}
+x10 := typ10{x9}
+x := x10
+
+expected, err := json.Marshal(x0)
+require.NoError(t, err)
+kvs := encode(ctx, x)
+require.NotNil(t, kvs)
+require.Equal(t, 1, len(kvs))
+require.Equal(t, KeyString("/0/0/Tempora/Eum/foo/Dolorem/13/0/true/0"), kvs[0].Key)
+require.Equal(t, expected, kvs[0].Value)
+fmt.Fprint(t.Output(), kvs)
 */
-func TestGenEncodeTest (t *testing.T) {
+func TestGenEncodeTest(t *testing.T) {
 
 }
 
 
-// Confirm envvars are set
-func envConfirmExists (t *testing.T, names... string) {
-	missing := []string{}
-	
-	for _, name := range names {
-		_, is := os.LookupEnv(name)
-		if !is {
-			missing = append(missing, name)
-		}
+// Ex: x4 := typ4{13: x3}
+func TestCreateEncodeMapAssignStatement1 (t *testing.T) {
+	val := 13
+	n := 4
+	stmt := createEncodeMapAssignStatement(val, n)
+	t.Log(stmt)
+}
+
+// Ex: type typ4 map[int]typ3
+func TestCreateEncodeMapTypeStatement1 (t *testing.T) {
+	rtElem := reflect.TypeFor[int]()
+	n := 4
+	stmt := createEncodeMapTypeStatement(rtElem, n)
+	t.Log(stmt)
+}
+
+
+// Ex: x0 := typ0("meat")
+func TestCreateEncodeScalarAssignStatement1 (t *testing.T) {
+	value := "meat"
+	n := 0
+	stmt := createEncodeScalarAssignStatement(value, n)
+	t.Log(stmt)
+}
+
+// Ex: type typ0 string
+func TestCreateEncodeScalarTypeStatement1 (t *testing.T) {
+	rt := reflect.TypeFor[string]()
+	n := 0
+	stmt := createEncodeScalarTypeStatement(rt, n)
+	t.Log(stmt)
+}
+
+
+
+// Ex: x3 := typ3{x2}
+func TestCreateEncodeSliceAssignStatement1 (t *testing.T) {
+	n := 3
+	stmt := createEncodeSliceAssignStatement(n)
+	t.Log(stmt)
+}
+
+// Ex: type typ3 []typ2
+func TestCreateEncodeSliceTypeStatement1 (t *testing.T) {
+	n := 3
+	stmt := createEncodeSliceTypeStatement(n)
+	t.Log(stmt)
+}
+
+
+// Ex: x7 := typ7{Eum: x6}
+func TestCreateEncodeStructAssignStatement1 (t *testing.T) {
+	fieldName := "Eum"
+	n := 7
+	stmt := createEncodeStructAssignStatement(fieldName, n)
+	t.Log(stmt)
+}
+
+// Ex: type typ7 struct{Eum typ6}
+func TestCreateEncodeStructTypeStatement1 (t *testing.T) {
+	fieldName := "Eum"
+	n := 7
+	stmt := createEncodeStructTypeStatement(fieldName, n)
+	t.Log(stmt)
+}
+
+
+func TestGenDeclarations(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	decls := GenDeclarations(ctx, 10, 3)
+	for i, decl := range decls {
+		fmt.Fprintf(t.Output(), "decls[%d] = %v\n", i, decl)
 	}
-	t.Skipf("Missing one or more require envvars (%s)", missing)
 }
 
 
-func genEncodeGenner (t *testing.T, data EncodeGennerData, i int, n int, filenamePrefix string) {
-	// Create filename
-	fileNumber := (i+1)/20
-	nDigits := getNumDigits(n)
-	fmtString := fmt.Sprintf("%s%%0%dd_test.go", filenamePrefix, nDigits)
-	filename := fmt.Sprintf(fmtString, fileNumber)
+func TestGenSliceDeclaration(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
 
-	// open test file or create a new one
-	var w io.Writer
-	w, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, os.ModePerm)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			require.NoError(t, err)
-		}
-		w, err = os.Create(filename)
-		require.NoError(t, err)
-		tmplNewFile := loadTemplate(t, "content/NewEncodeTestFile.tmpl")
-		err := tmplNewFile.Execute(w, nil)
-		require.NoError(t, err)
-	}	
-	tmpl := loadTemplate(t, "content/EncodeTestGen.tmpl")
-	tmpl.Execute(w, data)
+	decl := genSliceDeclaration(ctx, 1)
+	t.Log(decl)
 }
 
 
-func getEnvInt (t *testing.T, name string) int {
-	val, is := os.LookupEnv(name)
-	require.True(t, is)
-	n, err := strconv.Atoi(val)
-	require.NoError(t, err)
-	return n
+func TestGenObjCtorStmts1(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+	type typ map[string]int
+	rt := reflect.TypeFor[typ]()
+	values := GenScalarValues(ctx, rt)
+
+	stmts := GenObjCtorStmts(ctx, rt, values)
+	for _, stmt := range stmts {
+		fmt.Fprintln(t.Output(), stmt)
+	}
 }
 
 
-func getEnvString (t *testing.T, name string) string {
-	val, is := os.LookupEnv(name)
-	require.True(t, is)
-	return val
+func TestGenObjCtorStmts2(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
+
+    type typ struct{Ipsa struct{Placeat []string}}
+	rt := reflect.TypeFor[typ]()
+	values := GenScalarValues(ctx, rt)
+
+	stmts := GenObjCtorStmts(ctx, rt, values)
+	for _, stmt := range stmts {
+		fmt.Fprintln(t.Output(), stmt)
+	}
 }
 
+func TestGenObjCtorStmts3(t *testing.T) {
+	ctx := NewEcoContext(os.Stdout)
 
-func getNumDigits (n int) int {
-    if n == 0 {
-        return 1
-    }
-    count := 0
-    for n != 0 {
-        n /= 10
-        count++
-    }
-    
-	return count
+	type typ struct{N int}
+	rt := reflect.TypeFor[typ]()
+	values := GenScalarValues(ctx, rt)
+
+	stmts := GenObjCtorStmts(ctx, rt, values)
+	for _, stmt := range stmts {
+		fmt.Fprintln(t.Output(), stmt)
+	}
 }
 
-
-func loadTemplate (t *testing.T, tmplPath string) *template.Template {
-	//	load template
-	buf, err := content.ReadFile(tmplPath)
-	require.NoError(t, err)
-	require.NotNil(t, buf)
-	tmplName := filepath.Base(tmplPath)
-	tmpl, err := template.New(tmplName).Parse(string(buf))
-	return tmpl
-}

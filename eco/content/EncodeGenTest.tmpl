@@ -1,0 +1,7 @@
+func {{ .TestName }} (t *testing.T) {
+    type typ {{ .Decl }}
+
+    testNumber := {{ .TestNumber }}
+    
+    testEncodeGen(t, reflect.TypeFor[typ](), testNumber)
+}
