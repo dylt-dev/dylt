@@ -1,4 +1,4 @@
-package cmd
+	package cmd
 
 import (
 	"github.com/dylt-dev/dylt/lib"
@@ -18,7 +18,7 @@ func NewGetCommand(cmdline Cmdline, parent Command) Command {
 		name:            name,
 		fnRun:           fnRun,
 		opts:            opts,
-		usage:           USG_Call,
+		usage:           USG_Get,
 		validator:       ArgCountValidator{nExpected: 1},
 	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
