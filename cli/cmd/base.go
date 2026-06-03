@@ -239,7 +239,6 @@ func (cmd *BaseCommand[_]) Run() error {
 	}
 
 	// execute command
-	fmt.Printf("cmd.fnRun=%p\n", cmd.fnRun)
 	if cmd.fnRun != nil {
 		return cmd.fnRun(cmd)
 	}
