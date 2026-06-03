@@ -16,7 +16,7 @@ func NewListCommand(cmdline Cmdline, parent Command) Command {
 		name: name,
 		fnRun: fnRun,
 		opts: opts,
-		usage: CreateUsageString(USG_Config_Get),
+		usage: CreateUsageString(USG_List),
 		validator: ArgCountValidator{nExpected: 0},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
