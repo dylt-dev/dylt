@@ -189,6 +189,21 @@ yesorno ()
 }
 
 
+install-build-dylt-svc ()
+{
+    local repo=https://raw.githubusercontent.com/dylt-dev/dylt/main
+    mkdir -p /opt/svc/build-dylt/bin
+    chown -R rayray:rayray /opt/svc/build-dylt
+    curl --silent --remote-name --output-dir /opt/svc/build-dylt "$repo/svc/build-dylt/build-dylt.service"
+    curl --silent --remote-name --output-dir /opt/svc/build-dylt "$repo/svc/build-dylt/build-dylt.timer"
+    curl --silent --remote-name --output-dir /opt/svc/build-dylt/bin "$repo/svc/build-dylt/bin/run.sh"
+    chmod 777 /opt/svc/build-dylt/bin/run.sh
+    systemctl enable /opt/svc/build-dylt/build-dylt.service
+    systemctl enable /opt/svc/build-dylt/build-dylt.timer
+    systemctl start build-dylt.timer
+}
+
+
 main ()
 {
     if (($# >= 1)); then
@@ -205,6 +220,7 @@ main ()
             git-install-latest-daylightsh)            git-install-latest-daylightsh "$@";;
             git-install-latest-dylt)                  git-install-latest-dylt "$@";;
             git-tag-nightly)                          git-tag-nightly "$@";;
+            install-build-dylt-svc)                   install-build-dylt-svc "$@";;
             yesorno)                                  yesorno "$@";;
             *) printf 'Unknown command: %s \n' "$cmd";;
         esac
