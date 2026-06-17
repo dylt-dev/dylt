@@ -204,12 +204,39 @@ install-build-dylt-svc ()
 }
 
 
+add-to-bashrc ()
+{
+    local bashrc="$HOME/.bashrc"
+    local funcName='sunbeam'
+    local sunbeamPath="$HOME/.local/bin/sunbeam.sh"
+
+    if grep -q "^${funcName}()" "$bashrc" 2>/dev/null; then
+        printf '`%s` function already exists in %s — nothing to do\n' "$funcName" "$bashrc"
+        return 0
+    fi
+
+    cat >> "$bashrc" << EOF
+
+# added by opencode in loyal service to master
+$funcName()
+{
+    $sunbeamPath "\$@"
+}
+EOF
+
+    printf 'Added `%s` function to %s\n' "$funcName" "$bashrc"
+    printf 'Restart your shell or run: source %s\n' "$bashrc"
+    printf 'Then type: %s --help\n' "$funcName"
+}
+
+
 main ()
 {
     if (($# >= 1)); then
         local cmd=$1
         shift
         case "$cmd" in
+            add-to-bashrc)                            add-to-bashrc "$@";;
             gen-nightly-tagname)                      gen-nightly-tagname "$@";;
             gen-nightly-timestamp)                    gen-nightly-timestamp "$@";;
             git-do-nightly-release)                   git-do-nightly-release "$@";;
