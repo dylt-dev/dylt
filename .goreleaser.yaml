@@ -16,8 +16,7 @@ before:
     - go generate ./...
 
 builds:
-  - id: primary
-    env:
+  - env:
       - CGO_ENABLED=0
     goarch:
       - amd64
@@ -30,16 +29,13 @@ builds:
     goos:
       - darwin
       - linux
-
-  - id: extended
-    env:
-      - CGO_ENABLED=0
-    goarch:
-      - amd64
-      - arm64
-      - "386"
-    goos:
       - windows
+    # skip unsupported GOOS/GOARCH combos
+    ignore:
+      - goos: darwin
+        goarch: "386"
+      - goos: darwin
+        goarch: arm
 
 archives:
   - formats: ['tar.gz']
