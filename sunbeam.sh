@@ -121,70 +121,10 @@ download-github-utils ()
 }
 
 
-#------------------------------------------------------------------------------
-#
-# gen-nightly-tagname()
-#
-# Create a tagname from a root version (eg v1.0.7) and the nightly timestamp
-# eg v1.0.7-nightly.20240522152147
-#
-gen-nightly-tagname ()
-{
-	# shellcheck disable=SC2016
-	(( $# == 1 )) || { printf 'Usage: gen-nightly-tagname $version\n' >&2; return 1; }
-	local version=$1
-
-	local ts; ts=$(gen-nightly-timestamp) || return
-	local label=$(printf '%s-nightly.%s' "$version" "$ts")
-
-	printf "$label"
-}
 
 
-#------------------------------------------------------------------------------
-#
-# gen-nightly-timestamp()
-#
-# Simple function to create a timestamp in the format used for nightly release tags
-# eg 20240522152147 (Wed May 22 15:21:47 CDT 2024)
-# More separators for the various date fields would be great, but they would break https://semver.org rules
-#
-gen-nightly-timestamp ()
-{
-	date '+%Y%m%d%H%M%S'
-}
 
 
-#------------------------------------------------------------------------------
-#
-# git-do-nightly-release()
-#
-# Tag the nightly release, push the current commit, and push the tag
-#
-git-do-nightly-release ()
-{
-	# @todo Use [[ $(git status --porcelain) == "" ]] to see if there is uncommited work. If so ask for confirmation
-	# shellcheck disable=SC2016
-	# shellcheck disable=SC2016
-	{ (( $# >= 0 )) && (( $# <= 1 )); } || { printf 'Usage: git-do-nightly-release [$version]\n' >&2; return 1; }
-	local version=${1:-''}
-
-	if [[ -z "$version" ]]; then
-		version=$(git-get-latest-release-version dylt-dev dylt) || return
-		printf '$version=%s\n' "$version"
-	fi
-	if [[ $(git status --porcelain) != "" ]]; then
-		printf '%s\n' "There are uncommitted changes"
-		if ! yesorno yn "Push nightly release anyway? "; then 
-			return 0 
-		fi
-	fi
-	local tag
-	git-tag-nightly tag "$version" || return
-# 	day ssh h0 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
-#	day ssh h1 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
-#	day ssh h2 GOBIN=/opt/bin /usr/local/go/bin/go install github.com/dylt-dev/dylt@$tag
-}
 
 
 #------------------------------------------------------------------------------
@@ -313,28 +253,6 @@ git-install-latest-dylt ()
 }	
 
 
-#------------------------------------------------------------------------------
-#
-# git-tag-nightly()
-#
-# Create the nightly tagname, and then a git tag from the name
-#
-git-tag-nightly ()
-{
-	# shellcheck disable=SC2016
-	(( $# == 2 )) || { printf 'Usage: git-tag-nightly varname $version\n' >&2; return 1; }
-	# shellcheck disable=SC2178
-	[[ $1 != tagname ]] && { local -n tagname; tagname=$1; }
-	local version=$2
-
-	tagname=$(gen-nightly-tagname $version) || return
-	git tag "$tagname"
-	git push
-	git push --tags
-	local releaseSpec="github.com/dylt-dev/dylt@$tagname"
-	go list -m "$releaseSpec"
-	echo "$tagname"
-}
 
 
 # #-------------------------------------------------------------------------------
@@ -1365,20 +1283,45 @@ git-tag-nightly ()
 
 #------------------------------------------------------------------------------
 #
-# install-build-dylt-svc ()
+# Install the nightly release service for dylt using the indexed template from
+# daylight-public/daylight.  This replaces the old per-repo service layout with
+# the shared template pattern at /opt/svc/nightly-release/<instance>/.
 #
 install-build-dylt-svc ()
 {
-    local repo=https://raw.githubusercontent.com/dylt-dev/dylt/main
-    mkdir -p /opt/svc/build-dylt/bin
-    chown -R rayray:rayray /opt/svc/build-dylt
-    curl --silent --remote-name --output-dir /opt/svc/build-dylt "$repo/svc/build-dylt/build-dylt.service"
-    curl --silent --remote-name --output-dir /opt/svc/build-dylt "$repo/svc/build-dylt/build-dylt.timer"
-    curl --silent --remote-name --output-dir /opt/svc/build-dylt/bin "$repo/svc/build-dylt/bin/run.sh"
-    chmod 777 /opt/svc/build-dylt/bin/run.sh
-    systemctl enable /opt/svc/build-dylt/build-dylt.service
-    systemctl enable /opt/svc/build-dylt/build-dylt.timer
-    systemctl start build-dylt.timer
+    local daylightBase="https://raw.githubusercontent.com/daylight-public/daylight/main"
+    local instance=dylt-dev-dylt
+    local svcDir=/opt/svc/nightly-release
+    local repoDir=$svcDir/$instance/repo
+
+    mkdir -p "$svcDir/$instance/bin"
+    chown -R rayray:rayray "$svcDir"
+
+    curl -s --remote-name --output-dir /etc/systemd/system \
+        "$daylightBase/svc/nightly-release/nightly-release@.service"
+    curl -s --remote-name --output-dir /etc/systemd/system \
+        "$daylightBase/svc/nightly-release/nightly-release@.timer"
+
+    cat > "$svcDir/$instance/bin/run.sh" <<'RUNEOF'
+#!/usr/bin/env bash
+main ()
+{
+    local svcDir=/opt/svc/nightly-release
+    cd "$svcDir/dylt-dev-dylt/repo" || exit 1
+    git pull --ff-only origin main || exit 1
+    source ./sunbeam.sh || exit 1
+    trigger-nightly-release "dylt-dev/dylt" || exit 1
+}
+main "$@"
+RUNEOF
+    chmod 755 "$svcDir/$instance/bin/run.sh"
+
+    systemctl enable "nightly-release@$instance.service"
+    systemctl enable "nightly-release@$instance.timer"
+    systemctl start "nightly-release@$instance.timer"
+
+    printf 'NOTE: Create %s/%s/env with GITHUB_PAT=... before timer fires\n' "$svcDir" "$instance"
+    printf 'NOTE: Clone the repo with: git clone git@github.com:dylt-dev/dylt.git %s\n' "$repoDir"
 }
 
 
@@ -1404,6 +1347,24 @@ safe-curl ()
         return 1
     }
     rm -f "$errfile"
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# sanitize-label()
+#
+# Sanitize a human-readable label for use in a git tag.
+# Spaces become dashes; non-alphanumeric, non-dot, non-underscore,
+# non-hyphen characters are stripped.
+#
+sanitize-label ()
+{
+    (( $# == 1 )) || { printf 'Usage: sanitize-label $label\n' >&2; return 1; }
+    local label=$1
+    label=${label// /-}
+    label=${label//[^a-zA-Z0-9._-]/}
+    printf '%s' "$label"
 }
 
 
@@ -1453,6 +1414,26 @@ source-remote-script ()
 
 #------------------------------------------------------------------------------
 #
+# trigger-nightly-release()
+#
+# Trigger a nightly-release GHA workflow for a given repo via workflow_dispatch.
+# Requires $GITHUB_PAT in the environment.
+#
+trigger-nightly-release ()
+{
+    (( $# == 1 )) || { printf 'Usage: trigger-nightly-release $owner/$repo\n' >&2; return 1; }
+    local repo=$1
+    local token=${GITHUB_PAT:?error: GITHUB_PAT not set}
+    curl --fail --silent --show-error -X POST \
+        "https://api.github.com/repos/$repo/actions/workflows/nightly-release.yml/dispatches" \
+        -H "Authorization: Bearer $token" \
+        -H "Accept: application/vnd.github.v3+json" \
+        -d '{"ref": "main"}' || return
+}
+
+
+#------------------------------------------------------------------------------
+#
 # yesorno()
 #
 # From @day-sh/app-funcs.sh
@@ -1496,16 +1477,12 @@ main ()
         shift
         case "$cmd" in
             add-to-bashrc)                            add-to-bashrc "$@";;
-            gen-nightly-tagname)                      gen-nightly-tagname "$@";;
-            gen-nightly-timestamp)                    gen-nightly-timestamp "$@";;
-            git-do-nightly-release)                   git-do-nightly-release "$@";;
             git-download-latest-daylightsh)           git-download-latest-daylightsh "$@";;
             git-get-latest-release-spec)              git-get-latest-release-spec "$@";;
             git-get-latest-release-tag)               git-get-latest-release-tag "$@";;
             git-get-latest-release-version)           git-get-latest-release-version "$@";;
             git-install-latest-daylightsh)            git-install-latest-daylightsh "$@";;
             git-install-latest-dylt)                  git-install-latest-dylt "$@";;
-            git-tag-nightly)                          git-tag-nightly "$@";;
             github-app-get-client-id)                 github-app-get-client-id "$@";;
             github-app-get-data)                      github-app-get-data "$@";;
             github-app-get-id)                        github-app-get-id "$@";;
@@ -1536,7 +1513,9 @@ main ()
             github-release-select-platform)           github-release-select-platform "$@";;
             github-test-repo)                         github-test-repo "$@";;
             github-test-repo-with-auth)               github-test-repo-with-auth "$@";;
-	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
+ 	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
+            sanitize-label)                           sanitize-label "$@";;
+            trigger-nightly-release)                  trigger-nightly-release "$@";;
             yesorno)                                  yesorno "$@";;
             *) printf 'Unknown command: %s \n' "$cmd";;
         esac

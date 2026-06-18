@@ -1,11 +1,12 @@
 [Unit]
-Description=Nightly dylt build — tag HEAD and push to trigger goreleaser
+Description=Nightly dylt build — trigger GHA nightly release workflow
 
 [Service]
 Type=oneshot
 User=rayray
-WorkingDirectory=/opt/svc/build-dylt/repo
-ExecStart=/opt/svc/build-dylt/bin/run.sh
+WorkingDirectory=/opt/svc/nightly-release/dylt-dev-dylt
+EnvironmentFile=/opt/svc/nightly-release/dylt-dev-dylt/env
+ExecStart=/opt/svc/nightly-release/dylt-dev-dylt/bin/run.sh
 
 [Install]
 WantedBy=multi-user.target
