@@ -1,0 +1,39 @@
+name: Nightly release
+
+on:
+  workflow_dispatch:
+    inputs:
+      label:
+        description: 'Optional human-readable label'
+        required: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get latest version
+        run: |
+          TAG=$(curl -L --silent "https://api.github.com/repos/dylt-dev/dylt/releases/latest" \
+            | jq -r '.tag_name')
+          echo "VERSION=${TAG%%-*}" >> "$GITHUB_ENV"
+      - name: Create nightly tag
+        run: |
+          DATE=$(date +'%Y%m%d')
+          TIMESTAMP=$(date +'%H%M%S')
+
+          LABEL="${{ inputs.label || '' }}"
+          LABEL="${LABEL// /-}"
+          LABEL="${LABEL//[^a-zA-Z0-9._-]/}"
+
+          if [ -n "$LABEL" ]; then
+            TAG="v${{ env.VERSION }}-nightly-${DATE}-${LABEL}-${TIMESTAMP}"
+          else
+            TAG="v${{ env.VERSION }}-nightly-${DATE}"
+            git tag "$TAG" 2>/dev/null || TAG="${TAG}-${TIMESTAMP}"
+          fi
+
+          git tag "$TAG"
+          git push origin "$TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.NIGHTLY_RELEASE_PAT }}
