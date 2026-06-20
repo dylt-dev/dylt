@@ -21,12 +21,53 @@ download-shr-tarball ()
 `download-shr-tarball` is the function name.
 "Download" etc is a one or two line description. In rare cases a description will be longer because the function will warrant a longer description. Do not shorten or edit existing descriptions.
 
+Functions that appear in the `main()` case statement should NOT use the `@internal` tag in their comment block — it signifies the function is a helper that lives outside the dispatch table.
+
+```
+#-------------------------------------------------------------------------------
+#
+# sb()
+#
+# @internal
+# Shorthand description of the function goes here on the next line
+#
+```
+
+The `@internal` tag sits alone on its own line between the function name and the description. This makes it trivially grepable (`grep -B3 '^# @internal$'`) while keeping the description readable and adjacent.
+
+### tools/
+
+New helper scripts go in `./tools/` by default, not the repo root. Tools follow the same conventions as sunbeam.sh — comment blocks, alphabetized functions, case dispatch, and `@internal` for helpers. Each tool script is self-contained and calls sunbeam.sh functions via case dispatch.
+
 ### pushing code changes
 
 All code changes will be done on new branches, with short names -- 2 or 3 words or terms separated by hyphens. Ask me to approve branch names. After committing and pushing a branch, create a PR for the change, where the body of the PR contains information similar or identical to the plan markdown. Create an issue and link it to the PR. Ask what the issue should be labelled - Bug, Task, or Feature.
 
+### download-dylt flags
+
+`download-dylt` uses a custom flag parser (not `github-parse-args`) for branch/release selection.
+
+| Flag | Value | Behavior |
+|---|---|---|
+| (none) | — | Branch mode, defaults to `main` |
+| `--branch` | (no value) | Branch mode, defaults to `main` |
+| `--branch <name>` | branch name | Branch mode, specific branch |
+| `--release` | (no value) | Release mode, latest release |
+| `--release <tag>` | tag name | Release mode, specific tag |
+| `--release --latest` | — | Same as `--release` with no value |
+| `--latest` alone | — | Error: requires `--release` |
+| `--token <value>` | token | GitHub API token for release mode |
+| `--branch` + `--release` | — | Error: incompatible |
+
+Rules:
+- Flags are parsed in order. The optional value after `--branch` or `--release` is consumed only if it doesn't start with `--`.
+- `--latest` must follow `--release` (either immediately or as a later flag).
+- The destination folder is the first positional argument after all flags; an optional platform string is the second positional.
+- Exactly one of branch mode or release mode must be active.
+
 ### reminders
 
+- Add download-daylight to sunbeam
 - Cleanup dylt release yamls
 - Investigate why dylt's release matrix always hits every platform
 - Explore externalizing label creation into a separate function
