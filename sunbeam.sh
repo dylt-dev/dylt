@@ -64,45 +64,173 @@ detect-platform ()
 
 #-------------------------------------------------------------------------------
 #
+# download-dylt-batch()
+#
+# Download dylt from a GitHub branch or release
+#
+download-dylt-batch ()
+{
+    local branch="" release="" latest=0
+    local -a pass=()
+    local dstFolder=""
+    local platform=""
+
+    local args=("$@")
+    local i=0
+    while (( i < $# )); do
+        case "${args[i]}" in
+            --branch)
+                if [[ -n "$release" ]]; then
+                    printf 'Error: --branch and --release are incompatible\n' >&2
+                    return 1
+                fi
+                if (( i+1 < $# )) && [[ "${args[i+1]}" != --* ]]; then
+                    branch=${args[i+1]}
+                    (( i++ ))
+                else
+                    branch=main
+                fi
+                ;;
+            --release)
+                if [[ -n "$branch" ]]; then
+                    printf 'Error: --branch and --release are incompatible\n' >&2
+                    return 1
+                fi
+                if (( i+1 < $# )) && [[ "${args[i+1]}" != --* ]]; then
+                    release=${args[i+1]}
+                    (( i++ ))
+                else
+                    release=latest
+                fi
+                ;;
+            --latest)
+                latest=1
+                ;;
+            --token)
+                if (( i+1 < $# )); then
+                    pass+=("${args[i]}" "${args[i+1]}")
+                    (( i++ ))
+                else
+                    printf 'Error: --token requires a value\n' >&2
+                    return 1
+                fi
+                ;;
+            --)
+                (( i++ ))
+                break
+                ;;
+            --*)
+                printf 'Unknown flag: %s\n' "${args[i]}" >&2
+                return 1
+                ;;
+            *)
+                if [[ -z "$dstFolder" ]]; then
+                    dstFolder=${args[i]}
+                else
+                    platform=${args[i]}
+                fi
+                ;;
+        esac
+        (( i++ ))
+    done
+
+    [[ -n "$dstFolder" ]] || { printf 'Usage: download-dylt-batch [--branch [<name>]] [--release [<tag>]] [--latest] [--token <pat>] [--] <dstFolder> [<platform>]\n' >&2; return 1; }
+    [[ -d "$dstFolder" ]] || { printf 'Non-existent folder: %s\n' "$dstFolder" >&2; return 1; }
+
+    if (( latest )) && [[ -z "$release" ]]; then
+        printf 'Error: --latest requires --release\n' >&2
+        return 1
+    fi
+    if [[ -z "$branch" && -z "$release" ]]; then
+        branch=main
+    fi
+
+    [[ -z "$platform" ]] && platform=$(detect-platform) || :
+
+    local token=""
+    local j=0
+    while (( j < ${#pass[@]} )); do
+        if [[ "${pass[j]}" == "--token" ]] && (( j+1 < ${#pass[@]} )); then
+            token=${pass[j+1]}
+            break
+        fi
+        (( j++ ))
+    done
+
+    local -a auth=()
+    [[ -n "$token" ]] && auth=(-H "Authorization: Bearer $token")
+
+    if [[ -n "$release" ]]; then
+        local tag json assetName checksumName tmpDir assetUrl checksumUrl
+
+        if [[ "$release" == "latest" ]]; then
+            tag=$(curl "${auth[@]}" --fail --location --silent \
+                "https://api.github.com/repos/dylt-dev/dylt/releases/latest" \
+                | jq -r '.tag_name') || return
+        else
+            tag=$release
+        fi
+
+        tmpDir=$(mktemp -d) || return
+
+        json=$(curl "${auth[@]}" --fail --location --silent \
+            "https://api.github.com/repos/dylt-dev/dylt/releases/tags/$tag") || {
+            rm -rf "$tmpDir"
+            return 1
+        }
+
+        assetName=$(printf '%s' "$json" | jq -r '.assets[] | select(.name | endswith(".tar.gz") and startswith("dylt_'"$platform"'")) | .name' | head -1) || :
+        if [[ -z "$assetName" ]]; then
+            printf 'No tar.gz asset found for platform %s in release %s\n' "$platform" "$tag" >&2
+            rm -rf "$tmpDir"
+            return 1
+        fi
+
+        checksumName=$(printf '%s' "$json" | jq -r '.assets[] | select(.name | endswith("checksums.txt")) | .name' | head -1) || :
+
+        assetUrl="https://github.com/dylt-dev/dylt/releases/download/$tag/$assetName"
+        curl "${auth[@]}" --fail --location --silent --output "$tmpDir/$assetName" "$assetUrl" || {
+            rm -rf "$tmpDir"
+            return 1
+        }
+
+        if [[ -n "$checksumName" ]]; then
+            checksumUrl="https://github.com/dylt-dev/dylt/releases/download/$tag/$checksumName"
+            if ! curl "${auth[@]}" --fail --location --silent --output "$tmpDir/$checksumName" "$checksumUrl"; then
+                printf 'Warning: could not download %s — skipping checksum verification\n' "$checksumName" >&2
+                checksumName=""
+            fi
+        fi
+
+        if [[ -n "$checksumName" ]] && [[ -f "$tmpDir/$checksumName" ]]; then
+            if ! (cd "$tmpDir" && grep -F "$assetName" "$checksumName" | sha256sum -c -); then
+                printf 'Checksum verification failed for %s\n' "$assetName" >&2
+                rm -rf "$tmpDir"
+                return 1
+            fi
+        fi
+
+        mv "$tmpDir/$assetName" "$dstFolder/$assetName" || {
+            rm -rf "$tmpDir"
+            return 1
+        }
+        rm -rf "$tmpDir"
+    else
+        local url="https://raw.githubusercontent.com/dylt-dev/dylt/$branch/sunbeam.sh"
+        curl --location --silent --fail --output-dir "$dstFolder" --remote-name "$url" || return
+    fi
+}
+
+
+#-------------------------------------------------------------------------------
+#
 # download-dylt()
 #
-# Download latest dylt release
+# Download dylt with optional interactive prompts
 #
 download-dylt ()
 {
-    # basic validation before loading remote functions
-    # shellcheck disable=SC2016
-    (( $# >= 1 )) || { printf 'Usage: download-dylt $dstFolder [$platform]\n' >&2; return 1; }
-    source-github-utils || return
-    # parse github args
-    local -A argmap=()
-    local nargs=0
-    github-parse-args argmap nargs "$@" || return
-    local -a flags=()
-    github-create-flags argmap flags token
-    shift "$nargs"
-    local dstFolder=$1
-    local platform=$2
-    [[ -d "$dstFolder" ]] || { echo "Non-existent folder: $dstFolder" >&2; return 1; }
-
-    if [[ -z "$platform" ]]; then
-        platform=$(detect-platform) || return
-    fi
-
-    local -a flags=()
-    [[ -n "${argmap[token]+exists}" ]] && flags+=(--token "${argmap[token]}") 
-
-    local version; version=$(github-release-get-latest-tag "${flags[@]}" dylt-dev dylt) || return
-
-    local releaseName="dylt_${platform}.tar.gz"
-    local legacyName="dylt_$(dylt-legacy-platform "$platform").tar.gz"
-    local url="https://github.com/dylt-dev/dylt/releases/download/$version/$releaseName"
-
-    if curl --fail --location --head "$url" >/dev/null 2>&1; then
-        github-release-download-latest "${flags[@]}" dylt-dev dylt "$releaseName" "$dstFolder" || return
-    else
-        github-release-download-latest "${flags[@]}" dylt-dev dylt "$legacyName" "$dstFolder" || return
-    fi
+    download-dylt-batch "$@" || return
 }
 
 
@@ -451,43 +579,15 @@ main ()
         shift
         case "$cmd" in
             add-to-bashrc)                            add-to-bashrc "$@";;
+            download-dylt)                            download-dylt "$@";;
+            download-dylt-batch)                      download-dylt-batch "$@";;
             git-download-latest-daylightsh)           git-download-latest-daylightsh "$@";;
             git-get-latest-release-spec)              git-get-latest-release-spec "$@";;
             git-get-latest-release-tag)               git-get-latest-release-tag "$@";;
             git-get-latest-release-version)           git-get-latest-release-version "$@";;
             git-install-latest-daylightsh)            git-install-latest-daylightsh "$@";;
             git-install-latest-dylt)                  git-install-latest-dylt "$@";;
-            github-app-get-client-id)                 github-app-get-client-id "$@";;
-            github-app-get-data)                      github-app-get-data "$@";;
-            github-app-get-id)                        github-app-get-id "$@";;
-            github-app-get-info)                      github-app-get-info "$@";;
-            github-create-flags)                      github-create-flags "$@";;
-            github-create-url)                        github-create-url "$@";;
-            github-create-user-access-token)          github-create-user-access-token "$@";;
-            github-curl)                              github-curl "$@";;
-            github-curl-post)                         github-curl-post "$@";;
-            github-download-latest-release)           github-download-latest-release "$@";;
-            github-get-release-data)                  github-get-release-data "$@";;
-            github-get-release-name-list)             github-get-release-name-list "$@";;
-            github-get-release-package-data)          github-get-release-package-data "$@";;
-            github-get-release-package-info)          github-get-release-package-info "$@";;
-            github-parse-args)                        github-parse-args "$@";;
-            github-release-create-url-path)           github-release-create-url-path "$@";;
-            github-release-download)                  github-release-download "$@";;
-            github-release-download-latest)           github-release-download-latest "$@";;
-            github-release-get-data)                  github-release-get-data "$@";;
-            github-release-get-latest-tag)            github-release-get-latest-tag "$@";;
-            github-release-get-package-data)          github-release-get-package-data "$@";;
-            github-release-get-package-info)          github-release-get-package-info "$@";;
-            github-release-install)                   github-release-install "$@";;
-            github-release-install-latest)            github-release-install-latest "$@";;
-            github-release-list)                      github-release-list "$@";;
-            github-release-list-platforms)            github-release-list-platforms "$@";;
-            github-release-select)                    github-release-select "$@";;
-            github-release-select-platform)           github-release-select-platform "$@";;
-            github-test-repo)                         github-test-repo "$@";;
-            github-test-repo-with-auth)               github-test-repo-with-auth "$@";;
- 	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
+	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
             sanitize-label)                           sanitize-label "$@";;
             trigger-nightly-release)                  trigger-nightly-release "$@";;
             yesorno)                                  yesorno "$@";;
