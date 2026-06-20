@@ -147,34 +147,20 @@ download-dylt-batch ()
 
     [[ -z "$platform" ]] && platform=$(detect-platform) || :
 
-    local token=""
-    local j=0
-    while (( j < ${#pass[@]} )); do
-        if [[ "${pass[j]}" == "--token" ]] && (( j+1 < ${#pass[@]} )); then
-            token=${pass[j+1]}
-            break
-        fi
-        (( j++ ))
-    done
-
-    local -a auth=()
-    [[ -n "$token" ]] && auth=(-H "Authorization: Bearer $token")
-
     if [[ -n "$release" ]]; then
-        local tag json assetName checksumName tmpDir assetUrl checksumUrl
+        source-github-utils || return
+
+        local tag json assetName checksumName tmpDir releasePath checksumPath
 
         if [[ "$release" == "latest" ]]; then
-            tag=$(curl "${auth[@]}" --fail --location --silent \
-                "https://api.github.com/repos/dylt-dev/dylt/releases/latest" \
-                | jq -r '.tag_name') || return
+            tag=$(github-release-get-latest-tag "${pass[@]}" dylt-dev dylt) || return
         else
             tag=$release
         fi
 
         tmpDir=$(mktemp -d) || return
 
-        json=$(curl "${auth[@]}" --fail --location --silent \
-            "https://api.github.com/repos/dylt-dev/dylt/releases/tags/$tag") || {
+        json=$(github-release-get-data --version "$tag" "${pass[@]}" dylt-dev dylt) || {
             rm -rf "$tmpDir"
             return 1
         }
@@ -188,21 +174,19 @@ download-dylt-batch ()
 
         checksumName=$(printf '%s' "$json" | jq -r '.assets[] | select(.name | endswith("checksums.txt")) | .name' | head -1) || :
 
-        assetUrl="https://github.com/dylt-dev/dylt/releases/download/$tag/$assetName"
-        curl "${auth[@]}" --fail --location --silent --output "$tmpDir/$assetName" "$assetUrl" || {
+        releasePath=$(github-release-download --version "$tag" "${pass[@]}" dylt-dev dylt "$assetName" "$tmpDir") || {
             rm -rf "$tmpDir"
             return 1
         }
 
         if [[ -n "$checksumName" ]]; then
-            checksumUrl="https://github.com/dylt-dev/dylt/releases/download/$tag/$checksumName"
-            if ! curl "${auth[@]}" --fail --location --silent --output "$tmpDir/$checksumName" "$checksumUrl"; then
+            checksumPath=$(github-release-download --version "$tag" "${pass[@]}" dylt-dev dylt "$checksumName" "$tmpDir") || {
                 printf 'Warning: could not download %s — skipping checksum verification\n' "$checksumName" >&2
-                checksumName=""
-            fi
+                checksumPath=""
+            }
         fi
 
-        if [[ -n "$checksumName" ]] && [[ -f "$tmpDir/$checksumName" ]]; then
+        if [[ -n "$checksumPath" ]]; then
             if ! (cd "$tmpDir" && grep -F "$assetName" "$checksumName" | sha256sum -c -); then
                 printf 'Checksum verification failed for %s\n' "$assetName" >&2
                 rm -rf "$tmpDir"
@@ -210,7 +194,7 @@ download-dylt-batch ()
             fi
         fi
 
-        mv "$tmpDir/$assetName" "$dstFolder/$assetName" || {
+        mv "$releasePath" "$dstFolder/$assetName" || {
             rm -rf "$tmpDir"
             return 1
         }
@@ -231,6 +215,157 @@ download-dylt-batch ()
 download-dylt ()
 {
     download-dylt-batch "$@" || return
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# download-daylight()
+#
+# Download daylight.sh with optional interactive prompts
+#
+download-daylight ()
+{
+    download-daylight-batch "$@" || return
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# download-daylight-batch()
+#
+# Download daylight.sh from a GitHub branch or release
+#
+download-daylight-batch ()
+{
+    local branch="" release="" latest=0
+    local -a pass=()
+    local dstFolder=""
+
+    local args=("$@")
+    local i=0
+    while (( i < $# )); do
+        case "${args[i]}" in
+            --branch)
+                if [[ -n "$release" ]]; then
+                    printf 'Error: --branch and --release are incompatible\n' >&2
+                    return 1
+                fi
+                if (( i+1 < $# )) && [[ "${args[i+1]}" != --* ]]; then
+                    branch=${args[i+1]}
+                    (( i++ ))
+                else
+                    branch=main
+                fi
+                ;;
+            --release)
+                if [[ -n "$branch" ]]; then
+                    printf 'Error: --branch and --release are incompatible\n' >&2
+                    return 1
+                fi
+                if (( i+1 < $# )) && [[ "${args[i+1]}" != --* ]]; then
+                    release=${args[i+1]}
+                    (( i++ ))
+                else
+                    release=latest
+                fi
+                ;;
+            --latest)
+                latest=1
+                ;;
+            --token)
+                if (( i+1 < $# )); then
+                    pass+=("${args[i]}" "${args[i+1]}")
+                    (( i++ ))
+                else
+                    printf 'Error: --token requires a value\n' >&2
+                    return 1
+                fi
+                ;;
+            --)
+                (( i++ ))
+                break
+                ;;
+            --*)
+                printf 'Unknown flag: %s\n' "${args[i]}" >&2
+                return 1
+                ;;
+            *)
+                if [[ -z "$dstFolder" ]]; then
+                    dstFolder=${args[i]}
+                else
+                    printf 'Unexpected argument: %s\n' "${args[i]}" >&2
+                    return 1
+                fi
+                ;;
+        esac
+        (( i++ ))
+    done
+
+    [[ -n "$dstFolder" ]] || { printf 'Usage: download-daylight-batch [--branch [<name>]] [--release [<tag>]] [--latest] [--token <pat>] [--] <dstFolder>\n' >&2; return 1; }
+    [[ -d "$dstFolder" ]] || { printf 'Non-existent folder: %s\n' "$dstFolder" >&2; return 1; }
+
+    if (( latest )) && [[ -z "$release" ]]; then
+        printf 'Error: --latest requires --release\n' >&2
+        return 1
+    fi
+    if [[ -z "$branch" && -z "$release" ]]; then
+        branch=main
+    fi
+
+    if [[ -n "$release" ]]; then
+        source-github-utils || return
+
+        local tag json assetName tmpDir releasePath checksumFile
+        local checksumName=SHA256SUMS
+
+        if [[ "$release" == "latest" ]]; then
+            tag=$(github-release-get-latest-tag "${pass[@]}" daylight-public daylight) || return
+        else
+            tag=$release
+        fi
+
+        tmpDir=$(mktemp -d) || return
+
+        json=$(github-release-get-data --version "$tag" "${pass[@]}" daylight-public daylight) || {
+            rm -rf "$tmpDir"
+            return 1
+        }
+
+        assetName=$(printf '%s' "$json" | jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .name' | head -1) || :
+        if [[ -z "$assetName" ]]; then
+            printf 'No tar.gz asset found in release %s\n' "$tag" >&2
+            rm -rf "$tmpDir"
+            return 1
+        fi
+
+        releasePath=$(github-release-download --version "$tag" "${pass[@]}" daylight-public daylight "$assetName" "$tmpDir") || {
+            rm -rf "$tmpDir"
+            return 1
+        }
+
+        checksumFile=$(github-release-download --version "$tag" "${pass[@]}" daylight-public daylight "$checksumName" "$tmpDir") || {
+            printf 'SHA256SUMS not found in release %s — cannot verify integrity\n' "$tag" >&2
+            rm -rf "$tmpDir"
+            return 1
+        }
+
+        if ! (cd "$tmpDir" && grep -F "$assetName" "$checksumName" | sha256sum -c -); then
+            printf 'Checksum verification failed for %s\n' "$assetName" >&2
+            rm -rf "$tmpDir"
+            return 1
+        fi
+
+        tar -xzf "$releasePath" -C "$dstFolder" daylight.sh || {
+            rm -rf "$tmpDir"
+            return 1
+        }
+
+        rm -rf "$tmpDir"
+    else
+        local url="https://raw.githubusercontent.com/daylight-public/daylight/$branch/daylight.sh"
+        curl --location --silent --fail --output-dir "$dstFolder" --remote-name "$url" || return
+    fi
 }
 
 
@@ -581,6 +716,8 @@ main ()
             add-to-bashrc)                            add-to-bashrc "$@";;
             download-dylt)                            download-dylt "$@";;
             download-dylt-batch)                      download-dylt-batch "$@";;
+            download-daylight)                        download-daylight "$@";;
+            download-daylight-batch)                  download-daylight-batch "$@";;
             git-download-latest-daylightsh)           git-download-latest-daylightsh "$@";;
             git-get-latest-release-spec)              git-get-latest-release-spec "$@";;
             git-get-latest-release-tag)               git-get-latest-release-tag "$@";;
