@@ -162,3 +162,7 @@ need issues, labels, or approval. Use the `update-agents-md` persistent branch:
 - Check it out from `main`, push commits to it over time
 - Open a PR against `main` when there's a batch ready (no issue link needed)
 - Self-merge, then rebase `update-agents-md` onto fresh `main`
+
+To automate the PR/merge/reset steps, run:
+`sunbeam reconcile-agents-md` (from the repo) or
+`sunbeam reconcile-agents-md --repo-dir /path/to/repo` (from anywhere).

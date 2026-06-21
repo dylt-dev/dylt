@@ -715,6 +715,113 @@ safe-curl ()
 
 #-------------------------------------------------------------------------------
 #
+# reconcile-agents-md()
+#
+# Reconcile the update-agents-md persistent branch: rebase onto default
+# branch, push, PR, merge, and reset for the next round.  Errors at any
+# step and leaves the working tree clean.
+#
+reconcile-agents-md ()
+{
+    (( $# <= 2 )) || { printf 'Usage: reconcile-agents-md [--repo-dir <path>]\n' >&2; return 1; }
+
+    local repoDir=$PWD
+
+    if [[ ${1-} == --repo-dir ]]; then
+        repoDir=$2
+        shift 2
+    fi
+
+    cd "$repoDir" || { printf 'error: cannot cd to %s\n' "$repoDir" >&2; return 1; }
+
+    # Must be a git repo
+    git rev-parse --git-dir >/dev/null 2>&1 \
+        || { printf 'error: %s is not a git repository\n' "$repoDir" >&2; return 1; }
+
+    # Must have AGENTS.md
+    [[ -f AGENTS.md ]] \
+        || { printf 'error: AGENTS.md not found in %s\n' "$repoDir" >&2; return 1; }
+
+    # Must have a clean working tree
+    git diff --quiet && git diff --cached --quiet \
+        || { printf 'error: working tree has uncommitted changes; commit or stash first\n' >&2; return 1; }
+
+    # Detect default branch from origin HEAD
+    local default_branch
+    default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null) \
+        || default_branch=$(git remote show origin 2>/dev/null | awk '/HEAD branch/{print $NF}')
+    [[ -n "$default_branch" ]] \
+        || { printf 'error: could not detect default branch from origin\n' >&2; return 1; }
+    default_branch=${default_branch#refs/remotes/origin/}
+
+    # Fetch the persistent branch (may not exist yet)
+    git fetch origin update-agents-md 2>/dev/null || true
+
+    # cd back so the caller's PWD is unchanged
+    cd - >/dev/null || true
+
+    if git show-ref --verify refs/heads/update-agents-md >/dev/null 2>&1; then
+        git checkout update-agents-md 2>/dev/null \
+            || { printf 'error: failed to checkout update-agents-md\n' >&2; return 1; }
+    else
+        git checkout -b update-agents-md "origin/$default_branch" 2>/dev/null \
+            || { printf 'error: failed to create update-agents-md from origin/%s\n' "$default_branch" >&2; return 1; }
+    fi
+
+    # Rebase onto default branch
+    if ! git rebase "$default_branch"; then
+        printf 'error: rebase conflict — resolve it, then re-run\n' >&2
+        return 1
+    fi
+
+    # Count commits on the persistent branch not on default
+    local -i ncommits
+    ncommits=$(git rev-list HEAD "^origin/$default_branch" --count 2>/dev/null) || ncommits=0
+
+    if (( ncommits == 0 )); then
+        printf 'Nothing to reconcile — branch is up to date\n'
+        git checkout "$default_branch" 2>/dev/null
+        return 0
+    fi
+
+    # Push — force-with-lease is safe because this is our branch
+    git push --force-with-lease origin update-agents-md 2>/dev/null \
+        || { printf 'error: push failed — check auth\n' >&2; git checkout "$default_branch" 2>/dev/null; return 1; }
+
+    # Build a summary from commit messages
+    local summary
+    summary=$(git log --oneline "$default_branch..HEAD" 2>/dev/null \
+              | cut -d' ' -f2- \
+              | tr '\n' '; ' \
+              | sed 's/; $//')
+
+    # Create PR and merge
+    local pr_url
+    pr_url=$(gh pr create --title "Update AGENTS.md: ${summary:-batch}" \
+             --body "Meta, batch update-agents-md" \
+             --base "$default_branch" --head update-agents-md 2>/dev/null) \
+        || { printf 'error: PR creation failed — check gh auth and GITHUB_TOKEN\n' >&2; return 1; }
+    printf 'PR: %s\n' "$pr_url"
+
+    gh pr merge --squash 2>/dev/null \
+        || { printf 'error: PR merge failed\n' >&2; return 1; }
+
+    # Reset local branch state for next round
+    git checkout "$default_branch" 2>/dev/null || { printf 'error: checkout %s failed\n' "$default_branch" >&2; return 1; }
+    git pull 2>/dev/null || true
+    git checkout update-agents-md 2>/dev/null || { printf 'error: checkout update-agents-md failed\n' >&2; return 1; }
+    git rebase "$default_branch" 2>/dev/null \
+        || { printf 'error: post-merge rebase failed\n' >&2; return 1; }
+    git push origin update-agents-md 2>/dev/null \
+        || { printf 'warning: post-merge push failed — may need manual update\n' >&2; }
+
+    git checkout "$default_branch" 2>/dev/null
+    printf 'Done\n'
+}
+
+
+#-------------------------------------------------------------------------------
+#
 # sanitize-label()
 #
 # Sanitize a human-readable label for use in a git tag.
@@ -918,6 +1025,7 @@ main ()
             git-install-latest-daylightsh)            git-install-latest-daylightsh "$@";;
             git-install-latest-dylt)                  git-install-latest-dylt "$@";;
 	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
+            reconcile-agents-md)                      reconcile-agents-md "$@";;
             sanitize-label)                           sanitize-label "$@";;
             trigger-nightly-release)                  trigger-nightly-release "$@";;
             trigger-nightly-release-batch)            trigger-nightly-release-batch "$@";;
