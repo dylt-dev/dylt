@@ -6,3 +6,5 @@ prof/
 
 
 dist/
+.config/
+tools/.config/
