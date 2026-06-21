@@ -48,8 +48,11 @@ main ()
 
     chmod 755 "$installPath" || { printf 'Failed to chmod\n' >&2; exit 1; }
 
+    # Auto-wire the sunbeam shell function into ~/.bashrc
+    source "$installPath"
+    add-to-bashrc
+
     printf '\nDone — installed to %s\n' "$installPath"
-    printf 'Next step: run  %s add-to-bashrc  to add the `sunbeam` shell function\n' "$installPath"
     printf 'Then:   source ~/.bashrc\n'
     printf 'Then:   sunbeam --help\n'
 }

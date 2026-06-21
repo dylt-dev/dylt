@@ -311,6 +311,14 @@ download-daylight ()
 
     bash "$scriptPath" gen-completion-script daylight.sh < <(bash "$scriptPath" list-bash-funcs < "$scriptPath") > "$compPath" || return
     printf 'Bash completions written to %s\n' "$compPath" >&2
+
+    # Wire the completion file into the user's shell
+    local bashrc="$HOME/.bashrc"
+    local source_line="source $compPath"
+    if ! grep -qF "$source_line" "$bashrc" 2>/dev/null; then
+        printf '%s\n' "$source_line" >> "$bashrc"
+        printf 'Added auto-source line to %s\n' "$bashrc" >&2
+    fi
 }
 
 
