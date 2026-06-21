@@ -41,6 +41,10 @@ New helper scripts go in `./tools/` by default, not the repo root. Tools follow 
 
 Test scripts follow the same conventions and are manual verification tools, not CI. Daylight repo has test scripts for shared infrastructure (`github-curl-parse-args`, `--token` flag handling) that can be referenced by dylt tests.
 
+Test scripts must be executable (`chmod +x`). Name them
+`tools/test-<branchname>.sh` where the branch name includes the issue number
+(e.g. `tools/test-138-trigger-func-changes.sh`).
+
 ### pushing code changes (issue-driven workflow)
 
 1. Propose an issue title, a short branch name (without issue number), and an issue body (can include markdown)
