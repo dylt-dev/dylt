@@ -74,6 +74,7 @@ download-dylt-batch ()
     local -a pass=()
     local dstFolder=""
     local platform=""
+    local extract_flag="" extract_dir="" extract_name=""
 
     local args=("$@")
     local i=0
@@ -115,6 +116,39 @@ download-dylt-batch ()
                     return 1
                 fi
                 ;;
+            --output-dir)
+                if (( i+1 < $# )); then
+                    pass+=("${args[i]}" "${args[i+1]}")
+                    (( i++ ))
+                else
+                    printf 'Error: --output-dir requires a value\n' >&2
+                    return 1
+                fi
+                ;;
+            --remote-name)
+                pass+=("${args[i]}")
+                ;;
+            --extract)
+                extract_flag=1
+                ;;
+            --extract-dir)
+                if (( i+1 < $# )); then
+                    extract_dir=${args[i+1]}
+                    (( i++ ))
+                else
+                    printf 'Error: --extract-dir requires a value\n' >&2
+                    return 1
+                fi
+                ;;
+            --extract-name)
+                if (( i+1 < $# )); then
+                    extract_name=${args[i+1]}
+                    (( i++ ))
+                else
+                    printf 'Error: --extract-name requires a value\n' >&2
+                    return 1
+                fi
+                ;;
             --)
                 (( i++ ))
                 break
@@ -134,7 +168,7 @@ download-dylt-batch ()
         (( i++ ))
     done
 
-    [[ -n "$dstFolder" ]] || { printf 'Usage: download-dylt-batch [--branch [<name>]] [--release [<tag>]] [--latest] [--token <pat>] [--] <dstFolder> [<platform>]\n' >&2; return 1; }
+    [[ -n "$dstFolder" ]] || { printf 'Usage: download-dylt-batch [--branch [<name>]] [--release [<tag>]] [--latest] [--token <pat>] [--output-dir <dir>] [--remote-name] [--extract] [--extract-dir <dir>] [--extract-name <name>] [--] <dstFolder> [<platform>]\n' >&2; return 1; }
     [[ -d "$dstFolder" ]] || { printf 'Non-existent folder: %s\n' "$dstFolder" >&2; return 1; }
 
     if (( latest )) && [[ -z "$release" ]]; then
@@ -146,6 +180,7 @@ download-dylt-batch ()
     fi
 
     [[ -z "$platform" ]] && platform=$(detect-platform) || :
+    [[ -z "$extract_dir" ]] && extract_dir=$dstFolder
 
     if [[ -n "$release" ]]; then
         source-github-utils || return
@@ -174,7 +209,11 @@ download-dylt-batch ()
 
         checksumName=$(printf '%s' "$json" | jq -r '.assets[] | select(.name | endswith("checksums.txt")) | .name' | head -1) || :
 
-        releasePath=$(github-release-download --version "$tag" "${pass[@]}" dylt-dev dylt "$assetName" "$tmpDir") || {
+        local release_args=(--version "$tag")
+        if [[ -n "$extract_flag" || -n "$extract_dir" || -n "$extract_name" ]]; then
+            release_args+=(--extract-dir "$extract_dir" --extract-name "${extract_name:-dylt}")
+        fi
+        releasePath=$(github-release-download "${release_args[@]}" "${pass[@]}" dylt-dev dylt "$assetName" "$tmpDir") || {
             rm -rf "$tmpDir"
             return 1
         }
@@ -194,14 +233,16 @@ download-dylt-batch ()
             fi
         fi
 
-        mv "$releasePath" "$dstFolder/$assetName" || {
+        mv "$releasePath" "$dstFolder/${extract_name:-$(basename "$releasePath")}" || {
             rm -rf "$tmpDir"
             return 1
         }
         rm -rf "$tmpDir"
     else
         local url="https://raw.githubusercontent.com/dylt-dev/dylt/$branch/sunbeam.sh"
-        curl --location --silent --fail --output-dir "$dstFolder" --remote-name "$url" || return
+        local target="$extract_dir/${extract_name:-sunbeam.sh}"
+        mkdir -p "$extract_dir"
+        curl --location --silent --fail --output "$target" "$url" || return
     fi
 }
 
@@ -284,6 +325,7 @@ download-daylight-batch ()
     local branch="" release="" latest=0
     local -a pass=()
     local dstFolder=""
+    local extract_flag="" extract_dir="" extract_name=""
 
     local args=("$@")
     local i=0
@@ -325,6 +367,39 @@ download-daylight-batch ()
                     return 1
                 fi
                 ;;
+            --output-dir)
+                if (( i+1 < $# )); then
+                    pass+=("${args[i]}" "${args[i+1]}")
+                    (( i++ ))
+                else
+                    printf 'Error: --output-dir requires a value\n' >&2
+                    return 1
+                fi
+                ;;
+            --remote-name)
+                pass+=("${args[i]}")
+                ;;
+            --extract)
+                extract_flag=1
+                ;;
+            --extract-dir)
+                if (( i+1 < $# )); then
+                    extract_dir=${args[i+1]}
+                    (( i++ ))
+                else
+                    printf 'Error: --extract-dir requires a value\n' >&2
+                    return 1
+                fi
+                ;;
+            --extract-name)
+                if (( i+1 < $# )); then
+                    extract_name=${args[i+1]}
+                    (( i++ ))
+                else
+                    printf 'Error: --extract-name requires a value\n' >&2
+                    return 1
+                fi
+                ;;
             --)
                 (( i++ ))
                 break
@@ -345,7 +420,7 @@ download-daylight-batch ()
         (( i++ ))
     done
 
-    [[ -n "$dstFolder" ]] || { printf 'Usage: download-daylight-batch [--branch [<name>]] [--release [<tag>]] [--latest] [--token <pat>] [--] <dstFolder>\n' >&2; return 1; }
+    [[ -n "$dstFolder" ]] || { printf 'Usage: download-daylight-batch [--branch [<name>]] [--release [<tag>]] [--latest] [--token <pat>] [--output-dir <dir>] [--remote-name] [--extract] [--extract-dir <dir>] [--extract-name <name>] [--] <dstFolder>\n' >&2; return 1; }
     [[ -d "$dstFolder" ]] || { printf 'Non-existent folder: %s\n' "$dstFolder" >&2; return 1; }
 
     if (( latest )) && [[ -z "$release" ]]; then
@@ -355,6 +430,8 @@ download-daylight-batch ()
     if [[ -z "$branch" && -z "$release" ]]; then
         branch=main
     fi
+
+    [[ -z "$extract_dir" ]] && extract_dir=$dstFolder
 
     if [[ -n "$release" ]]; then
         source-github-utils || return
@@ -382,7 +459,7 @@ download-daylight-batch ()
             return 1
         fi
 
-        releasePath=$(github-release-download --version "$tag" "${pass[@]}" daylight-public daylight "$assetName" "$tmpDir") || {
+        releasePath=$(github-release-download --version "$tag" "${pass[@]}" --extract-dir "$extract_dir" --extract-name "${extract_name:-daylight.sh}" daylight-public daylight "$assetName" "$tmpDir") || {
             rm -rf "$tmpDir"
             return 1
         }
@@ -399,15 +476,13 @@ download-daylight-batch ()
             return 1
         fi
 
-        tar -xzf "$releasePath" -C "$dstFolder" daylight.sh || {
-            rm -rf "$tmpDir"
-            return 1
-        }
-
+        # releasePath now points to the extracted file from github-release-download
         rm -rf "$tmpDir"
     else
         local url="https://raw.githubusercontent.com/daylight-public/daylight/$branch/daylight.sh"
-        curl --location --silent --fail --output-dir "$dstFolder" --remote-name "$url" || return
+        local target="$extract_dir/${extract_name:-daylight.sh}"
+        mkdir -p "$extract_dir"
+        curl --location --silent --fail --output "$target" "$url" || return
     fi
 }
 
