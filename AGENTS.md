@@ -78,9 +78,14 @@ Rules:
 - The destination folder is the first positional argument after all flags; an optional platform string is the second positional.
 - Exactly one of branch mode or release mode must be active.
 
+### download-daylight
+
+`download-daylight` is a wrapper around `download-daylight-batch` that adds a
+`--gen-bash-completions [<path>]` flag and an interactive prompt to generate
+bash completions, delegating to the downloaded `daylight.sh gen-completion-script`.
+
 ### reminders
 
-- Add download-daylight to sunbeam
 - Cleanup dylt release yamls
 - Investigate why dylt's release matrix always hits every platform
 - Explore externalizing label creation into a separate function

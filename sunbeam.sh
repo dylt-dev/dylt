@@ -226,7 +226,50 @@ download-dylt ()
 #
 download-daylight ()
 {
-    download-daylight-batch "$@" || return
+    local gen_completions=""
+    local completions_path=""
+    local -a pass_args=()
+    local args=("$@")
+
+    local i=0
+    while (( i < $# )); do
+        case "${args[i]}" in
+            --gen-bash-completions)
+                gen_completions=1
+                if (( i+1 < $# )) && [[ "${args[i+1]}" != --* ]]; then
+                    completions_path=${args[i+1]}
+                    (( i++ ))
+                fi
+                ;;
+            *)
+                pass_args+=("${args[i]}")
+                ;;
+        esac
+        (( i++ ))
+    done
+
+    download-daylight-batch "${pass_args[@]}" || return
+
+    if [[ -z "$gen_completions" ]] && [[ -t 0 ]]; then
+        printf 'Generate bash completions for daylight.sh? [y/N] '
+        local reply
+        read -r reply
+        [[ "$reply" =~ ^[yY] ]] || return 0
+    fi
+
+    # Find dstFolder from pass_args (last positional arg)
+    local dstFolder="${pass_args[${#pass_args[@]}-1]}"
+
+    [[ -n "$dstFolder" ]] || { printf 'error: could not determine destination folder\n' >&2; return 1; }
+
+    local scriptPath="$dstFolder/daylight.sh"
+    [[ -f "$scriptPath" ]] || { printf 'error: %s not found after download\n' "$scriptPath" >&2; return 1; }
+
+    local compPath="${completions_path:-$HOME/bash-completion.d/daylight.sh}"
+    mkdir -p "$(dirname "$compPath")" || return
+
+    bash "$scriptPath" gen-completion-script daylight.sh < <(bash "$scriptPath" list-bash-funcs < "$scriptPath") > "$compPath" || return
+    printf 'Bash completions written to %s\n' "$compPath" >&2
 }
 
 
