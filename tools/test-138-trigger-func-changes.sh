@@ -1,0 +1,139 @@
+#! /usr/bin/env bash
+
+SCRIPT_DIR=$(dirname "$(readlink -f "$BASH_SOURCE")")
+SUNBEAM_SH="$SCRIPT_DIR/../sunbeam.sh"
+[[ -f "$SUNBEAM_SH" ]] || { printf 'Cannot find sunbeam.sh\n' >&2; exit 1; }
+
+source "$SUNBEAM_SH" || { printf 'Failed to source sunbeam.sh\n' >&2; exit 1; }
+
+#-------------------------------------------------------------------------------
+#
+# run-tests()
+#
+# Run all test scenarios and report results
+#
+run-tests()
+{
+    local tests=(
+        test-batch-no-args
+        test-batch-missing-workflow
+        test-batch-missing-positional
+        test-batch-invalid-workflow
+        test-batch-token-and-label
+        test-wrapper-defaults-workflow
+    )
+    local total=0 passed=0 failed=0
+    for t in "${tests[@]}"; do
+        printf '=== %s ===\n' "$t"
+        (( total++ ))
+        if "$t"; then
+            (( passed++ ))
+        else
+            (( failed++ ))
+        fi
+    done
+    printf '\n%d total, %d passed, %d failed\n' "$total" "$passed" "$failed"
+    return "$failed"
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# fail-check()
+#
+# @internal
+# Run a command and verify it fails with the expected substring in stderr
+# Usage: fail-check desc expected_substring cmd args...
+#
+fail-check()
+{
+    local desc=$1 expected=$2
+    shift 2
+    local stderr
+    stderr=$("$@" 2>&1 1>/dev/null) && {
+        printf '  FAIL (%s): expected failure but succeeded\n' "$desc"
+        return 1
+    }
+    if [[ $stderr != *"$expected"* ]]; then
+        printf '  FAIL (%s): expected stderr to contain "%s", got:\n  %s\n' "$desc" "$expected" "$stderr"
+        return 1
+    fi
+    printf '  PASS\n'
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# test-batch-no-args()
+#
+test-batch-no-args()
+{
+    fail-check "no args" 'Usage' trigger-nightly-release-batch
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# test-batch-missing-workflow()
+#
+test-batch-missing-workflow()
+{
+    fail-check "no --workflow" 'Usage' trigger-nightly-release-batch --token x
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# test-batch-missing-positional()
+#
+test-batch-missing-positional()
+{
+    fail-check "missing positional" 'Usage' trigger-nightly-release-batch --workflow nightly
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# test-batch-invalid-workflow()
+#
+test-batch-invalid-workflow()
+{
+    fail-check "invalid workflow" 'not found' \
+        trigger-nightly-release-batch --workflow does-not-exist-file.yml --token x owner/repo
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# test-batch-token-and-label()
+#
+test-batch-token-and-label()
+{
+    fail-check "token+label" 'error: workflow' \
+        trigger-nightly-release-batch --workflow nightly --token x --label v0 owner/repo
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# test-wrapper-defaults-workflow()
+#
+test-wrapper-defaults-workflow()
+{
+    fail-check "default workflow" 'not found' \
+        trigger-nightly-release --token x owner/repo
+}
+
+
+#-------------------------------------------------------------------------------
+#
+# main()
+#
+case ${1:-} in
+    *)  run-tests;;
+esac
+
+
+if ! (return 0 2>/dev/null); then
+    main "$@"
+fi

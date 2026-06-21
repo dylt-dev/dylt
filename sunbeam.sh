@@ -557,7 +557,7 @@ RUNEOF
     systemctl enable "nightly-release@$instance.timer"
     systemctl start "nightly-release@$instance.timer"
 
-    printf 'NOTE: Create %s/%s/env with GITHUB_PAT=... before timer fires\n' "$svcDir" "$instance"
+    printf 'NOTE: Create %s/%s/env with GITHUB_TOKEN=... before timer fires\n' "$svcDir" "$instance"
     printf 'NOTE: Clone the repo with: git clone git@github.com:dylt-dev/dylt.git %s\n' "$repoDir"
 }
 
@@ -651,6 +651,56 @@ source-remote-script ()
 
 #------------------------------------------------------------------------------
 #
+# trigger-nightly-release-batch()
+#
+# Trigger a GHA workflow for a given repo via workflow_dispatch.
+# Requires --workflow; accepts --token (falls back to GITHUB_TOKEN env var)
+# and --label. No interactivity, no token inference.
+#
+trigger-nightly-release-batch ()
+{
+    source-github-utils || return
+
+    local -A argmap=()
+    local nargs=0
+    github-curl-parse-args argmap nargs "$@" || return
+    shift "$nargs"
+    # shellcheck disable=SC2016
+    (( $# == 1 )) || { printf 'Usage: trigger-nightly-release-batch --workflow <name> [--token <pat>] [--label <label>] $owner/$repo\n' >&2; return 1; }
+    local repo=$1
+
+    local workflow=${argmap[workflow]}
+    [[ -n "$workflow" ]] || { printf 'error: --workflow is required\n' >&2; return 1; }
+
+    local token=${argmap[token]:-${GITHUB_TOKEN:?error: --token not given and GITHUB_TOKEN not set}}
+
+    local wf_name=${workflow%.yml}
+    wf_name=${wf_name%.yaml}
+    if ! curl -sf -o /dev/null \
+        "https://api.github.com/repos/$repo/actions/workflows/${wf_name}.yml"; then
+        printf 'error: workflow "%s" not found in %s\n' "$workflow" "$repo" >&2
+        return 1
+    fi
+
+    source-github-utils || return
+
+    local -a flags=(--token "$token")
+    local data
+    if [[ -n "${argmap[label]}" ]]; then
+        local label
+        label=$(sanitize-label "${argmap[label]}") || return
+        data=$(printf '{"ref":"main","inputs":{"label":"%s"}}' "$label")
+    else
+        data='{"ref":"main"}'
+    fi
+    flags+=(--data "$data")
+
+    github-curl "${flags[@]}" "/repos/$repo/actions/workflows/${wf_name}.yml/dispatches" || return
+}
+
+
+#------------------------------------------------------------------------------
+#
 # trigger-nightly-release()
 #
 # Trigger a nightly-release GHA workflow for a given repo via workflow_dispatch.
@@ -658,14 +708,31 @@ source-remote-script ()
 #
 trigger-nightly-release ()
 {
-    (( $# == 1 )) || { printf 'Usage: trigger-nightly-release $owner/$repo\n' >&2; return 1; }
+    local -A argmap=()
+    local nargs=0
+    github-curl-parse-args argmap nargs "$@" || return
+    shift "$nargs"
+    # shellcheck disable=SC2016
+    (( $# == 1 )) || { printf 'Usage: trigger-nightly-release [--workflow <name>] [--token <pat>] [--label <label>] $owner/$repo\n' >&2; return 1; }
     local repo=$1
-    local token=${GITHUB_PAT:?error: GITHUB_PAT not set}
-    curl --fail --silent --show-error -X POST \
-        "https://api.github.com/repos/$repo/actions/workflows/nightly-release.yml/dispatches" \
-        -H "Authorization: Bearer $token" \
-        -H "Accept: application/vnd.github.v3+json" \
-        -d '{"ref": "main"}' || return
+
+    local workflow=${argmap[workflow]:-nightly-release}
+    local label=${argmap[label]:-''}
+
+    local token
+    if [[ -v argmap[token] ]]; then
+        token=${argmap[token]}
+    elif [[ -n "${GITHUB_TOKEN-}" ]]; then
+        token=$GITHUB_TOKEN
+    elif [[ -n "${GH_TOKEN-}" ]]; then
+        token=$GH_TOKEN
+    elif type gh &>/dev/null; then
+        token=$(gh auth token 2>/dev/null) || token=''
+    fi
+
+    local -a batch_args=(--workflow "$workflow" --token "$token")
+    [[ -n "$label" ]] && batch_args+=(--label "$label")
+    trigger-nightly-release-batch "${batch_args[@]}" "$repo" || return
 }
 
 
@@ -727,6 +794,7 @@ main ()
 	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
             sanitize-label)                           sanitize-label "$@";;
             trigger-nightly-release)                  trigger-nightly-release "$@";;
+            trigger-nightly-release-batch)            trigger-nightly-release-batch "$@";;
             yesorno)                                  yesorno "$@";;
             *) printf 'Unknown command: %s \n' "$cmd";;
         esac
