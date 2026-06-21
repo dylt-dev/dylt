@@ -6,9 +6,12 @@ on:
 
 jobs:
   goreleaser:
+    if: ${{ !contains(github.ref_name, '-nightly-') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: stable
@@ -16,6 +19,7 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          args: release --clean --config=.goreleaser.full.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOPRIVATE: github.com/dylt-dev
