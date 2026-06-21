@@ -39,6 +39,8 @@ The `@internal` tag sits alone on its own line between the function name and the
 
 New helper scripts go in `./tools/` by default, not the repo root. Tools follow the same conventions as sunbeam.sh — comment blocks, alphabetized functions, case dispatch, and `@internal` for helpers. Each tool script is self-contained and calls sunbeam.sh functions via case dispatch.
 
+Test scripts follow the same conventions and are manual verification tools, not CI. Daylight repo has test scripts for shared infrastructure (`github-curl-parse-args`, `--token` flag handling) that can be referenced by dylt tests.
+
 ### pushing code changes (issue-driven workflow)
 
 1. Propose an issue title, a short branch name (without issue number), and an issue body (can include markdown)
