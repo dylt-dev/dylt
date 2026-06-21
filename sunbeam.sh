@@ -754,7 +754,8 @@ reconcile-agents-md ()
         || { printf 'error: could not detect default branch from origin\n' >&2; return 1; }
     default_branch=${default_branch#refs/remotes/origin/}
 
-    # Fetch the persistent branch (may not exist yet)
+    # Fetch the persistent branch and current default branch
+    git fetch origin "$default_branch" 2>/dev/null || true
     git fetch origin update-agents-md 2>/dev/null || true
 
     # cd back so the caller's PWD is unchanged
@@ -776,7 +777,7 @@ reconcile-agents-md ()
 
     # Count commits on the persistent branch not on default
     local -i ncommits
-    ncommits=$(git rev-list HEAD "^origin/$default_branch" --count 2>/dev/null) || ncommits=0
+    ncommits=$(git rev-list HEAD "^$default_branch" --count 2>/dev/null) || ncommits=0
 
     if (( ncommits == 0 )); then
         printf 'Nothing to reconcile — branch is up to date\n'
@@ -785,8 +786,27 @@ reconcile-agents-md ()
     fi
 
     # Push — force-with-lease is safe because this is our branch
-    git push --force-with-lease origin update-agents-md 2>/dev/null \
-        || { printf 'error: push failed — check auth\n' >&2; git checkout "$default_branch" 2>/dev/null; return 1; }
+    if ! git push --force-with-lease origin update-agents-md 2>/dev/null; then
+        # Fallback: embed GITHUB_TOKEN in HTTPS URL
+        if [[ -n "${GITHUB_TOKEN-}" ]]; then
+            local remote_url
+            remote_url=$(git config --get remote.origin.url) || remote_url=''
+            if [[ "$remote_url" == https://* ]]; then
+                local auth_url
+                auth_url=$(printf '%s' "$remote_url" | sed "s#https://#https://${GITHUB_TOKEN}@#")
+                git push --force-with-lease "$auth_url" update-agents-md 2>/dev/null || {
+                    printf 'error: push failed after auth fallback — check GITHUB_TOKEN\n' >&2
+                    git checkout "$default_branch" 2>/dev/null; return 1
+                }
+            else
+                printf 'error: push failed — check auth\n' >&2
+                git checkout "$default_branch" 2>/dev/null; return 1
+            fi
+        else
+            printf 'error: push failed — check auth or set GITHUB_TOKEN\n' >&2
+            git checkout "$default_branch" 2>/dev/null; return 1
+        fi
+    fi
 
     # Build a summary from commit messages
     local summary
