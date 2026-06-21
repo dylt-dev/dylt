@@ -107,16 +107,48 @@ Rules:
 - The destination folder is the first positional argument after all flags; an optional platform string is the second positional.
 - Exactly one of branch mode or release mode must be active.
 
-### download-daylight
+### usage guide
 
-`download-daylight` is a wrapper around `download-daylight-batch` that adds a
-`--gen-bash-completions [<path>]` flag and an interactive prompt to generate
-bash completions, delegating to the downloaded `daylight.sh gen-completion-script`.
+All operations run via case dispatch on `sunbeam.sh`. Source it for
+direct function access, or call it as a command for one-off use.
+
+#### install sunbeam
+
+    mkdir -p ~/.local/bin
+    curl -fsSL -o ~/.local/bin/sunbeam.sh \
+      https://raw.githubusercontent.com/dylt-dev/dylt/main/sunbeam.sh
+    chmod 755 ~/.local/bin/sunbeam.sh
+    ~/.local/bin/sunbeam.sh add-to-bashrc
+    source ~/.bashrc
+
+This registers a `sunbeam()` shell function so you can run
+`sunbeam <subcommand>` from anywhere.
+
+#### download daylight and generate completions
+
+    sunbeam download-daylight --gen-bash-completions ~/.bash-completion.d/daylight.sh ~/bin
+
+Or interactively (answer y when prompted):
+
+    sunbeam download-daylight ~/bin
+
+After download, a `source` line for the completion file is automatically
+appended to ~/.bashrc.
+
+#### confirm completions work
+
+    source ~/.bashrc
+    daylight.sh <tab><tab>
+
+You should see the list of available subcommands. To debug:
+
+    ls ~/.bash-completion.d/daylight.sh           # completion file exists
+    grep 'daylight.sh' ~/.bashrc                   # source line is present
+    type daylight.sh                                # should show the wrapper function
 
 ### reminders
 
-- Cleanup dylt release yamls
-- Investigate why dylt's release matrix always hits every platform
+- Add bash completions support for sunbeam.sh following the same pattern as daylight.sh's gen-completion-script-batch / gen-completion-script
 - Explore externalizing label creation into a separate function
 - Create custom git function for setting URL
 - Use a GitHub App for auth instead of PATs
