@@ -1,5 +1,18 @@
 #! /usr/bin/env bash
 
+# Manual functional test — download daylight.sh via sunbeam.sh, generate
+# completions via the interactive prompt, source them, then verify:
+#
+#   dst=/tmp/dl-test && mkdir -p "$dst"
+#   bash sunbeam.sh download-daylight "$dst"
+#   # When prompted: y  (or use --gen-bash-completions)
+#   source ~/.bash_completion.d/daylight.sh
+#   # In the same shell:  daylight.sh <Tab><Tab>
+#   # Expected: list of dispatchable subcommands completes
+#
+# This test script automates the underlying function behaviour; the manual
+# test above exercises the full end-to-end pipeline.
+
 SCRIPT_DIR=$(dirname "$(readlink -f "$BASH_SOURCE")")
 SUNBEAM_SH="$SCRIPT_DIR/../sunbeam.sh"
 [[ -f "$SUNBEAM_SH" ]] || { printf 'Cannot find sunbeam.sh\n' >&2; exit 1; }
