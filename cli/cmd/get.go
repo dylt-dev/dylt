@@ -10,14 +10,12 @@ type GetOpts struct {
 
 func NewGetCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "get"
-	opts := GetOpts{}
 	fnRun := func (cmd *BaseCommand[GetOpts]) error { return lib.RunGet(cmd.opts.Key) }
 
 	cfg := BaseCommandConfig[GetOpts]{
-		name:            name,
+		name:            "get",
 		fnRun:           fnRun,
-		opts:            opts,
+		opts:            GetOpts{},
 		usage:           CreateUsageString(USG_Get),
 		validator:       ArgCountValidator{nExpected: 1},
 	}
@@ -25,7 +23,7 @@ func NewGetCommand(cmdline Cmdline, parent Command) Command {
 	
 	// flags + args if any 
 	cmd.argMap = ArgMap{
-		0: &opts.Key,
+		0: &cmd.opts.Key,
 	}
 	
 	// subcommand map if any
