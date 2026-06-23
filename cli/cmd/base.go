@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/dylt-dev/dylt/common"
@@ -54,7 +56,59 @@ func NewBaseCommand[Opts CommandOpts] (cmdline Cmdline,
 	}
 	cmd.FlagSet.BoolVar(&cmd.help, "help", false, "give it to me")
 
+	// Process struct tags on opts:
+	//   pos:"N"   — positional argument mapping (populates argMap)
+	//   flag:".." — flag binding (registers with FlagSet)
+	t := reflect.TypeOf(cmd.opts)
+	v := reflect.ValueOf(&cmd.opts).Elem()
+	for i := range t.NumField() {
+		ft := t.Field(i)
+		fv := v.Field(i)
+
+		if posStr, ok := ft.Tag.Lookup("pos"); ok {
+			pos, _ := strconv.Atoi(posStr)
+			if cmd.argMap == nil {
+				cmd.argMap = make(ArgMap)
+			}
+			cmd.argMap[pos] = func(s string) {
+				switch fv.Kind() {
+				case reflect.String:
+					fv.SetString(s)
+				case reflect.Int:
+					if n, err := strconv.Atoi(s); err == nil {
+						fv.SetInt(int64(n))
+					}
+				case reflect.Bool:
+					if b, err := strconv.ParseBool(s); err == nil {
+						fv.SetBool(b)
+					}
+				}
+			}
+		}
+
+		if flagStr, ok := ft.Tag.Lookup("flag"); ok {
+			defaultVal := ft.Tag.Get("default")
+			desc := ft.Tag.Get("desc")
+			switch fv.Kind() {
+			case reflect.String:
+				cmd.FlagSet.StringVar(fv.Addr().Interface().(*string), flagStr, defaultVal, desc)
+			case reflect.Int:
+				def := 0
+				if defaultVal != "" {
+					def, _ = strconv.Atoi(defaultVal)
+				}
+				cmd.FlagSet.IntVar(fv.Addr().Interface().(*int), flagStr, def, desc)
+			case reflect.Bool:
+				cmd.FlagSet.BoolVar(fv.Addr().Interface().(*bool), flagStr, defBool(defaultVal), desc)
+			}
+		}
+	}
+
 	return cmd
+}
+
+func defBool(s string) bool {
+	return s == "true"
 }
 
 func (cmd *BaseCommand[_]) ArgMap() ArgMap{
@@ -170,8 +224,8 @@ func (cmd *BaseCommand[_]) HandleArgs() error {
 
 	// init positional params, if any
 	if cmd.argMap != nil {
-		for i, ptr := range cmd.argMap {
-			*ptr = cmdArgs[i]
+		for i, fn := range cmd.argMap {
+			fn(cmdArgs[i])
 		}
 	}
 

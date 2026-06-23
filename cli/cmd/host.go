@@ -11,12 +11,10 @@ type HostOpts struct {
 
 func NewHostCommand(cmdline Cmdline, parent Command) Command {
 	// host command
-	name := "host"
-	opts := HostOpts{}
 	cfg := BaseCommandConfig[HostOpts]{
-		name:            name,
+		name:            "host",
+		opts:            HostOpts{},
 		isUsageOnNoArgs: true,
-		opts:            opts,
 		usage:           CreateUsageString(USG_Host),
 		validator:       ArgCountGEValidator{nExpected: 0},
 	}
@@ -48,28 +46,23 @@ func RunHost(cmdline Cmdline, parent Command) error {
 }
 
 type HostInitOpts struct {
-	Gid int // --gid
-	Uid int // --uid
+	Gid int `flag:"gid" default:"2000" desc:"group ID" impl:"api.RunHostInit"`
+	Uid int `flag:"uid" default:"2000" desc:"user ID"`
 }
 
 func NewHostInitCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "host.init"
-	opts := HostInitOpts{}
-	fnRun := func(cmd *BaseCommand[HostInitOpts]) error { return api.RunHostInit(cmd.opts.Uid, cmd.opts.Gid) }
 	cfg := BaseCommandConfig[HostInitOpts]{
-		name:            name,
-		fnRun:           fnRun,
+		name:            "host.init",
+		fnRun:           func(cmd *BaseCommand[HostInitOpts]) error { return api.RunHostInit(cmd.opts.Uid, cmd.opts.Gid) },
+		opts:            HostInitOpts{},
 		isUsageOnNoArgs: true,
-		opts:            opts,
 		usage:           CreateUsageString(USG_Config_Get),
 		validator:       ArgCountValidator{nExpected: 0},
 	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.IntVar(&cmd.opts.Gid, "gid", 2000, "gid")
-	cmd.IntVar(&cmd.opts.Uid, "uid", 2000, "uid")
 
 	// subcommand map if any
 

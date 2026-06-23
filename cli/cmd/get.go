@@ -5,26 +5,21 @@ import (
 )
 
 type GetOpts struct {
-	Key string // arg 0
+	Key string `pos:"0" impl:"lib.RunGet"`
 }
 
 func NewGetCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	fnRun := func (cmd *BaseCommand[GetOpts]) error { return lib.RunGet(cmd.opts.Key) }
-
 	cfg := BaseCommandConfig[GetOpts]{
 		name:            "get",
-		fnRun:           fnRun,
+		fnRun:           func (cmd *BaseCommand[GetOpts]) error { return lib.RunGet(cmd.opts.Key) },
 		opts:            GetOpts{},
 		usage:           CreateUsageString(USG_Get),
 		validator:       ArgCountValidator{nExpected: 1},
 	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 	
-	// flags + args if any 
-	cmd.argMap = ArgMap{
-		0: &cmd.opts.Key,
-	}
+	// flags + args if any
 	
 	// subcommand map if any
 	

@@ -22,13 +22,10 @@ type StatusOpts struct {
 
 func NewStatusCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "status"
-	opts := StatusOpts{}
-	fnRun := func (cmd *BaseCommand[StatusOpts]) error { return api.RunStatus() }
 	cfg := BaseCommandConfig[StatusOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "status",
+		fnRun: func (cmd *BaseCommand[StatusOpts]) error { return api.RunStatus() },
+		opts: StatusOpts{},
 		usage: CreateUsageString(USG_Status),
 		validator: ArgCountValidator{nExpected: 0},
 	}	
