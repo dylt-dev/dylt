@@ -151,8 +151,35 @@ You should see the list of available subcommands. To debug:
 - Add bash completions support for sunbeam.sh following the same pattern as daylight.sh's gen-completion-script-batch / gen-completion-script
 - Explore externalizing label creation into a separate function
 - Create custom git function for setting URL
-- Use a GitHub App for auth instead of PATs
+- Use a GitHub App for auth instead of PATs (see docs/runner-security-hardening.md for staged migration)
 - Sort out all the github functions starting with flags/args
+
+### eco CLI commands
+
+The eco package (`eco/`) provides encode/decode — serializing Go structs to
+etcd key-value pairs, one field per key (e.g. `/$/$cluster/app/$appName/name`,
+`/$/$cluster/app/$appName/port`, etc.).
+
+To expose this through the CLI, add:
+
+- `cli/cmd/eco.go` — `EcoCommand` (parent), with subcommands `encode`, `decode`
+- `cli/cmd/eco_encode.go` — `EcoEncodeOpts{Key}` reads JSON from stdin, calls
+  `eco.Encode()` into etcd
+- `cli/cmd/eco_decode.go` — `EcoDecodeOpts{Key}` reads from etcd via
+  `eco.Decode()`, outputs JSON
+- `lib/eco_cmd.go` — `RunEcoEncode`, `RunEcoDecode` functions
+- `factory.go` — add `EcoCommandF`, `EcoEncodeCommandF`, `EcoDecodeCommandF`
+- `main.go` — register `"eco"` in `subCommandMap`
+
+**Open questions** (decide before implementation):
+
+1. **Command shape**: Top-level (`dylt eco encode <key>`) or under `misc`?
+2. **Input format**: JSON from stdin, or a `--file` flag?
+3. **Key format**: Full etcd path (`/$/mc15/app/foo/name`), or built from
+   flags (`--cluster mc15 --app foo`)?
+4. **Primary vs debug tool**: `day.sh app create` is the primary path. Is
+   `eco encode` for manual/debug use only, or the primary way to populate
+   etcd? Affects polish/error-handling effort.
 
 ### AGENTS.md changes
 
