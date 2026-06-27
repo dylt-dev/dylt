@@ -16,6 +16,24 @@ A permanent SHR stays online as a systemd service, long-polls GitHub for
 workflow jobs, and needs no open inbound ports. It's the same model
 GitHub uses for its own hosted runners, just on your hardware.
 
+### TL;DR
+
+Three daylight.sh commands, case-dispatch style:
+
+```bash
+/opt/bin/daylight.sh github-create-user-access-token ACCESS_TOKEN shrboy
+/opt/bin/daylight.sh download-shr-tarball /opt/actions-runner
+/opt/bin/daylight.sh install-shr-token your-org your-repo my-shr "$ACCESS_TOKEN" "linux"
+```
+
+After the third command, the runner registers with GitHub, installs
+itself as a systemd service (`actions.runner.<org>-<repo>.<svcName>`),
+and starts polling for workflow jobs. Confirm with:
+
+```bash
+sudo systemctl status 'actions.runner.*'
+```
+
 ### Prerequisites
 
 - A GitHub repo you own (or have admin access to)
