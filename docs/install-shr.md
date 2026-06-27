@@ -33,9 +33,9 @@ installed on. We'll use **`shrboy`**, which has
 **Via daylight.sh:**
 
 ```bash
-source /opt/bin/daylight.sh
-github-create-user-access-token MY_TOKEN shrboy
+/opt/bin/daylight.sh github-create-user-access-token TOKENVAR shrboy
 ```
+TOKENVAR is the name of an envvar that will receive the value of the token. Most `daylight.sh` function don't work this way, instead emitting data which can be assigned to a variable via VAR=$(func foo bar). But that requires the function does not write anything to `stdout`, and `github-create-user-access-token` needs to write to `stdout` to prompt the user for input.
 
 **Manual curl:**
 
