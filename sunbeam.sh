@@ -1021,6 +1021,158 @@ yesorno ()
 }
 
 
+#-------------------------------------------------------------------------------
+#
+# reconcile-labels()
+#
+# Reconcile labels on one or more GitHub repos to the standard set:
+# bug, feature, task. Renames enhancement -> feature, creates task if
+# missing, and deletes all other labels. Snapshot before making changes.
+# Usage: reconcile-labels [--all] [--dry-run] [owner/repo ...]
+#        --all     auto-detect target repos under ~/src/
+#        --dry-run show what would change without making API calls
+#
+reconcile-labels ()
+{
+    local find_all=false
+    local dry_run=false
+    local -a repos=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --all)     find_all=true; shift ;;
+            --dry-run) dry_run=true; shift ;;
+            --*)       printf 'Unknown flag: %s\n' "$1" >&2; return 1 ;;
+            *)         repos+=("$1"); shift ;;
+        esac
+    done
+
+    if "$find_all"; then
+        if ((${#repos[@]} > 0)); then
+            printf 'error: --all cannot be combined with positional repo args\n' >&2
+            return 1
+        fi
+        local src_dir
+        src_dir=$(dirname "$HOME")/src
+        [[ -d "$src_dir" ]] || { printf 'error: %s not found\n' "$src_dir" >&2; return 1; }
+        local d remote
+        for d in "$src_dir"/*/.git; do
+            [[ -d "$d" ]] || continue
+            remote=$(git -C "$(dirname "$d")" remote get-url origin 2>/dev/null) || continue
+            remote=$(printf '%s' "$remote" | sed 's/.*github.com[:\/]//; s/\.git$//; s/.*@//')
+            [[ -z "$remote" ]] && continue
+            repos+=("$remote")
+        done
+    fi
+
+    ((${#repos[@]} > 0)) || { printf 'Usage: reconcile-labels [--all] [--dry-run] owner/repo ...\n' >&2; return 1; }
+
+    local rv=0
+    local repo local_path json snapshot_dir
+
+    for repo in "${repos[@]}"; do
+        # Determine local clone path under ~/src/
+        local_path=""
+        local repo_name=${repo#*/}
+        local candidate
+        for candidate in "$HOME/src/$repo_name" "$HOME/src/$repo" "$HOME/src/${repo_name%.git}"; do
+            if [[ -d "$candidate/.git" ]]; then
+                local_path=$candidate
+                break
+            fi
+        done
+
+        if "$dry_run"; then
+            printf '[DRY RUN] %s\n' "$repo"
+        else
+            printf '%s\n' "$repo"
+        fi
+
+        # Fetch current labels
+        json=$(gh label list --repo "$repo" --json name,color,description 2>/dev/null) || {
+            printf '  error: cannot list labels for %s (no access?)\n' "$repo" >&2
+            rv=1; continue
+        }
+
+        # Write snapshot if we have a local path
+        if [[ -n "$local_path" ]]; then
+            snapshot_dir="$local_path/misc"
+            if ! "$dry_run"; then
+                mkdir -p "$snapshot_dir"
+                printf '%s\n' "$json" > "$snapshot_dir/gh-labels.json"
+            fi
+            printf '  snapshot: %s/misc/gh-labels.json\n' "${local_path#$HOME/src/}"
+        else
+            printf '  (no local clone — skipping snapshot)\n'
+        fi
+
+        # Determine which labels exist
+        local has_enhancement=false
+        local has_feature=false
+        local has_task=false
+        local -a to_delete=()
+        local name color desc line
+
+        while IFS= read -r line; do
+            name=$(printf '%s' "$line" | jq -r '.name')
+            case "$name" in
+                bug)    : ;;
+                feature) has_feature=true ;;
+                task)   has_task=true ;;
+                enhancement) has_enhancement=true ;;
+                *)      to_delete+=("$name") ;;
+            esac
+        done < <(printf '%s' "$json" | jq -c '.[]')
+
+        if "$has_enhancement"; then
+            if "$dry_run"; then
+                printf '  would rename: enhancement -> feature\n'
+            else
+                gh label edit --repo "$repo" enhancement --name feature 2>/dev/null \
+                    && printf '  renamed: enhancement -> feature\n' \
+                    || { printf '  failed: rename enhancement -> feature\n' >&2; rv=1; }
+                has_feature=true
+            fi
+        fi
+
+        if ! "$has_feature" && ! "$has_enhancement"; then
+            if "$dry_run"; then
+                printf '  would create: feature\n'
+            else
+                gh label create --repo "$repo" feature --color a2eeef \
+                    --description "New feature or request" 2>/dev/null \
+                    && printf '  created: feature\n' \
+                    || { printf '  failed: create feature\n' >&2; rv=1; }
+            fi
+        fi
+
+        if ! "$has_task"; then
+            if "$dry_run"; then
+                printf '  would create: task\n'
+            else
+                gh label create --repo "$repo" task --color c5def5 \
+                    --description "An internal improvement or chore" 2>/dev/null \
+                    && printf '  created: task\n' \
+                    || { printf '  failed: create task\n' >&2; rv=1; }
+            fi
+        fi
+
+        local label
+        for label in "${to_delete[@]}"; do
+            if "$dry_run"; then
+                printf '  would delete: %s\n' "$label"
+            else
+                gh label delete --repo "$repo" "$label" --yes 2>/dev/null \
+                    && printf '  deleted: %s\n' "$label" \
+                    || { printf '  failed: delete %s\n' "$label" >&2; rv=1; }
+            fi
+        done
+    done
+
+    return "$rv"
+}
+
+
 #------------------------------------------------------------------------------
 #
 # main()
@@ -1046,6 +1198,7 @@ main ()
             git-install-latest-dylt)                  git-install-latest-dylt "$@";;
 	    install-build-dylt-svc)                   install-build-dylt-svc "$@";;
             reconcile-agents-md)                      reconcile-agents-md "$@";;
+            reconcile-labels)                         reconcile-labels "$@";;
             sanitize-label)                           sanitize-label "$@";;
             trigger-nightly-release)                  trigger-nightly-release "$@";;
             trigger-nightly-release-batch)            trigger-nightly-release-batch "$@";;
