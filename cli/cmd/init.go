@@ -5,25 +5,21 @@ import (
 )
 
 type InitOpts struct {
-	EtcdDomain string // --etcd-domain
+	EtcdDomain string `flag:"etcd-domain" default:"" desc:"etcd cluster to activate" impl:"api.RunInit"`
 }
 
 func NewInitCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "init"
-	opts := InitOpts{}
-	fnRun := func (cmd *BaseCommand[InitOpts]) error { return api.RunInit(cmd.opts.EtcdDomain) }
 	cfg := BaseCommandConfig[InitOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "init",
+		fnRun: func (cmd *BaseCommand[InitOpts]) error { return api.RunInit(cmd.opts.EtcdDomain) },
+		opts: InitOpts{},
 		usage: CreateUsageString(USG_Init),
 		validator: ArgCountValidator{nExpected: 0},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
-	// flags + args if any 
-	cmd.FlagSet.StringVar(&cmd.opts.EtcdDomain, "etcd-domain", "", "etcd-domain")
+	// flags + args if any
 
 	// subcommand map if any
 	

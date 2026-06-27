@@ -23,7 +23,7 @@ type Command interface {
 	UsageOnNoArgs() bool
 }
 
-type ArgMap map[int]*string
+type ArgMap map[int]func(string)
 type CommandMap map[string]NewCommandFunc
 
 type CommandValidator interface {

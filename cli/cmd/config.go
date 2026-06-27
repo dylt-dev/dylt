@@ -9,12 +9,10 @@ type ConfigOpts struct {
 
 func NewConfigCommand(cmdline Cmdline, parent Command) Command {
 	// config command
-	name := "config"
-	opts := ConfigOpts{}
 	cfg := BaseCommandConfig[ConfigOpts]{
-		name:            name,
+		name:            "config",
+		opts:            ConfigOpts{},
 		isUsageOnNoArgs: true,
-		opts:            opts,
 		usage:           CreateUsageString(USG_Config),
 		validator:       ArgCountGEValidator{nExpected: 0},
 	}
@@ -52,27 +50,21 @@ func NewConfigCommand(cmdline Cmdline, parent Command) Command {
 //
 //	dylt get key     # get key from config
 type ConfigGetOpts struct {
-	Key string // arg 0
+	Key string `pos:"0" impl:"api.RunConfigGet"`
 }
 
 func NewConfigGetCommand(cmdline Cmdline, parent Command) *BaseCommand[ConfigGetOpts] {
 	// create config object + BaseCommand
-	name := "config.get"
-	opts := ConfigGetOpts{}
-	fnRun := func(cmd *BaseCommand[ConfigGetOpts]) error { return api.RunConfigGet(cmd.opts.Key) }
 	cfg := BaseCommandConfig[ConfigGetOpts]{
-		name:      name,
-		fnRun:     fnRun,
-		opts:      opts,
+		name:      "config.get",
+		fnRun:     func(cmd *BaseCommand[ConfigGetOpts]) error { return api.RunConfigGet(cmd.opts.Key) },
+		opts:      ConfigGetOpts{},
 		usage:     CreateUsageString(USG_Config_Get),
 		validator: ArgCountValidator{nExpected: 1},
 	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.argMap = map[int]*string{
-		0: &cmd.opts.Key,
-	}
 
 	// subcommand map if any
 
@@ -81,31 +73,24 @@ func NewConfigGetCommand(cmdline Cmdline, parent Command) *BaseCommand[ConfigGet
 }
 
 type ConfigSetOpts struct {
-	Key   string // arg 0
-	Value string // arg 1
+	Key   string `pos:"0" impl:"api.RunConfigSet"`
+	Value string `pos:"1"`
 }
 
 func NewConfigSetCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "config.set"
-	opts := ConfigSetOpts{}
-	fnRun := func(cmd *BaseCommand[ConfigSetOpts]) error {
-		return api.RunConfigSet(cmd.opts.Key, cmd.opts.Value)
-	}
 	cfg := BaseCommandConfig[ConfigSetOpts]{
-		name:      name,
-		fnRun:     fnRun,
-		opts:      opts,
+		name:      "config.set",
+		fnRun:     func(cmd *BaseCommand[ConfigSetOpts]) error {
+			return api.RunConfigSet(cmd.opts.Key, cmd.opts.Value)
+		},
+		opts:      ConfigSetOpts{},
 		usage:     CreateUsageString(USG_Config_Set),
 		validator: ArgCountValidator{nExpected: 2},
 	}
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.argMap = map[int]*string{
-		0: &cmd.opts.Key,
-		1: &cmd.opts.Value,
-	}
 
 	// subcommand map if any
 
@@ -118,13 +103,10 @@ type ConfigShowOpts struct {
 
 func NewConfigShowCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "config.show"
-	opts := ConfigShowOpts{}
-	fnRun := func(cmd *BaseCommand[ConfigShowOpts]) error { return api.RunConfigShow() }
 	cfg := BaseCommandConfig[ConfigShowOpts]{
-		name:      name,
-		fnRun:     fnRun,
-		opts:      opts,
+		name:      "config.show",
+		fnRun:     func(cmd *BaseCommand[ConfigShowOpts]) error { return api.RunConfigShow() },
+		opts:      ConfigShowOpts{},
 		usage:     CreateUsageString(USG_Config_Get),
 		validator: ArgCountValidator{nExpected: 0},
 	}

@@ -16,19 +16,16 @@ type MainOpts struct {
 
 func NewMainCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "dylt"
-	opts := MainOpts{}
-	fnRun := func (cmd *BaseCommand[MainOpts]) error {
-		args, flag := cmd.Args()
-		if !flag {
-			return errors.New("command is not parsed")
-		}
-		return RunMain(args, cmd)
-	}
 	cfg := BaseCommandConfig[MainOpts]{
-		name:            name,
-		fnRun:           fnRun,
-		opts:            opts,
+		name:            "dylt",
+		fnRun:           func (cmd *BaseCommand[MainOpts]) error {
+			args, flag := cmd.Args()
+			if !flag {
+				return errors.New("command is not parsed")
+			}
+			return RunMain(args, cmd)
+		},
+		opts:            MainOpts{},
 		usage:           CreateUsageString(USG_Main),
 		validator:       ArgCountGEValidator{nExpected: 0},
 	}

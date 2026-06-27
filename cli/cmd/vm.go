@@ -11,12 +11,10 @@ type VmOpts struct {
 
 func NewVmCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm"
-	opts := VmOpts{}
 	cfg := BaseCommandConfig[VmOpts]{
-		name:            name,
+		name:            "vm",
+		opts:            VmOpts{},
 		isUsageOnNoArgs: true,
-		opts:            opts,
 		usage:           CreateUsageString(USG_Vm),
 		validator: ArgCountGEValidator{nExpected: 0},
 	}
@@ -54,29 +52,23 @@ func NewVmCommand(cmdline Cmdline, parent Command) Command {
 // }
 
 type VmAddOpts struct {
-	Name string // arg 0
-	Fqdn string // arg 1
+	Name string `pos:"0" impl:"api.RunVmAdd"`
+	Fqdn string `pos:"1"`
 }
 
 func NewVmAddCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm.add"
-	opts := VmAddOpts{}
-	fnRun := func(cmd *BaseCommand[VmAddOpts]) error { return api.RunVmAdd(cmd.opts.Name, cmd.opts.Fqdn) }
 	cfg := BaseCommandConfig[VmAddOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "vm.add",
+		fnRun: func(cmd *BaseCommand[VmAddOpts]) error { return api.RunVmAdd(cmd.opts.Name, cmd.opts.Fqdn) },
+		opts: VmAddOpts{},
 		usage:           CreateUsageString(USG_Vm_Add),
 		validator: ArgCountValidator{nExpected: 2},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.argMap = map[int]*string{
-		0: &cmd.opts.Name,
-		1: &cmd.opts.Fqdn,
-	}
+
 	// subcommand map if any
 	
 	// done
@@ -88,13 +80,10 @@ type VmAllOpts struct {
 
 func NewVmAllCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm.all"
-	opts := VmAllOpts{}
-	fnRun := func(cmd *BaseCommand[VmAllOpts]) error { return api.RunVmAll() }
 	cfg := BaseCommandConfig[VmAllOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "vm.all",
+		fnRun: func(cmd *BaseCommand[VmAllOpts]) error { return api.RunVmAll() },
+		opts: VmAllOpts{},
 		usage: CreateUsageString(USG_Vm_All),
 		validator: ArgCountValidator{nExpected: 0},
 	}	
@@ -112,28 +101,22 @@ func NewVmAllCommand(cmdline Cmdline, parent Command) Command {
 //
 //	vm del vmName
 type VmDelOpts struct {
-	Name string // arg 0
+	Name string `pos:"0" impl:"api.RunVmDel"`
 }
 
 func NewVmDelCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm.del"
-	opts := VmDelOpts{}
-	fnRun := func(cmd *BaseCommand[VmDelOpts]) error { return api.RunVmDel(cmd.opts.Name) }
 	cfg := BaseCommandConfig[VmDelOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "vm.del",
+		fnRun: func(cmd *BaseCommand[VmDelOpts]) error { return api.RunVmDel(cmd.opts.Name) },
+		opts: VmDelOpts{},
 		usage: CreateUsageString(USG_Vm_Del),
 		validator: ArgCountValidator{nExpected: 1},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.argMap = map[int]*string{
-		0: &cmd.opts.Name,
-	}
-	
+
 	// subcommand map if any
 	
 	// done
@@ -144,28 +127,22 @@ func NewVmDelCommand(cmdline Cmdline, parent Command) Command {
 //
 //	vm get vmName
 type VmGetOpts struct {
-	Name string // arg 0
+	Name string `pos:"0" impl:"api.RunVmGet"`
 }
 
 func NewVmGetCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm.get"
-	opts := VmGetOpts{}
-	fnRun := func(cmd *BaseCommand[VmGetOpts]) error { return api.RunVmGet(cmd.opts.Name) }
 	cfg := BaseCommandConfig[VmGetOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "vm.get",
+		fnRun: func(cmd *BaseCommand[VmGetOpts]) error { return api.RunVmGet(cmd.opts.Name) },
+		opts: VmGetOpts{},
 		usage: CreateUsageString(USG_Vm_Get),
 		validator: ArgCountValidator{nExpected: 1},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.argMap = map[int]*string{
-		0: &cmd.opts.Name,
-	}
-	
+
 	// subcommand map if any
 	
 	// done
@@ -180,13 +157,10 @@ type VmListOpts struct {
 
 func NewVmListCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm.list"
-	opts := VmListOpts{}
-	fnRun := func(cmd *BaseCommand[VmListOpts]) error { return api.RunVmList() }
 	cfg := BaseCommandConfig[VmListOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "vm.list",
+		fnRun: func(cmd *BaseCommand[VmListOpts]) error { return api.RunVmList() },
+		opts: VmListOpts{},
 		usage: CreateUsageString(USG_Vm_List),
 		validator: ArgCountValidator{nExpected: 0},
 	}	
@@ -204,32 +178,24 @@ func NewVmListCommand(cmdline Cmdline, parent Command) Command {
 //
 //	vm set vmName key val
 type VmSetOpts struct {
-	Name  string // arg 0
-	Key   string // arg 1
-	Value string // arg 2
+	Name  string `pos:"0" impl:"api.RunVmSet"`
+	Key   string `pos:"1"`
+	Value string `pos:"2"`
 }
 
 func NewVmSetCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "vm.set"
-	opts := VmSetOpts{}
-	fnRun := func(cmd *BaseCommand[VmSetOpts]) error { return api.RunVmSet(cmd.opts.Name, cmd.opts.Key, cmd.opts.Value) }
 	cfg := BaseCommandConfig[VmSetOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "vm.set",
+		fnRun: func(cmd *BaseCommand[VmSetOpts]) error { return api.RunVmSet(cmd.opts.Name, cmd.opts.Key, cmd.opts.Value) },
+		opts: VmSetOpts{},
 		usage: CreateUsageString(USG_Vm_Set),
 		validator: ArgCountValidator{nExpected: 3},
 	}	
 	cmd := NewBaseCommand(cmdline, parent, cfg)
 
 	// flags + args if any
-	cmd.argMap = ArgMap{
-		0: &cmd.opts.Name,
-		1: &cmd.opts.Key,
-		2: &cmd.opts.Value,
-	}
-	
+
 	// subcommand map if any
 	
 	// done

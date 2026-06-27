@@ -17,8 +17,8 @@ func TestGet (t *testing.T) {
 	cmdFlags := []string{}
 	cmdArgs := []string{key}
 	cmdString := fmt.Sprintf("%s", cmdName)
-	cmd := CreateAndTestCommand(t, GetCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString)
-	require.Equal(t, key, *cmd.ArgMap()[0])
+	cmd := CreateAndTestCommand(t, GetCommandF.New, cmdName, cmdFlags, cmdArgs, cmdString).(*BaseCommand[GetOpts])
+	require.Equal(t, key, cmd.opts.Key)
 }
 
 

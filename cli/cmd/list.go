@@ -9,13 +9,10 @@ type ListOpts struct {
 
 func NewListCommand(cmdline Cmdline, parent Command) Command {
 	// create config object + BaseCommand
-	name := "list"
-	opts := ListOpts{}
-	fnRun := func (cmd *BaseCommand[ListOpts]) error { return api.RunList() }
 	cfg := BaseCommandConfig[ListOpts]{
-		name: name,
-		fnRun: fnRun,
-		opts: opts,
+		name: "list",
+		fnRun: func (cmd *BaseCommand[ListOpts]) error { return api.RunList() },
+		opts: ListOpts{},
 		usage: CreateUsageString(USG_List),
 		validator: ArgCountValidator{nExpected: 0},
 	}	
