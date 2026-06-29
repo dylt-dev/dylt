@@ -18,21 +18,17 @@ GitHub uses for its own hosted runners, just on your hardware.
 
 ### TL;DR
 
-Three daylight.sh commands, case-dispatch style:
+One command end-to-end:
 
 ```bash
-/opt/bin/daylight.sh github-create-user-access-token ACCESS_TOKEN shrboy
-/opt/bin/daylight.sh download-shr-tarball /opt/actions-runner
-/opt/bin/daylight.sh install-shr-token your-org your-repo my-shr "$ACCESS_TOKEN" "linux"
+sudo daylight.sh github-shr-install your-org your-repo
+# ... device-code prompt (go to URL, enter code) ...
+# ... runner downloads, registers, service installs and starts ...
+# ... verification workflow triggers, tailing runner logs ...
+# Runner is online and verified for your-org/your-repo
 ```
 
-After the third command, the runner registers with GitHub, installs
-itself as a systemd service (`actions.runner.<org>-<repo>.<svcName>`),
-and starts polling for workflow jobs. Confirm with:
-
-```bash
-sudo systemctl status 'actions.runner.*'
-```
+No separate download, token creation, or svc start steps.
 
 ### Prerequisites
 
@@ -95,37 +91,23 @@ curl -sL https://api.github.com/repos/actions/runner/releases/latest \
   | tar xz -C /opt/actions-runner
 ```
 
-### Step 3: Register and Start
+### Step 3: Register and Start (One Command)
 
 ```bash
-ORG=your-org
-REPO=your-repo
-
-REG_TOKEN=$(curl -sL \
-  -X POST \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "Accept: application/vnd.github+json" \
-  "https://api.github.com/repos/$ORG/$REPO/actions/runners/registration-token" \
-  | jq -r '.token')
-
-/opt/actions-runner/config.sh \
-  --unattended \
-  --url "https://github.com/$ORG/$REPO" \
-  --token "$REG_TOKEN" \
-  --name "$(hostname)" \
-  --labels "linux,$(uname -m)" \
-  --replace
-
-cd /opt/actions-runner
-sudo ./svc.sh install
-sudo ./svc.sh start
+sudo daylight.sh github-shr-install $ORG $REPO "linux"
 ```
 
-**Via daylight.sh:**
+This single command runs the entire flow:
 
-```bash
-install-shr-token $ORG $REPO my-shr $ACCESS_TOKEN "linux"
-```
+1. Device-code flow to get a user access token for the `shrboy` GitHub App
+2. Downloads and extracts the runner tarball into `/opt/actions-runner/shr-$ORG-$REPO`
+3. Exchanges the UAT for a registration token and runs `config.sh`
+4. Installs and starts the runner as a systemd service
+5. Optionally creates and triggers a test workflow
+
+The svc name is derived automatically as `shr-$ORG-$REPO`. The runner directory
+is `/opt/actions-runner/shr-$ORG-$REPO`. The UAT is saved to `.uat` in that
+directory for later cleanup operations.
 
 ### Security Note
 
@@ -222,7 +204,7 @@ REG_TOKEN=$(curl -sL -X POST \
 cd /opt/actions-runner
 sudo ./svc.sh stop
 sudo ./svc.sh uninstall
-./config.sh remove --token "$REG_TOKEN"
+sudo ./config.sh remove --token "$REG_TOKEN"
 rm -rf /opt/actions-runner
 ```
 
@@ -232,9 +214,13 @@ rm -rf /opt/actions-runner
 
 | Function | Use for |
 |----------|---------|
-| `github-create-user-access-token tokenvar appslug` | Device-code flow → token |
+| `github-create-user-access-token tokenvar appslug` | Device-code flow → token (if not using github-shr-install) |
 | `detect-runner-platform` | Detect `linux-x64`, `linux-arm64`, etc. |
-| `download-shr-tarball targetFolder` | Download + extract latest runner release |
-| `install-shr-token org repo svcName token labels` | Register permanent SHR + install as service |
+| `download-shr-tarball targetFolder [$version]` | Download + extract runner release (optionally pinned) |
+| `github-shr-install org repoName [$labels] [$version]` | **End-to-end** — device-code auth, download, register, svc start, optional test. Requires `sudo`. |
+| `github-shr-install-runner org repoName svcName uatPath labels [$version]` | Low-level: register runner with existing UAT (no svc start). |
+| `github-shr-start org repoName` | Install svc, start service, run verification workflow. Requires `sudo`. |
+| `github-shr-test org repoName svcName uatPath` | Create/trigger a test workflow and tail runner logs |
+| `github-shr-clean org repoName` | Stop svc, deregister runner, delete directory. Requires `sudo`. |
 
 All functions are in `daylight.sh`: `source /opt/bin/daylight.sh`.

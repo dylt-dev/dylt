@@ -288,7 +288,7 @@ approaches so you can pick your threat model:
 
 | sunbeam function | Stage | Description |
 |---|---|---|
-| `install-shr-token` | 1–2 | Manual runner setup (legacy) |
+| `github-shr-install` | 1–2 | Manual runner setup via UAT |
 | *(planned)* `github-get-installation-token` | 3–4 | Generate JWT → installation token |
 | *(planned)* `install-shr-ephemeral` | 2–4 | One-shot runner registration with any auth source |
 
