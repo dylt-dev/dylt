@@ -509,6 +509,137 @@ download-github-utils ()
     safe-curl "https://raw.githubusercontent.com/daylight-public/daylight/main/github-utils.sh"
 }
 
+#-------------------------------------------------------------------------------
+
+# gh-branch-clean()
+
+# Delete remote branches that are fully merged into a base branch.
+# Uses gh-branch-merged to find candidates, then prompts for confirmation.
+# Accepts an optional base branch (default: main).
+
+gh-branch-clean ()
+{
+    (( $# <= 1 )) || { printf 'Usage: gh-branch-clean [base]
+' >&2; return 1; }
+    local base=${1:-main}
+    local merged
+    merged=$(gh-branch-merged "$base") || return
+    if [[ -z "$merged" ]]; then
+        printf 'No merged branches found.
+'
+        return 0
+    fi
+    local reply
+    printf 'Branches fully merged into %s:
+' "$base"
+    printf '%s
+' "$merged" | while IFS= read -r branch; do
+        read -r -n1 -p "Delete $branch? (y/N) " reply
+        printf '
+'
+        if [[ $reply == [yY] ]]; then
+            git push origin --delete "$branch" || {
+                printf '  Failed to delete %s
+' "$branch" >&2
+            }
+        fi
+    done
+}
+
+
+#-------------------------------------------------------------------------------
+
+# gh-branch-compare()
+
+# Show ahead count and diff stat for a branch against a base.
+# Uses gh api to get the ahead count and git diff for the real content diff.
+# The ahead count alone can be misleading after squash merges — git diff
+# is the definitive check.
+
+gh-branch-compare ()
+{
+    (( $# >= 1 && $# <= 2 )) || { printf 'Usage: gh-branch-compare $branch [base]
+' >&2; return 1; }
+    local branch=$1 base=${2:-main}
+
+    # gh compares the commit histories. ahead_by counts commits on the
+    # branch not reachable from base. After a squash merge, the branch's
+    # commits aren't in base's history, so ahead_by won't be 0 even
+    # though the content is fully merged.
+    local ahead
+    ahead=$(gh api "repos/:owner/:repo/compare/$base...$branch" --jq '.ahead_by') || return
+
+    # git diff base...branch --stat checks the actual content difference
+    # between the two trees ignoring commit history. Zero lines of diff
+    # means the content is fully merged regardless of how it was merged.
+    local diffStat
+    diffStat=$(git diff "$base...$branch" --stat 2>/dev/null) || true
+
+    printf 'Branch: %s (base: %s)
+' "$branch" "$base"
+    printf '  Ahead by: %d commits
+' "$ahead"
+    if [[ -n "$diffStat" ]]; then
+        printf '  Diff:
+'
+        printf '%s
+' "$diffStat" | sed 's/^/    /'
+    else
+        printf '  Diff: (none — fully merged)
+'
+    fi
+}
+
+
+#-------------------------------------------------------------------------------
+
+# gh-branch-list()
+
+# List all remote branches for the current repo.
+
+gh-branch-list ()
+{
+    (( $# == 0 )) || { printf 'Usage: gh-branch-list
+' >&2; return 1; }
+
+    # gh api returns JSON with branch metadata. We extract just the names.
+    # The --paginate flag handles repos with many branches.
+    gh api repos/:owner/:repo/branches --paginate --jq '.[].name'
+}
+
+
+#-------------------------------------------------------------------------------
+
+# gh-branch-merged()
+
+# List branches with zero content diff against a base branch.
+# These branches are safe to delete — their content is already merged,
+# regardless of whether a squash or merge commit was used.
+
+gh-branch-merged ()
+{
+    (( $# <= 1 )) || { printf 'Usage: gh-branch-merged [base]
+' >&2; return 1; }
+    local base=${1:-main}
+    local branches
+
+    branches=$(gh-branch-list) || return
+
+    # For each branch, check whether git diff shows any file changes.
+    # Zero lines of diff output means the content is identical — the
+    # branch is fully merged and safe to delete.
+    printf '%s
+' "$branches" | while IFS= read -r branch; do
+        [[ "$branch" == "$base" ]] && continue
+        local diffCount
+        diffCount=$(git diff "$base...$branch" --stat 2>/dev/null | wc -l) || true
+        if (( diffCount == 0 )); then
+            printf '%s
+' "$branch"
+        fi
+    done
+}
+
 
 
 
@@ -1190,6 +1321,10 @@ main ()
             download-dylt-batch)                      download-dylt-batch "$@";;
             download-daylight)                        download-daylight "$@";;
             download-daylight-batch)                  download-daylight-batch "$@";;
+            gh-branch-clean)                          gh-branch-clean "$@";;
+            gh-branch-compare)                        gh-branch-compare "$@";;
+            gh-branch-list)                           gh-branch-list "$@";;
+            gh-branch-merged)                         gh-branch-merged "$@";;
             git-download-latest-daylightsh)           git-download-latest-daylightsh "$@";;
             git-get-latest-release-spec)              git-get-latest-release-spec "$@";;
             git-get-latest-release-tag)               git-get-latest-release-tag "$@";;
